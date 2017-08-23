@@ -1,0 +1,589 @@
+data={
+	--LR_AccountStatistics.lua--
+	["Delete successful!\n"]="刪除成功！\n",
+	["Show Group"]="顯示分組",
+	["Reading Statistics"]="閱讀統計",
+	["Item Statistics"]="物品統計",
+	["Settings"]="設置",
+	["FB Detail"]="副本明細",
+	["Save Data"]="保存數據",
+	["Add this money"]="合計該角色金錢",
+	["Show item statistics"]="查看物品統計",
+	["Show FB Details"]="查看副本明細",
+	["Show reading statistics"]="查看閱讀統計",
+	["Show Equipment"]="查看裝備",
+
+	["Group Settings"]="分組設置",
+	["Add Group"]="添加分組",
+	["Delete Group"]="刪除分組",
+	["Group Name"]="分組名字",
+	["Rename Group"]="重命名分組",
+
+	["Delete Data"]="刪除數據",
+	["Login Server:"]="登錄服務器：",
+	["Tong:"]="幫會：",
+	["Title:"]="稱號：",
+	["Camp:"]="陣營：",
+	["Z"]="中立",
+	["E"]="惡人谷",
+	["H"]="浩氣盟",
+	["TrainValue:"]="修為：",
+	["Stamina:"]="精力：",
+	["Thew:"]="體力：",
+	[" (FULL)"]=" （滿）",
+
+	["LR_AccountStatistics"]="懶人賬目本",
+
+	["Are you sure to delete?"]="確定刪除？",
+	["Yes"]="確定",
+	["Cancle"]="取消",
+	["Already have the same name group.\n"]="已有同名分組\n",
+
+	["AccountStatistics"]="賬號統計",
+	["FBStatistics"]="副本統計",
+	["RCStatistics"]="日常統計",
+
+	["Name"]="角色名",
+	["Examprint"]="監本",
+	["JiangGong"]="江湖貢獻值",
+	["XiaYi"]="俠義值",
+	["WeiWang"]="威望值",
+	["ZhanJieJiFen"]="戰階積分",
+	["ZhanJieLevel"]="戰階等級",
+	["MingJian"]="名劍幣",
+
+
+	--LR_AccountStatistics_Bag.lua--
+	["LR_Item_Statistics"]="懶人物品統計",
+	["Click here to open [LR_Item_Statistics] panel."]="點擊這裡打開【懶人物品統計】界面",
+
+	["Money"]="金錢",
+
+	["LR_Statistics has saved mail data.\n"]="懶人賬目本已保存郵箱數據\n",
+
+	["feige"]="<L飛鴿傳書>",
+
+	["TASK_ITEM"]="任務物品",
+	["EQUIPMENT"]="裝備",
+	["POTION"]="藥品",
+	["MATERIAL"]="材料",
+	["BOOK"]="書籍",
+	["COLOR_DIAMOND"]="五彩石",
+	["DIAMOND"]="五行石",
+	["OTHER"]="其他",
+
+	["(ALL CHARACTERS)"]="（全部角色）",
+
+	["Search"]="搜索",
+	["Choose position"]="位置選擇",
+	["Bag"]="背包",
+	["Bank"]="倉庫",
+	["Mail"]="郵件",
+	["Choose type"]="分類顯示",
+	["1.Because of White list, you can only get attachment information after interactiving messenger.\n"]="1. 由於白名單限制，郵件附件需要和信使交互後才能獲取。",
+
+	["Binded"]="已綁定",
+	["Item belongs:(Mail)\n"]="物品所屬：（郵件）\n",
+	["Item belongs:(Bag/Bank/Mail)\n"]="物品所屬：（背包/倉庫/郵件）\n",
+	["Remain:"]="剩餘：",
+	["(unit)Remain:"]="（個）剩餘：",
+	["Debug"]="調試信息",
+	["Please goto the messenger, and check out mail once.\n"]="請去信使處查看信件後方可使用。\n",
+
+	["Prev"]="上一頁",
+	["Next"]="下一頁",
+
+	["LR_Mail:You have not receive letters for over %d days.\n"]="懶人郵件：你已經超過 %d 天沒去信使查看信件了。（此提示在去信使查看信件後消失，或者在懶人賬目本設置里修改相應選項。）\n",
+	["LR_Mail:You have not receive letters for %d days.\n"]="懶人郵件：你已經有 %d 天沒去信使查看信件了。（此提示在去信使查看信件後消失，或者在懶人賬目本設置里修改相應選項。）\n",
+
+
+	["%dHour"]="%d小時",
+	["%dMinite"]="%d分鐘",
+	["%dSecond"]="%d秒",
+
+	["LR_Mail:[%s] has attachment at maturity in %s .\n"]="懶人郵件：[%s] 有附件僅剩下 %s 到期。\n",
+	["LR_Mail:[%s] has attachment at maturity in %d days .\n"]="懶人郵件：[%s] 有附件僅剩下 %s 天到期。\n",
+	["LR_Mail:Above will disappear after received the attachment.\n"]="懶人郵件：以上到期信息在登錄相應賬號收取即將到期附件後消失，或者在懶人設置界面進行相應提醒設置。\n",
+
+
+	--LR_AccountStatistics_BookRd.lua--
+	["LR Reading Statistics"]="懶人閱讀統計",
+	["Click here to open [LR Reading Statistics] panel"]="點擊這裡打開【懶人閱讀統計】界面",
+
+	["ID"]="序號",
+	["Suitbook Name"]="套書名稱",
+	["Book Name"]="書籍名稱",
+	["Readed Character"]="已閱讀過角色",
+	["Source"]="來源",
+
+	["Key words"]="關鍵字",
+
+	["Open [LR Printing Machine]"]="打開抄書插件",
+	["LR Printing Machine"]="懶人印刷機",
+
+	["[Quest]"]="【任務】",
+	["[BEI]"]="【碑銘】",
+	["Drop"]="掉落",
+
+	["Click to goto JX3 Official BBS."]="點擊上劍網3官方論壇查詢",
+
+	--LR_AccountStatistics_Equip.lua--
+	["BANGLE"]="護腕",
+	["BOOTS"]="鞋子",
+	["HELM"]="帽子",
+	["CHEST"]="上衣",
+	["WAIST"]="腰帶",
+	["PANTS"]="下裝",
+	["AMULET"]="項鏈",
+	["PENDANT"]="腰墜",
+	["LEFT_RING"]="戒指",
+	["RIGHT_RING"]="戒指",
+	["RANGE_WEAPON"]="遠程武器",
+	["MELEE_WEAPON"]="近身武器",
+	["BIG_SWORD"]="重劍",
+	["ARROW"]="暗器",
+
+	["LR Equipment Statistics"]="懶人裝備統計",
+	["Desc"]="說明",
+
+	["You can only see original attribute of others"]="其他角色的裝備只能看到原始屬性",
+
+	--LR_AccountStatistics_FBList.lua--
+	["LR FB Details"]="懶人副本明細",
+	["FB Name"]="副本名稱",
+	["FB ID"]="副本ID",
+
+	["25FB"]="25人副本",
+	["10FB"]="10人副本",
+
+	["LR:You enter FB[%s], ID is %d, "]="懶人提醒你：你進入了秘境【%s】，當前秘境ID為 %d，",
+	["You have cd.\n"]="該秘境你已經有CD了。\n",
+	["You have not cd.\n"]="該秘境你還沒有CD。\n",
+	["LR:You got FB CD:%d.\n"]="懶人提醒你：你當前秘境的CD已經沒了，CD為：%d 。\n",
+
+	--LR_AccountStatistics_FP.lua--
+	["Left click to open [LR_AccountStatistics]\nRight click to open[LR Trade Record]."]="左鍵點擊打開【懶人賬目本】\n右鍵點擊打開【懶人收支記錄】",
+
+
+	--LR_AccountStatistics_RiChang.lua--
+	["DA"]="大戰",
+	["GONG"]="公共日常",
+	["CHA"]="茶館",
+	["QIN"]="勤修不輟",
+	["JU"]="據點貿易",
+	["JING"]="晶礦爭奪",
+	["MEI"]="每日首勝",
+	["CAI"]="採仙草",
+	["XUN"]="尋龍脈",
+	["TU"]="美人圖",
+	["MI"]="覓寶會/黑市",
+
+	["Done"]="已完成",
+	["Accepted"]="已接",
+	["Finished but not pay"]="完成沒交",
+
+	--LR_AccountStatistics_Trade.lua--
+	["NONE"]="無",
+	["TRADE"]="交易",
+	["SHOP"]="商店",
+	["REPAIR"]="修理",
+	["QUEST"]="任務",
+	["GKP"]="GKP",
+	["SHOP_BUY"]="購入",
+	["SHOP_SELL"]="賣出",
+	["DROP"]="丟棄",
+	["RETURN"]="普通回購",
+	["H_RETURN"]="高級回購",
+	["LOOT"]="拾取",
+	["LOOT_MONEY"]="拾取",
+	["AUCTION_SELL"]="交易行寄售",
+	["AUCTION_BUY"]="交易行購買",
+	["SHOP_RETURN"]="退貨",
+	["AUCTION_SUCCESS"]="寄賣成功",
+	["GOLDTEAM"]="拍團分配",
+
+	["D_CORPSE"]="屍體/掉落",
+	["D_QUEST"]="任務物品",
+	["D_TREASURE"]="拾取物品",
+
+	["MON"]="星期一",
+	["TUE"]="星期二",
+	["WED"]="星期三",
+	["THU"]="星期四",
+	["FRI"]="星期五",
+	["SAT"]="星期六",
+	["SUN"]="星期日",
+
+	["THIS_LOGIN"]="本次登錄",
+	["TODAY"]="今日",
+	["THIS_MONTH"]="本月",
+	["HISTORY"]="歷史",
+
+	--拍團發完工資時的提示--
+	["MSG_1"]="收入已發放，請查看！",
+
+	["LR:This login, you got money:"]="懶人收入統計提醒您，本次登錄，該角色獲得了金錢：",
+	["(8s)"]="（8秒內不再提示）",
+
+	--拍賣行npc稱號--
+	["TRADER"]="交易師",
+
+	["%dGoldBrick"]="%d磚",
+	["%dGold"]="%d金",
+	["%dSilver"]="%d銀",
+	["%dCopper"]="%d銅",
+
+	["LR_TRADE_RECORD"]="懶人收支記錄",
+
+	["Please choose the right folder.\n"]="請選擇正確的目錄。\n",
+	["Please choose the right file.\n"]="請選擇正確的文件。\n",
+
+	["Time"]="時間",
+	["Location"]="位置",
+	["Type"]="類型",
+	["Source/Object"]="來源/對象",
+	["Content"]="內容",
+	["MONEY"]="金額",
+
+	["<PLAYER>"]="<玩家>",
+	["<GKP>"]="<GKP提供記錄>",
+	["Get:"]="獲得：",
+	["Give:"]="給予：",
+	["Consignment:"]="寄售：",
+
+	["You successfully bought"]="你成功購買 ",
+	["You consignment thing "]="你寄售的 ",
+	["sold out successful."]="成功賣出！",
+	["Record "]="將 ",
+	["as"]="記錄為 ",
+
+	["Finish quest "]="完成任務",
+
+	["Total:"]="合計：",
+
+	--add2tools--
+	["Plugin"]="插件",
+	["Allow others to see this character's record"]="允許登錄其他角色時看到此角色記錄",
+	["Auto save"]="自動保存",
+	["Auto save desc"]="自動保存說明",
+	["When will auto save:\n"]="自動保存時機：\n",
+	["1.Login in\n"]="1.上線\n",
+	["2.Open LR AccountStatistics panel\n"]="2.打開賬目本界面\n",
+	["3.Quit game"]="3.登出游戲\n",
+
+	["Enable floating bar"]="啟用懸浮框",
+
+	["Mail remind settings"]="郵件提醒設置",
+	["Enable Remind"]="開啟收件提示",
+	["Enable at Maturity"]="開啟郵件到期提示",
+	["day"]="天",
+
+	["FB show in panel"]="副本記錄頁顯示的副本",
+	["RC show in panel"]="日常記錄頁顯示的日常",
+	["Use common FB settings"]="使用副本公共設置",
+	["Use common RC settings"]="使用日常公共設置",
+
+	["PVX"]="休閑日常",
+	["PVE"]="PVE日常",
+	["PVP"]="PVP日常",
+
+	["Tips&FAQ"]="Tips 及 常見問題說明",
+	["TIP1\n"]="1.記錄保存在本地，不會聯網共享；\n",
+	["TIP2\n"]="2.默認不允許登錄其他角色時看到當前角色信息，要使用此功能請自行開啟；\n",
+	["TIP3\n"]="3.只有登錄角色才會更新此角色信息，您所看到的其他角色信息為您上次在本地登錄那個角色時的信息；\n",
+	["TIP4\n"]="4.由於白名單限制，郵件的物品統計需要與信使交互後才能記錄下附件中的物品；\n",
+	["TIP5\n"]="5.副本記錄頁可以顯示最多6個副本的CD；\n日常記錄頁可以顯示最多8個日常的記錄；\n奇遇記錄頁可以顯示最多9個常用的奇遇記錄。\n",
+	["TIP6\n"]="6.由於插件不能判斷角色是否為同一賬號，而體力精力為賬號共享，故插件顯示的精力體力僅為參考；同一個分組的角色共享精力、體力數值，故推薦相同賬號下的角色分為同一個分組。\n",
+	["TIP7\n"]="7.體力精力顯示中，A=B+ΔC，A為預計當前值，B為記錄值，C為預計增長的數值，數值不一定准確，僅供參考。\n",
+
+	["Reset settings"]="重置設置",
+
+	["Open [LR_AccountStatistics] panel"]="打開【懶人賬目本】界面",
+	["Open [LR_FB_Detail] panel"]="打開【懶人副本明細】界面",
+	["Open [LR_Reading_Record] panel"]="打開【懶人閱讀統計】界面",
+	["Open [LR_Trade_Record] panel"]="打開【懶人收支記錄】界面",
+
+
+	["Warning used in Internet cafes"]="網吧慎用！！！",
+
+	--20160411add--
+	["LR_Acc_Trade:Data convert successful!\n"]="懶人收支記錄：數據升級成功！\n",
+
+	--20160413add--
+	["Open [LR_Item_Statistics] panel"]="打開【懶人物品統計】界面",
+
+	--20160425add--
+	["MAIL_GET"]="郵箱收件",
+	["MAIL_SEND"]="郵箱發件",
+	["MAIL_PAY"]="郵箱付費",
+	["Get Attachment:"]="取得物品：",
+	["Pay for Attachment:"]="付費得到：",
+	["Mail Items:"]="郵寄物品：",
+
+	--20160507add--
+	["SHENG_FU_JU"]="勝負局",
+	["ZHUO_YAO_JI"]="捉妖記",
+	["GUI_XIANG_LU"]="歸鄉路",
+	["FENG_LIN_JIU"]="楓林酒",
+	["HONG_YI_GE"]="紅衣歌",
+	["HAI_TONG_SHU"]="孩童書",
+	["JING_KE_CI"]="荊軻刺",
+	["SHA_HAI_YAO"]="沙海謠",
+	["SHI_GAN_DANG"]="石敢當",
+
+	["DIALOG_SHENG_FU_JU"]="承讓承讓。",
+	["DIALOG_FENG_LIN_JIU"]="再來一局",
+
+	--20160509add--
+	["QYStatistics"]="奇遇統計",
+	["LR QiYu Details"]="懶人奇遇明細",
+	["QiYu Name"]="奇遇名字",
+	["QiYu Times"]="次數",
+	["Open [LR_QiYu_Detail] panel"]="打開【懶人奇遇明細】界面",
+	["QiYu Detail"]="奇遇明細",
+	["QiYu About"]="奇遇說明",
+	["QiYu Tip"]="這裡統計的是使用觸發奇遇的道具或對話的次數。例如：【捉妖記】中喝一次酒記為1次；【楓林酒】中猜一次拳記為1次。\n此數據並非從服務器獲取，因此如果在其他電腦上完成的次數，不會在這臺電腦上顯示出來。",
+
+	--20160511add--
+	["LR Quest Tool"]="懶人任務工具",
+	["Quest Tools"]="任務工具",
+	["Quest ID"]="任務ID",
+	["Quest Name"]="任務名稱",
+
+	--20160512add--
+	["%d/%d/%d %0.2d:%0.2d:%0.2d"]="%d年%d月%d日 %0.2d:%0.2d:%0.2d",
+	["LR:Blacked by [%s], Time:%s.\n"]="懶人：該副本已經被 [%s] 黑了，黑本時間：%s。（只有裝了懶人插件的才能同步黑本數據。）\n",
+
+	--20160601add--
+	["Begin TeamGold"]="分配者正發起收入分配",
+	["Add TeamGold"]="成功追加(%d+)金團隊收入，該部分追加金額可用於最終的收入分配。",
+	["GOLDTEAM_ADDMONEY"]="拍團投金",
+
+	--20160708add--
+	["JianBen this week remain:"]="本周還可獲得監本：",
+
+	--20160717add--
+	["THIS_WEEK"]="本周",
+	["LAST_SEVEN_DAYS"]="最近七天",
+
+	--20160718add--
+	["ZHI_ZUN_BAO"]="至尊寶",
+	["PO_XIAO_MING"]="破曉鳴",
+	["ZHU_MA_QING"]="竹馬情",
+	["QiYu show in panel"]="奇遇記錄頁顯示的奇遇",
+	["Use common QiYu settings"]="使用奇遇公共設置",
+
+	--20160913add--
+	["HUIGUANG"]="7周年丸子",
+	["HUASHAN"]="沉香扇骨",
+	["7 YEAR"]="扇子成就",
+	["LR_7Year"]="懶人七周年扇子成就統計",
+
+	--20160919add--
+	["LR_Achievement Panel"]="懶人成就統計面板",
+	["MengHuiDaoXiang"]="【夢回稻香】系列成就",
+	["MidAutumn"]="【中秋節】系列成就",
+	["ChineseNewYear"]="【春節】系列成就",
+	["NewYearsDay"]="【元旦】系列成就",
+	["FlowerFestival"]="【花朝節】系列成就",
+	["LanternFestival"]="【元宵節】系列成就",
+	["ChingMingFestival"]="【清明節】系列成就",
+	["DragonBoatFestival"]="【端午節】系列成就",
+	["ChineseValentineDay"]="【七夕】系列成就",
+	["WinterSolstice"]="【冬至節】系列成就",
+	["DoubleNinthFestival"]="【重陽節】系列成就",
+	["Open [LR_Achievement] panel"]="打開【懶人成就統計】面板",
+	["Refresh"]="刷新",
+
+	--20160921add--
+	["Please refresh again.\n"]="懶人：請再次刷新。\n",
+
+	--20161019add--
+	["QING_CAO_GE"]="青草歌",
+	["DIALOG_QING_CAO_GE_01"]="若論騎術，如風如雲如火，是最基礎的三個條件。",
+	["DIALOG_QING_CAO_GE_02"]="你已經賽了三圈，今天烈風已經不想和你比賽啦。",
+	["DIALOG_QING_CAO_GE_03"]="你的騎術太棒了",
+	["QING_CAO_GE_NPCSZNAME"]="阿曼",
+
+	["DIALOG_ZHU_MA_QING_01"]="不是記憶里的味道",
+	["DIALOG_ZHU_MA_QING_02"]="吃了三個都不如丁爺爺家的好吃",
+	["DIALOG_ZHU_MA_QING_03"]="真好吃",
+	["ZHU_MA_QING_NPCSZNAME"]="沈笑顏",
+
+	["DIAN_NAN_XING"]="滇南行",
+	["DIALOG_DIAN_NAN_XING_01"]="丟了件不值錢的飾品，沒什麼的。",
+	["DIALOG_DIAN_NAN_XING_02"]="你都問了三遍了，只是丟了個小物什。",
+	["DIALOG_DIAN_NAN_XING_03"]="一件雖然不貴重但有特殊意義的飾品。",
+	["DIAN_NAN_XING_NPCSZNAME"]="苗淼爾",
+
+	["DIALOG_SHENG_FU_JU_01"]="承讓承讓。",
+	["DIALOG_FENG_LIN_JIU_01"]="再來一局",
+
+	["ZHI_ZI_XIN"]="稚子心",
+	["DIALOG_ZHI_ZI_XIN_01"]="還是我自己想想吧",
+	["DIALOG_ZHI_ZI_XIN_02"]="我還是自己再想想吧",
+	["DIALOG_ZHI_ZI_XIN_03"]="不如你幫我想想吧",
+	["ZHI_ZI_XIN_NPCSZNAME"]="蘇臨淵",
+
+	["DIALOG_SHI_GAN_DANG_02"]="找了三個都不是我的，少俠你心境不夠啊",
+	["SHI_GAN_DANG_NPCSZNAME"]="吳為有",
+
+	["DIALOG_HAI_TONG_SHU_02"]="都給你三張紙了",
+	["HAI_TONG_SHU_NPCSZNAME"]="趙小凱",
+
+	["DIALOG_SHENG_FU_JU_02"]="你都贏我三回了",
+	["SHENG_FU_JU_NPCSZNAME"]="航小婷",
+
+	["DIALOG_FENG_LIN_JIU_02"]="都和你划了三回了",
+	["FENG_LIN_JIU_NPCSZNAME"]="馬四",
+
+	["DIALOG_ZHI_ZUN_BAO_02"]="看了三株",
+	["ZHI_ZUN_BAO_NPCSZNAME"]="查飛天",
+
+	--20161122add--
+	["Userlist is old.\n"]="用戶列表文件陳舊，請重新登錄每一個號。\n",
+
+	--20170111add--
+	["Instructions:\n"]="使用說明：\n",
+	["Instructions01\n"]="勾選此項後，才能在其他號上看到此角色的信息。\n",
+
+	["Floating bar Instructions:\n"]="浮動條使用說明：\n",
+	["Floating bar Instructions01\n"]="◆建議開啟此浮動條，快速顯示總資金\n",
+	["Floating bar Instructions02\n"]="◆左擊浮動條左邊的元寶可以打開【懶人賬目本】界面\n",
+	["Floating bar Instructions03\n"]="◆右擊浮動條左邊的元寶可以打開【懶人收支記錄】界面\n",
+
+	--20170425add--
+	["GUAN_WAI_SHANG"]="關外商",
+
+	--20170526add--
+	["BEI_XING_BIAO"] = "北行鏢",
+	["DIALOG_BEI_XING_BIAO_01"] = "小貓吃掉了你的",
+
+	--20170527add--
+	["Next 20 Records"] = "◆下20條記錄◆-->",
+
+	--20170531add--
+	["charinfo"]="屬性",
+	["charmoreinfo"]="詳細屬性",
+	["Equipmentscore"]="裝備分數",
+	["PVEscore"]="秘境評分",
+	["PVPscore"]="對抗評分",
+	["Property"]="屬性",
+	["No data"]="暫無數據",
+
+	--20170602add--
+	["Make Friend"]="加為好友",
+
+	--20170609add--
+	["DONG_HAI_KE"]="東海客",
+	["DIALOG_DONG_HAI_KE_01"]="多謝你的草藥……滴水之恩，當涌泉相報。",
+	["DONG_HAI_KE_NPCSZNAME"]="康永浩",
+
+	--20170625add--
+	["Show data not in choose group. (translucence)"]="透明顯示未選分組",
+	["Group Cancel"]="取消分組",
+
+	--20170630add--
+	["to be expired"]="即將過期",
+
+	--20170701add--
+	["[from]->[to] (left time) (mail id)\t[number]\n"]="[來自]->[收件人] (剩餘時間)(郵件ID)\t[數量]\n",
+	["Only show mail which will expire"]="僅顯示即將到期的郵件",
+
+	--20170706add--
+	["Year"]="年",
+	["Month"]="月",
+	["Day"]="日",
+	["Start Time"]="開始時間",
+	["End Time"]="結束時間",
+
+	--20170707add--
+	["FIRST"]="第一頁",
+	["PRE"]="上一頁",
+	["NEXT"]="下一頁",
+	["LAST"]="最後頁",
+	["Total %d record(s), total %d page(s)"]="共 %d 條記錄，共 %d 頁",
+	["Do not show by page"]="不以分頁顯示",
+	["Page tip 1"]="開啟後，當記錄條數過多時，會占用過多UI資源，造成卡頓。",
+	["Import data"]="導入數據",
+	["Import old version data (not database version)"]="導入舊版（非數據庫版'.jx3dat'）數據",
+	["Are you sure to import old version data (not database version) ?"]="你確定要導入舊版（非數據庫版'.jx3dat'）數據嗎？",
+	["Import new version data (database version)"]="導入新版（數據庫版'.db'）數據，適用於數據庫版 合服後數據的手動合併",
+	["Are you sure to import new version data (database version) ?"]="你確定要導入新版（數據庫版'.db'）數據嗎？（請勿導入其他角色數據，以免數據混亂）",
+
+	--20170708add--
+	["file locate at 'Interface/LR_Plugin/@Data/LR_AccountStatistics/UsrData/TradeData/[Area]/[Server]/[PlayerName]'"]="文件位於 'Interface/LR_Plugin/@Data/LR_AccountStatistics/UsrData/TradeData/[大區名稱]/[服務器名稱]/[角色名稱]/(tradedb.db)'",
+	["Choose file"]="選擇文件：",
+	["File path wrong."]="文件路徑有誤。",
+	["File name wrong."]="文件名錯誤。（正確的為'tradedb.db'）",
+	["File open error."]="文件打開錯誤（選錯db文件或文件損壞）",
+	["File correct, sure to import?\nArea: %s , Server: %s , Name: %s"]="文件正確，確定導入？\n區域：%s，服務器：%s，名字：%s\n（註意：請勿導入其他角色數據，以免數據混亂）",
+	["Can not import data in current status."]="當前狀態不能導入數據。",
+	["Import success"]="導入成功！",
+
+	--20170711add--
+	["LR_Mail:You have not received letters for at least %d days.\n"]="懶人郵件：你至少 %d 天沒收郵件了。（信使處查看郵件後，此提示消失。）\n",
+	["LR_Mail:You have not received letters for %d days.\n"]="懶人郵件：你 %d 天沒收郵件了。（信使處查看郵件後，此提示消失。）\n",
+	["LR_Mail:Someone's mail is about to expire. Open [LR_Bag] to have a look."]="懶人郵件：有人的郵件快到期了，點擊設置界面【賬目本】-【全局設置】-【查看即將到期郵件】按鈕查看具體信息。",
+	[" %s->%s  overdue (%d) \t%d\n"]=" %s->%s  已到期 (%d) \t%d\n",
+	["LR_AS"]="賬目本",
+	["LR_AS_Global_Settings"]="全局設置",
+	["LR_AS_Normal_Settings"]="分類設置",
+	["FB Settings"]="副本統計設置",
+	["RC Settings"]="日常統計設置",
+	["QiYu Settings"]="奇遇統計設置",
+	["Mail Settings"]="郵件統計設置",
+	["LR_AS_DB_Settings"]="數據庫設置",
+	["Main DB Settings"]="主數據庫",
+	["DB Vacuum"]="數據庫優化",
+	["DB Backup"]="數據庫備份",
+	["DB Restore"]="數據庫恢復",
+	["TRADE DB Settings"]="收支記錄數據庫",
+	["TRADE DB Batch Import"]="批量導入(舊)",
+	["Are you sure to vacuum main database ?"]="你確定要優化主數據庫嗎？",
+	["VACUUM Success!"]="數據庫優化成功！",
+	["Are you sure to backup main database ?"]="你確定要備份主數據庫嗎？",
+	["Please backup manually."]="請手動備份數據庫。",
+	["Are you sure to patch import data (database version) ?"]="你確定要根據現有的角色列表，批量導入各角色的舊版交易數據('.jx3dat')嗎?\n這個操作將花費很多時間，並占用大量磁盤資源。",
+	["Cost %0.3f s.\n"]="花費 %0.3f 秒\n",
+	["DB Import playerlist"]="導入角色列表(舊)",
+	["Are you sure to import playerlist ?"]="你確定要導入舊數據（'.jx3dat'）的角色列表數據嗎？\n導入後將覆蓋當前數據。",
+	["Main DB Tip 1"]="1. 主數據庫文件位於'Interface/LR_Plugin/@DATA/LR_AccountStatistics/UsrData/'下，文件名：'maindb.db'\n",
+	["Main DB Tip 2"]="2. 當前版本為數據庫(.db)版本。老版本為'.jx3dat'文件版本。\n",
+	["Main DB Tip 3"]="3. 重裝插件時，請事先備份'Interface/LR_Plugin/@DATA/'下的所有文件，保證所有的數據不丟失。\n",
+	["Trade DB Tip 1"]="1. 交易記錄數據位於'Interface/LR_Plugin/@DATA/LR_AccountStatistics/UsrData/TradeData/【大區名字】/【服務器名字】/【角色名字】'下，文件名為'tradedb.db'\n",
+	["Trade DB Tip 2"]="2. 當前版本為數據庫(.db)版本，老版本為'.jx3dat'文件版本。老版本下的交易數據請通過【批量導入(舊)】或者【懶人收支記錄】中的【導入數據】->【導入舊版數據】手動導入到新版本數據庫中。\n",
+	["Trade DB Tip 3"]="3. 重裝插件時，請事先備份'Interface/LR_Plugin/@DATA/'下的所有文件，保證所有的數據不丟失。\n",
+	["Are you sure to vacuum tradedata ?"]="你確定要優化交易數據嗎？",
+	["View mails overdue."]="查看即將到期郵件",
+	["View trade record."]="查看收支記錄",
+	["TIP8\n"]="8. 當每周監本可獲取數量小於300時，字體顏色為黃色；當每周監本可獲取數量小於100時，字體顏色為紅色。\n",
+	["TIP9\n"]="9. 參加完省試後，監本數量兩側有'△'標記，參加完會試後，監本數量兩側有'▲'標記",
+
+	--20170713add--
+	["Warning 2"]="當插件更新時，尤其是需要刪除插件重裝時，請手動將'interface/LR_Plugin/@DATA'文件夾備份，該文件夾為懶人插件所有插件記錄的存放處。",
+
+	--20170716add--
+	["5FB"]="5人副本",
+	["Boss List"]="首領列表：",
+
+	--20170718add--
+	["Choose %d at most"]="最多選 %d 個",
+	["DB_TIP_1"]="主數據庫文件位於'Interface/LR_Plugin/@DATA/LR_AccountStatistics/UsrData/'下，文件名：'maindb.db'\n",
+	["DB_TIP_2"]="交易記錄數據位於'Interface/LR_Plugin/@DATA/LR_AccountStatistics/UsrData/TradeData/【大區名字】/【服務器名字】/【角色名字】'下，文件名為'tradedb.db'\n",
+	["LR_AS_Desc"]="說明彙總",
+
+	--20170721--
+	["FAN_PAI_JIANG_LI_STRING"]="連續簽到翻牌獎勵已經進入大俠背包",
+	["FAN_PAI_JIANG_LI"]="翻牌獎勵",
+	["SAVE"]="保存數據",
+	["TRADE_FAQ_1"]="【收支記錄】插件有緩存機制，每次緩存間隔至少為5分鐘。緩存的目的在於防止數據丟失，減少因保存數據造成的游戲卡頓。\n",
+	["TRADE_FAQ_2"]="緩存數據並不在收支記錄中，只有在保存數據的時候，才會將緩存數據保存入收支記錄里。\n",
+	["TRADE_FAQ_3"]="只有在【返回角色選擇】、【返回登錄界面】、【退出游戲】以及打開【懶人收支記錄】界面時，才會將緩存記錄保存進收支記錄。\n",
+	["TRADE_FAQ_4"]="【本次登錄】顯示的內容包含緩存中的數據，在執行非【本次登錄】選項的數據查詢時，不一定能全部查詢出在【本次登錄】中顯示的內容。如需在執行非【本次登陸】時能查詢到全部【本次登錄】顯示的的內容，請點擊【懶人收支記錄】界面上的【保存數據】按鈕，將緩存數據保存進收支記錄。【本次登錄】的顯示的內容不會因記錄保存而丟失。\n",
+	["TRADE_FAQ_5"]="【本次登錄】顯示的數據按照時間的倒序進行排序（時間晚的在前），其他查詢選項則按照時間的正序進行排序（時間早的在前）。\n",
+	["(Do not show again in %d seconds)"]="(%d秒內不再顯示)",
+
+	--20170726add--
+	["Group name:"]="所在分組：",
+}

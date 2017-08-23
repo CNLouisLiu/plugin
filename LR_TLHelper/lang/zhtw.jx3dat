@@ -1,0 +1,42 @@
+data={
+	--LR_TLHelper--
+	["None"]="無",
+	["QianJiBian"]="千機變",
+	["LianNuXingTai"]="連弩形態",
+	["ZhongNuXingTai"]="重弩形態",
+	["DuShaXingTai"]="毒剎形態",
+	
+	["LianNu"]="連弩",
+	["ZhongNu"]="重弩",
+	["DuSha"]="毒剎",
+	["FeiXing"]="飛星",
+	["TianJueDiMie"]="天絕地滅",
+	["AnCangShaJi"]="暗藏殺機",
+	["TuQiongBiXian"]="圖窮匕見",
+	["Other"]="其他",
+	
+	["Not the same target"]="目標不一致",
+	["GuiFu"]="鬼斧中",
+	["Attacking"]="攻擊中",
+	
+	["Choose self"]="懶人天羅機關選自己",
+	
+	--Add2Tools--
+	["Plugins"]="插件",
+	["TL Helper"]="天羅唐助手",
+	["Enable TL Helper"]="開啟天羅唐助手",
+	["Set Alpha"]="設置透明度",
+	["Set Scale"]="設置縮放比例",
+	["Auto Hide"]="沒有機關的時候隱藏",
+	
+	["1.Only be used in TianLuo\n"]="1.僅在天羅心法下才能啟用插件",
+	["2.Press Alt+Ctrl Move.\n"]="2.按住Alt+Ctrl進行拖動",
+
+	---20160511add--
+	["Show TargetLine"]="顯示與目標的連線",
+	["Show MeLine"]="顯示到自己的連線",
+	["Show Self"]="顯示千機變的位置",
+	
+	--20170419add--
+	["Press Alt+Ctrl Move"]="按住Alt+Ctrl進行拖動、移動位置",
+}

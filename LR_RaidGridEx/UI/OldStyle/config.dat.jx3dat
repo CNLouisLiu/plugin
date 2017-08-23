@@ -1,0 +1,165 @@
+data={
+	marginBody = 12,		--角色格子与容纳角色格子的容器的边框的距离
+
+	--whoRoleGrid角色格子，这里控制格子边框()、选择框()、小怪目标框()、团确背景(Image_ReadyCheck)
+	wholeRoleGrid={
+		width=72,	--格子宽度
+		height=55,	--格子高度
+		margin_x=9,	--格子与格子之间的距离x方向
+		margin_y=4,	--格子与格子之间的距离y方向
+	},
+
+	--roleName角色名字(Text_RoleName)
+	roleName={
+		top=1,		--格子内部上边距
+		left=0,		--格子内部左边距
+		width=63,	--名字长度
+		height=16,	--名字高度
+		valign=1,	--1:垂直居中；2：底对齐；0：顶对齐
+		halign=0,	--1:水平居中；2：右对齐；0：左对齐
+	},
+
+	--lifeBar  血条设置(Image_LifeBG、Shadow_Life_Fade)
+	--血条设置包含了距离元件(Image_Life_White、Image_Life_Red、Image_Life_Orange、Image_Life_Blue、Image_Life_Green、)
+	lifeBar={
+		top=14,
+		left=0,
+		width=68,
+		height=25,
+	},
+
+	--manaBar 蓝条设置(Image_ManaBG、Image_Mana)
+	--蓝条设置包含了门派元件(Image_CJRage、Image_TMRage)
+	manaBar={
+		top=39,
+		left=0,
+		width=68,
+		height=11,
+	},
+
+	--kungfuText 心法名字设置(Text_Kungfu)
+	kungfuText={
+		top=18,
+		left=-9,
+		width=18,
+		height=18,
+	},
+	
+	--kungfuImage 心法图片(Image_Kungfu)
+	kungfuImage={
+		top=14,
+		left=-6,
+		width=18,
+		height=18,
+	},
+
+	--distanceText(距离文字)
+	distanceText={
+		top=40,
+		left=0,
+		width=72,
+		height=20,
+	},
+
+	--groupEyeImage 阵眼 (Image_GroupEye)
+	groupEyeImage={
+		top=42,
+		left=-4,
+		width=16,
+		height=16,
+	},
+
+	--bossTargetImage boss对象(Image_BossTarget)
+	bossTargetImage={
+		top=16,
+		left=53,
+		width=21,
+		height=21,
+	},
+
+	--团长图标 (Image_Leader)
+	leaderImage={
+		top=12,
+		left=64,
+		width=15,
+		height=15,
+	},
+
+	--标记权限者图标(Image_Mark)
+	markerImage={
+		top=28,
+		left=64,
+		width=15,
+		height=15,
+	},
+
+	--分配权限者图标 (Image_Looter)
+	looterImage={
+		top=44,
+		left=64,
+		width=15,
+		height=15,
+	},
+
+	--世界标记图片(Image_WorldMark)
+	worldMarkImage={
+		top=0,
+		left=54,
+		width=18,
+		height=18,
+	},
+
+	--lifeText 血量文字 (Text_LifeValue)
+	lifeText={
+		top=20,
+		left=2,
+		width=67,
+		height=18,	
+		valign=1,	--1:垂直居中；2：底对齐；0：顶对齐
+		halign=1,	--1:水平居中；2：右对齐；0：左对齐
+	},
+
+
+	--buffhandle ()
+	handleBuff={
+		top=38,
+		left=0,
+		width=84,
+		height=21,
+	},
+
+	handleBuffBox={
+		[1]={
+			top=0,
+			left=-4,
+			width=18,
+			height=18,
+		},
+		[2]={
+			top=0,
+			left=17,
+			width=18,
+			height=18,
+		},
+		[3]={
+			top=0,
+			left=38,
+			width=18,
+			height=18,
+		},
+		[4]={
+			top=0,
+			left=59,
+			width=18,
+			height=18,
+		},
+	},
+
+	--confirmImage团确图标设置，等待(Image_Vote_Wait)、同意(Image_Vote_Yes)、不同意(Image_Vote_No)、团确没准备好(Image_ReadyCheck_No)
+	confirmImage={
+		top=16,
+		left=3,
+		width=64,
+		height=32,
+	},
+}

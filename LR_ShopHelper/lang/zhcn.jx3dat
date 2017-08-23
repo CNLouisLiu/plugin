@@ -1,0 +1,19 @@
+data = {
+	["LR ShopHelper"]="懒人商店助手",
+	["Enable auto sell"]="允许打开商店时即刻卖物品",
+	["Enable auto repare"]="允许打开商店时即刻修理",
+	["Enable buy more"]="允许购买物品时输入更多的数量",
+	["Helpers"]="小助手",
+
+	--20170821add--
+	["Auto sell grey item"]="自动卖出灰色物品",
+	["Sell Item List"]="自定义物品列表",
+	["Enable sell items in list"]="允许卖出列表中的物品",
+	["Error, no this item"]="错误，没有这个物品",
+	["Sure to delete"]="你确定要删除：",
+	["Add Item"]="添加物品",
+	["Reset list"]="重置列表",
+	["Are you sure to reset item list?"]="确定要重置列表？",
+	["LR: Sell item:"]="懒人：卖出物品",
+
+}

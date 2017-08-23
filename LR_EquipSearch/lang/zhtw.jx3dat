@@ -1,0 +1,81 @@
+data ={
+	--201170718add--
+	--DPS
+	["PO_FANG"] = "破防",
+	["HUI_XIN"] = "會心等級",
+	["HUI_XIAO"] = "會心效果等級",
+	["WU_SHUANG"] = "無雙",
+	["JIA_SU"] = "加速",
+	["MING_ZHONG"] = "命中",
+	--T
+	["WAI_FANG"] = "外功防禦",
+	["NEI_FANG"] = "內功防禦",
+	["YU_JIN"] = "御勁",
+	["ZHAO_JIA"] = "招架",
+	["SHAN_BI"] = "閃避",
+	--PVP
+	["HUA_JIN"] = "化勁",
+
+	["LR_EQUIP_SEARCH"]="懶人裝備查詢",
+	["Equip Name"]="裝備名稱",
+	["Equip Require Level"]="裝備等級",
+	["Equip Level"]="裝備品質等級",
+	["Equip Quality"]="裝備品質",
+	["Equip Recommend Kungfu"]="適用心法",
+	["Equip Attribute"]="裝備屬性",
+	["Equip Part"]="裝備類型",
+
+	["FIRST"]="第一頁",
+	["PRE"]="上一頁",
+	["NEXT"]="下一頁",
+	["LAST"]="最後頁",
+	["Yes"]="確定",
+	["SEARCH"]="搜索",
+	["RESET"]="重置",
+	["Total %d record(s), total %d page(s)"]="共 %d 條記錄，共 %d 頁",
+	["Do not show by page"]="不以分頁顯示",
+	["Page tip 1"]="開啟後，當記錄條數過多時，會占用過多UI資源，造成卡頓。",
+
+	["PO_BAI"]="破敗",
+	["PU_TONG"]="普通",
+	["JING_QIAO"]="精巧",
+	["ZHUO_YUE"]="卓越",
+	["ZHEN_QI"]="珍奇",
+	["XI_SHI"]="稀世",
+	["ANY_QUALITY"]="任何品質",
+
+	--20170719add--
+	["%dP，%dL"]="%d品，%d級",
+	["Any Type"]="任何類型",
+	["ZHUANG_SHI"]="裝飾",
+	["QI_TA"]="其他",
+	["AN_QI"]="暗器",
+	["FANG_JU"]="防具",
+	["Any Attribute"]="任何屬性",
+	["Search Result"]="搜索結果",
+	["Equip Source"]="裝備來源",
+	["ASC"]="升序",
+	["DESC"]="降序",
+	["FU_BEN"]="副本",
+	["SHENG_WANG"]="聲望",
+	["SHANG_REN"]="商",
+	["Need to initialize the plug-in and start?"]="需要初始化插件，開始？\n該操作將花費一段時間，請耐心等待。",
+	["Initialize plug-in successfully"]="初始化插件完成！",
+	["Cost %0.3f s\n"]="用時 %0.3f 秒\n",
+	["CONTAIN"]="包含",
+	["NOT CONTAIN"]="不含",
+	["Multiple conditions can be checked"]="可以勾選多個條件，勾選的條件之間為與的關係\n",
+	["Conditions"]="條件",
+	["Equip Search"]="裝備查詢",
+	["Reinitialize plug-in manually"]="手動重新初始化插件",
+	["Are you sure to reinitial plug-in?"]="你確定要重新初始化插件嗎？\n該操作將花費一段時間，請耐心等待。",
+	["Exit"]="退出",
+	["OPEN_LR_EQUIP_SEARCH"]="打開【懶人裝備查詢】面板",
+
+	--20170720add--
+	["%dP"]="%d品",
+	["%dL"]="%d級",
+
+	--20170729add--
+	["DAN_YAO"]="彈葯",
+}

@@ -1,0 +1,11 @@
+data={
+	{szName="Classic",cnName="经典风格",},
+	{szName="OldStyle",cnName="RaidGridEx老风格",},
+	{szName="NewStyle1",cnName="新风格(Buff同一排)",},
+	{szName="NewStyle2",cnName="新风格(无框版)",},
+	{szName="CTMStyle",cnName="CTM风格",},
+	{szName="SysStyle",cnName="系统风格",},
+	{szName="NewStyle3",cnName="风格3(去选中动画效果)",},
+	{szName="NewStyle4",cnName="绿底",},
+	{szName="NewStyle5",cnName="超大，适用界面缩放0.7 1080p，手动大字号",},
+}

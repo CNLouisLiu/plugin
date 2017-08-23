@@ -1,0 +1,164 @@
+data={
+	marginBody = 10,		--角色格子与容纳角色格子的容器的边框的距离
+
+	--whoRoleGrid角色格子，这里控制格子边框()、选择框()、小怪目标框()、团确背景(Image_ReadyCheck)
+	wholeRoleGrid={
+		width=85,	--格子宽度
+		height=66,	--格子高度
+		margin_x=3,	--格子与格子之间的距离x方向
+		margin_y=2,	--格子与格子之间的距离y方向
+	},
+
+	--roleName角色名字(Text_RoleName)
+	roleName={
+		top=3,		--格子内部上边距
+		left=2,		--格子内部左边距
+		width=85,	--名字长度
+		height=16,	--名字高度
+		valign=1,	--1:垂直居中；2：底对齐；0：顶对齐
+		halign=0,	--1:水平居中；2：右对齐；0：左对齐
+	},
+
+	--lifeBar  血条设置(Image_LifeBG、Shadow_Life_Fade)
+	lifeBar={
+		top=20,
+		left=0,
+		width=82,
+		height=32,
+	},
+
+	--manaBar 蓝条设置(Image_ManaBG、Image_Mana)
+	--蓝条设置包含了门派元件(Image_CJRage、Image_TMRage)
+	manaBar={
+		top=52,
+		left=0,
+		width=82,
+		height=12,
+	},
+
+	--kungfuText 心法名字设置(Text_Kungfu)
+	kungfuText={
+		top=20,
+		left=0,
+		width=20,
+		height=20,
+	},
+	
+	--kungfuImage 心法图片(Image_Kungfu)
+	kungfuImage={
+		top=20,
+		left=-2,
+		width=24,
+		height=24,
+	},
+
+	--distanceText(距离文字)
+	distanceText={
+		top=18,
+		left=0,
+		width=82,
+		height=20,
+	},
+
+	--groupEyeImage 阵眼 (Image_GroupEye)
+	groupEyeImage={
+		top=56,
+		left=-1,
+		width=16,
+		height=16,
+	},
+
+	--bossTargetImage boss对象(Image_BossTarget)
+	bossTargetImage={
+		top=45,
+		left=57,
+		width=28,
+		height=28,
+	},
+
+	--团长图标 (Image_Leader)
+	leaderImage={
+		top=20,
+		left=76,
+		width=14,
+		height=14,
+	},
+
+	--标记权限者图标(Image_Mark)
+	markerImage={
+		top=38,
+		left=76,
+		width=14,
+		height=14,
+	},
+
+	--分配权限者图标 (Image_Looter)
+	looterImage={
+		top=56,
+		left=76,
+		width=14,
+		height=14,
+	},
+
+	--世界标记图片(Image_WorldMark)
+	worldMarkImage={
+		top=1,
+		left=65,
+		width=20,
+		height=20,
+	},
+
+	--lifeText 血量文字 (Text_LifeValue)
+	lifeText={
+		top=32,
+		left=0,
+		width=85,
+		height=14,	
+		valign=1,	--1:垂直居中；2：底对齐；0：顶对齐
+		halign=1,	--1:水平居中；2：右对齐；0：左对齐
+	},
+
+
+	--buffhandle ()
+	handleBuff={
+		top=45,
+		left=0,
+		width=84,
+		height=21,
+	},
+
+	handleBuffBox={
+		[1]={
+			top=-20,
+			left=58,
+			width=24,
+			height=24,
+		},
+		[2]={
+			top=0,
+			left=0,
+			width=20,
+			height=20,
+		},
+		[3]={
+			top=0,
+			left=21,
+			width=20,
+			height=20,
+		},
+		[4]={
+			top=0,
+			left=42,
+			width=20,
+			height=20,
+		},
+	},
+
+	--confirmImage团确图标设置，等待(Image_Vote_Wait)、同意(Image_Vote_Yes)、不同意(Image_Vote_No)、团确没准备好(Image_ReadyCheck_No)
+	confirmImage={
+		top=20,
+		left=5,
+		width=70,
+		height=36,
+	},
+}

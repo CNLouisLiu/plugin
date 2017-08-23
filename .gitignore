@@ -1,0 +1,7 @@
+*.dat
+*.key
+.idea/
+@DATA/
+__pycache__/
+UsrData/
+

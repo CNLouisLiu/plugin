@@ -1,0 +1,444 @@
+data={
+	["Distribute Mode Now:"]="当前分配模式：",
+	["Free Pick"]="自由拾取",
+	["Distributor"]="分配者分配",
+	["Team Pick"]="队伍拾取",
+	["Gold Team"]="拍团分配",
+	["Click to change distribute mode"]="点击设置分配模式",
+	["You have not the distribute right,you can not change the distribute mode."]="你没有分配权限，不能修改分配模式",
+	
+	["Distribute Level Now:"]="当前分配等级：",
+	["Green"]="绿色",
+	["Blue"]="蓝色",
+	["Purple"]="紫色",
+	["Orange"]="橙色",
+	["Red"]="红色",
+	["White"]="白色",
+	["Click to change distribute level"]="点击设置分配等级",
+	["You have not the distribute right,you can not change the distribute level."]="你没有分配权限，不能修改分配等级",
+
+	["MiXian"]="迷仙引梦",
+	
+	["You are not the leader"]="你不是队长/团长",
+	["Enter Save File Name"]="输入需要保存的文件名字：",
+	["Enter Load File Name"]="输入需要载入的文件名字：",
+	["Export Successful!"]="导出成功！",
+	["Import Successful!"]="导入成功！",
+	
+	["Do you want to change the distribute mode to distributor?"]="是否要转换分配模式为【分配者分配】？",
+	["Tips:Hold Alt when hover,will show HPS/DPS,MY DPS required."]="懒人提示：按住ALT同时，鼠标划过人物，显示DPS/HPS数据，需安装【茗伊插件集】-【伤害统计】",
+	
+	["Dead"]="重伤",
+	["Offline"]="离线",
+	["Check Attribute"]="查看属性",
+	
+	["Lock Group"]="锁定小队分组",
+	["Error!The Group has been locked,you have to unlock it or press Shift."]="错误：小队分组已锁定，你需要 解锁 或 按住Shift 才能进行分组！",
+	["The Group has been locked,you have to unlock it or press Shift."]="小队分组已锁定，你需要解锁或按住Shift才能进行分组",
+	["The group has been unlocked,you can group your member freely."]="小队分组已解锁，你可以自由分组了。小心误拖。",
+	
+	["ONE"]="一",
+	["TWO"]="二",
+	["THREE"]="三",
+	["FOUR"]="四",
+	["FIVE"]="五",
+	["TEAM"]="小队",
+	
+	["--Dead Record--"]="重伤记录",
+	["No Record"]="无记录",
+	["Cause"]="造成了",
+	["Debug:"]="调试信息",
+	
+	["-----DPS（HPS）Record-----"]="-----DPS（HPS）统计-----",
+	
+	["Tong:"]="帮会：",
+	["Level:"]="等级：",
+	["Kungfu:"]="心法：",
+	["Map:"]="地图：",
+	["Camp:"]="阵营：",
+	
+	["xia"]="侠",
+	["xi"]="洗",
+	["yi"]="易",
+	["hua"]="花",
+	["li"]="离",
+	["ao"]="傲",
+	["tie"]="铁",
+	["qi"]="气",
+	["jian"]="剑",
+	["yun"]="云",
+	["bing"]="冰",
+	["du"]="毒",
+	["bu"]="补",
+	["yu"]="羽",
+	["gui"]="诡",
+	["wen"]="问",
+	["shan"]="山",
+	["gai"]="丐",
+	["ying"]="影",
+	["liu"]="琉",
+	["gu"]="骨",
+	["fen"]="分",
+	["mo"]="莫",
+	["zhi"]="知",
+	
+	["Extraterrestrials"]="天外来客",
+	["Fly up"]="飞升大法",
+	["point damage"]="点伤害",
+	
+	--buff监控颜色--
+	["red"]="红",
+	["green"]="绿",
+	["blue"]="蓝",
+	["yellow"]="黄",
+	["purple"]="紫",
+	["gress"]="青",
+	["orange"]="橙",
+	["black"]="黑",
+	["white"]="白",
+	["self"]="自",
+	["NewGroup"]="新建组",
+	
+	["This monitoring module has been closed.(Crying Icon)"]="当前监视模块已关闭。（哭泣图标）",
+	["This monitoring module is working now.(Smile Icon)"]="当前监视模块正在工作中。（大笑图标）",
+	["Are you sure to delete?(press SHIFT to skip)"]="你确定要删除么？（按住SHIFT可以跳过此确认框）",
+	
+	--add2tools--
+	["plugins"]="插件",
+	["Team Grid"]="团队面板",
+	["Enalbe LR_RaidGridEx"]="启用懒人团队面板",
+	["Enable When in Team"]="在小队时也显示",
+	["Enable System Grid Panel"]="显示系统团队面板",
+	["Enable System Team Panel"]="显示系统小队面板",
+	
+	["Mouse operation instructions and settings"]="鼠标操作说明及设置",
+	["The following instructions for mouse"]="以下为鼠标操作说明",
+	["Enable quick choose when in cure kungfu"]="治疗心法下开启【快速选队友】",
+	["The following are optional"]="以下为可选设置",
+	
+	["Hover"]="悬停",
+	["Alt+Hover"]="Alt+悬停",
+	["Ctrl+Hover"]="Ctrl+悬停",
+	["Left Click"]="左键单击",
+	["Right Click"]="右键单击",
+	["Left Double Click"]="左键双击",
+	["Alt+Left Double Click"]="Alt+左键双击",
+	
+	["*Show Target Tip"]="※显示目标Tip",
+	["*Auto select target"]="※自动选择该目标",
+	["*Show target DPS/HPS"]="※显示目标DPS/HPS",
+	["*Show dead record/debug"]="※显示目标重伤记录/调试信息",
+	["*Select this target"]="※选择该目标",
+	["*Popup menu"]="※弹出菜单",
+	["*No operation"]="※无操作",
+	["Follow"]="※跟随",
+	["Trade"]="※交易对方",
+	
+	["Load commom settings"]="载入公共设置",
+	["Reset settings"]="重置设置",
+
+	["Correlation with boss"]="Boss相关",
+	["Show boss target"]="显示Boss目标",
+	["Show elite monster target"]="显示精英怪目标",
+	["Show boss OTBar"]="显示Boss读条",
+	["Enable only in cure kungfu"]="只在治疗心法下显示",
+	
+	["Correlation with cure"]="治疗相关",
+	["The following functions will be auto enabled in cure kungfu"]="以下功能在治疗心法下自动开启",
+	["Quick select team member(without click)."]="快速选队友（无需鼠标点击）",
+	["Show skill cd self"]="显示自身技能CD",
+	["The position where the skill will be shown"]="技能显示位于面板",
+	["Up"]="上",
+	["Down"]="下",
+	["Left"]="左",
+	["Right"]="右",
+	
+	["Blood automatically converted to percentage display"]="血量自动转化为百分比显示",
+	["Check order is the sort order"]="勾选顺序为排列顺序",
+	["Uncheck All"]="取消所有选择",
+	
+	["Kungfu Display"]="心法显示设置",
+	["Show Kungfu name"]="显示心法名字",
+	["Show Kungfu icon"]="显示心法图标",
+	
+	["Scale"]="缩放",
+	
+	["Team member name settings"]="队友名字设置",
+	["Style1"]="样式一（小）",
+	["Style2"]="样式二（描边小）",
+	["Style3"]="样式三（描边大）",
+	["Colored by school"]="按门派着色",
+	["Colored by kungfu"]="按心法着色",
+	["Colored by camp"]="按阵营着色",
+	["Name number limit"]="名字个数限制",
+	["%d characters"]="%d 个",
+	
+	["Blood display settings"]="血量显示设置",
+	["Enable show team member blood"]="◆开启队友血量显示",
+	["Display left blood"]="显示剩余血量",
+	["Show damaged blood"]="显示损耗血量",
+	["Show blood number"]="显示血量数值",
+	["Show blood percent"]="显示血量百分比",
+	["Short blood"]="精简血量",
+	["%d digits after the decimal point"]="小数点后 %d 位",
+	
+	["Text Align"]="文字对齐方式",
+	["CENTER"]="居中对齐",
+	["RIGHT"]="右对齐",
+	
+	["Enable blood animation"]="开启掉血动画",
+	
+	["Colored by distance settings"]="距离着色设置",
+	["Enable background colored by distance"]="◆开启背景按距离着色",
+	["Color:%s - %s meter"]="%s ～ %s 尺的颜色：",
+	["Color:%s meters - Sync Range"]="%s ～ 同步范围的颜色",
+	["Color:Out of Sync Range"]="超出同步范围的颜色",
+	
+	["　Custom distance level"]="　自定义距离分级",
+	["nDis1"]="第一级",
+	["nDis2"]="第二级",
+	["nDis3"]="第三级",
+	
+	["　Refresh interval of colored by distance"]="　距离着色处理间隔",
+	["%5s seconds"]="%5s 秒",
+	
+	["ShaoLin"]="少林",
+	["WanHua"]="万花",
+	["ChunYang"]="纯阳",
+	["TianCe"]="天策",
+	["QiXiu"]="七秀",
+	["WuDu"]="五毒",
+	["TangMen"]="唐门",
+	["CangJian"]="藏剑",
+	["MingJiao"]="明教",
+	["GaiBang"]="丐帮",
+	["CangYun"]="苍云",
+	["ChangGeMen"]="长歌",
+	["DaXia"]="大侠",
+	
+	["Lock Position"]="锁定插件面板位置",
+	["Reload Team Grid Panel"]="重新加载团队面板",
+	
+	["Config Debuff monitor settings"]="Debuff监控设置",
+	["Add/Remove Settings"]="添加/删除设置",
+	["Load default file"]="载入默认配置",
+	["　　Are you sure to load the default settings?\n\n"]="　　你确定要加载默认配置文件么？\n\n",
+	["　　　 Warning:It will destroy the settings now!"]="　　　 警告:将覆盖当前所有设置！",
+	["Backup settings"]="备份设置",
+	["Load settings"]="加载配置文件",
+	["　　Are you sure to load external file?\n\n"]="　　你确定要加载外部配置文件么？\n\n",
+	["Enable monitor debuffs"]="开启Debuff监控",
+	["How many debuffs to be monitored"]="监视Debuff数量",
+	["Icon flashing rate"]="图标闪烁速度",
+	["No flashing"]="不闪烁",
+	[" %d Debuff(s)"]=" %d 个",
+	["Max alpha of icon"]="图标最大不透明度",
+	["Alpha of auxiliary background color"]="辅助背景色透明度",
+	
+	["Open world sign panel"]="打开【世界标记】面板",
+	["Position confirmation"]="团队就位确认",
+	["Start position confirmation"]="开始就位确认",
+	["Reset position confirmation"]="重置就位确认",
+	
+	["Count of school members"]="团队门派人数统计",
+	["[%s]:%2d people"]="【%s】：%2d 人",
+	
+	["Quick Set"]="快速设置",
+	["Color of name"]="名字颜色",
+	["Kungfu display"]="心法显示",
+	["Blood display"]="血量显示",
+	
+	["Interface scale"]="界面缩放",
+	["More settings"]="更多设置",
+	
+	["CD:None"]="CD：无",
+	["CD:(Require LR_AccountStatistics)"]="CD：（需账目本插件支持）",
+	
+	["Waiting for deleting member...."]="开除队友等待中....",
+	["Waiting for money...."]="分钱等待中.....",
+	["Waiting for money....%ds %d %% (%d/%d)"]="分钱等待中....%d秒 %d%%（%d / %d）",
+	
+	["Translucent name when fighting"]="战斗时半透明名字",
+	["Enable flag icon"]="开启标记图标显示",
+	
+	["Enable group num display"]="开启小队序号显示",
+	["Enable new type of tip"]="使用新Tip显示",
+	
+	["Auto scale"]="自动缩放",
+	
+	--160405add--
+	["Blood automatically converted to percentage display in cure kungfu."]="治疗心法下显示百分比",
+
+	--20160512add--
+	["Black:%s"]="黑本者：%s",
+	["This player is not in the same map with you."]="该玩家与你不在同一个地图",
+
+	--20160531add--
+	["Cure Select Mode 1."]="模式1：鼠标悬停时选中",
+	["Cure Select Mode 2."]="模式2：按下技能时选中",
+
+	--20160601add--
+	["End GoldTeam"]="收入已发放，请查看！",
+
+	--20161012add--
+	["ba"]="霸",
+
+	--20161109add--
+	["BaDao"]="霸刀",
+
+	--20161124add--
+	["Waiting for deleting member....%ds %d %% (%d/%d)"]="开除队友等待中....%d秒 %d%%（%d / %d）",
+
+	--20161206add--
+	["No blood display"]="不显示血量",
+	["No Color"]="不着色",
+	["Distance display settings"]="距离渲染/血条颜色",
+	["Alpha:%s - %s meter"]="%s ~ %s米的透明度",
+	["Alpha:%s v - Sync Range"]="%s米 ~ 同步范围内的透明度",
+	["Alpha:Out of Sync Range"]="超出同步范围的透明度",
+	["%d Alpha , Click to change alpha"]="%d 透明度，点击更改透明度(0~255)",
+	["Reset alpha settings"]="重置透明度设置",
+	["Reset color settings"]="重置颜色设置",
+	["Set level alpha"]="设置各级别透明度",
+	["Set level color"]="设置各级别颜色",
+	["%s meter"]="%s 米",
+	["Distinguish the distance by color"]="以颜色区分距离",
+	["Distinguish the distance by alpha"]="以透明度区分距离",
+	["Set each level by distance"]="设置各级别距离",
+	["Set color of each level"]="设置各级别颜色",
+	["Set alpha of each level"]="设置各级别透明度",
+	["▊ Click to change color"]="▊ 点击设置颜色",
+
+	--20161209add--
+	["BuffMonitor Settings"]="BUFF监控设置",
+	["Open Buff Set Panel"]="打开BUFF设置面板",
+	["fx Scale"]="界面X轴缩放",
+	["fy Scale"]="界面Y轴缩放",
+	["BuffMonitor num"]="BUFF数量",
+	["%d buff(s)"]="%d个BUFF",
+	["BuffCD Settings"]="BUFF CD设置",
+	["Show buffcd animation"]="显示BUFFCD动画",
+	["buffcd animation alpha"]="BUFFCD动画透明度",
+	["Debuff shadow settings"]="BUFF阴影设置",
+	["Show buff shadow"]="显示BUFF阴影",
+	["Debuff shadow border"]="BUFF阴影边框宽度",
+	["Debuff shadow alpha"]="BUFF阴影透明度",
+	["%d Pixs, Click to change border width"]="%d像素，点击更改宽度(1~7)",
+
+	--20161210add--
+	["Choose UI"]="选择界面样式",
+	["Fixed Color"]="固定颜色",
+	["Colored in kungfuColor"]="以门派颜色着色",
+	["Colored in CampColor"]="以阵营颜色着色",
+	["LR_MenPai Count:\n"]="门派统计：\n",
+	["Publish to raid"]="发布至团队",
+	["Do not care about distance"]="不区分距离",
+	["LR_TeamGrid"]="团队面板",
+	["Shift+Hover"]="Shift+悬停",
+
+	--20161213add--
+	["Warning: You are in [%s] loot mode"]="注意：你现在处于【%s】分配模式（此提示12秒后消失）",
+	["Drag"]="拖拽",
+	["*Change member group"]="※改变成员队伍",
+
+	--20161214add--
+	["Life/Mana danger set"]="血量/蓝量濒危设置",
+	["Show Life Danger"]="开启血量濒危显示",
+	["Show Mana Danger"]="开启蓝量濒危显示",
+	["Life Danger Line:%d%%, Click to change"]="血量濒危线：%d%%，点击修改(1~100)",
+	["Mana Danger Line:%d%%, Click to change"]="蓝量濒危线：%d%%，点击修改(1~100)",
+	["TeamGrid UI Help"]="※皮肤文件修改方法请访问作者微博",
+
+	--20161216add--
+	["Scale1"]="成员名字缩放",
+	["Scale2"]="心法文字缩放",
+	["Scale3"]="血量文字缩放",
+	["Enable distribute warn"]="开启分配异常提醒",
+	["TeamGrid UI Help2"]="※UI皮肤文件夹下的config.dat.jx3dat文件可修改位置、大小、间隔等参数",
+	["BG Color Fill Method"]="背景颜色填充效果",
+	["Method %d"]="效果%d",
+	["Set Font Spacing"]="设置字间距",
+
+	--20161217add--
+	["Disable tip when fight"]="战斗时不显示Tip",
+	["Cure Select Mode 2 Tip1"]="按下技能时选中队友说明：\n※面板激活时才会生效(此激活不是指面板开着，而是指面板处于按键焦点状态。激活面板需要点一下面板任意位置)\n",
+	["Cure Select Mode 2 Tip2"]="※面板激活时显示笑脸",
+	["Cure Select Mode 2 Tip3"]="※面板未激活时显示哭脸",
+	["Cure Select Mode 2 Tip4"]="※在普通地图和战场时，为防止轻功bug，禁用跳跃、大轻功时自动选队友",
+	["Cure Auto Select Tip"]="自动选是指鼠标进入角色格子时自动选中当前鼠标所指的队友，或者是按技能时自动选中当前鼠标所在格子的队友。\n※只有在身边56尺以内的队友才能被选中。\n※只有处于治疗心法且开启自动选队友功能后，自动选的功能才会生效。\n※当自动选功能生效后，若鼠标移出面板，会自动选中最后一个鼠标主动左击所选的队友（如果这个队友能被选中）",
+
+	--20170111add--
+	["UI choose Instructions:\n"]="皮肤样式选择说明：\n",
+	["◆UI choose Instructions01\n"]="◆可选择基本皮肤、RaidGridEx皮肤、CTM风格皮肤以及系统样式皮肤\n",
+	["◆UI choose Instructions02\n"]="◆对RaidGridEx样式异常执着的老玩家请选择【RaidGridEx老风格】皮肤\n",
+
+	["Team member name Instructions:\n"]="队友名字设置说明：\n",
+	["◆Team member name Instructions01\n"]="◆改选项设置队友名字的字体大小、颜色、字数限制以及字间距\n",
+
+	["Kungfu Instructions:\n"]="心法设置说明\n",
+	["◆Kungfu Instructions01\n"]="◆可以设置显示为文字或者图标。\n",
+
+	["Blood Instructions:\n"]="血量文字设置说明：\n",
+	["◆Blood Instructions01\n"]="◆可以设置血量显示方式，以及濒危血线\n",
+	["◆Blood Instructions02\n"]="◆默认DPS状态下显示数值，奶妈状态下自动切换至百分比，奶妈状态下若要显示数值，请去掉【奶妈状态下显示百分比】并选择【显示数值】\n",
+	["◆Blood Instructions03\n"]="◆显示具体数值时默认显示为以万为单位，小数点保留2位的数值\n",
+
+	["BuffMonitor Instructions:\n"]="BUFF显示设置说明：\n",
+	["◆BuffMonitor Instructions01\n"]="◆默认开启BUFF显示\n",
+	["◆BuffMonitor Instructions02\n"]="◆默认可以显示4个BUFF\n",
+	["◆BuffMonitor Instructions03\n"]="◆显示的BUFF来源于：\n①DBM传过来的数据\n②面板自身的BUFF监控功能\n",
+	["◆BuffMonitor Instructions04\n"]="◆面板自身的BUFF监控请在BUFF设置面板中进行设置\n",
+	["◆BuffMonitor Instructions05\n"]="◆BUFF设置自带3组BUFF数据，【奶妈常用BUFF】【常用减伤BUFF】【常见无气劲BUFF】\n",
+	["◆BuffMonitor Instructions06\n"]="◆设置中显示“笑脸”表示监控，显示“哭脸”表示不监控，点击“笑脸”或者“哭脸”图标可以切换状态\n",
+	["◆BuffMonitor Instructions07\n"]="◆可以设置BUFF名称或者BUFF ID\n※仅显示自身的BUFF请在BUFF后加[自]\n※增加BUFF颜色请在BUFF后加(颜色)，目前支持红绿蓝黄紫青橙黑白几种颜色\n",
+
+	["Mouse Instructions:\n"]="鼠标手势说明：\n",
+	["◆Mouse Instructions01\n"]="◆默认状态下，鼠标单击可以选中队友\n",
+	["◆Mouse Instructions02\n"]="◆悬停于角色格子上方时，显示队友TIP\n",
+	["◆Mouse Instructions03\n"]="◆按住SHIFT且悬停于角色格子上方时，显示目标的重伤记录\n",
+	["◆Mouse Instructions04\n"]="◆按住ALT且悬停于角色格子上方时，显示目标的DPS或者HPS记录（需要加载茗伊的伤害统计）\n",
+	["◆Mouse Instructions05\n"]="◆默认按住ALT，双击角色格子时，会请求与目标交易\n",
+	["◆Mouse Instructions06\n"]="◆可选双击时跟随目标（请手动设置）\n",
+
+	["Distance Instructions:\n"]="血条颜色设置说明：\n",
+	["◆Distance Instructions01\n"]="◆默认显示为按距离着色:\n※绿色：目标在20尺内\n※黄色，目标在20~24尺内\n※红色：目标超过24尺且在同步范围内（一般为56尺左右）\n※白色：目标超出范围或者不在同一个地图\n",
+	["◆Distance Instructions02\n"]="◆可选择按门派着色，此时距离显示只能用透明度表示\n",
+	["◆Distance Instructions03\n"]="◆区分距离只能使用颜色或者透明度，且两种方式互斥\n",
+
+	["Cure Instructions:\n"]="治疗相关说明：\n",
+	["◆Cure Instructions01\n"]="◆默认切换到治疗心法后，显示自身的技能CD监控\n",
+	["◆Cure Instructions02\n"]="◆默认切换到治疗心法后，自动显示为血量百分比，如需显示数值，请将【血量自动转化为百分比】的勾去掉\n",
+	["◆Cure Instructions03\n"]="◆默认切换到治疗心法后，开启自动选队友方式①，即悬停时选中\n※处于自动选队友方式时，当鼠标移出面板，会自动返回最后一次手动点击的队友。\n",
+	["◆Cure Instructions04\n"]="◆默认开启BOSS的读条监控，毕竟奶妈大部分情况下不会选中Boss\n",
+	["◆Cure Instructions05\n"]="◆大BOSS目标在面板中显示为头盔+红框，精英怪目标显示为红框\n",
+
+
+	--20170418add--
+	["BloodBar color/alpha settings"]="血条颜色/透明度设置",
+	["BloodBar Color Set"]="血条颜色设置",
+	["BloodBar Alpha Set"]="血条透明度设置",
+	["Distance level set"]="距离级别设置",
+	["Blood level set"]="血量级别设置",
+	["%d%%, Click to change"]="%d%%, 点击修改(1~100)",
+	["Colored by Camp"]="按阵营着色",
+	["Colored by distance"]="按距离着色",
+	["Colored by blood volume"]="按血量着色",
+	["Blood level 1"]="血线一",
+	["Blood level 2"]="血线二",
+	["Level 1:(above %d%%)"]="级别一：(%d%%以上)",
+	["Level 2:(%d%% ~ %d%%)"]="级别二：(%d%% ~ %d%%)",
+	["Level 3:(under %d%%)"]="级别三：(%d%%以下)",
+	["Fixed alpha"]="固定透明度",
+	["Alpha by distance"]="按距离透明",
+	["Alpha by blood volume"]="按血量透明",
+	["Show Camp icon"]="显示阵营图标",
+	["Show Camp name"]="显示阵营名字",
+	["H"]="浩",
+	["E"]="恶",
+	["Z"]="中",
+	["Show distance text"]="显示距离文本",
+	["Show buff stack"]="显示buff层数",
+	["Show buff remain time"]="显示buff剩余时间",
+	["Do not show"]="不显示",
+
+}

@@ -1,0 +1,171 @@
+data={
+	--副本名字（短名字）--
+	--25人副本--
+	--95年代--
+	["Map_273"]="鍛刀廳(試練)",
+	["Map_271"]="鍛刀廳(25英)",
+	["Map_237"]="花月別院(25挑)",
+	["Map_236"]="仙侶庭園(25挑)",
+	["Map_230"]="花月別院(25英)",
+	["Map_231"]="仙侶庭園(25英)",
+	["Map_233"]="花月別院(試練)",
+	["Map_232"]="仙侶庭園(試練)",
+	--90年代--
+	["Map_206"]="英雄虎狼(挑戰)",
+	["Map_205"]="英雄夜守(挑戰)",
+	["Map_199"]="英雄逐虎驅狼",
+	["Map_198"]="英雄夜守孤城",
+	--10人副本--
+	--95年代--
+	["Map_264"]="千雷殿(10人)",
+	["Map_263"]="鍛刀廳(10人)",
+	["Map_235"]="花月別院(10挑)",
+	["Map_234"]="仙侶庭園(10挑)",
+	["Map_221"]="花月別院(10普)",
+	["Map_220"]="仙侶庭園(10普)",
+	--90年代--
+	["Map_212"]="普通虎狼(挑戰)",
+	["Map_211"]="普通夜守(挑戰)",
+	["Map_192"]="普通逐虎驅狼",
+	["Map_191"]="普通夜守孤城",
+
+	["GB_Long"]="丐幫點龍曲",
+
+	--20160719add--
+	--團隊秘境--
+	["BossHuaYue"]="韓非池,莫雨,李白",
+	["BossXianLv"]="屈焰陽,森九嵐,李瑒,仲虛念,李璘,蘇十三娘",
+	["BossZhuHu"]="阿獨鹿,烏素爾,可蒙,安雨,白陶,史思明",
+	["BossYeShou"]="田布戈,火龍摧城",
+	["BossQinHuangLing"]="王翦,石麒麟,探雪,令狐傷,安祿山",
+	["BossFengXueDaoXiangCun"]="地字一號,史朝義,黑鷹,無名",
+	["BossXueZhanTianCe"]="席庶雲,曹炎烈,沙叱博,阿史那從禮,黑齒元佑,蘇曼莎,令狐傷",
+	["BossDaMingGong"]="何莘涯,耶律燕,獨孤問俗,傀儡·天,傀儡·地,傀儡·人,傀儡·修羅,傀儡·畜生,傀儡·惡鬼,傀儡·地獄,劍聖,無名,伊瑪目,安祿山",
+	["BossZhanBaoJunXieKu"]="聞人彥範,岳承志,卓力格圖,澹台枯火,蕭沙,韋柔絲",
+	["BossHuangGong"]="枯榮大師,段宗公,泰崇傣,閣邏鴻,蕭沙,摩提耶羅,陳和尚,康雪燭,柳公子,閣邏鳳,李倓",
+	["BossHuiZhanTangMen"]="汪莽",
+	["BossZhuLongDian"]="胡韃,武逸青,陸尋,南之雷神,醉蛛老人,索笛爾,千秋子,烏蒙貴",
+	["BossChiGuoHuiYiLu"]="提多羅叱,蕭沙",
+	["BossDiHuaDongKu"]="",
+	["BossLongYuanZe"]="慕容野狐,殷青絲,里赤梅,蘇貝德哈",
+	["BossDiHuaShengDian"]="牡丹,塔洛馬蒂,姬無雙,慕容追風,蠻熊之力,貪狼之牙,飛猿之影,衛棲梧,阿裡曼執法長老,阿薩辛,卓婉清,沙利亞",
+	["BossDiHuaHouShan"]="水煙,羅索斯,提坦德亞羅,牡丹",
+	["BossGongZhongShenWu"]="謝雲流",
+	["BossChiGuoTianWangDian"]="提多羅叱",
+	["BossZhanBaoJiaLan"]="王海銀,朱葵,平等,掌火,鎮惡,餐風,飲火,吞雲,千手觀音",
+	--5人秘境--
+	["BossBaiDiShuiGong"]="慕容綠珠,宮天蟬,雨卓承",
+	["BossWeiShanShuYuan"]="鳳息顏,趙宮商,月侍弓",
+	["BossYinXianShuiXie"]="平花秀夜,劍姬·攻,劍姬·鏡,劍姬·寧,劍姬·壁,劍姬·界,李倓,李復",
+	["BossFanKongChanYuan"]="悟影,雙雄劍意,幻影劍聖",
+	["BossYinShanShengQuan"]="秦秀,莫蕾,植屍將",
+	["BossTianQiLin"]="看舞,崖劍,高力士",
+	["BossHaiTing"]="宇文畫,莫雨,穆玄英,血僕·宮溟",
+	["BossYanMenGuan"]="中田海,拓跋離,獨孤問俗",
+	["BossChunMingMen"]="崔乾佑,安守忠,嚴莊",
+	["BossMoJia"]="踏霆車,兵俑陣,白起",
+	["BossZhiChengMen"]="牛介平,安守忠,阿史那承慶,惡狼",
+	["BossLiuLiDao"]="詹素,第五雍容,詹毅",
+	["BossHuaQingGongHuiYiLu"]="英懷珠,高力士,安祿山",
+	["BossHuaQingGong"]="尹素顏,阿依努爾,葛爾東贊",
+	["BossYiXianTian"]="蘇清,寧毅,列缺,霹靂",
+	["BossGuangMingDing"]="問寒松,辛然,吳穎蓮,薛山,西域獅王",
+	["BossTangMenMiShi"]="柳驚濤,機關骰子,漢唐,密室機關",
+	["BossJiMieTing"]="藏·劍邪鳩,劍心,摩提耶羅",
+	["BossWuLiangGong"]="桃葉仙,瀖塵,多多",
+	["BossFaWangKu"]="胡韃,武逸青,智慧",
+	["BossDuShenDian"]="塔丹茂伯,鮑穆俠,烏靈風",
+	["BossXianZongLin"]="塔納刀王,水雲,蘇髓",
+	["BossJianZhong"]="葉凌烈,葉無心,葉火汐,葉昊天,葉金素,葉冬辰,葉秋池,葉芳致,葉琦菲,夜嘯",
+	["BossFengYuDaoXiangCun"]="盧元霸,齊宗強,肖紅,熊奎,汪莽,殷不為,肖童,劉大海,秦雷,狼牙夜暮刺客",
+	["BossTianZiFeng"]="玄陰子,程傲,王積薪,道衍,李裳秋,方鶴影,柳隨風,孫敬蕭,李堯,玄悲,陌香,方宇謙",
+	["BossRiLunShanCheng"]="屍靈武者,謝雲流,野村一郎,服部朧藏,上衫勇刀,霧影奈葉,猿飛菖蒲,源明雅,八歧大蛇,吉汰",
+	["BossDiHuaQianShan"]="阿裡曼監察使,阿裡曼入教主祭司,衛棲梧,沙利亞,阿斯瑪",
+	["BossSanCaiZhen"]="範霸,趙天龍,樸宗資,人熊,鄧文峰,商仲永,李千水",
+	["BossKongWuFeng"]="夕羅雙,藤原櫻奈,梅劍雄,馮度,王彥直,鬼影小次郎,魯飛",
+	["BossWuYanDao"]="羅翼,龐虎文,楊心羽,常萬山,杜姬欣,溫紗兒",
+	["BossTianGongFang"]="煞靈魔屍,塔瑪,司徒一一,方季常,平三指,震天甲士,華鐵顱",
+	["BossLingXiaoXia"]="慧中,千葉佛像,水中月,鏡中花,空中雲,虎嘯,謝雲,華鶴炎,神策暗刺衛",
+
+	--20160921add-
+	["CJ_TigerRun"]="藏劍點虎跑",
+
+
+	--20161012add--
+	["Map_248"]="觀風殿(25英)",
+	["Map_249"]="雙曜亭(25英)",
+	["Map_240"]="觀風殿(10普)",
+	["Map_241"]="雙曜亭(10普)",
+
+	["BossGuanFengDian"]="沈眠風,柳緋君,月華,曹炎烈,獨孤先生",
+	["BossShuangYaoTing"]="黑齒元佑,哥舒翰,安慶緒",
+	["BossXiYanGe"]="柳夕的心魔,柳哲,柳浮雲",
+
+	--20161019add--
+	["Map_250"]="觀風殿(25幫)",
+	["Map_251"]="雙曜亭(25幫)",
+
+	--20161020add--
+	["LR Color Table"]="懶人調色板",
+	["OK"]="確定",
+	["Restore"]="恢復",
+	["LR Color Tip"]="H:色相\nS:飽和度\nV:亮度\n按住Ctrl時，鼠標滑過調色板時不會取色\n更多有關HSV的信息請自行百度",
+	["LR_MenPai_Color"]="門派顏色",
+
+	["About"]="關於",
+	["JX3 LR Plugin"]="劍網3懶人插件集",
+	["LR Plugins"]="懶人插件集",
+	["Enable Bottom-Right Button"]="開啟右下角入口按鈕",
+	["Welcome %s to use LR Plugins"]="歡迎 %s 使用懶人插件集！",
+	["Author:HuaQi@DianLiu"]="作者：華契@電六",
+	["If you have any suggestions or comments, please open the Weibo of the author!"]="如果你有任何的意見和建議，請打開作者微博！",
+	["Click to open the Setting_Interface of LR Plugins"]="點擊打開懶人插件設置界面",
+	["I want to make suggestions and comments, feedback bugs"]="我要提建議和意見，反饋bug",
+	["Plugins"]="插件",
+	["Team Grid"]="團隊面板",
+	["Setting Panel"]="設置面板",
+	["TIP1"]="\n由於金山的設定，該面板和菊花的【Cataclysm團隊面板】衝突，請 取消加載 或 卸載 菊花的【Cataclysm團隊面板】後，再勾選加載 【懶人團隊面板】 方可使用。\n\n",
+	["Enable Effect"]="界面效果",
+
+	["Force0"]="大俠",
+	["Force1"]="少林",
+	["Force2"]="萬花",
+	["Force3"]="天策",
+	["Force4"]="純陽",
+	["Force5"]="七秀",
+	["Force6"]="五毒",
+	["Force7"]="唐門",
+	["Force8"]="藏劍",
+	["Force9"]="丐幫",
+	["Force10"]="明教",
+	["Force21"]="蒼雲",
+	["Force22"]="長歌",
+	["Force23"]="霸刀",
+
+	["Reset colors"]="重置顏色",
+
+	--20170419add--
+	["BossQianLeiDian"]="伊瑪目,柳秀岳,柳鸞旗",
+	["BossDuanDaoTing"]="史朝英,柳愚,柳哲,柳時清,冰盔龍甲,解語",
+	["BossDaoLunHaiTing"]="令狐傷,八重妙法村正,趙淮",
+
+	--20170602add--
+	["Map_270"]="千雷殿(25英)",
+
+	--20170713add--
+	["Map_272"]="千雷殿(試煉)",
+
+	--20170716add--
+	["(%d+)人(.+)"]="(%d+)人(.+)",
+
+	["BossZhuHu"]="阿獨鹿,烏素爾,可蒙,安雨,白陶,史思明",
+	
+	--20170720add--
+	["TEST HOTKEY"]="測試快捷鍵",
+
+	--20170720add--
+	["REN"]="人",
+
+	--20170820add--
+	["Helpers"]="小助手",
+}

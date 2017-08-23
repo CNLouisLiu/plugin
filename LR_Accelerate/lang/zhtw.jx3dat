@@ -1,0 +1,85 @@
+data={
+	--下拉框-加速奇穴--
+	["Acupoint:None(Default)"]="加速奇穴：無(默認)",
+	["MengGe(WanHua)"]="夢歌(萬花)",
+	["ZhenShang(QiXiu)"]="枕上(七秀)",
+	["DuShou(WuDu)"]="毒手(五毒)",
+	["JuJingNingShen(TangMen)"]="聚精凝神(唐門)",
+	["YuePo(MingJiao)"]="月破(明教DPS)",
+	["TaiJiWuJi(ChunYang)"]="太極無極(純陽)",
+	["QinXin/NingJue(ChangGeMen)"]="沁心/凝絕(長歌門)",
+	["RuFeng(CangJian)"]="如風(藏劍)",
+	["SuiBing(NaiXiu)"]="碎冰(奶秀)",
+	["FaJing(MingJiaoT)"]="法鏡(明教T)",
+	
+	--下拉框-預設--
+	["Default(1.5sGCD)"]="預設(1.5sGCD)",
+	["MingJiaoDPS"]="明教DPS",
+	["MingJiaoT"]="明教T",
+	["QiChun"]="氣純",
+	["BingXin(XinZhuang)"]="冰心(新妝)",
+	["BingXin(YuSu)"]="冰心(玉素)",
+	["NaiXiu(HuiXuePiaoYao)"]="奶秀(回雪飄搖)",
+	["NaiXiu(HuiXuePiaoYao)+SuiBing"]="奶秀(回雪飄搖)+碎冰",
+	["NaiXiu(LingLongKongHou)"]="奶秀(玲瓏箜篌)",
+	["NaiXiu(LingLongKongHou)+SuiBing"]="奶秀(玲瓏箜篌)+碎冰",
+	["HuaJian(KuaiXue)"]="花間(快雪)",
+	["HuaJian(YangMingZhi)"]="花間(陽明指)",
+	["NaiHuaChangZhen(QingLv)"]="奶花長針(青律)",
+	["NaiHuaChangZhen(Normal)"]="奶花普通長針",
+	["NaiHuaBiZhen"]="奶花彼針",
+	["NaiHuaTiZhen(JieZe)"]="奶花提針(竭沢)",
+	["NaiHuaTiZhen(Normal)"]="奶花普通提針",
+	["NaiDuZuiWu(NaJing)"]="奶毒醉舞(納精)",
+	["NaiDuZuiWu(Normal)"]="奶毒普通醉舞",
+	["NaiDuBingCan"]="奶毒冰蠶",
+	["DuJingXieXin"]="毒經蝎心",
+	["TianLuo(ShiJiDan1.75s)"]="天羅(蝕肌彈1.75s)",
+	["TianLuo(ShiJiDan1.5s)"]="天羅(蝕肌彈1.5s)",
+	["TangMen(BaoYuLiHuaZhen)"]="唐門(暴雨梨花針)",
+	["JingYu(DuoPo)"]="驚羽(奪魄)",
+	["ChangGeMen-Zhi"]="長歌門-徽",
+	["ChangGeMen-Zhi(ZhengCu)"]="長歌門-徽(爭簇)",
+	["ChangGeMen-Gong"]="長歌門-宮",
+	["ChangGeMen-Gong(GuangYa)"]="長歌門-宮(廣雅)",
+	["CangJian"]="藏劍",
+	
+	["LR Accelerate Table"]="懶人加速表",
+	["Level"]="段數",
+	["Real Time"]="實際時間",
+	["Accelerate Rate"]="加速率",
+	["Accelerate Level"]="加速等級",
+	["Time/Interval"]="時間/間隔",
+	["Jumps"]="跳數",
+	
+	["Lv95 Version"]="95等級版本",
+	["Lv90 Version"]="90等級版本",
+	
+	["Plugins"]="插件",
+	["Open LR Accelerate Table"]="打開懶人加速表",
+	
+	--20160426add--
+	["Lv951 Version"]="95壯志凌雲",
+
+	--20160428add--
+	["MengGe(WanHua)DPS"]="夢歌(萬花DPS)",
+	["MengGe(WanHua)Nurse"]="夢歌(萬花奶)",
+
+	--20160715add--
+	["Lv952 Version"]="95百家爭鳴",
+
+
+	--20161012add--
+	["Lv953 Version"]="95風骨霸刀",
+	["YiFeng(BaDao)"]="風倚(霸刀)",
+	["BaDao"]="霸刀",
+	["BaDao(YiFeng)"]="霸刀(風倚)",
+
+	--20170420add--
+	["Lv954 Version"]="95日月凌空",
+
+	--20170428--
+	["HuaJian(KuaiXue-QingGe)"]="花間快雪(青歌奇穴)",
+
+	--20170711add--
+}

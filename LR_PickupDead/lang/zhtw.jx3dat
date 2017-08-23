@@ -1,0 +1,25 @@
+data = {
+	--20170820add--
+	["LR PickupDead"]="懶人撿屍助手",
+	["Enable pickup dead"]="開啟撿屍小助手",
+	["Quality Settings"]="拾取品質設定",
+	["Any Quality"]="拾取灰色及以上物品",
+	["Quality 0"]="拾取白色及以上物品",
+	["Quality 1"]="拾取綠色及以上物品",
+	["Quality 2"]="拾取藍色及以上物品",
+	["Quality 3"]="拾取紫色及以上物品",
+
+	["Item Filter Settings"]="物品過濾設置",
+	["Pickup task item"]="拾取任務物品",
+	["Pickup unread book"]="拾取沒讀過的書籍",
+	["Pickup White List"]="拾取白名單",
+	["Pickup Black List"]="拾取黑名單",
+	["Error, no this item"]="錯誤，沒有這個物品",
+	["Add Item"]="添加物品",
+	["Only pickup item in white list which is checked"]="只拾取白名單中勾選的物品",
+	["Sure to delete"]="確定要刪除：",
+
+
+
+
+}

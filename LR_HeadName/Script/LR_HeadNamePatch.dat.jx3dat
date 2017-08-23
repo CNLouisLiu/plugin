@@ -1,0 +1,174 @@
+data={
+	--帮会领地--
+	[829]={		----帮会除草
+		{dwQuestID=829,dwTemplateID=11,dwMapID=1,nType="D",mode="need_item",nMinD=9999,nZ=0,},
+	},
+
+	[3565]={	------------
+		{dwQuestID=3565,dwTemplateID=895,dwMapID=21,nType="D",mode="all",nMinD=9999,nZ=0,},
+	},
+
+	[13966]={
+		{dwQuestID=13966,dwTemplateID=895,dwMapID=21,nType="D",mode="all",nMinD=9999,nZ=0,},
+	},
+
+	[13874]={	----[六年信约·寻宝觅珍]
+		{dwQuestID=13874,dwTemplateID=5290,dwMapID=23,nType="D",mode="need_item",nMinD=9999,nZ=0,},
+	},
+
+	[6463]={	----帮会除草
+		{dwQuestID=6463,dwTemplateID=2228,dwMapID=71,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	[6456]={	----帮会扫树叶
+		{dwQuestID=6456,dwTemplateID=2268,dwMapID=71,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	--七秀--
+	[2462]={	------七秀任务[听声辨乐]
+		{dwQuestID=2462,dwTemplateID=693,dwMapID=16,nType="D",mode="all",nMinD=9999,nZ=0,},
+		{dwQuestID=2462,dwTemplateID=692,dwMapID=16,nType="D",mode="all",nMinD=9999,nZ=0,},
+		{dwQuestID=2462,dwTemplateID=691,dwMapID=16,nType="D",mode="all",nMinD=9999,nZ=0,},
+		{dwQuestID=2462,dwTemplateID=694,dwMapID=16,nType="D",mode="all",nMinD=9999,nZ=0,},
+		{dwQuestID=2462,dwTemplateID=661,dwMapID=16,nType="D",mode="all",nMinD=9999,nZ=0,},
+	},
+
+	[8230]={	------七秀任务[七秀·转轴拨弦信手弹]
+		{dwQuestID=8230,dwTemplateID=693,dwMapID=16,nType="D",mode="all",nMinD=9999,nZ=0,},
+		{dwQuestID=8230,dwTemplateID=692,dwMapID=16,nType="D",mode="all",nMinD=9999,nZ=0,},
+		{dwQuestID=8230,dwTemplateID=691,dwMapID=16,nType="D",mode="all",nMinD=9999,nZ=0,},
+		{dwQuestID=8230,dwTemplateID=694,dwMapID=16,nType="D",mode="all",nMinD=9999,nZ=0,},
+		{dwQuestID=8230,dwTemplateID=661,dwMapID=16,nType="D",mode="all",nMinD=9999,nZ=0,},
+	},
+
+	[8053]={	--------七秀任务[朝露新茶]
+		{dwQuestID=8053,dwTemplateID=655,dwMapID=16,nType="D",mode="need_item",nMinD=9999,nZ=0,},
+	},
+
+	[2452]={	--------七秀任务[一败难求]
+		{dwQuestID=2452,dwTemplateID=671,dwMapID=16,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+
+	--巴陵--
+	[3585]={	----巴陵任务《找到幸存者》
+		{dwQuestID=3585,dwTemplateID=909,dwMapID=21,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	--白龙口--
+	[5868]={	----白龙口任务《救死扶伤》
+		{dwQuestID=5868,dwTemplateID=8442,dwMapID=100,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=5868,dwTemplateID=8443,dwMapID=100,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	[5833]={	-----白龙口任务《解救羚羊》
+		{dwQuestID=5833,dwTemplateID=2099,dwMapID=100,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	--枫华谷·战乱--
+	[8570]={	-----枫华谷·战乱任务《[长相思·水中伞怪]》
+		{dwQuestID=8570,dwTemplateID=3362,dwMapID=139,nType="D",mode="need_item",nMinD=9999,nZ=0,},
+	},
+
+	[8537]={	-----枫华谷·战乱任务
+		{dwQuestID=8537,dwTemplateID=3364,dwMapID=139,nType="D",mode="need_item",nMinD=9999,nZ=0,},
+	},
+
+	--长安战乱--
+	[10895]={	-----长安·战乱任务[托情飞灯]
+		{dwQuestID=10895,dwTemplateID=4038,dwMapID=156,nType="D",mode="need_item",nMinD=9999,nZ=0,},
+	},
+
+	--五台山--
+	[13845]={	-----五台山任务[狼牙大将]
+		{dwQuestID=13845,dwTemplateID=43001,dwMapID=214,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	[13844]={	-----五台山任务[昏迷不醒]
+		{dwQuestID=13844,dwTemplateID=43007,dwMapID=214,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	[13789]={	----五台山[胜造浮屠]
+		{dwQuestID=13789,dwTemplateID=45158,dwMapID=214,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	--大草原--
+	[13650]={	-----大草原任务[侠者帮人帮到底]
+		{dwQuestID=13650,dwTemplateID=43791,dwMapID=216,nType="N",mode="need_item",nMinD=9999,nZ=0,},
+	},
+
+	[14099]={	-----大草原任务[再给族人分皮衣]
+		{dwQuestID=14099,dwTemplateID=45647,dwMapID=216,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=14099,dwTemplateID=45645,dwMapID=216,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=14099,dwTemplateID=43565,dwMapID=216,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	[3501]={
+		{dwQuestID=3501,dwTemplateID=834,dwMapID=23,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=3501,dwTemplateID=829,dwMapID=23,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=3501,dwTemplateID=830,dwMapID=23,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=3501,dwTemplateID=831,dwMapID=23,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=3501,dwTemplateID=832,dwMapID=23,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=3501,dwTemplateID=833,dwMapID=23,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	--千岛湖--
+	[14029]={	----千岛湖任务[调查香客]
+		{dwQuestID=14029,dwTemplateID=44564,dwMapID=215,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	--黑戈壁--
+	[14454]={	----黑戈壁任务[祭祀到来忙]
+		{dwQuestID=14454,dwTemplateID=5667,dwMapID=217,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	[14564]={
+		{dwQuestID=14564,dwTemplateID=46329,dwMapID=217,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	[14536]={	----黑戈壁任务[出门需谨慎]
+		{dwQuestID=14536,dwTemplateID=5707,dwMapID=217,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=14536,dwTemplateID=5709,dwMapID=217,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=14536,dwTemplateID=5701,dwMapID=217,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	--太原--
+	[14270]={	----太原茶馆任务[红尘饮茶·调皮灵猫]
+		{dwQuestID=14270,dwTemplateID=45043,dwMapID=194,nType="N",mode="need_item",nMinD=9999,nZ=0,},
+	},
+
+	--瞿塘峡--
+	[13482]={	----瞿塘峡 美人图任务 [惩治色鬼]
+		{dwQuestID=13482,dwTemplateID=3090,dwMapID=35,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=13482,dwTemplateID=15726,dwMapID=35,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	[7887]={	----瞿塘峡 美人图任务 [羊字腰牌]
+		{dwQuestID=7887,dwTemplateID=3063,dwMapID=35,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+		{dwQuestID=7887,dwTemplateID=15997,dwMapID=35,nType="N",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	[8332]={	----瞿塘峡任务[游历瞿塘采仙草]
+		{dwQuestID=8332,dwTemplateID=3226,dwMapID=35,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
+	},
+
+	--金水镇--
+	[1650]={	----[为表心意杀小贼]
+		{dwQuestID=1650,mode="need_item2",type=5,index=1890,data={dwQuestID=1650,dwTemplateID=1854,dwMapID=13,nType="N",mode="need_item",nMinD=9999,nZ=0,},},	--地鼠门令牌
+		{dwQuestID=1650,mode="need_item2",type=5,index=1891,data={dwQuestID=1650,dwTemplateID=1857,dwMapID=13,nType="N",mode="need_item",nMinD=9999,nZ=0,},},	--铜钱会令牌
+	},
+
+	--中秋节日任务--
+	[7465]={	---[金秋会饼共团圆·莲子]
+		{dwQuestID=7465,dwTemplateID=2969,dwMapID=6,nType="D",mode="need_item",nMinD=9999,nZ=0,},  --扬州莲子
+	},
+	
+	[7466]={	----[金秋会饼共团圆·木柴]
+		{dwQuestID=7466,dwTemplateID=2971,dwMapID=6,nType="D",mode="need_item",nMinD=9999,nZ=0,},  --扬州树枝
+	},
+
+	[7468]={	----[金秋会饼共团圆·蛋黄]
+		{dwQuestID=7468,dwTemplateID=2970,dwMapID=6,nType="D",mode="need_item",nMinD=9999,nZ=0,},  --扬州鸟蛋
+	},
+
+}

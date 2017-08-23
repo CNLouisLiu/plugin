@@ -1,0 +1,36 @@
+data={
+	["Please Enter Suitbook Name"]="请输入套书名字",
+	["LR Copy Book"]="懒人抄书",
+	["LR Printing Machine"]="懒人印刷机",
+	["Click to Open LR Printing Machine Interface"]="点击打开【懒人印刷机】界面",
+	["Begin Printing"]="开始抄录",
+	["Stop Printing!"]="停止抄录",
+	["Remain %d book(s)."]="剩余 %d 本",
+	["Need:"]="需求材料：",
+	["Begin printing 【%s】\n"]="开始抄录【%s】\n",
+
+	["Mini Printing Machine"]="迷你印刷机",
+
+	["Plugins"]="插件",
+	["Suitbook Name"]="套书名字",
+	["Source of books/Book Records"]="书籍来源/阅读统计",
+	["Please install [LR_AccountStatistics Plugin]"]="请安装【懒人账目本】插件",
+	["No this Suitbook"]="无此套书",
+	["OK"]="确定",
+	["Choose book(s) which to print"]="选择抄录的书籍",
+	["(Bind after printing)"]="（抄录后绑定）",
+	["(Never Read\)"]="（未阅读）",
+	["Continuous print"]="连续抄录",
+	["unit"]="本",
+	["Enter num"]="输入数值",
+	["Open mini panel"]="打开迷你界面",
+	["Stop Printing immediately when close Setting Panel or Mini Panel or press ESC."]="关闭窗口或点击终止按钮时，立即打断抄书读条",
+	["Tips & FAQ"]="Tips以及常见问题",
+	["1.Suggest to copy [ShiSanGunSenJiuTangWang]\n"]="建议抄录【十三棍僧救唐王】\n",
+	["2.The book which will bind after printing can not trade to others.\n"]="抄录后绑定的书籍抄录后不能交易\n",
+
+	--20170523add--
+	["No book set, please set"]="请点击左上角图标设置套书",
+	["SuitBook Name:%s"]="套书：%s",
+
+}
