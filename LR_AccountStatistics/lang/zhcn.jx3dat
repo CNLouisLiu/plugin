@@ -320,20 +320,6 @@ data={
 	["Pay for Attachment:"]="付费得到：",
 	["Mail Items:"]="邮寄物品：",
 
-	--20160507add--
-	["SHENG_FU_JU"]="胜负局",
-	["ZHUO_YAO_JI"]="捉妖记",
-	["GUI_XIANG_LU"]="归乡路",
-	["FENG_LIN_JIU"]="枫林酒",
-	["HONG_YI_GE"]="红衣歌",
-	["HAI_TONG_SHU"]="孩童书",
-	["JING_KE_CI"]="荆轲刺",
-	["SHA_HAI_YAO"]="沙海谣",
-	["SHI_GAN_DANG"]="石敢当",
-
-	["DIALOG_SHENG_FU_JU"]="承让承让。",
-	["DIALOG_FENG_LIN_JIU"]="再来一局",
-
 	--20160509add--
 	["QYStatistics"]="奇遇统计",
 	["LR QiYu Details"]="懒人奇遇明细",
@@ -366,10 +352,6 @@ data={
 	["THIS_WEEK"]="本周",
 	["LAST_SEVEN_DAYS"]="最近七天",
 
-	--20160718add--
-	["ZHI_ZUN_BAO"]="至尊宝",
-	["PO_XIAO_MING"]="破晓鸣",
-	["ZHU_MA_QING"]="竹马情",
 	["QiYu show in panel"]="奇遇记录页显示的奇遇",
 	["Use common QiYu settings"]="使用奇遇公共设置",
 
@@ -398,48 +380,6 @@ data={
 	--20160921add--
 	["Please refresh again.\n"]="懒人：请再次刷新。\n",
 
-	--20161019add--
-	["QING_CAO_GE"]="青草歌",
-	["DIALOG_QING_CAO_GE_01"]="若论骑术，如风如云如火，是最基础的三个条件。",
-	["DIALOG_QING_CAO_GE_02"]="你已经赛了三圈，今天烈风已经不想和你比赛啦。",
-	["DIALOG_QING_CAO_GE_03"]="你的骑术太棒了",
-	["QING_CAO_GE_NPCSZNAME"]="阿曼",
-
-	["DIALOG_ZHU_MA_QING_01"]="不是记忆里的味道",
-	["DIALOG_ZHU_MA_QING_02"]="吃了三个都不如丁爷爷家的好吃",
-	["DIALOG_ZHU_MA_QING_03"]="真好吃",
-	["ZHU_MA_QING_NPCSZNAME"]="沈笑颜",
-
-	["DIAN_NAN_XING"]="滇南行",
-	["DIALOG_DIAN_NAN_XING_01"]="丢了件不值钱的饰品，没什么的。",
-	["DIALOG_DIAN_NAN_XING_02"]="你都问了三遍了，只是丢了个小物什。",
-	["DIALOG_DIAN_NAN_XING_03"]="一件虽然不贵重但有特殊意义的饰品。",
-	["DIAN_NAN_XING_NPCSZNAME"]="苗淼尔",
-
-	["DIALOG_SHENG_FU_JU_01"]="承让承让。",
-	["DIALOG_FENG_LIN_JIU_01"]="再来一局",
-
-	["ZHI_ZI_XIN"]="稚子心",
-	["DIALOG_ZHI_ZI_XIN_01"]="还是我自己想想吧",
-	["DIALOG_ZHI_ZI_XIN_02"]="我还是自己再想想吧",
-	["DIALOG_ZHI_ZI_XIN_03"]="不如你帮我想想吧",
-	["ZHI_ZI_XIN_NPCSZNAME"]="苏临渊",
-
-	["DIALOG_SHI_GAN_DANG_02"]="找了三个都不是我的，少侠你心境不够啊",
-	["SHI_GAN_DANG_NPCSZNAME"]="吴为有",
-
-	["DIALOG_HAI_TONG_SHU_02"]="都给你三张纸了",
-	["HAI_TONG_SHU_NPCSZNAME"]="赵小凯",
-
-	["DIALOG_SHENG_FU_JU_02"]="你都赢我三回了",
-	["SHENG_FU_JU_NPCSZNAME"]="航小婷",
-
-	["DIALOG_FENG_LIN_JIU_02"]="都和你划了三回了",
-	["FENG_LIN_JIU_NPCSZNAME"]="马四",
-
-	["DIALOG_ZHI_ZUN_BAO_02"]="看了三株",
-	["ZHI_ZUN_BAO_NPCSZNAME"]="查飞天",
-
 	--20161122add--
 	["Userlist is old.\n"]="用户列表文件陈旧，请重新登录每一个号。\n",
 
@@ -451,13 +391,6 @@ data={
 	["Floating bar Instructions01\n"]="◆建议开启此浮动条，快速显示总资金\n",
 	["Floating bar Instructions02\n"]="◆左击浮动条左边的元宝可以打开【懒人账目本】界面\n",
 	["Floating bar Instructions03\n"]="◆右击浮动条左边的元宝可以打开【懒人收支记录】界面\n",
-
-	--20170425add--
-	["GUAN_WAI_SHANG"]="关外商",
-
-	--20170526add--
-	["BEI_XING_BIAO"] = "北行镖",
-	["DIALOG_BEI_XING_BIAO_01"] = "小猫吃掉了你的",
 
 	--20170527add--
 	["Next 20 Records"] = "◆下20条记录◆-->",
@@ -473,11 +406,6 @@ data={
 
 	--20170602add--
 	["Make Friend"]="加为好友",
-
-	--20170609add--
-	["DONG_HAI_KE"]="东海客",
-	["DIALOG_DONG_HAI_KE_01"]="多谢你的草药……滴水之恩，当涌泉相报。",
-	["DONG_HAI_KE_NPCSZNAME"]="康永浩",
 
 	--20170625add--
 	["Show data not in choose group. (translucence)"]="透明显示未选分组",
@@ -586,4 +514,76 @@ data={
 
 	--20170726add--
 	["Group name:"]="所在分组：",
+
+	--20170824add--
+	["SHENG_FU_JU"]="胜负局",
+	["DIALOG_SHENG_FU_JU_01"]="你都赢我三回了",
+	["DIALOG_SHENG_FU_JU_02"]="你还真厉害，不过我也不差。",
+
+	["ZHUO_YAO_JI"]="捉妖记",
+	["WARNING_ZHUO_YAO_JI_01"]="三次已满，请明日再来。",
+
+	["GUI_XIANG_LU"]="归乡路",
+	["DIALOG_GUI_XIANG_LU_01"]="给你三回了，工匠们",
+
+	["FENG_LIN_JIU"]="枫林酒",
+	["WINDOW_FENG_LIN_JIU_01"]="再来一局",
+	["DIALOG_FENG_LIN_JIU_01"]="都和你划了三回了",
+
+	["HONG_YI_GE"]="红衣歌",
+	["DIALOG_HONG_YI_GE_01"]="给你三回了，老头我",
+
+	["HAI_TONG_SHU"]="孩童书",
+	["DIALOG_HAI_TONG_SHU_01"]="都给你三张纸了",
+
+	["JING_KE_CI"]="荆轲刺",
+	["DIALOG_JING_KE_CI_01"]="吃了三个都没有",
+
+	["SHA_HAI_YAO"]="沙海谣",
+	["DIALOG_SHA_HAI_YAO_01"]="你都挖了三次了还没挖到",
+
+	["SHI_GAN_DANG"]="石敢当",
+	["DIALOG_SHI_GAN_DANG_01"]="找了三个都不是我的，少侠你心境不够啊",
+	["WARNING_SHI_GAN_DANG_01"]="三次已满，请明日再来。",
+
+	["ZHI_ZUN_BAO"]="至尊宝",
+	["DIALOG_ZHI_ZUN_BAO_01"]="看了三株",
+	["DIALOG_ZHI_ZUN_BAO_02"]="看起来没有传闻中的那么奇特",
+
+	["PO_XIAO_MING"]="破晓鸣",
+	["DIALOG_PO_XIAO_MING_01"]="辛苦你来回折腾了",
+	["DIALOG_PO_XIAO_MING_02"]="你今天已经帮了三次了",
+
+	["ZHU_MA_QING"]="竹马情",
+	["DIALOG_ZHU_MA_QING_01"]="不是记忆里的味道",
+	["DIALOG_ZHU_MA_QING_02"]="吃了三个都不如丁爷爷家的好吃",
+	["DIALOG_ZHU_MA_QING_03"]="真好吃",
+
+	["QING_CAO_GE"]="青草歌",
+	["DIALOG_QING_CAO_GE_01"]="若论骑术，如风如云如火，是最基础的三个条件。",
+	["DIALOG_QING_CAO_GE_02"]="你已经赛了三圈，今天烈风已经不想和你比赛啦。",
+	["DIALOG_QING_CAO_GE_03"]="你的骑术太棒了",
+
+	["DIAN_NAN_XING"]="滇南行",
+	["WINDOW_DIAN_NAN_XING_01"]="你都问了三遍了，只是丢了个小物什。",
+	["DIALOG_DIAN_NAN_XING_01"]="丢了件不值钱的饰品，没什么的。",
+	["DIALOG_DIAN_NAN_XING_02"]="一件虽然不贵重但有特殊意义的饰品。",
+
+	["ZHI_ZI_XIN"]="稚子心",
+	["DIALOG_ZHI_ZI_XIN_01"]="还是我自己想想吧",
+	["DIALOG_ZHI_ZI_XIN_02"]="我还是自己再想想吧",
+	["DIALOG_ZHI_ZI_XIN_03"]="不如你帮我想想吧",
+
+	["GUAN_WAI_SHANG"]="关外商",
+	["WINDOW_GUAN_WAI_SHANG_01"]="不让兄弟们的鲜血白流",
+	["WINDOW_GUAN_WAI_SHANG_02"]="当年和自己生死与共的",
+
+	["BEI_XING_BIAO"] = "北行镖",
+	["DIALOG_BEI_XING_BIAO_01"] = "小猫吃掉了你的",
+
+	["DONG_HAI_KE"]="东海客",
+	["DIALOG_DONG_HAI_KE_01"]="当涌泉相报",
+	["WINDOW_DONG_HAI_KE_01"]="多谢你的草药",
+
+
 }

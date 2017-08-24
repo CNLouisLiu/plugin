@@ -145,10 +145,11 @@ local schema_fb_data = {
 
 local schema_qiyu_data = {
 	name = "qiyu_data",
-	version = "20170628",
+	version = "20170824",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--Ö÷¼ü
 		{name = "qiyu_data", sql = "qiyu_data TEXT"},
+		{name = "qiyu_achievement", sql = "qiyu_achievement TEXT"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},

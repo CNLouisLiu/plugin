@@ -103,6 +103,7 @@ function LR_AccountStatistics.ON_FRAME_CREATE()
 		frame:Lookup("Btn_Sure"):Enable(false)
 		Log("[LR_AccountStatistics]:Exit save")
 		LR_AccountStatistics.AutoSave()
+		LR_ACS_QiYu.SaveData()
 		LR_Acc_Trade.MoveData2MainTable()
 		FireEvent("LR_ACS_REFRESH_FP")
 		frame:Lookup("Btn_Sure"):Enable(true)
@@ -128,6 +129,7 @@ function LR_AccountStatistics.ON_FRAME_CREATE()
 
 		if _time - _auto_save_lasttime2 > 60 * 3 then
 			LR_AccountStatistics.AutoSave()
+			LR_ACS_QiYu.SaveData()
 			_auto_save_lasttime2 = _time
 		end
 
@@ -542,13 +544,15 @@ function LR_AccountStatistics.OnFrameBreathe()
 	local path = sformat("%s\\%s", SaveDataPath, DB_name)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
-	LR_AccountStatistics.GetUserInfo()
-	LR_AccountStatistics.LoadGroupListData(DB)
-	LR_AccountStatistics.LoadAllUserGroup(DB)
-	LR_AccountStatistics.LoadAllUserInformation(DB)
-	LR_AS_Exam.LoadData(DB)
-	LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
-	LR_AccountStatistics_FBList.LoadAllUsrData(DB)
+	LR_AccountStatistics.GetUserInfo()	--获取自身数据
+	LR_AccountStatistics.LoadGroupListData(DB)	--分组数据
+	LR_AccountStatistics.LoadAllUserGroup(DB)	--人物分组
+	LR_AccountStatistics.LoadAllUserInformation(DB)		--人物数据
+	LR_AS_Exam.LoadData(DB)	--考试数据
+	LR_AccountStatistics_RiChang.LoadAllUsrData(DB)	--日常数据
+	LR_AccountStatistics_FBList.LoadAllUsrData(DB)	--副本数据
+	LR_ACS_QiYu.LoadAllUsrData(DB)		--奇遇数据
+	---展示
 	LR_AccountStatistics.ListAS()
 	LR_AccountStatistics_FBList.ListFB()
 	LR_AccountStatistics_RiChang.ListRC()
@@ -1510,6 +1514,9 @@ function LR_AccountStatistics.FIRST_LOADING_END()
 	--装备获取及装分
 	LR_AccountStatistics_Equip.LoadSelfData(DB)
 	LR_AccountStatistics_Equip.GetEquipScore()
+	----获取奇遇数据
+	LR_ACS_QiYu.LoadAllUsrData(DB)
+
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 	FireEvent("LR_ACS_REFRESH_FP")
