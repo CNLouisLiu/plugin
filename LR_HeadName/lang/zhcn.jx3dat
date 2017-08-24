@@ -274,4 +274,11 @@ data={
 	["LifeBar Instructions01\n"]="◆设置血条的颜色、宽度等细节\n",
 	["LifeBar Instructions02\n"]="◆如要设置是否显示血条请至【NPC头顶设置】以及【玩家头顶设置】\n",
 	["LifeBar Instructions03\n"]="◆当自身血条设置为非战斗隐藏时，不满血时为半透明状态，满血后自动消失\n",
+
+	--20170824add--
+	["Always hide sys npc top when disable"]="屏蔽系统NPC头顶",
+	["Always hide sys player top when disable"]="屏蔽系统玩家头顶",
+	["Border color"]="边框颜色",
+	["▊ Click to change color"]="▊ 点击修改颜色",
+
 }
