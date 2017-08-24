@@ -7,7 +7,7 @@ data = {
 
 	--20170821add--
 	["Auto sell grey item"]="自動賣出灰色物品",
-	["Sell Item List"]="自定義物品列表",
+	["Sell Item List"]="賣出物品列表",
 	["Enable sell items in list"]="允許賣出列表中的物品",
 	["Error, no this item"]="錯誤，沒有這個物品",
 	["Sure to delete"]="你確定要刪除：",
@@ -15,5 +15,10 @@ data = {
 	["Reset list"]="重置列表",
 	["Are you sure to reset item list?"]="確定要重置列表？",
 	["LR: Sell item:"]="懶人：賣出物品",
+
+	--20170824add--
+	["Black List"]="不賣出物品列表",
+	["Enable black list"]="以下物品不自動賣出",
+	["LR:You are locked\n"]="懶人賣店：你沒解鎖，不能賣出物品。\n",
 
 }

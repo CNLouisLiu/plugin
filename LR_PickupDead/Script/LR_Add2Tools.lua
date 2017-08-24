@@ -46,7 +46,6 @@ local LR_PickupDead_UI  = {
 				return LR_PickupDead.UsrData.bOn
 			end,
 			callback = function(m)
-				LR_PickupDead.LoadCustomData()
 				--拾取任务物品
 				m[#m + 1] = {szOption = _L["Pickup task item"], bCheck = true, bMCheck = false, bChecked = function() return LR_PickupDead.UsrData.bPickupTaskItem end,
 					fnAction = function()
@@ -215,6 +214,19 @@ local LR_PickupDead_UI  = {
 						return not LR_PickupDead.UsrData.bnotPickupItems
 					end,
 				}
+
+				m[#m + 1] = {bDevide = true}
+				m[#m + 1] = {szOption = _L["Refresh black/white list"],
+					fnAction = function()
+						local msg = {
+							szMessage = _L["Are you sure to refresh black/white list?"],
+							szName = "reset",
+							fnAutoClose = function() return false end,
+							{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() LR_PickupDead.LoadCustomData() end, },
+							{szOption = g_tStrings.STR_HOTKEY_CANCEL, fnAction = function() end, },
+						}
+						MessageBox(msg)
+					end,}
 
 				PopupMenu(m)
 			end

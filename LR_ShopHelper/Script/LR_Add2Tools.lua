@@ -34,7 +34,7 @@ local LR_ShopHelper_UI  = {
 			callback = function (enabled)
 				LR_AutoSell.UsrData.bAutoSellGreyItem = enabled
 			end,
-		},{	name = "LR_ShopHelper_ComboBox1", type = "ComboBox", x = 200, y = 30, w = 220, text = _L["Sell Item List"],
+		},{	name = "LR_ShopHelper_ComboBox1", type = "ComboBox", x = 20, y = 60, w = 220, text = _L["Sell Item List"],
 			enable = function()
 				return LR_AutoSell.UsrData.bOn
 			end,
@@ -46,7 +46,8 @@ local LR_ShopHelper_UI  = {
 					end,
 				}
 				m[#m + 1] = {bDevide = true}
-				for k, v in pairs (LR_AutoSell.CustomData or {}) do
+				local CustomData = LR_AutoSell.CustomData or {}
+				for k, v in pairs (CustomData.AutoSellItem or {}) do
 					local szName = ""
 					if v.szName then
 						szName = v.szName
@@ -79,7 +80,7 @@ local LR_ShopHelper_UI  = {
 								szMessage = sformat("%s %s?", _L["Sure to delete"], szName),
 								szName = "delete",
 								fnAutoClose = function() return false end,
-								{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() tremove(LR_AutoSell.CustomData, k); LR_AutoSell.SaveCustomData() end, },
+								{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() tremove(LR_AutoSell.CustomData.AutoSellItem, k); LR_AutoSell.SaveCustomData() end, },
 								{szOption = g_tStrings.STR_HOTKEY_CANCEL, fnAction = function() end, },
 							}
 							MessageBox(msg)
@@ -103,7 +104,7 @@ local LR_ShopHelper_UI  = {
 								end
 								data.bSell = true
 								LR_AutoSell.CustomData = LR_AutoSell.CustomData or {}
-								tinsert(LR_AutoSell.CustomData, data)
+								tinsert(LR_AutoSell.CustomData.AutoSellItem, data)
 								LR_AutoSell.SaveCustomData()
 							end
 						end)
@@ -112,21 +113,101 @@ local LR_ShopHelper_UI  = {
 						return not LR_AutoSell.UsrData.bAutoSellItemInList
 					end,
 				}
-				m[#m + 1] = {bDevide = true}
-				m[#m + 1] = {szOption = _L["Reset list"],
-					fnAction = function()
-						local msg = {
-							szMessage = _L["Are you sure to reset item list?"],
-							szName = "reset",
-							fnAutoClose = function() return false end,
-							{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() LR_AutoSell.ResetCustomData() end, },
-							{szOption = g_tStrings.STR_HOTKEY_CANCEL, fnAction = function() end, },
-						}
-						MessageBox(msg)
-					end,}
 				PopupMenu(m)
 			end
-		},{name = "LR_ShopHelper_CheckBox02", type = "CheckBox", text = _L["Enable auto repare"], x = 0, y = 80, w = 150,
+		},{	name = "LR_ShopHelper_ComboBox2", type = "ComboBox", x = 250, y = 60, w = 220, text = _L["Black List"],
+			enable = function()
+				return LR_AutoSell.UsrData.bOn
+			end,
+			callback = function(m)
+				LR_AutoSell.LoadCustomData()
+				m[#m + 1] = {szOption = _L["Enable black list"], bCheck = true, bMCheck = false, bChecked = function() return LR_AutoSell.UsrData.enableBlackList end,
+					fnAction = function()
+						LR_AutoSell.UsrData.enableBlackList = not LR_AutoSell.UsrData.enableBlackList
+					end,
+				}
+				m[#m + 1] = {bDevide = true}
+				local CustomData = LR_AutoSell.CustomData or {}
+				for k, v in pairs (CustomData.BlackList or {}) do
+					local szName = ""
+					if v.szName then
+						szName = v.szName
+					elseif v.dwTabType then
+						local itemInfo = GetItemInfo(v.dwTabType, v.dwIndex)
+						if itemInfo then
+							szName = itemInfo.szName
+						else
+							szName = _L["Error, no this item"]
+						end
+					else
+						szName = GetItemNameByUIID(v.nUiId)
+					end
+					m[#m + 1] = {szOption = szName, bCheck = true, bMCheck = false, bChecked = function() return v.bNotSell end,
+						fnAction = function()
+							v.bNotSell = not v.bNotSell
+							LR_AutoSell.SaveCustomData()
+						end,
+						fnDisable = function()
+							return not LR_AutoSell.UsrData.enableBlackList
+						end,
+						fnAutoClose = true,
+						szIcon = "ui\\Image\\UICommon\\CommonPanel4.UITex",
+						nFrame  = 72,
+						nMouseOverFrame = 72,
+						szLayer = "ICON_RIGHT",
+						fnAutoClose = true,
+						fnClickIcon = function ()
+							local msg = {
+								szMessage = sformat("%s %s?", _L["Sure to delete"], szName),
+								szName = "delete",
+								fnAutoClose = function() return false end,
+								{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() tremove(LR_AutoSell.CustomData.BlackList, k); LR_AutoSell.SaveCustomData() end, },
+								{szOption = g_tStrings.STR_HOTKEY_CANCEL, fnAction = function() end, },
+							}
+							MessageBox(msg)
+						end,
+					}
+				end
+				m[#m + 1] = {bDevide = true}
+				m[#m + 1] = {szOption = _L["Add Item"],
+					fnAction = function()
+						GetUserInput(_L["Add Item"], function(szText)
+							local szText =  LR.Trim(szText)
+							if szText ~= "" then
+								local data
+								if type(tonumber(szText)) == "number" then
+									data = {nUiId = tonumber(szText)}
+								elseif sfind(szText, "(%d+),(%d+)") then
+									local _, _, dwTabType, dwIndex = sfind(szText, "(%d+),(%d+)")
+									data = {dwTabType = dwTabType, dwIndex = dwIndex}
+								else
+									data = {szName = szText}
+								end
+								data.bNotSell = true
+								LR_AutoSell.CustomData = LR_AutoSell.CustomData or {}
+								tinsert(LR_AutoSell.CustomData.BlackList, data)
+								LR_AutoSell.SaveCustomData()
+							end
+						end)
+					end,
+					fnDisable = function()
+						return not LR_AutoSell.UsrData.enableBlackList
+					end,
+				}
+				PopupMenu(m)
+			end
+		},{	name = "LR_ShopHelper_Button01", type = "Button", x = 20, y = 90, text = _L["Reset list"], w = 120, h = 40,
+			callback = function()
+				local msg = {
+					szMessage = _L["Are you sure to reset item list?"],
+					szName = "reset",
+					fnAutoClose = function() return false end,
+					{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() LR_AutoSell.ResetCustomData() end, },
+					{szOption = g_tStrings.STR_HOTKEY_CANCEL, fnAction = function() end, },
+				}
+				MessageBox(msg)
+			end,
+		},{name = "LR_ShopHelper_CheckBox02", type = "CheckBox", text = _L["Enable auto repare"], x = 0, y = 140, w = 150,
 			default = function ()
 				return LR_AutoRepare.UsrData.bOn
 			end,

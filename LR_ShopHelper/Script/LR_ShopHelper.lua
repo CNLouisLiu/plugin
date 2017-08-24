@@ -45,20 +45,24 @@ LR_AutoSell.UsrData = {
 	bOn = false,
 	bAutoSellGreyItem = true,
 	bAutoSellItemInList = true,
+	enableBlackList = false,
 }
 RegisterCustomData("LR_AutoSell.UsrData", VERSION)
 local DEFAULT_ITEM = {
-	{dwTabType = 5, dwIndex = 17369, bSell = true}, 			--金叶子
-	{dwTabType = 5, dwIndex = 2863, bSell = true}, 			--银叶子
-	{dwTabType = 5, dwIndex = 2864, bSell = true}, 			--真银叶子
-	{dwTabType = 5, dwIndex = 11682, bSell = true}, 			--金条
-	{dwTabType = 5, dwIndex = 11683, bSell = true}, 			--金块
-	{dwTabType = 5, dwIndex = 11684, bSell = true}, 			--金砖
-	{dwTabType = 5, dwIndex = 11685, bSell = true}, 			--金元宝
-	{dwTabType = 5, dwIndex = 17130, bSell = true}, 			--银叶子·试炼之地
-	{dwTabType = 5, dwIndex = 21381, bSell = true}, 			--卦文龟甲（没用的）
-	{dwTabType = 5, dwIndex = 11640, bSell = true}, 			--金砖
-	{dwTabType = 5, dwIndex = 22974, bSell = true}, 			--破碎的金玄玉
+	AutoSellItem = {
+		{dwTabType = 5, dwIndex = 17369, bSell = true}, 			--金叶子
+		{dwTabType = 5, dwIndex = 2863, bSell = true}, 			--银叶子
+		{dwTabType = 5, dwIndex = 2864, bSell = true}, 			--真银叶子
+		{dwTabType = 5, dwIndex = 11682, bSell = true}, 			--金条
+		{dwTabType = 5, dwIndex = 11683, bSell = true}, 			--金块
+		{dwTabType = 5, dwIndex = 11684, bSell = true}, 			--金砖
+		{dwTabType = 5, dwIndex = 11685, bSell = true}, 			--金元宝
+		{dwTabType = 5, dwIndex = 17130, bSell = true}, 			--银叶子·试炼之地
+		{dwTabType = 5, dwIndex = 21381, bSell = true}, 			--卦文龟甲（没用的）
+		{dwTabType = 5, dwIndex = 11640, bSell = true}, 			--金砖
+		{dwTabType = 5, dwIndex = 22974, bSell = true}, 			--破碎的金玄玉
+	},
+	BlackList = {},
 }
 LR_AutoSell.CustomData = clone(DEFAULT_ITEM)
 
@@ -120,7 +124,8 @@ function LR_AutoSell.SHOP_OPENSHOP()
 					end
 				end
 				if LR_AutoSell.UsrData.bAutoSellItemInList then
-					for k, v in pairs(LR_AutoSell.CustomData or {}) do
+					local CustomData = LR_AutoSell.CustomData or {}
+					for k, v in pairs(CustomData.AutoSellItem or {}) do
 						if v.bSell then
 							if v.szName then
 								if v.szName == LR.GetItemNameByItem(item) then
@@ -138,13 +143,37 @@ function LR_AutoSell.SHOP_OPENSHOP()
 						end
 					end
 				end
-				if bSell then
-					local nCount = 1
-					if item.bCanStack then
-						nCount = item.nStackNum
+				if LR_AutoSell.UsrData.enableBlackList then
+					local CustomData = LR_AutoSell.CustomData or {}
+					for k, v in pairs(CustomData.BlackList or {}) do
+						if v.bNotSell then
+							if v.szName then
+								if v.szName == LR.GetItemNameByItem(item) then
+									bSell = false
+								end
+							elseif v.dwTabType then
+								if v.dwTabType ==  item.dwTabType and v.dwIndex ==  item.dwIndex then
+									bSell = false
+								end
+							elseif v.nUiId then
+								if v.nUiId == item.nUiId then
+									bSell = false
+								end
+							end
+						end
 					end
-					LR.SysMsg(sformat("%s [%s] x%d\n", _L["LR: Sell item:"], LR.GetItemNameByItem(item), nCount))
-					SellItem(dwNpcID, dwShopID, i, j, nCount)
+				end
+				if bSell then
+					if LR.CheckUnLock() then
+						local nCount = 1
+						if item.bCanStack then
+							nCount = item.nStackNum
+						end
+						LR.SysMsg(sformat("%s [%s] x%d\n", _L["LR: Sell item:"], LR.GetItemNameByItem(item), nCount))
+						SellItem(dwNpcID, dwShopID, i, j, nCount)
+					else
+						LR.SysMsg(_L["LR:You are locked\n"])
+					end
 				end
 			end
 		end

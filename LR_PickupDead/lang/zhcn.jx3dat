@@ -19,7 +19,9 @@ data = {
 	["Only pickup item in white list which is checked"]="只拾取白名单中勾选的物品",
 	["Sure to delete"]="确定要删除：",
 
-
+	--20170824add--
+	["Refresh black/white list"]="刷新黑白名单列表",
+	["Are you sure to refresh black/white list?"]="确定要刷新黑白名单列表？",
 
 
 }
