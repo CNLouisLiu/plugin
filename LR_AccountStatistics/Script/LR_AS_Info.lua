@@ -139,6 +139,10 @@ function LR_AccountStatistics.ON_FRAME_CREATE()
 		LR.DelayCall(500, function()
 			LR_AccountStatistics_Bag.HookBag()
 		end)
+	elseif szName == "MailPanel" then
+		LR.DelayCall(500, function()
+			LR_AccountStatistics_Bag.HookMailPanel()
+		end)
 	end
 end
 

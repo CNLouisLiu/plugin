@@ -48,14 +48,6 @@ ITEM_EXIST_TYPE.OFFLINE	下线限时道具
 ITEM_EXIST_TYPE.ONLINE	上线限时道具
 ITEM_EXIST_TYPE.ONLINEANDOFFLINE  &	ITEM_EXIST_TYPE.TIMESTAMP 		限时道具
 
-
-sdf
-s
-dfsdf
-sfsdf
-sdf
-sdf
-
 ]]
 
 
@@ -70,9 +62,12 @@ LR_AccountStatistics_Bag.UsrData = {
 LR_AccountStatistics_Bag.ItemInBag =  {}
 LR_AccountStatistics_Bag.UsrTable = {}
 LR_AccountStatistics_Bag.bHooked = false
+LR_AccountStatistics_Bag.bHookMailPanel = false
 LR_AccountStatistics_Bag.Default = {
 	Version = "20170119",
 }
+local CustomVersion = "20170111"
+RegisterCustomData("LR_AccountStatistics_Bag.bHookMailPanel", CustomVersion)
 
 function LR_AccountStatistics_Bag.HookBag()
 	local frame = Station.Lookup("Normal/BigBagPanel")
@@ -99,6 +94,27 @@ function LR_AccountStatistics_Bag.HookBag()
 		end
 	end
 end
+
+function LR_AccountStatistics_Bag.HookMailPanel()
+	local frame = Station.Lookup("Normal/MailPanel")
+	if frame then --背包界面添加一个按钮
+		local BTN_Mail = frame:Lookup("LR_BTN_Mail")
+		if not BTN_Mail then
+			if LR_AccountStatistics_Bag.bHookMailPanel then
+				local BTN_Mail = LR.AppendUI("Button", frame, "LR_BTN_Mail", {w = 90, h = 28, x = 200, y = 8})
+				BTN_Mail:SetText(_L["LR Mail"])
+				BTN_Mail.OnClick = function()
+					LR_AccountStatistics_Bag_Panel:Open(nil, nil, nil, nil ,true)
+				end
+			end
+		else
+			if not LR_AccountStatistics_Bag.bHookMailPanel then
+				BTN_Mail:Destroy()
+			end
+		end
+	end
+end
+
 
 function LR_AccountStatistics_Bag.GetItemByGrid ()
 	local me = GetClientPlayer()
@@ -321,7 +337,34 @@ LR_AccountStatistics_Mail_Loot = {
 	tLootQueue = {},
 }
 
+local stopFun = function()
+	LR_AccountStatistics_Mail_Loot.aLootQueue = {}
+	LR_AccountStatistics_Mail_Loot.tLootQueue = {}
+	LR.UnBreatheCall("LootingBreathe")
+	----保存
+	LR.DelayCall(150, function()
+		LR_AccountStatistics_Mail.info = {}
+		LR_AccountStatistics_Mail.ItemInMail = {}
+		LR_AccountStatistics_Mail.MailData = {}
+		LR_AccountStatistics_Mail.GetItemByMail()
+		local path = sformat("%s\\%s", SaveDataPath, DB_name)
+		local DB = SQLite3_Open(path)
+		DB:Execute("BEGIN TRANSACTION")
+		LR_AccountStatistics_Mail.SaveData(DB)
+		DB:Execute("END TRANSACTION")
+		DB:Release()
+		local realArea = LR_AccountStatistics_Bag_Panel.realArea
+		local realServer = LR_AccountStatistics_Bag_Panel.realServer
+		local dwID = LR_AccountStatistics_Bag_Panel.dwID
+		LR_AccountStatistics_Bag_Panel:ReloadItemBox(realArea, realServer, dwID)
+	end)
+end
+
 local function LootingBreathe()
+	local npc = GetNpc(LR_AccountStatistics_Mail_None.XinShiID)
+	if not npc or LR.GetDistance(npc) > 5 then
+		stopFun()
+	end
 	if GetTime() - LR_AccountStatistics_Mail_Loot.nLastLootTime <=  GetPingValue()*1.2 then -- 取附件得间隔一定时间，否则无法全部取出，需要加上延迟
 		return
 	elseif #LR_AccountStatistics_Mail_Loot.aLootQueue > 0 -- 确定收件队列不为空
@@ -344,24 +387,7 @@ local function LootingBreathe()
 			LR_AccountStatistics_Mail_Loot.tLootQueue[sformat("%d_%d", tLoot.nMailID, tLoot.nIndex)] = nil
 		end
 	else -- 不符合条件时中断并清空收件队列
-		LR_AccountStatistics_Mail_Loot.aLootQueue = {}
-		LR_AccountStatistics_Mail_Loot.tLootQueue = {}
-		LR.UnBreatheCall("LootingBreathe")
-		----保存
-		LR_AccountStatistics_Mail.info = {}
-		LR_AccountStatistics_Mail.ItemInMail = {}
-		LR_AccountStatistics_Mail.MailData = {}
-		LR_AccountStatistics_Mail.GetItemByMail()
-		local path = sformat("%s\\%s", SaveDataPath, DB_name)
-		local DB = SQLite3_Open(path)
-		DB:Execute("BEGIN TRANSACTION")
-		LR_AccountStatistics_Mail.SaveData(DB)
-		DB:Execute("END TRANSACTION")
-		DB:Release()
-		local realArea = LR_AccountStatistics_Bag_Panel.realArea
-		local realServer = LR_AccountStatistics_Bag_Panel.realServer
-		local dwID = LR_AccountStatistics_Bag_Panel.dwID
-		LR_AccountStatistics_Bag_Panel:ReloadItemBox(realArea, realServer, dwID)
+		stopFun()
 	end
 end
 
@@ -991,7 +1017,7 @@ function LR_AccountStatistics_Bag_Panel:Init()
 	LR.AppendAbout(LR_AccountStatistics_Bag_Panel, frame)
 end
 
-function LR_AccountStatistics_Bag_Panel:Open(realArea, realServer, dwID, bShowExpireMail)
+function LR_AccountStatistics_Bag_Panel:Open(realArea, realServer, dwID, bShowExpireMail, bOnlyShowMail)
 	if realArea then
 		LR_AccountStatistics_Bag_Panel.realArea = realArea
 		LR_AccountStatistics_Bag_Panel.realServer = realServer
@@ -1005,6 +1031,11 @@ function LR_AccountStatistics_Bag_Panel:Open(realArea, realServer, dwID, bShowEx
 		LR_AccountStatistics_Bag_Panel.realServer = realServer
 		LR_AccountStatistics_Bag_Panel.dwID = me.dwID
 		LR_AccountStatistics_Bag_Panel.bShowExpireMail = false
+	end
+	if bOnlyShowMail then
+		LR_AccountStatistics_Bag_Panel.CalBag = false
+		LR_AccountStatistics_Bag_Panel.CalBank = false
+		LR_AccountStatistics_Bag_Panel.CalMail = true
 	end
 	local frame = self:Fetch("LR_AccountStatistics_Bag_Panel")
 	if frame then
@@ -1267,6 +1298,10 @@ function LR_AccountStatistics_Bag_Panel:LoadOneItem2(parent, item_data)
 	box:OnItemLButtonClick(OnClick)
 
 	local OnRClick = function()
+		local frame = Station.Lookup("Normal/MailPanel")
+		if not frame then
+			return
+		end
 		if (not LR_AccountStatistics_Bag_Panel.CalBag) and (not LR_AccountStatistics_Bag_Panel.CalBank) and LR_AccountStatistics_Bag_Panel.CalMail and LR_AccountStatistics_Bag_Panel.dwID ~= -1
 			or (item_data.nUiId == 0 and LR_AccountStatistics_Bag_Panel.dwID ~=  -1 )
 		then

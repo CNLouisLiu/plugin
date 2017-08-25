@@ -63,6 +63,18 @@ local function _CheckRCData(szName)
 			return true
 		end
 	end
+	for k, v in pairs(LR_AccountStatistics_RiChang.CustomQuestList or {}) do
+		if v.szName == szName then
+			return false
+		end
+		if v.bShow then
+			n = n + 1
+		end
+		if n >=8 then
+			return true
+		end
+	end
+
 	return false
 end
 
@@ -162,6 +174,14 @@ local LR_AccountStatistics_UI = {
 				szTip[#szTip+1] = {szText = _L["Floating bar Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
 				szTip[#szTip+1] = {szText = _L["Floating bar Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
 				return szTip
+			end,
+		},{name="LR_Acc_UI_CheckBox003",type="CheckBox",text=_L["Show button on mail panel"],x = 220 , y = 30, w = 200,
+			default = function ()
+ 				return LR_AccountStatistics_Bag.bHookMailPanel
+			end,
+			callback = function (enabled)
+				LR_AccountStatistics_Bag.bHookMailPanel = enabled
+				LR_AccountStatistics_Bag.HookMailPanel()
 			end,
 		},{	name = "LR_Acc_UI_an4", type = "Button", x = 0, y = 70, text = _L["Open [LR_AccountStatistics] panel"], w = 200, h = 40,
 			callback = function()
@@ -291,6 +311,7 @@ local LR_AS_Normal_Settings = {
 			end,
 		},{	name = "LR_Acc_UI_RCBox1", type = "ComboBox", x = 0, y = 95, w = 220, text = _L["RC show in panel"],
 			callback = function(m)
+				LR_AccountStatistics_RiChang.LoadCustomQuestList()
 				local szOption = {_L["PVE"],  _L["PVP"], _L["PVX"]}
 				local List = {{"DA", "GONG"}, {"JU", "JING"}, {"CHA", "QIN", "CAI", "TU", "XUN", "MI", "HUIGUANG", "HUASHAN"}}
 				for k, v in pairs (szOption) do
@@ -310,6 +331,95 @@ local LR_AS_Normal_Settings = {
 						}
 					end
 				end
+				-------自定义任务
+				m[#m + 1] = {bDevide = true}
+				m[#m + 1] = {szOption = _L["Custom quest list"]}
+				local customMenu = m[#m]
+				for k, v in pairs (LR_AccountStatistics_RiChang.CustomQuestList or {}) do
+					customMenu[#customMenu + 1] = {szOption = v.szName, bCheck = true, bMCheck = false, bChecked = function() return v.bShow end,
+						fnAction = function()
+							v.bShow = not v.bShow
+							LR_AccountStatistics_RiChang.SaveCustomQuestList()
+						end,
+						fnDisable = function()
+							return _CheckRCData(v.szName)
+						end,
+						fnAutoClose = true,
+						szIcon = "ui\\Image\\UICommon\\CommonPanel4.UITex",
+						nFrame  = 72,
+						nMouseOverFrame = 72,
+						szLayer = "ICON_RIGHT",
+						fnAutoClose = true,
+						fnClickIcon = function ()
+							local msg = {
+								szMessage = sformat("%s %s?", _L["Sure to delete"], v.szName),
+								szName = "delete",
+								fnAutoClose = function() return false end,
+								{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() tremove(LR_AccountStatistics_RiChang.CustomQuestList, k); LR_AccountStatistics_RiChang.SaveCustomQuestList() end, },
+								{szOption = g_tStrings.STR_HOTKEY_CANCEL, fnAction = function() end, },
+							}
+							MessageBox(msg)
+						end,
+					}
+				end
+				customMenu[#customMenu + 1] = {bDevide = true}
+				customMenu[#customMenu + 1] = {szOption = _L["Add custom quest"],
+					fnAction = function()
+						local dwID, szName, refresh = 0, "", "NEVER"
+						local step_4 = function(nType)
+							refresh = nType
+							local QuestInfo = LR.Table_GetQuestStringInfo(dwID)
+							local szQuestName = QuestInfo.szName
+							local data = {dwID = dwID, szName = szName, refresh = refresh, bShow = false,}
+							local msg = {
+								szMessage = sformat("%s\n%s:%s,%s:%s (%s)", _L["Are you sure to add?"], _L["QuestName"], szQuestName, _L["Show name"], szName, _L[refresh] ),
+								szName = "add",
+								fnAutoClose = function() return false end,
+								{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() tinsert(LR_AccountStatistics_RiChang.CustomQuestList, data); LR_AccountStatistics_RiChang.SaveCustomQuestList() end, },
+								{szOption = g_tStrings.STR_HOTKEY_CANCEL, },
+							}
+							MessageBox(msg)
+						end
+
+						local step_3 = function()
+							local msg = {
+								szMessage = _L["Please choose quest refresh type."],
+								szName = "quest refresh type",
+								fnAutoClose = function() return false end,
+								{szOption = _L["NEVER"], fnAction = function() step_4("NEVER") end, },
+								{szOption = _L["WEEK"], fnAction = function() step_4("WEEK") end, },
+								{szOption = _L["EVERYDAY"], fnAction = function() step_4("EVERYDAY") end, },
+							}
+							MessageBox(msg)
+						end
+
+						local step_2 = function()
+							GetUserInput(_L["Input quest show name"], function(szText)
+								local szText =  string.gsub(szText, "^%s*%[?(.-)%]?%s*$", "%1")
+								if szText ~= "" then
+									szName = szText
+									step_3()
+								else
+									LR.SysMsg(_L["Quest name could not be null.\n"])
+								end
+							end)
+						end
+
+						local step_1 = function()
+							GetUserInput(_L["Input quest id"], function(szText)
+								local szText =  string.gsub(szText, "^%s*%[?(.-)%]?%s*$", "%1")
+								if type(tonumber(szText)) == "number" then
+									dwID = tonumber(szText)
+									LR.DelayCall(250, function() step_2() end)
+								else
+									LR.SysMsg(_L["Quest id must be number.\n"])
+								end
+							end)
+						end
+
+						step_1()
+					end,}
+
 				PopupMenu(m)
 			end,
 			Tip = function()

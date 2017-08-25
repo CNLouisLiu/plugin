@@ -585,5 +585,25 @@ data={
 	["DIALOG_DONG_HAI_KE_01"]="當涌泉相報",
 	["WINDOW_DONG_HAI_KE_01"]="多謝你的草藥",
 
+	["LR Mail"]="郵件統計",
+	["Show button on mail panel"]="郵箱界面上顯示【郵件統計】按鈕",
+
+	--20170825add--
+	["Custom quest list"]="自定義任務列表",
+	["Add custom quest"]="增加自定義任務",
+	["Are you sure to add?"]="確定要增加？",
+	["QuestName"]="任務名稱",
+	["Show name"]="顯示名稱",
+	["Please choose quest refresh type."]="選擇任務刷新類型",
+	["NEVER"]="從不",
+	["WEEK"]="周更",
+	["EVERYDAY"]="日更",
+	["Input quest show name"]="輸入顯示的名稱",
+	["Quest name could not be null.\n"]="名稱不能為空。\n",
+	["Input quest id"]="輸入任務ID",
+	["Quest id must be number.\n"]="任務ID必須是數字。\n",
+
+	["Custom quest under"]="以下為自定義任務",
+	["Sure to delete"]="確定要刪除",
 
 }

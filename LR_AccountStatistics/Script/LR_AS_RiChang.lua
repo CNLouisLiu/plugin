@@ -78,11 +78,13 @@ LR_AccountStatistics_RiChang.Default = {
 	Version = "20170626",
 }
 LR_AccountStatistics_RiChang.UsrData = clone(LR_AccountStatistics_RiChang.Default)
+LR_AccountStatistics_RiChang.CustomQuestList = {}
+LR_AccountStatistics_RiChang.SelfCustomQuestStatus = {}
 local CustomVersion = "20170111"
 RegisterCustomData("LR_AccountStatistics_RiChang.UsrData", CustomVersion)
 
 -------------------------------
-local MONITED_QUEST_LIST = {}
+local MONITED_QUEST_LIST = {}		----不在这个列表中的任务不会触发保存
 local ADD2MONITED_QUEST_LIST = function(tList)
 	for k, v in pairs (tList) do
 		MONITED_QUEST_LIST[k] = true
@@ -143,6 +145,36 @@ function LR_AccountStatistics_RiChang.LoadCommomMenuList()
 	LR_AccountStatistics_RiChang.UsrData = clone(CommomMenuList)
 end
 
+----------------------------------------------------------------------------------------
+----自定义监控任务
+----------------------------
+function LR_AccountStatistics_RiChang.SaveCustomQuestList()
+	local path = sformat("%s\\CustomQuestList.dat", SaveDataPath)
+	local data = LR_AccountStatistics_RiChang.CustomQuestList or {}
+	SaveLUAData(path, data)
+end
+
+function LR_AccountStatistics_RiChang.LoadCustomQuestList()
+	local path = sformat("%s\\CustomQuestList.dat", SaveDataPath)
+	local data = LoadLUAData(path) or {}
+	LR_AccountStatistics_RiChang.CustomQuestList = clone(data)
+end
+
+function LR_AccountStatistics_RiChang.GetCustomQuestStatus()
+	local me = GetClientPlayer()
+	local CustomQuestList = LR_AccountStatistics_RiChang.CustomQuestList
+	local data = {}
+	for k, v in pairs (CustomQuestList) do
+		local dwID = v.dwID
+		local nQuestPhase = me.GetQuestPhase(dwID)	--3: 表示已完成任务0: 表示任务不存在1: 表示任务正在进行中，2: 表示任务已完成但还没有交-1: 表示任务id非法
+		if nQuestPhase > 0 then
+			data[tostring(dwID)] = {nQuestPhase = nQuestPhase,}
+		end
+	end
+	LR_AccountStatistics_RiChang.SelfCustomQuestStatus = clone(data)
+end
+
+-----------------------------------------------------------------------------------------
 function LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM richang_data WHERE bDel = 0")
 	local Data = DB_SELECT:GetAll() or {}
@@ -152,7 +184,11 @@ function LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
 			local data2 = {}
 			for k2, v2 in pairs(v) do
 				if k2 ~="szKey" and k2 ~= "bDel" then
-					data2[RI_CHANG[k2]] = LR.JsonDecode(v2)
+					if RI_CHANG[k2] then
+						data2[RI_CHANG[k2]] = LR.JsonDecode(v2)
+					else
+						data2["CUSTOM_QUEST"] = LR.JsonDecode(v2)
+					end
 				end
 			end
 			AllUsrData[v.szKey] = data2
@@ -171,6 +207,9 @@ function LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	LR_AccountStatistics_RiChang.AllUsrData[szKey] = LR_AccountStatistics_RiChang.SelfData
+
+	LR_AccountStatistics_RiChang.GetCustomQuestStatus()
+	LR_AccountStatistics_RiChang.AllUsrData[szKey].CUSTOM_QUEST = clone(LR_AccountStatistics_RiChang.SelfCustomQuestStatus)
 end
 
 function LR_AccountStatistics_RiChang.SaveData(DB)
@@ -192,6 +231,12 @@ function LR_AccountStatistics_RiChang.SaveData(DB)
 			wen[#wen+1] = "?"
 			value[#value+1] = LR.JsonEncode(LR_AccountStatistics_RiChang.SelfData[v])
 		end
+		---增加自定义任务数据
+		LR_AccountStatistics_RiChang.GetCustomQuestStatus()
+		name[#name+1] = "CUSTOM_QUEST"
+		wen[#wen+1] = "?"
+		value[#value+1] = LR.JsonEncode(LR_AccountStatistics_RiChang.SelfCustomQuestStatus or {})
+
 		local DB_REPLACE = DB:Prepare(sformat("REPLACE INTO richang_data ( bDel, szKey, %s ) VALUES ( ?, %s, ? )", tconcat(name, ", "), tconcat(wen, ", ")))
 		DB_REPLACE:ClearBindings()
 		DB_REPLACE:BindAll(0, szKey, unpack(value))
@@ -203,7 +248,6 @@ function LR_AccountStatistics_RiChang.SaveData(DB)
 		DB_REPLACE:Execute()
 	end
 end
-
 
 ----------------------------------------------------------------------------
 ---------各种日常检测
@@ -997,15 +1041,19 @@ function LR_AccountStatistics_RiChang.ResetData()
 		---将所有数据写回数据库
 		local name, wen = {}, {}
 		for k, v in pairs(RI_CHANG) do
-			name[#name+1] = k
-			wen[#wen+1] = "?"
+			name[#name + 1] = k
+			wen[#wen + 1] = "?"
 		end
+		name[#name + 1] = "CUSTOM_QUEST"
+		wen[#wen + 1] = "?"
 		local DB_REPLACE = DB:Prepare(sformat("REPLACE INTO richang_data ( bDel, szKey, %s ) VALUES ( ?, %s, ? )", tconcat(name, ", "), tconcat(wen, ", ")))
 		for szKey, v in pairs (LR_AccountStatistics_RiChang.AllUsrData) do
 			local value = {}
 			for  k2, v2 in pairs(RI_CHANG) do
 				value[#value+1] = LR.JsonEncode(v[v2])
 			end
+			value[#value + 1] = LR.JsonEncode(v.CUSTOM_QUEST)
+
 			DB_REPLACE:ClearBindings()
 			DB_REPLACE:BindAll(0, szKey, unpack(value))
 			DB_REPLACE:Execute()
@@ -1035,6 +1083,17 @@ function LR_AccountStatistics_RiChang.ClearZC()
 				end
 			end
 		end
+
+		local CUSTOM_QUEST = v.CUSTOM_QUEST or {}
+		if next(CUSTOM_QUEST) ~= nil then
+			for k2, v2 in pairs (LR_AccountStatistics_RiChang.CustomQuestList or {}) do
+				if v2.refresh == "WEEK" or v.refresh == "EVERYDAY" then
+					if CUSTOM_QUEST[tostring(v2.dwID)] then
+						CUSTOM_QUEST[tostring(v2.dwID)] = nil
+					end
+				end
+			end
+		end
 	end
 end
 
@@ -1048,6 +1107,15 @@ function LR_AccountStatistics_RiChang.ClearRC()
 					if v[v2.order].finished then
 						LR_AccountStatistics_RiChang.AllUsrData[szKey][v2.order].finished = false
 					end
+				end
+			end
+		end
+
+		local CUSTOM_QUEST = v.CUSTOM_QUEST or {}
+		for k2, v2 in pairs (LR_AccountStatistics_RiChang.CustomQuestList or {}) do
+			if v2.refresh == "EVERYDAY" then
+				if CUSTOM_QUEST[tostring(v2.dwID)] then
+					CUSTOM_QUEST[tostring(v2.dwID)] = nil
 				end
 			end
 		end
@@ -1112,6 +1180,14 @@ function LR_AccountStatistics_RiChang.ListRC()
 		if LR_AccountStatistics_RiChang.UsrData.List[List[i].order] and n<= 8 then
 			local text = title_handle:Lookup(sformat("Text_RC%d_Break", n))
 			text:SetText(List[i].szName)
+			n = n+1
+		end
+	end
+
+	for k, v in pairs (LR_AccountStatistics_RiChang.CustomQuestList) do
+		if v.bShow and n <= 8 then
+			local text = title_handle:Lookup(sformat("Text_RC%d_Break", n))
+			text:SetText(v.szName)
 			n = n+1
 		end
 	end
@@ -1213,6 +1289,35 @@ function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 				n = n+1
 			end
 		end
+
+		---自定义任务
+		local CustomQuestList = LR_AccountStatistics_RiChang.CustomQuestList or {}
+		local CUSTOM_QUEST = RC_Record.CUSTOM_QUEST or {}
+		for k, v in pairs(CustomQuestList) do
+			if v.bShow and n <= 8 then
+				local Text_FB = items:Lookup(sformat("Text_RC%d", n))
+				if CUSTOM_QUEST[tostring(v.dwID)] then
+					if CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 1 then
+						Text_FB:SetText(_L["Accepted"])
+						Text_FB:SetFontScheme(31)
+					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 2 then
+						Text_FB:SetText(_L["Finished but not pay"])
+						Text_FB:SetFontScheme(17)
+					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 3 then
+						Text_FB:SetText(_L["Done"])
+						Text_FB:SetFontScheme(47)
+					else
+						Text_FB:SetText("--")
+						Text_FB:SetFontScheme(80)
+					end
+				else
+					Text_FB:SetText("--")
+					Text_FB:SetFontScheme(80)
+				end
+				n = n+1
+			end
+		end
+
 		for j = n, 8, 1 do
 			local Text_FB = items:Lookup(sformat("Text_RC%d", j))
 			Text_FB:SetText("")
@@ -1252,6 +1357,30 @@ function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 					end
 				end
 			end
+
+			------自定义技能
+			local CustomQuestList = LR_AccountStatistics_RiChang.CustomQuestList or {}
+			local CUSTOM_QUEST = RC_Record.CUSTOM_QUEST or {}
+			if next(CustomQuestList) ~= nil then
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Custom quest under"]), 47)
+			end
+			for k, v in pairs(CustomQuestList) do
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：\t", v.szName), 224)
+				if CUSTOM_QUEST[tostring(v.dwID)] then
+					if CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 1 then
+						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Accepted"]), 31)
+					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 2 then
+						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Finished but not pay"]), 17)
+					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 3 then
+						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
+					else
+						szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
+					end
+				else
+					szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
+				end
+			end
+
 			OutputTip(tconcat(szTipInfo), 250, {nMouseX, nMouseY, 0, 0})
 		end
 		items.OnItemMouseLeave = function()
@@ -1506,6 +1635,9 @@ function LR_AccountStatistics_RiChang.FIRST_LOADING_END()
 	if not (LR_AccountStatistics_RiChang.UsrData and LR_AccountStatistics_RiChang.UsrData.Version and LR_AccountStatistics_RiChang.UsrData.Version == LR_AccountStatistics_RiChang.Default.Version) then
 		LR_AccountStatistics_RiChang.ResetMenuList()
 	end
+	LR_AccountStatistics_RiChang.LoadCustomQuestList()
+	LR_AccountStatistics_RiChang.GetCustomQuestStatus()
+
 	LR_AccountStatistics_RiChang.LoadCommomMenuList()
 	LR_AccountStatistics_RiChang.ResetData()
 	LR_AccountStatistics_RiChang.CheckAll()

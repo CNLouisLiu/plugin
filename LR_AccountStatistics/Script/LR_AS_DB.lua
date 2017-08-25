@@ -101,7 +101,7 @@ local schema_exam_data = {
 
 local schema_richang_data = {
 	name = "richang_data",
-	version = "20170628",
+	version = "20170825",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--Ö÷¼ü
 		{name = "DA", 	sql = "DA TEXT"},
@@ -117,6 +117,7 @@ local schema_richang_data = {
 		{name = "MI", 	sql = "MI TEXT"},
 		{name = "HUIGUANG", 	sql = "HUIGUANG TEXT"},
 		{name = "HUASHAN", 	sql = "HUASHAN TEXT"},
+		{name = "CUSTOM_QUEST", 	sql = "CUSTOM_QUEST TEXT"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
