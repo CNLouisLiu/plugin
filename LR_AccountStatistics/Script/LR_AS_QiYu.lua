@@ -1059,7 +1059,7 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 
 	LR_ACS_QiYu.AllUsrData[szKey] = LR_ACS_QiYu.AllUsrData[szKey] or {}
 	local QY_Record = LR_ACS_QiYu.AllUsrData[szKey].qiyu_data or {}
-	local QY_Achievement = LR_ACS_QiYu.AllUsrData[szKey].qiyu_data or {}
+	local QY_Achievement = LR_ACS_QiYu.AllUsrData[szKey].qiyu_achievement or {}
 	local ServerInfo2 = {GetUserServer()}
 	local loginArea2, loginServer2, realArea2, realServer2 = ServerInfo2[3], ServerInfo2[4], ServerInfo2[5], ServerInfo2[6]
 	local me = GetClientPlayer()
@@ -1091,15 +1091,19 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 		Text_break1:SetHAlign(0)
 		Text_break1:SetVAlign(1)
 
+		local times = QY_Record[v] or 0
+		local font = 18
 		if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v])] then
 			times = _L["Done"]
+			font = 47
 		else
-			local times = QY_Record[v] or 0
 			if times >= 3 then
 				times = _L["Done"]
+				font =47
 			end
 		end
-		local Text_break2 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 140, h = 30, x  = 200, y = 2, text = times, font = 18})
+
+		local Text_break2 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 140, h = 30, x  = 200, y = 2, text = times, font = font})
 		Text_break2:SetHAlign(1)
 		Text_break2:SetVAlign(1)
 

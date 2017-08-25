@@ -3,4 +3,7 @@ data = {
 	["Remember last recipe"]="记住上次配方并合成",
 	["LR DiamondHelper"]="五行石小助手",
 
+	---20170825add--
+	["Distinguish by bind"]="区分绑定属性",
+
 }

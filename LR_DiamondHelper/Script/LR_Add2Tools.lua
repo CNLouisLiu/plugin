@@ -24,6 +24,13 @@ local LR_DiamondHelper_UI  = {
 			callback = function (enabled)
 				LR_DiamondHelper.UsrData.bRememberLastRecipe = enabled
 			end,
+		},{name = "LR_DiamondHelper_CheckBox02", type = "CheckBox", text = _L["Distinguish by bind"], x = 0, y = 30, w = 150,
+			default = function ()
+				return LR_DiamondHelper.UsrData.bDistinguishBind
+			end,
+			callback = function (enabled)
+				LR_DiamondHelper.UsrData.bDistinguishBind = enabled
+			end,
 		},
 	}
 }

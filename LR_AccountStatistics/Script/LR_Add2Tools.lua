@@ -175,7 +175,8 @@ local LR_AccountStatistics_UI = {
 				szTip[#szTip+1] = {szText = _L["Floating bar Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
 				return szTip
 			end,
-		},{name="LR_Acc_UI_CheckBox003",type="CheckBox",text=_L["Show button on mail panel"],x = 220 , y = 30, w = 200,
+		},
+		{name="LR_Acc_UI_CheckBox003",type="CheckBox",text=_L["Show button on mail panel"],x = 220 , y = 30, w = 200,
 			default = function ()
  				return LR_AccountStatistics_Bag.bHookMailPanel
 			end,
@@ -183,7 +184,8 @@ local LR_AccountStatistics_UI = {
 				LR_AccountStatistics_Bag.bHookMailPanel = enabled
 				LR_AccountStatistics_Bag.HookMailPanel()
 			end,
-		},{	name = "LR_Acc_UI_an4", type = "Button", x = 0, y = 70, text = _L["Open [LR_AccountStatistics] panel"], w = 200, h = 40,
+		},
+		{	name = "LR_Acc_UI_an4", type = "Button", x = 0, y = 70, text = _L["Open [LR_AccountStatistics] panel"], w = 200, h = 40,
 			callback = function()
 				LR_AccountStatistics.OpenPanel(true)
 			end,

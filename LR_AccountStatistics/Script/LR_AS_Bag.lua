@@ -106,6 +106,8 @@ function LR_AccountStatistics_Bag.HookMailPanel()
 				BTN_Mail.OnClick = function()
 					LR_AccountStatistics_Bag_Panel:Open(nil, nil, nil, nil ,true)
 				end
+				BTN_Mail:Enable(false)
+				LR.DelayCall(3000, function() BTN_Mail:Enable(true) end)
 			end
 		else
 			if not LR_AccountStatistics_Bag.bHookMailPanel then
@@ -1250,6 +1252,9 @@ function LR_AccountStatistics_Bag_Panel:LoadOneItem2(parent, item_data)
 			EditBox_AppendLinkItemInfo(1, item_data.dwTabType, item_data.dwIndex, item_data.nBookID)
 			return
 		end
+		if not LR.bCanDebug2() then
+			return
+		end
 		if (not LR_AccountStatistics_Bag_Panel.CalBag) and (not LR_AccountStatistics_Bag_Panel.CalBank) and LR_AccountStatistics_Bag_Panel.CalMail and LR_AccountStatistics_Bag_Panel.dwID ~= -1
 			or (item_data.nUiId == 0 and LR_AccountStatistics_Bag_Panel.dwID ~= -1 )
 		then
@@ -1298,6 +1303,9 @@ function LR_AccountStatistics_Bag_Panel:LoadOneItem2(parent, item_data)
 	box:OnItemLButtonClick(OnClick)
 
 	local OnRClick = function()
+		if not LR.bCanDebug2() then
+			return
+		end
 		local frame = Station.Lookup("Normal/MailPanel")
 		if not frame then
 			return
@@ -1346,7 +1354,8 @@ function LR_AccountStatistics_Bag_Panel:LoadOneItem2(parent, item_data)
 							nMouseOverFrame = 106,
 							szLayer = "ICON_LEFT",
 							fnClickIcon = function()
-								for nIndex, v4 in pairs (LR_AccountStatistics_Mail.info[tonumber(nMailID)].location) do
+								LR_AccountStatistics_Mail.info[tonumber(nMailID)] = LR_AccountStatistics_Mail.info[tonumber(nMailID)] or {}
+								for nIndex, v4 in pairs (LR_AccountStatistics_Mail.info[tonumber(nMailID)].location or {}) do
 									if v4.szKey == item_data.szKey then
 										LR_AccountStatistics_Mail_Loot.LootMailItem(tonumber(nMailID), nIndex)
 									end

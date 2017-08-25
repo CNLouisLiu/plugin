@@ -140,7 +140,7 @@ function LR_AccountStatistics.ON_FRAME_CREATE()
 			LR_AccountStatistics_Bag.HookBag()
 		end)
 	elseif szName == "MailPanel" then
-		LR.DelayCall(500, function()
+		LR.DelayCall(200, function()
 			LR_AccountStatistics_Bag.HookMailPanel()
 		end)
 	end
@@ -1314,8 +1314,9 @@ function LR_AccountStatistics.OpenQYDetail_Panel()
 	local ServerInfo = {GetUserServer()}
 	local realArea, realServer = ServerInfo[5], ServerInfo[6]
 	local szName = me.szName
+	local dwID = me.dwID
 
-	LR_ACS_QiYu_Panel:Open(realArea, realServer, szName)
+	LR_ACS_QiYu_Panel:Open(realArea, realServer, dwID)
 end
 
 -----------------------------

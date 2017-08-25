@@ -1039,6 +1039,18 @@ function LR.bCanDebug()
 	end
 end
 
+function LR.bCanDebug2()
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if realArea == "电信六区" and realServer == "红尘寻梦" and LR.GetTongName(me.dwTongID) == "么么哒萌萌哒" then
+		return true
+	else
+		return false
+	end
+end
+
+
 function LR.RedAlert(...)
 	OutputWarningMessage("MSG_WARNING_RED", ...)
 end
