@@ -86,7 +86,7 @@ RegisterCustomData("LR_AccountStatistics_RiChang.UsrData", CustomVersion)
 -------------------------------
 local MONITED_QUEST_LIST = {}		----不在这个列表中的任务不会触发保存
 local ADD2MONITED_QUEST_LIST = function(tList)
-	for k, v in pairs (tList) do
+	for k, v in pairs (tList or {}) do
 		MONITED_QUEST_LIST[k] = true
 	end
 end
@@ -158,17 +158,60 @@ function LR_AccountStatistics_RiChang.LoadCustomQuestList()
 	local path = sformat("%s\\CustomQuestList.dat", SaveDataPath)
 	local data = LoadLUAData(path) or {}
 	LR_AccountStatistics_RiChang.CustomQuestList = clone(data)
+	local quest_list = {}
+	for k, v in pairs (data) do
+		quest_list[tonumber(v.dwID)] = true
+	end
+	ADD2MONITED_QUEST_LIST(quest_list)
 end
 
 function LR_AccountStatistics_RiChang.GetCustomQuestStatus()
 	local me = GetClientPlayer()
+	if not me then
+		return
+	end
 	local CustomQuestList = LR_AccountStatistics_RiChang.CustomQuestList
 	local data = {}
 	for k, v in pairs (CustomQuestList) do
 		local dwID = v.dwID
+		local dwTemplateID = v.dwTemplateID or 0
+		data[tostring(dwID)] = {nQuestPhase = 0, need = 0, have = 0, full = false,}
+
 		local nQuestPhase = me.GetQuestPhase(dwID)	--3: 表示已完成任务0: 表示任务不存在1: 表示任务正在进行中，2: 表示任务已完成但还没有交-1: 表示任务id非法
 		if nQuestPhase > 0 then
-			data[tostring(dwID)] = {nQuestPhase = nQuestPhase,}
+			data[tostring(dwID)].nQuestPhase = nQuestPhase
+		end
+
+		local QuestTraceInfo = me.GetQuestTraceInfo(dwID)
+		if QuestTraceInfo then
+			local quest_state = QuestTraceInfo.quest_state or {}
+			local kill_npc = QuestTraceInfo.kill_npc or {}
+			local need_item = QuestTraceInfo.need_item or {}
+			local need = 0
+			local have = 0
+			for k , v in pairs (kill_npc) do
+				need = need + v.need or 0
+				have = have + v.have or 0
+			end
+			for k , v in pairs (quest_state) do
+				need = need + v.need or 0
+				have = have + v.have or 0
+			end
+			for k , v in pairs (need_item) do
+				need = need + v.need or 0
+				have = have + v.have or 0
+			end
+			data[tostring(dwID)].need = need
+			data[tostring(dwID)].have = have
+		end
+
+		if dwTemplateID > 0 then
+			local eCanAccept = me.CanAcceptQuest(dwID, dwTemplateID)		------用【大战！英雄微山书院！】测试大战是否有cd 。代码57：任务完成度已达上限
+			if eCanAccept ==  57 then
+				data[tostring(dwID)].full = true
+			else
+				data[tostring(dwID)].full = false
+			end
 		end
 	end
 	LR_AccountStatistics_RiChang.SelfCustomQuestStatus = clone(data)
@@ -176,7 +219,7 @@ end
 
 -----------------------------------------------------------------------------------------
 function LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM richang_data WHERE bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT * FROM richang_data WHERE bDel = 0 AND szKey IS NOT NULL ")
 	local Data = DB_SELECT:GetAll() or {}
 	local AllUsrData = {}
 	if Data and next(Data) ~= nil then
@@ -870,7 +913,7 @@ LR_AS_Exam.SelfData = {
 }
 
 function LR_AS_Exam.LoadData(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM exam_data WHERE bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT * FROM exam_data WHERE bDel = 0 AND szKey IS NOT NULL")
 	local Data = DB_SELECT:GetAll() or {}
 	local AllUsrData = {}
 	if Data and next(Data) ~=  nil then
@@ -920,7 +963,7 @@ end
 
 function LR_AS_Exam.ResetData(DB)
 	--清考试
-	local DB_SELECT = DB:Prepare("SELECT szKey FROM exam_data WHERE bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT szKey FROM exam_data WHERE bDel = 0 AND szKey IS NOT NULL")
 	local result = DB_SELECT:GetAll() or {}
 	if result and next(result) ~=  nil then
 		local DB_REPLACE = DB:Prepare("REPLACE INTO exam_data ( szKey, bDel ) VALUES ( ?, 0 )")
@@ -992,7 +1035,7 @@ function LR_AccountStatistics_RiChang.ResetData()
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
 	------载入时间
-	local DB_SELECT = DB:Prepare("SELECT * FROM richang_clear_time")
+	local DB_SELECT = DB:Prepare("SELECT * FROM richang_clear_time WHERE szName IS NOT NULL")
 	local Data = DB_SELECT:GetAll() or {}
 	local RC_ResetTime = {
 		ClearTimeRC = 0,			--日常
@@ -1020,6 +1063,10 @@ function LR_AccountStatistics_RiChang.ResetData()
 			RC_ResetTime.ClearTime5R = GetCurrentTime()
 			RC_ResetTime.ClearTime10R = GetCurrentTime()
 			RC_ResetTime.ClearTime25R = GetCurrentTime()
+
+			LR.DelayCall(2000, function()
+				LR_AS_DB.MainDBVacuum(true)
+			end)
 		elseif RefreshTimeThursday > RC_ResetTime.ClearTime10R then
 			LR_AccountStatistics_RiChang.ClearRC(DB)
 			LR_AccountStatistics_FBList.ClearAllData10R(DB)	--自带写入
@@ -1297,9 +1344,17 @@ function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 			if v.bShow and n <= 8 then
 				local Text_FB = items:Lookup(sformat("Text_RC%d", n))
 				if CUSTOM_QUEST[tostring(v.dwID)] then
-					if CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 1 then
-						Text_FB:SetText(_L["Accepted"])
-						Text_FB:SetFontScheme(31)
+					if CUSTOM_QUEST[tostring(v.dwID)].full then
+						Text_FB:SetText(_L["Done"])
+						Text_FB:SetFontScheme(47)
+					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 1 then
+						if CUSTOM_QUEST[tostring(v.dwID)].have == 0 then
+							Text_FB:SetText(_L["Accepted"])
+							Text_FB:SetFontScheme(31)
+						else
+							Text_FB:SprintfText("%s / %s", tostring(CUSTOM_QUEST[tostring(v.dwID)].have or 0), tostring(CUSTOM_QUEST[tostring(v.dwID)].need or 0))
+							Text_FB:SetFontScheme(31)
+						end
 					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 2 then
 						Text_FB:SetText(_L["Finished but not pay"])
 						Text_FB:SetFontScheme(17)
@@ -1358,7 +1413,7 @@ function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 				end
 			end
 
-			------自定义技能
+			------自定义任务
 			local CustomQuestList = LR_AccountStatistics_RiChang.CustomQuestList or {}
 			local CUSTOM_QUEST = RC_Record.CUSTOM_QUEST or {}
 			if next(CustomQuestList) ~= nil then
@@ -1367,8 +1422,14 @@ function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 			for k, v in pairs(CustomQuestList) do
 				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：\t", v.szName), 224)
 				if CUSTOM_QUEST[tostring(v.dwID)] then
-					if CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 1 then
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Accepted"]), 31)
+					if CUSTOM_QUEST[tostring(v.dwID)].full then
+						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
+					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 1 then
+						if CUSTOM_QUEST[tostring(v.dwID)].have == 0 then
+							szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Accepted"]), 31)
+						else
+							szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s / %s\n", tostring(CUSTOM_QUEST[tostring(v.dwID)].have or 0), tostring(CUSTOM_QUEST[tostring(v.dwID)].need or 0)), 31)
+						end
 					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 2 then
 						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Finished but not pay"]), 17)
 					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 3 then

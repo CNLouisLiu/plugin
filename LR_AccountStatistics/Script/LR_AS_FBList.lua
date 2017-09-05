@@ -108,19 +108,19 @@ end
 
 ------↓↓↓清除所有人的每周可获得监本数量
 function LR_AccountStatistics_FBList.ClearAllReaminJianBen(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM player_info")
+	local DB_SELECT = DB:Prepare("SELECT * FROM player_info WHERE szKey IS NOT NULL")
 	local Data = DB_SELECT:GetAll() or {}
-	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, dwID, szName, nLevel, dwForceID, nGold, nSilver, nCopper, JianBen, BangGong, XiaYi, WeiWang, ZhanJieJiFen, ZhanJieDengJi, MingJianBi, szTitle, nCurrentStamina, nMaxStamina, nCurrentThew, nMaxThew, nCurrentTrainValue, nCamp, szTongName, remainJianBen, loginArea, loginServer, realArea, realServer, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1000, ?, ?, ?, ?, ?)")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, dwID, szName, nLevel, dwForceID, nGold, nSilver, nCopper, JianBen, BangGong, XiaYi, WeiWang, ZhanJieJiFen, ZhanJieDengJi, MingJianBi, szTitle, nCurrentStamina, nMaxStamina, nCurrentThew, nMaxThew, nCurrentTrainValue, nCamp, szTongName, remainJianBen, loginArea, loginServer, realArea, realServer, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1500, ?, ?, ?, ?, ?)")
 	for k, v in pairs (Data) do
 		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(v.szKey, v.dwID, v.szName, v.nLevel, v.dwForceID, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.BangGong, v.XiaYi, v.WeiWang, v.ZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.szTitle, v.nCurrentStamina, v.nMaxStamina, v.nCurrentThew, v.nMaxThew, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.loginArea, v.loginServer, v.realArea, v.realServer, v.SaveTime)
+		DB_REPLACE:BindAll(v.szKey, v.dwID, v.szName, v.nLevel, v.dwForceID, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.BangGong, v.XiaYi, v.WeiWang, v.ZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.szTitle, v.nCurrentStamina, v.nMaxStamina, v.nCurrentThew, v.nMaxThew, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.loginArea, v.loginServer, v.realArea, v.realServer, GetCurrentTime())
 		DB_REPLACE:Execute()
 	end
 end
 
 ------↓↓↓清除所有人的副本数据，包括10人本，25人本，5人本
 function LR_AccountStatistics_FBList.ClearAllData(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0 AND szKey IS NOT NULL")
 	local Data = DB_SELECT:GetAll() or {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
 	for k, v in pairs (Data) do
@@ -132,7 +132,7 @@ end
 
 ------↓↓↓清除所有人物的10人本数据
 function LR_AccountStatistics_FBList.ClearAllData10R(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0 AND szKey IS NOT NULL")
 	local Data = DB_SELECT:GetAll() or {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
 	for k, v in pairs (Data) do
@@ -153,7 +153,7 @@ end
 
 ------↓↓↓清除所有人物的5人副本数据
 function LR_AccountStatistics_FBList.ClearAllData5R(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0 AND szKey IS NOT NULL")
 	local Data = DB_SELECT:GetAll() or {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
 	for k, v in pairs (Data) do
@@ -217,7 +217,7 @@ function LR_AccountStatistics_FBList.SaveData(DB)
 end
 
 function LR_AccountStatistics_FBList.LoadAllUsrData(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0 AND szKey IS NOT NULL")
 	local Data = DB_SELECT:GetAll()
 	local AllUsrData = {}
 	if Data and next(Data) ~= nil then

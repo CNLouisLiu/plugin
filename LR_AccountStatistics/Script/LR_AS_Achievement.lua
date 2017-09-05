@@ -64,7 +64,7 @@ end
 
 --载入成就数据
 function LR_AccountStatistics_Achievement.LoadAllUsrData(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM achievement_data INNER JOIN player_info ON player_info.szKey = achievement_data.szKey WHERE achievement_data.bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT * FROM achievement_data INNER JOIN player_info ON player_info.szKey = achievement_data.szKey WHERE achievement_data.bDel = 0 AND achievement_data.szKey IS NOT NULL")
 	local Data = DB_SELECT:GetAll() or {}
 	local AllUsrData = {}
 	for k, v in pairs (Data) do

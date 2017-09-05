@@ -167,7 +167,71 @@ function LR.CheckUnLock()
 	return state == "NO_PASSWORD" or state == "PASSWORD_UNLOCK"
 end
 
+function LR.GetItemNumInBag(dwTabType, dwIndex, nBookID)
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local num = 0
+	for dBox = 1, 6, 1 do
+		for dX = 0, me.GetBoxSize(dBox) - 1, 1 do
+			local item = me.GetItem(dBox, dX)
+			if item then
+				if item.dwTabType == dwTabType and item.dwIndex == dwIndex then
+					local nStackNum = 1
+					if item.nGenre == ITEM_GENRE.BOOK then
+						if item.nBookID ~= nBookID then
+							nStackNum = 0
+						end
+					else
+						if item.bCanStack then
+							nStackNum = item.nStackNum
+						end
+					end
+					num = num + nStackNum
+				end
+			end
+		end
+	end
 
+	return num
+end
+
+function LR.GetItemNumInBank(dwTabType, dwIndex, nBookID)
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local num = 0
+	for dBox = 7, 12, 1 do
+		for dX = 0, me.GetBoxSize(dBox) - 1, 1 do
+			local item = me.GetItem(dBox, dX)
+			if item then
+				if item.dwTabType == dwTabType and item.dwIndex == dwIndex then
+					local nStackNum = 1
+					if item.nGenre == ITEM_GENRE.BOOK then
+						if item.nBookID ~= nBookID then
+							nStackNum = 0
+						end
+					else
+						if item.bCanStack then
+							nStackNum = item.nStackNum
+						end
+					end
+					num = num + nStackNum
+				end
+			end
+		end
+	end
+
+	return num
+end
+
+function LR.GetItemNumInBagAndBank(dwTabType, dwIndex, nBookID)
+	local bagNum = LR.GetItemNumInBag(dwTabType, dwIndex, nBookID)
+	local bankNum = LR.GetItemNumInBank(dwTabType, dwIndex, nBookID)
+	return bagNum + bankNum
+end
 
 ------------------------------------------------------------------
 ------UI

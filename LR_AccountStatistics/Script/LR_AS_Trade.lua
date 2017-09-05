@@ -651,17 +651,17 @@ function LR_Acc_Trade.LoadData(nType, nPage)
 	DB:Execute("BEGIN TRANSACTION")
 	local SQL, SQL2, SQL3 = "", "", ""
 	if not nType or nType == OP1.TODAY then
-		SQL = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate = date('now', 'localtime') ORDER BY nTime, OrderTime LIMIT 100 OFFSET ?"
-		SQL3 = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate = date('now', 'localtime') ORDER BY nTime, OrderTime"
-		SQL2 = "SELECT COUNT(*) AS COUNT FROM trade_data WHERE bDel = 0 AND nDate = date('now', 'localtime')"
+		SQL = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate = date('now', 'localtime') AND szKey IS NOT NULL ORDER BY nTime, OrderTime LIMIT 100 OFFSET ?"
+		SQL3 = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate = date('now', 'localtime') AND szKey IS NOT NULL ORDER BY nTime, OrderTime"
+		SQL2 = "SELECT COUNT(*) AS COUNT FROM trade_data WHERE bDel = 0 AND nDate = date('now', 'localtime') AND szKey IS NOT NULL"
 	elseif nType == OP1.LAST_SEVEN_DAYS then
-		SQL = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate > date('now', 'localtime', '-7 day') ORDER BY nTime, OrderTime LIMIT 100 OFFSET ?"
-		SQL3 = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate > date('now', 'localtime', '-7 day') ORDER BY nTime, OrderTime"
-		SQL2 = "SELECT COUNT(*) AS COUNT FROM trade_data WHERE bDel = 0 AND nDate > date('now', 'localtime', '-7 day')"
+		SQL = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate > date('now', 'localtime', '-7 day') AND szKey IS NOT NULL ORDER BY nTime, OrderTime LIMIT 100 OFFSET ?"
+		SQL3 = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate > date('now', 'localtime', '-7 day') AND szKey IS NOT NULL ORDER BY nTime, OrderTime"
+		SQL2 = "SELECT COUNT(*) AS COUNT FROM trade_data WHERE bDel = 0 AND nDate > date('now', 'localtime', '-7 day') AND szKey IS NOT NULL"
 	elseif nType == OP1.THIS_MONTH then
-		SQL = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate >= date('now', 'localtime', 'start of month') ORDER BY nTime, OrderTime LIMIT 100 OFFSET ?"
-		SQL3 = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate >= date('now', 'localtime', 'start of month') ORDER BY nTime, OrderTime"
-		SQL2 = "SELECT COUNT(*) AS COUNT FROM trade_data WHERE bDel = 0 AND nDate >= date('now', 'localtime', 'start of month')"
+		SQL = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate >= date('now', 'localtime', 'start of month') AND szKey IS NOT NULL ORDER BY nTime, OrderTime LIMIT 100 OFFSET ?"
+		SQL3 = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate >= date('now', 'localtime', 'start of month') AND szKey IS NOT NULL ORDER BY nTime, OrderTime"
+		SQL2 = "SELECT COUNT(*) AS COUNT FROM trade_data WHERE bDel = 0 AND nDate >= date('now', 'localtime', 'start of month') AND szKey IS NOT NULL"
 	elseif nType == OP1.HISTORY then
 		local start_time = sformat("%04d-%02d-%02d", LR_Acc_Trade_ChooseDate_Panel.start_year, LR_Acc_Trade_ChooseDate_Panel.start_month, LR_Acc_Trade_ChooseDate_Panel.start_day )
 		local end_time = sformat("%04d-%02d-%02d", LR_Acc_Trade_ChooseDate_Panel.end_year, LR_Acc_Trade_ChooseDate_Panel.end_month, LR_Acc_Trade_ChooseDate_Panel.end_day )
@@ -670,9 +670,9 @@ function LR_Acc_Trade.LoadData(nType, nPage)
 			start_time = end_time
 			end_time = t
 		end
-		SQL = sformat("SELECT * FROM trade_data WHERE bDel = 0 AND nDate BETWEEN '%s' AND '%s' ORDER BY nTime, OrderTime LIMIT 100 OFFSET ?", start_time, end_time)
-		SQL3 = sformat("SELECT * FROM trade_data WHERE bDel = 0 AND nDate BETWEEN '%s' AND '%s' ORDER BY nTime, OrderTime", start_time, end_time)
-		SQL2 = sformat("SELECT COUNT(*) AS COUNT FROM trade_data WHERE bDel = 0 AND nDate BETWEEN '%s' AND '%s'", start_time, end_time)
+		SQL = sformat("SELECT * FROM trade_data WHERE bDel = 0 AND nDate BETWEEN '%s' AND '%s' AND szKey IS NOT NULL ORDER BY nTime, OrderTime LIMIT 100 OFFSET ?", start_time, end_time)
+		SQL3 = sformat("SELECT * FROM trade_data WHERE bDel = 0 AND nDate BETWEEN '%s' AND '%s' AND szKey IS NOT NULL ORDER BY nTime, OrderTime", start_time, end_time)
+		SQL2 = sformat("SELECT COUNT(*) AS COUNT FROM trade_data WHERE bDel = 0 AND szKey IS NOT NULL AND nDate BETWEEN '%s' AND '%s'", start_time, end_time)
 	elseif nType == OP1.THIS_WEEK then
 		local _now = GetCurrentTime()
 		local _date = TimeToDate(_now)
@@ -680,9 +680,9 @@ function LR_Acc_Trade.LoadData(nType, nPage)
 		if weekday ==0 then
 			weekday = 7
 		end
-		SQL = sformat("SELECT * FROM trade_data WHERE bDel = 0 AND nDate > date('now', 'localtime', '-%d day') ORDER BY nTime, OrderTime LIMIT 100 OFFSET ?", weekday)
-		SQL3 = sformat("SELECT * FROM trade_data WHERE bDel = 0 AND nDate > date('now', 'localtime', '-%d day') ORDER BY nTime, OrderTime", weekday)
-		SQL2 = sformat("SELECT COUNT(*) AS COUNT FROM trade_data WHERE bDel = 0 AND nDate > date('now', 'localtime', '-%d day')", weekday)
+		SQL = sformat("SELECT * FROM trade_data WHERE bDel = 0 AND nDate > date('now', 'localtime', '-%d day') AND szKey IS NOT NULL ORDER BY nTime, OrderTime LIMIT 100 OFFSET ?", weekday)
+		SQL3 = sformat("SELECT * FROM trade_data WHERE bDel = 0 AND nDate > date('now', 'localtime', '-%d day') AND szKey IS NOT NULL ORDER BY nTime, OrderTime", weekday)
+		SQL2 = sformat("SELECT COUNT(*) AS COUNT FROM trade_data WHERE bDel = 0 AND szKey IS NOT NULL AND nDate > date('now', 'localtime', '-%d day')", weekday)
 	end
 	local DB_SELECT2 = DB:Prepare(SQL2)
 	local data2 = DB_SELECT2:GetAll()
@@ -878,7 +878,7 @@ function LR_Acc_Trade.ImportNewVersionData()
 		local path = szFile
 		local DB = SQLite3_Open(path)
 		DB:Execute("BEGIN TRANSACTION")
-		DB_SELECT = DB:Prepare("SELECT * FROM trade_data WHERE bDel = 0")
+		DB_SELECT = DB:Prepare("SELECT * FROM trade_data WHERE bDel = 0 AND szKey IS NOT NULL")
 		local Data = DB_SELECT:GetAll() or {}
 		DB:Execute("END TRANSACTION")
 		DB:Release()

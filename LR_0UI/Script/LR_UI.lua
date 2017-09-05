@@ -483,8 +483,8 @@ end
 
 function WndButton:Enable(__enable)
 	if __enable then
-		self.__text:SetFontColor(255, 255, 255)
 		self.__this:Enable(true)
+		self.__text:SetFontColor(255, 255, 255)
 	else
 		self.__text:SetFontColor(180, 180, 180)
 		self.__this:Enable(false)

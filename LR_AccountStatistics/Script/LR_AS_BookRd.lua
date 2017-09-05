@@ -118,7 +118,7 @@ function LR_AccountStatistics_BookRd.SaveData(DB)
 end
 
 function LR_AccountStatistics_BookRd.LoadAllUsrData(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM bookrd_data WHERE bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT * FROM bookrd_data WHERE bDel = 0 AND szKey IS NOT NULL")
 	local Data = DB_SELECT:GetAll() or {}
 	local AllUsrData = {}
 	for k, v in pairs(Data) do

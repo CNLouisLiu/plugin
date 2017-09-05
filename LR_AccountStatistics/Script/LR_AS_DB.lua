@@ -169,7 +169,7 @@ local schema_bookrd_data = {
 
 local schema_bag_item_data = {
 	name = "bag_item_data",
-	version = "20170627",
+	version = "20170826",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "szName", 	sql = "szName VARCHAR(60)"},
@@ -179,6 +179,8 @@ local schema_bag_item_data = {
 		{name = "nUiId", 	sql = "nUiId INTEGER DEFAULT(0)"},
 		{name = "nBookID", 	sql = "nBookID INTEGER DEFAULT(0)"},
 		{name = "nGenre", 	sql = "nGenre INTEGER DEFAULT(0)"},
+		{name = "nSub", 	sql = "nSub INTEGER DEFAULT(0)"},
+		{name = "nDetail", 	sql = "nDetail INTEGER DEFAULT(0)"},
 		{name = "nQuality", 	sql = "nQuality INTEGER DEFAULT(0)"},
 		{name = "nStackNum", 	sql = "nStackNum INTEGER DEFAULT(0)"},
 		{name = "bBind", 	sql = "bBind INTEGER DEFAULT(0)"},
@@ -189,7 +191,7 @@ local schema_bag_item_data = {
 
 local schema_bank_item_data = {
 	name = "bank_item_data",
-	version = "20170627",
+	version = "20170826",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "szName", 	sql = "szName VARCHAR(60)"},
@@ -199,6 +201,8 @@ local schema_bank_item_data = {
 		{name = "nUiId", 	sql = "nUiId INTEGER DEFAULT(0)"},
 		{name = "nBookID", 	sql = "nBookID INTEGER DEFAULT(0)"},
 		{name = "nGenre", 	sql = "nGenre INTEGER DEFAULT(0)"},
+		{name = "nSub", 	sql = "nSub INTEGER DEFAULT(0)"},
+		{name = "nDetail", 	sql = "nDetail INTEGER DEFAULT(0)"},
 		{name = "nQuality", 	sql = "nQuality INTEGER DEFAULT(0)"},
 		{name = "nStackNum", 	sql = "nStackNum INTEGER DEFAULT(0)"},
 		{name = "bBind", 	sql = "bBind INTEGER DEFAULT(0)"},
@@ -209,7 +213,7 @@ local schema_bank_item_data = {
 
 local schema_mail_item_data = {
 	name = "mail_item_data",
-	version = "20170626",
+	version = "20170826",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "szName", 	sql = "szName VARCHAR(60)"},
@@ -219,6 +223,8 @@ local schema_mail_item_data = {
 		{name = "nUiId", 	sql = "nUiId INTEGER DEFAULT(0)"},
 		{name = "nBookID", 	sql = "nBookID INTEGER DEFAULT(0)"},
 		{name = "nGenre", 	sql = "nGenre INTEGER DEFAULT(0)"},
+		{name = "nSub", 	sql = "nSub INTEGER DEFAULT(0)"},
+		{name = "nDetail", 	sql = "nDetail INTEGER DEFAULT(0)"},
 		{name = "nQuality", 	sql = "nQuality INTEGER DEFAULT(0)"},
 		{name = "nStackNum", 	sql = "nStackNum INTEGER DEFAULT(0)"},
 		{name = "bBind", 	sql = "bBind INTEGER DEFAULT(0)"},
@@ -269,14 +275,13 @@ local schema_achievement_data = {
 
 local schema_equipment_data = {
 	name = "equipment_data",
-	version = "20170622",
+	version = "20170905",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(80)"},		--主键
 		{name = "nSuitIndex", 	sql = "nSuitIndex TEXT"},
 		{name = "equipment_data", 	sql = "equipment_data TEXT"},
 		{name = "score", 	sql = "score TEXT"},
-		{name = "char_info", 	sql = "char_info TEXT"},
-		{name = "char_infomore", 	sql = "char_infomore TEXT"},
+		{name = "char_infomoreV2", 	sql = "char_infomoreV2 TEXT"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey, nSuitIndex )"},
@@ -352,7 +357,7 @@ function LR_AS_DB.ImportPlayerListOld()
 	MessageBox(msg)
 end
 
-function LR_AS_DB.MainDBVacuum()
+function LR_AS_DB.MainDBVacuum(skip)
 	local vacuum = function()
 		local path = sformat("%s\\%s", SaveDataPath, DB_name)
 		local DB = SQLite3_Open(path)
@@ -363,6 +368,15 @@ function LR_AS_DB.MainDBVacuum()
 			local DB_DELETE = DB:Prepare(sformat(SQL, v))
 			DB_DELETE:Execute()
 		end
+
+		local SQL2 = "DELETE FROM %s WHERE %s IS NULL"
+		local TABLE2 = {"player_info", "bag_item_data", "bank_item_data", "bookrd_data", "exam_data", "fb_data", "mail_data", "mail_item_data", "mail_receive_time", "qiyu_data", "richang_data"}
+		local KEY2 = {"szKey", "szKey", "szKey", "szKey", "szKey", "szKey", "nMailID", "szKey", "szKey", "szKey", "szKey", }
+		for k, v in pairs(TABLE2) do
+			local DB_DELETE = DB:Prepare(sformat(SQL2, v, KEY2[k]))
+			DB_DELETE:Execute()
+		end
+
 		DB:Execute("END TRANSACTION")
 		DB:Execute("VACUUM")
 		DB:Release()
@@ -370,14 +384,18 @@ function LR_AS_DB.MainDBVacuum()
 		LR.GreenAlert(sformat("%s\n", _L["VACUUM Success!"]))
 	end
 
-	local msg = {
-		szMessage = _L["Are you sure to vacuum main database ?"],
-		szName = "vacuum database",
-		fnAutoClose = function() return false end,
-		{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() vacuum() end, },
-		{szOption = g_tStrings.STR_HOTKEY_CANCEL, },
-	}
-	MessageBox(msg)
+	if skip then
+		vacuum()
+	else
+		local msg = {
+			szMessage = _L["Are you sure to vacuum main database ?"],
+			szName = "vacuum database",
+			fnAutoClose = function() return false end,
+			{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() vacuum() end, },
+			{szOption = g_tStrings.STR_HOTKEY_CANCEL, },
+		}
+		MessageBox(msg)
+	end
 end
 
 function LR_AS_DB.MainDBBackup()

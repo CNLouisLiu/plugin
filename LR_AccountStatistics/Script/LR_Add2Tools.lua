@@ -367,14 +367,18 @@ local LR_AS_Normal_Settings = {
 				customMenu[#customMenu + 1] = {bDevide = true}
 				customMenu[#customMenu + 1] = {szOption = _L["Add custom quest"],
 					fnAction = function()
-						local dwID, szName, refresh = 0, "", "NEVER"
+						local dwID, szName, refresh, dwTemplateID = 0, "", "NEVER", 0
 						local step_4 = function(nType)
 							refresh = nType
 							local QuestInfo = LR.Table_GetQuestStringInfo(dwID)
+							if not QuestInfo then
+								LR.SysMsg(_L["Error, no this quest.\n"])
+								return
+							end
 							local szQuestName = QuestInfo.szName
-							local data = {dwID = dwID, szName = szName, refresh = refresh, bShow = false,}
+							local data = {dwID = dwID, szName = szName, refresh = refresh, bShow = false, dwTemplateID = dwTemplateID}
 							local msg = {
-								szMessage = sformat("%s\n%s:%s,%s:%s (%s)", _L["Are you sure to add?"], _L["QuestName"], szQuestName, _L["Show name"], szName, _L[refresh] ),
+								szMessage = sformat("%s\n%s:%s,%s:%s %s:%s (%s)", _L["Are you sure to add?"], _L["QuestName"], szQuestName, _L["NPC dwTemplateID"], dwTemplateID, _L["Show name"], szName, _L[refresh] ),
 								szName = "add",
 								fnAutoClose = function() return false end,
 								{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() tinsert(LR_AccountStatistics_RiChang.CustomQuestList, data); LR_AccountStatistics_RiChang.SaveCustomQuestList() end, },
@@ -407,12 +411,24 @@ local LR_AS_Normal_Settings = {
 							end)
 						end
 
+						local step_1_5 = function()
+							GetUserInput(_L["Input quest npc dwTemplateID"], function(szText)
+								local szText =  string.gsub(szText, "^%s*%[?(.-)%]?%s*$", "%1")
+								if type(tonumber(szText)) == "number" then
+									dwTemplateID = tonumber(szText)
+									LR.DelayCall(250, function() step_2() end)
+								else
+									LR.SysMsg(_L["Quest npc dwTemplateID must be number.\n"])
+								end
+							end)
+						end
+
 						local step_1 = function()
 							GetUserInput(_L["Input quest id"], function(szText)
 								local szText =  string.gsub(szText, "^%s*%[?(.-)%]?%s*$", "%1")
 								if type(tonumber(szText)) == "number" then
 									dwID = tonumber(szText)
-									LR.DelayCall(250, function() step_2() end)
+									LR.DelayCall(250, function() step_1_5() end)
 								else
 									LR.SysMsg(_L["Quest id must be number.\n"])
 								end

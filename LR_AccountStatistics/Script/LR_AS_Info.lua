@@ -57,7 +57,6 @@ function LR_AccountStatistics.AutoSave()
 	---获取人物数据
 
 
-
 	local _check_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, DB_name)
 	local DB = SQLite3_Open(path)
@@ -101,6 +100,12 @@ function LR_AccountStatistics.ON_FRAME_CREATE()
 	local szName = frame:GetName()
 	if szName  ==  "ExitPanel" then
 		frame:Lookup("Btn_Sure"):Enable(false)
+		LR.DelayCall(1000, function()
+			local frame = Station.Lookup("Topmost2/ExitPanel")
+			if frame then
+				frame:Lookup("Btn_Sure"):Enable(true)
+			end
+		end)
 		Log("[LR_AccountStatistics]:Exit save")
 		LR_AccountStatistics.AutoSave()
 		LR_ACS_QiYu.SaveData()
@@ -160,7 +165,7 @@ function LR_AccountStatistics.LoadUserList(DB)
 	if not me then
 		return
 	end
-	local DB_SELECT = DB:Prepare("SELECT szKey, dwID, szName, dwForceID, loginArea, loginServer, realArea, realServer FROM player_info")
+	local DB_SELECT = DB:Prepare("SELECT szKey, dwID, szName, dwForceID, loginArea, loginServer, realArea, realServer FROM player_info WHERE szKey IS NOT NULL")
 	DB_SELECT:ClearBindings()
 	local Data = DB_SELECT:GetAll() or {}
 	local UserList = {}
@@ -244,8 +249,6 @@ function LR_AccountStatistics.SaveSelfInfo(DB)
 		DB_DELETE:BindAll(szKey)
 		DB_DELETE:Execute()
 	end
-	local data = {}
-	-----------重置每周还可获得的监本数量的数据的操作放到副本统计里重置
 end
 
 function LR_AccountStatistics.LoadAllUserInformation(DB)
@@ -256,14 +259,14 @@ function LR_AccountStatistics.LoadAllUserInformation(DB)
 		for k, v in pairs(GroupChose) do
 			t[#t+1] = '?'
 		end
-		DB_SELECT = DB:Prepare(sformat("SELECT player_info.* FROM player_info INNER JOIN player_group ON player_info.szKey = player_group.szKey AND player_group.groupID IN ( %s )", tconcat(t, ", ")))
+		DB_SELECT = DB:Prepare(sformat("SELECT player_info.* FROM player_info INNER JOIN player_group ON player_info.szKey = player_group.szKey AND player_group.groupID IN ( %s ) WHERE player_info.szKey IS NOT NULL", tconcat(t, ", ")))
 		DB_SELECT:ClearBindings()
 		DB_SELECT:BindAll(unpack(GroupChose))
 	else
-		DB_SELECT = DB:Prepare("SELECT * FROM player_info")
+		DB_SELECT = DB:Prepare("SELECT * FROM player_info WHERE szKey IS NOT NULL")
 	end
 	local Data = DB_SELECT:GetAll() or {}
-	--local Data = DB:Execute("SELECT * FROM player_info") or {}
+	--local Data = DB:Execute("SELECT * FROM player_info WHERE szKey IS NOT NULL") or {}
 	local AllUsrData = {}
 	for k, v in pairs(Data) do
 		AllUsrData[v.szKey] = v
@@ -1386,7 +1389,9 @@ end
 ----分组
 --------------------------------------------
 function LR_AccountStatistics.LoadGroupListData(DB)
-	local Data = DB:Execute("SELECT * FROM group_list") or {}
+	local DB_SELECT = DB:Prepare("SELECT * FROM group_list WHERE groupID IS NOT NULL")
+	DB_SELECT:ClearBindings()
+	local Data = DB_SELECT:GetAll() or {}
 	local Group = {}
 	for k, v in pairs(Data) do
 		Group[v.groupID] = v
@@ -1402,7 +1407,7 @@ function LR_AccountStatistics.UpdateMyGroupInfo(DB)
 	local ServerInfo = {GetUserServer()}
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	local DB_SELECT = DB:Prepare("SELECT group_list.* FROM group_list INNER JOIN player_group ON player_group.groupID = group_list.groupID WHERE player_group.szKey = ? AND player_group.groupID > 0")
+	local DB_SELECT = DB:Prepare("SELECT group_list.* FROM group_list INNER JOIN player_group ON player_group.groupID = group_list.groupID WHERE player_group.szKey = ? AND player_group.groupID > 0 AND player_group.szKey IS NOT NULL")
 	DB_SELECT:ClearBindings()
 	DB_SELECT:BindAll(szKey)
 	local result = DB_SELECT:GetAll() or {}
@@ -1425,7 +1430,7 @@ function LR_AccountStatistics.LoadAllUserGroup(DB)
 	if not me then
 		return
 	end
-	local DB_SELECT = DB:Prepare("SELECT player_group.*, group_list.szName FROM player_group INNER JOIN group_list ON group_list.groupID = player_group.groupID")
+	local DB_SELECT = DB:Prepare("SELECT player_group.*, group_list.szName FROM player_group INNER JOIN group_list ON group_list.groupID = player_group.groupID WHERE player_group.szKey IS NOT NULL")
 	local Data = DB_SELECT:GetAll()
 	local AllUsrGroup = {}
 	for k, v in pairs(Data) do
@@ -1525,7 +1530,7 @@ function LR_AccountStatistics.FIRST_LOADING_END()
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 	FireEvent("LR_ACS_REFRESH_FP")
-	LR.DelayCall(18000, LR_AccountStatistics.AutoSave())
+	LR.DelayCall(8000, LR_AccountStatistics.AutoSave())
 end
 
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_AccountStatistics.FIRST_LOADING_END() end)

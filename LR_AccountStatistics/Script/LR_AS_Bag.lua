@@ -95,6 +95,7 @@ function LR_AccountStatistics_Bag.HookBag()
 	end
 end
 
+local _BTN_Mail = nil
 function LR_AccountStatistics_Bag.HookMailPanel()
 	local frame = Station.Lookup("Normal/MailPanel")
 	if frame then --背包界面添加一个按钮
@@ -107,16 +108,57 @@ function LR_AccountStatistics_Bag.HookMailPanel()
 					LR_AccountStatistics_Bag_Panel:Open(nil, nil, nil, nil ,true)
 				end
 				BTN_Mail:Enable(false)
-				LR.DelayCall(3000, function() BTN_Mail:Enable(true) end)
+				_BTN_Mail = BTN_Mail
+				LR.DelayCall(3000, function()
+					frame = Station.Lookup("Normal/MailPanel")
+					if frame then
+						local BTN_Mail = frame:Lookup("LR_BTN_Mail")
+						if BTN_Mail then
+							_BTN_Mail:Enable(true)
+						end
+					end
+				end)
 			end
 		else
 			if not LR_AccountStatistics_Bag.bHookMailPanel then
 				BTN_Mail:Destroy()
+				_BTN_Mail = nil
 			end
 		end
 	end
 end
 
+function LR_AccountStatistics_Bag.GetItemData(itm)
+	local t = {}
+	local t_item = {}
+	t_item.dwTabType = itm.dwTabType
+	t_item.dwIndex = itm.dwIndex
+	t_item.nUiId = itm.nUiId
+	t_item.nBookID = itm.nBookID
+	t_item.nGenre = itm.nGenre
+	t_item.nQuality = itm.nQuality
+	t_item.nStackNum = 1
+	if itm.bCanStack then
+		t_item.nStackNum = itm.nStackNum
+	end
+	if itm.bBind then
+		t_item.bBind = 1
+	else
+		t_item.bBind = 0
+	end
+	t_item.szName = LR.GetItemNameByItem(itm)
+	local szKey = sformat("%d_%d", itm.dwTabType, itm.dwIndex)
+	if itm.nGenre == ITEM_GENRE.BOOK then
+		szKey = sformat("Book_%d", itm.nBookID)
+	end
+	if itm.bBind then
+		szKey = sformat("%s_bBind", szKey)
+	end
+	t_item.szKey = szKey
+	t_item.nSub = itm.nSub
+	t_item.nDetail = itm.nDetail
+	return t_item
+end
 
 function LR_AccountStatistics_Bag.GetItemByGrid ()
 	local me = GetClientPlayer()
@@ -128,31 +170,8 @@ function LR_AccountStatistics_Bag.GetItemByGrid ()
 		for j = 0, me.GetBoxSize(i)-1, 1 do
 			local itm = me.GetItem(i, j)
 			if itm then
-				local t_item = {}
-				t_item.dwTabType = itm.dwTabType
-				t_item.dwIndex = itm.dwIndex
-				t_item.nUiId = itm.nUiId
-				t_item.nBookID = itm.nBookID
-				t_item.nGenre = itm.nGenre
-				t_item.nQuality = itm.nQuality
-				t_item.nStackNum = 1
-				if itm.bCanStack then
-					t_item.nStackNum = itm.nStackNum
-				end
-				if itm.bBind then
-					t_item.bBind = 1
-				else
-					t_item.bBind = 0
-				end
-				t_item.szName = LR.GetItemNameByItem(itm)
-				local szKey = sformat("%d_%d", itm.dwTabType, itm.dwIndex)
-				if itm.nGenre == ITEM_GENRE.BOOK then
-					szKey = sformat("Book_%d", itm.nBookID)
-				end
-				if itm.bBind then
-					szKey = sformat("%s_bBind", szKey)
-				end
-				t_item.szKey = szKey
+				local t_item = LR_AccountStatistics_Bag.GetItemData(itm)
+				local szKey = t_item.szKey
 				if ItemInBag[szKey] then
 					ItemInBag[szKey].nStackNum = ItemInBag[szKey].nStackNum + t_item.nStackNum
 				else
@@ -177,7 +196,7 @@ function LR_AccountStatistics_Bag.SaveData(DB)
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local belong = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	--先清数据
-	local DB_SELECT = DB:Prepare("SELECT szKey FROM bag_item_data WHERE nStackNum > 0 AND bDel = 0 AND belong = ?")
+	local DB_SELECT = DB:Prepare("SELECT szKey FROM bag_item_data WHERE nStackNum > 0 AND bDel = 0 AND belong = ? AND szKey IS NOT NULL AND belong IS NOT NULL")
 	DB_SELECT:ClearBindings()
 	DB_SELECT:BindAll(belong)
 	local result = DB_SELECT:GetAll() or {}
@@ -193,10 +212,10 @@ function LR_AccountStatistics_Bag.SaveData(DB)
 	if not LR_AccountStatistics.UsrData.OthersCanSee then
 		return
 	end
-	local DB_REPLACE2 = DB:Prepare("REPLACE INTO bag_item_data (szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nQuality, nStackNum, bBind, bDel) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
+	local DB_REPLACE2 = DB:Prepare("REPLACE INTO bag_item_data (szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum, bBind, bDel) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
 	for szKey, v in pairs (LR_AccountStatistics_Bag.ItemInBag) do
 		DB_REPLACE2:ClearBindings()
-		DB_REPLACE2:BindAll(szKey, belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nQuality, v.nStackNum, v.bBind)
+		DB_REPLACE2:BindAll(szKey, belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nSub, v.nDetail, v.nQuality, v.nStackNum, v.bBind)
 		DB_REPLACE2:Execute()
 	end
 end
@@ -224,31 +243,8 @@ function LR_AccountStatistics_Bank.GetItemByGrid ()
 		for j = 0, me.GetBoxSize(i)-1, 1 do
 			local itm = me.GetItem(i, j)
 			if itm then
-				local t_item = {}
-				t_item.dwTabType = itm.dwTabType
-				t_item.dwIndex = itm.dwIndex
-				t_item.nUiId = itm.nUiId
-				t_item.nBookID = itm.nBookID
-				t_item.nGenre = itm.nGenre
-				t_item.nQuality = itm.nQuality
-				t_item.nStackNum = 1
-				if itm.bCanStack then
-					t_item.nStackNum = itm.nStackNum
-				end
-				if itm.bBind then
-					t_item.bBind = 1
-				else
-					t_item.bBind = 0
-				end
-				t_item.szName = LR.GetItemNameByItem(itm)
-				local szKey = sformat("%d_%d", itm.dwTabType, itm.dwIndex)
-				if itm.nGenre == ITEM_GENRE.BOOK then
-					szKey = sformat("Book_%d", itm.nBookID)
-				end
-				if itm.bBind then
-					szKey = sformat("%s_bBind", szKey)
-				end
-				t_item.szKey = szKey
+				local t_item = LR_AccountStatistics_Bag.GetItemData(itm)
+				local szKey = t_item.szKey
 				if ItemInBank[szKey] then
 					ItemInBank[szKey].nStackNum = ItemInBank[szKey].nStackNum + t_item.nStackNum
 				else
@@ -273,7 +269,7 @@ function LR_AccountStatistics_Bank.SaveData(DB)
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local belong = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	--先清数据
-	local DB_SELECT = DB:Prepare("SELECT szKey FROM bank_item_data WHERE nStackNum > 0 AND bDel = 0 AND belong = ?")
+	local DB_SELECT = DB:Prepare("SELECT szKey FROM bank_item_data WHERE nStackNum > 0 AND bDel = 0 AND belong = ? AND szKey IS NOT NULL AND belong IS NOT NULL")
 	DB_SELECT:ClearBindings()
 	DB_SELECT:BindAll(belong)
 	local result = DB_SELECT:GetAll() or {}
@@ -289,10 +285,10 @@ function LR_AccountStatistics_Bank.SaveData(DB)
 	if not LR_AccountStatistics.UsrData.OthersCanSee then
 		return
 	end
-	local DB_REPLACE2 = DB:Prepare("REPLACE INTO bank_item_data (szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nQuality, nStackNum, bBind, bDel) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
+	local DB_REPLACE2 = DB:Prepare("REPLACE INTO bank_item_data (szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum, bBind, bDel) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
 	for szKey, v in pairs (LR_AccountStatistics_Bank.ItemInBank) do
 		DB_REPLACE2:ClearBindings()
-		DB_REPLACE2:BindAll(szKey, belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nQuality, v.nStackNum, v.bBind)
+		DB_REPLACE2:BindAll(szKey, belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nSub, v.nDetail, v.nQuality, v.nStackNum, v.bBind)
 		DB_REPLACE2:Execute()
 	end
 end
@@ -511,31 +507,8 @@ function LR_AccountStatistics_Mail.GetItemByMail ()
 				for nIndex = 0, 7, 1 do
 					local itm = MailInfo.GetItem(nIndex)
 					if itm then
-						local t_item = {}
-						t_item.dwTabType = itm.dwTabType
-						t_item.dwIndex = itm.dwIndex
-						t_item.nUiId = itm.nUiId
-						t_item.nBookID = itm.nBookID
-						t_item.nGenre = itm.nGenre
-						t_item.nQuality = itm.nQuality
-						t_item.nStackNum = 1
-						if itm.bCanStack then
-							t_item.nStackNum = itm.nStackNum
-						end
-						if itm.bBind then
-							t_item.bBind = 1
-						else
-							t_item.bBind = 0
-						end
-						t_item.szName = LR.GetItemNameByItem(itm)
-						local szKey = sformat("%d_%d", itm.dwTabType, itm.dwIndex)
-						if itm.nGenre == ITEM_GENRE.BOOK then
-							szKey = sformat("Book_%d", itm.nBookID)
-						end
-						if itm.bBind then
-							szKey = sformat("%s_bBind", szKey)
-						end
-						t_item.szKey = szKey
+						local t_item = LR_AccountStatistics_Bag.GetItemData(itm)
+						local szKey = t_item.szKey
 						if ItemInMail[szKey] then
 							ItemInMail[szKey].nStackNum = ItemInMail[szKey].nStackNum + t_item.nStackNum
 						else
@@ -580,7 +553,7 @@ function LR_AccountStatistics_Mail.SaveData(DB)
 	local belong = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	--先清数据
 	--清mail_item_data表
-	local DB_SELECT = DB:Prepare("SELECT szKey FROM mail_item_data WHERE nStackNum > 0 AND bDel = 0 AND belong = ?")
+	local DB_SELECT = DB:Prepare("SELECT szKey FROM mail_item_data WHERE nStackNum > 0 AND bDel = 0 AND belong = ? AND szKey IS NOT NULL AND belong IS NOT NULL")
 	DB_SELECT:ClearBindings()
 	DB_SELECT:BindAll(belong)
 	local result = DB_SELECT:GetAll() or {}
@@ -593,7 +566,7 @@ function LR_AccountStatistics_Mail.SaveData(DB)
 		end
 	end
 	--清mail_data表
-	local DB_SELECT2 = DB:Prepare("SELECT nMailID FROM mail_data WHERE bDel = 0 AND belong = ?")
+	local DB_SELECT2 = DB:Prepare("SELECT nMailID FROM mail_data WHERE bDel = 0 AND belong = ? AND nMailID IS NOT NULL AND belong IS NOT NULL")
 	DB_SELECT2:ClearBindings()
 	DB_SELECT2:BindAll(belong)
 	local result = DB_SELECT2:GetAll() or {}
@@ -615,11 +588,11 @@ function LR_AccountStatistics_Mail.SaveData(DB)
 	if not LR_AccountStatistics.UsrData.OthersCanSee then
 		--return
 	end
-	local DB_REPLACE = DB:Prepare("REPLACE INTO mail_item_data (bDel, szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nQuality, nStackNum, bBind, nBelongMailID) VALUES ( 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO mail_item_data (bDel, szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum, bBind, nBelongMailID) VALUES ( 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
 	--Output(LR_AccountStatistics_Mail.ItemInMail)
 	for szKey, v in pairs (LR_AccountStatistics_Mail.ItemInMail) do
 		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(szKey, belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nQuality, v.nStackNum, v.bBind, LR.JsonEncode(v.nBelongMailID))
+		DB_REPLACE:BindAll(szKey, belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nSub, v.nDetail, v.nQuality, v.nStackNum, v.bBind, LR.JsonEncode(v.nBelongMailID))
 		DB_REPLACE:Execute()
 	end
 	--添加邮件
@@ -1435,7 +1408,7 @@ function LR_AccountStatistics_Bag_Panel.LoadUserBagData(DB)
 		if dwID == me.dwID and realArea2 == realArea and realServer2 == realServer or dwID == 0 then
 			ItemInBag = LR_AccountStatistics_Bag.ItemInBag
 		else
-			local DB_SELECT = DB:Prepare("SELECT bag_item_data.* FROM bag_item_data INNER JOIN player_info ON bag_item_data.belong = player_info.szKey WHERE bag_item_data.bDel = 0 AND bag_item_data.belong = ? AND bag_item_data.nStackNum > 0")
+			local DB_SELECT = DB:Prepare("SELECT bag_item_data.* FROM bag_item_data INNER JOIN player_info ON bag_item_data.belong = player_info.szKey WHERE bag_item_data.bDel = 0 AND bag_item_data.belong = ? AND bag_item_data.nStackNum > 0 AND bag_item_data.szKey IS NOT NULL AND bag_item_data.belong IS NOT NULL")
 			DB_SELECT:ClearBindings()
 			DB_SELECT:BindAll(belong)
 			local Data = DB_SELECT:GetAll() or {}
@@ -1451,14 +1424,14 @@ function LR_AccountStatistics_Bag_Panel.LoadUserBagData(DB)
 			LR_AccountStatistics_Bag_Panel.ItemBelong[v.szKey][belong].bag_num = v.nStackNum
 		end
 	elseif dwID == -1 then
-		local DB_SELECT = DB:Prepare("SELECT belong, player_info.dwID, player_info.realArea, player_info.realServer FROM bag_item_data INNER JOIN player_info ON bag_item_data.belong = player_info.szKey GROUP BY belong")
+		local DB_SELECT = DB:Prepare("SELECT belong, player_info.dwID, player_info.realArea, player_info.realServer FROM bag_item_data INNER JOIN player_info ON bag_item_data.belong = player_info.szKey WHERE bag_item_data.szKey IS NOT NULL AND bag_item_data.belong IS NOT NULL GROUP BY belong")
 		local UserList = DB_SELECT:GetAll() or {}
 		for k, v in pairs(UserList) do
 			local temp = {}
 			if v.dwID == me.dwID and realArea2 == v.realArea and realServer2 == v.realServer then
 				temp = LR_AccountStatistics_Bag.ItemInBag
 			else
-				local DB_SELECT2 = DB:Prepare("SELECT bag_item_data.* FROM bag_item_data INNER JOIN player_info ON bag_item_data.belong = player_info.szKey WHERE bag_item_data.bDel = 0 AND bag_item_data.belong = ? AND bag_item_data.nStackNum > 0")
+				local DB_SELECT2 = DB:Prepare("SELECT bag_item_data.* FROM bag_item_data INNER JOIN player_info ON bag_item_data.belong = player_info.szKey WHERE bag_item_data.bDel = 0 AND bag_item_data.belong = ? AND bag_item_data.nStackNum > 0 AND bag_item_data.szKey IS NOT NULL AND bag_item_data.belong IS NOT NULL")
 				DB_SELECT2:ClearBindings()
 				DB_SELECT2:BindAll(v.belong)
 				local Data = DB_SELECT2:GetAll() or {}
@@ -1507,7 +1480,7 @@ function LR_AccountStatistics_Bag_Panel.LoadUserBankData(DB)
 		if dwID == me.dwID and realArea2 == realArea and realServer2 == realServer or dwID == 0 then
 			ItemInBank = LR_AccountStatistics_Bank.ItemInBank
 		else
-			local DB_SELECT = DB:Prepare("SELECT bank_item_data.* FROM bank_item_data INNER JOIN player_info ON bank_item_data.belong = player_info.szKey WHERE bank_item_data.bDel = 0 AND bank_item_data.belong = ? AND bank_item_data.nStackNum > 0")
+			local DB_SELECT = DB:Prepare("SELECT bank_item_data.* FROM bank_item_data INNER JOIN player_info ON bank_item_data.belong = player_info.szKey WHERE bank_item_data.bDel = 0 AND bank_item_data.belong = ? AND bank_item_data.nStackNum > 0 AND bank_item_data.szKey IS NOT NULL AND bank_item_data.belong IS NOT NULL")
 			DB_SELECT:ClearBindings()
 			DB_SELECT:BindAll(belong)
 			local Data = DB_SELECT:GetAll() or {}
@@ -1523,14 +1496,14 @@ function LR_AccountStatistics_Bag_Panel.LoadUserBankData(DB)
 			LR_AccountStatistics_Bag_Panel.ItemBelong[v.szKey][belong].bank_num = v.nStackNum
 		end
 	elseif dwID == -1 then
-		local DB_SELECT = DB:Prepare("SELECT belong, player_info.dwID, player_info.realArea, player_info.realServer FROM bank_item_data INNER JOIN player_info ON bank_item_data.belong = player_info.szKey GROUP BY belong")
+		local DB_SELECT = DB:Prepare("SELECT belong, player_info.dwID, player_info.realArea, player_info.realServer FROM bank_item_data INNER JOIN player_info ON bank_item_data.belong = player_info.szKey WHERE bank_item_data.szKey IS NOT NULL AND bank_item_data.belong IS NOT NULL GROUP BY belong")
 		local UserList = DB_SELECT:GetAll() or {}
 		for k, v in pairs(UserList) do
 			local temp = {}
 			if v.dwID == me.dwID and realArea2 == v.realArea and realServer2 == v.realServer then
 				temp = LR_AccountStatistics_Bank.ItemInBank
 			else
-				local DB_SELECT2 = DB:Prepare("SELECT bank_item_data.* FROM bank_item_data INNER JOIN player_info ON bank_item_data.belong = player_info.szKey WHERE bank_item_data.bDel = 0 AND bank_item_data.belong = ? AND bank_item_data.nStackNum > 0")
+				local DB_SELECT2 = DB:Prepare("SELECT bank_item_data.* FROM bank_item_data INNER JOIN player_info ON bank_item_data.belong = player_info.szKey WHERE bank_item_data.bDel = 0 AND bank_item_data.belong = ? AND bank_item_data.nStackNum > 0 AND bank_item_data.szKey IS NOT NULL AND bank_item_data.belong IS NOT NULL")
 				DB_SELECT2:ClearBindings()
 				DB_SELECT2:BindAll(v.belong)
 				local Data = DB_SELECT2:GetAll() or {}
@@ -1595,10 +1568,10 @@ function LR_AccountStatistics_Bag_Panel.LoadUserMailData(DB)
 			UserList[belong] = {belong = belong, realArea = realArea, realServer = realServer, dwID = dwID}
 		end
 	else
-		local SQL = "SELECT belong, player_info.dwID, player_info.realArea, player_info.realServer FROM mail_data INNER JOIN player_info ON mail_data.belong = player_info.szKey WHERE mail_data.bDel = 0 GROUP BY belong"
+		local SQL = "SELECT belong, player_info.dwID, player_info.realArea, player_info.realServer FROM mail_data INNER JOIN player_info ON mail_data.belong = player_info.szKey WHERE mail_data.bDel = 0 AND mail_data.nMailID IS NOT NULL AND mail_data.belong IS NOT NULL GROUP BY belong"
 		if LR_AccountStatistics_Bag_Panel.bShowExpireMail then
 			local nEndTime = GetCurrentTime() + 60 * 60 *24 * 7
-			SQL = sformat("SELECT belong, player_info.dwID, player_info.realArea, player_info.realServer FROM mail_data INNER JOIN player_info ON mail_data.belong = player_info.szKey WHERE mail_data.bDel = 0 AND mail_data.nEndTime < %d GROUP BY belong", nEndTime)
+			SQL = sformat("SELECT belong, player_info.dwID, player_info.realArea, player_info.realServer FROM mail_data INNER JOIN player_info ON mail_data.belong = player_info.szKey WHERE mail_data.bDel = 0 AND mail_data.nEndTime < %d AND mail_data.nMailID IS NOT NULL AND mail_data.belong IS NOT NULL GROUP BY belong", nEndTime)
 		end
 		local DB_SELECT = DB:Prepare(SQL)
 		local UserList2 = DB_SELECT:GetAll() or {}
@@ -1629,10 +1602,10 @@ function LR_AccountStatistics_Bag_Panel.LoadUserMailData(DB)
 				ItemInMail2 = clone(LR_AccountStatistics_Mail.ItemInMail)
 			end
 		else
-			local SQL = "SELECT mail_data.* FROM mail_data WHERE mail_data.belong = ? AND bDel = 0"
+			local SQL = "SELECT * FROM mail_data WHERE belong = ? AND bDel = 0 AND nMailID IS NOT NULL AND belong IS NOT NULL"
 			if LR_AccountStatistics_Bag_Panel.bShowExpireMail then
 				local nEndTime = GetCurrentTime() + 60 * 60 *24 * 7
-				SQL = sformat("SELECT mail_data.* FROM mail_data WHERE mail_data.belong = ? AND bDel = 0 AND nEndTime < %d", nEndTime)
+				SQL = sformat("SELECT * FROM mail_data WHERE belong = ? AND bDel = 0 AND nEndTime < %d AND nMailID IS NOT NULL AND belong IS NOT NULL", nEndTime)
 			end
 			local DB_SELECT = DB:Prepare(SQL)
 			DB_SELECT:ClearBindings()
@@ -1644,7 +1617,7 @@ function LR_AccountStatistics_Bag_Panel.LoadUserMailData(DB)
 					MailData2[v2.nMailID].item_record = LR.JsonDecode(v2.item_record)
 				end
 				--获取邮件中的物品信息
-				local SQL2 = "SELECT * FROM mail_item_data WHERE belong = ? AND bDel = 0"
+				local SQL2 = "SELECT * FROM mail_item_data WHERE belong = ? AND bDel = 0 AND szKey IS NOT NULL AND belong IS NOT NULL"
 				if LR_AccountStatistics_Bag_Panel.bShowExpireMail then
 					local t_szKey2 = {}
 					for k3, v3 in pairs(MailData2) do
@@ -1657,7 +1630,7 @@ function LR_AccountStatistics_Bag_Panel.LoadUserMailData(DB)
 					for k2, v2 in pairs(t_szKey2) do
 						t_szKey[#t_szKey+1] = sformat("'%s'", k2)
 					end
-					SQL2 = sformat("SELECT * FROM mail_item_data WHERE belong = ? AND bDel = 0 AND szKey IN ( %s )", tconcat(t_szKey, ", "))
+					SQL2 = sformat("SELECT * FROM mail_item_data WHERE belong = ? AND bDel = 0 AND szKey IN ( %s ) AND szKey IS NOT NULL AND belong IS NOT NULL", tconcat(t_szKey, ", "))
 				end
 				local DB_SELECT2 = DB:Prepare(SQL2)
 				DB_SELECT2:ClearBindings()
@@ -1839,29 +1812,22 @@ function LR_AccountStatistics_Bag_Panel.SortData(t_table)
 	local temp_table = (t_table) or {}
 	local tt = {}
 	tsort(temp_table, function(a, b)
-		if a["nQuality"] and b["nQuality"] then
-			if a["nQuality"] > b["nQuality"] then
-				return a["nQuality"] > b["nQuality"]
-			elseif a["nQuality"] ==  b["nQuality"] then
-				if a["nGenre"] ==   ITEM_GENRE.EQUIPMENT then
-					return a.dwIndex < b.dwIndex
---[[					if a["nSub"] and b["nSub"] then
-						if a["nSub"] ==  b["nSub"] then
-							return a["nUiId"] < b["nUiId"]
-						else
-							return a["nSub"] < b["nSub"]
-						end
+		if a.nGenre == b.nGenre then
+			if a.nSub == b.nSub then
+				if a.nDetail == b.nDetail then
+					if a.nQuality == b.nQuality then
+						return a.nUiId < b.nUiId
 					else
-						return false
-					end]]
+						return a.nQuality > b.nQuality
+					end
 				else
-					return a["nUiId"] < b["nUiId"]
+					return a.nDetail < b.nDetail
 				end
 			else
-				return false
+				return a.nSub < b.nSub
 			end
 		else
-			return false
+			return a.nGenre < b.nGenre
 		end
 	end)
 
@@ -1954,7 +1920,7 @@ function LR_AccountStatistics_Mail_Check.CheckAllMail()
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
 	if LR_AccountStatistics_Mail.UsrData.atMaturity then
-		local DB_SELECT = DB:Prepare("SELECT COUNT(*) AS COUNT FROM mail_data INNER JOIN player_info ON mail_data.belong = player_info.szKey WHERE mail_data.bDel = 0 AND nEndTime < ? AND nEndTime > ?")
+		local DB_SELECT = DB:Prepare("SELECT COUNT(*) AS COUNT FROM mail_data INNER JOIN player_info ON mail_data.belong = player_info.szKey WHERE mail_data.bDel = 0 AND nEndTime < ? AND nEndTime > ? AND mail_data.nMailID IS NOT NULL AND mail_data.belong IS NOT NULL")
 		local nEndTime = GetCurrentTime() + 60 * 60 * 24 * LR_AccountStatistics_Mail.UsrData.atMaturityDay
 		DB_SELECT:ClearBindings()
 		DB_SELECT:BindAll(nEndTime, GetCurrentTime())
@@ -1964,7 +1930,7 @@ function LR_AccountStatistics_Mail_Check.CheckAllMail()
 			LR.SysMsg(msg)
 			--LR.RedAlert(msg)
 			if false then
-				local DB_SELECT2 = DB:Prepare("SELECT * FROM mail_data INNER JOIN player_info ON mail_data.belong = player_info.szKey WHERE mail_data.bDel = 0 AND nEndTime < ? AND nEndTime > ?")
+				local DB_SELECT2 = DB:Prepare("SELECT * FROM mail_data INNER JOIN player_info ON mail_data.belong = player_info.szKey WHERE mail_data.bDel = 0 AND nEndTime < ? AND nEndTime > ? AND mail_data.nMailID IS NOT NULL AND mail_data.belong IS NOT NULL")
 				local nEndTime = GetCurrentTime() + 60 * 60 * 24 * LR_AccountStatistics_Mail.UsrData.atMaturityDay
 				DB_SELECT2:ClearBindings()
 				DB_SELECT2:BindAll(nEndTime, GetCurrentTime())
@@ -1977,7 +1943,7 @@ function LR_AccountStatistics_Mail_Check.CheckAllMail()
 	end
 
 	if LR_AccountStatistics_Mail.UsrData.remind then
-		local DB_SELECT = DB:Prepare("SELECT * FROM mail_receive_time WHERE szKey = ? AND bDel = 0")
+		local DB_SELECT = DB:Prepare("SELECT * FROM mail_receive_time WHERE szKey = ? AND bDel = 0 AND szKey IS NOT NULL")
 		local me = GetClientPlayer()
 		local ServerInfo = {GetUserServer()}
 		local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]

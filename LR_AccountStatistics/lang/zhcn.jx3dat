@@ -356,8 +356,6 @@ data={
 	["Use common QiYu settings"]="使用奇遇公共设置",
 
 	--20160913add--
-	["HUIGUANG"]="7周年丸子",
-	["HUASHAN"]="沉香扇骨",
 	["7 YEAR"]="扇子成就",
 	["LR_7Year"]="懒人七周年扇子成就统计",
 
@@ -469,7 +467,7 @@ data={
 	["TRADE DB Settings"]="收支记录数据库",
 	["TRADE DB Batch Import"]="批量导入(旧)",
 	["Are you sure to vacuum main database ?"]="你确定要优化主数据库吗？",
-	["VACUUM Success!"]="数据库优化成功！",
+	["VACUUM Success!"]="懒人账目本数据库优化成功！",
 	["Are you sure to backup main database ?"]="你确定要备份主数据库吗？",
 	["Please backup manually."]="请手动备份数据库。",
 	["Are you sure to patch import data (database version) ?"]="你确定要根据现有的角色列表，批量导入各角色的旧版交易数据('.jx3dat')吗?\n这个操作将花费很多时间，并占用大量磁盘资源。",
@@ -606,4 +604,12 @@ data={
 	["Custom quest under"]="以下为自定义任务",
 	["Sure to delete"]="确定要删除",
 
+	--20170901add--
+	["NPC dwTemplateID"]="NPC模版ID",
+	["Input quest npc dwTemplateID"]="输入接取任务的NPC的模版ID。部分一次性任务可输入0，但是大部分循环任务必须输入正确。",
+	["Quest npc dwTemplateID must be number.\n"]="任务NPC的模版ID必须为数字。\n",
+	["Error, no this quest.\n"]="错误，没有这个任务。\n",
+
+	["HUIGUANG"]="领辉光流影",
+	["HUASHAN"]="山海间",
 }

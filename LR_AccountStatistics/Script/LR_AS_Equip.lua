@@ -16,8 +16,6 @@ LR_AccountStatistics_Equip = LR_AccountStatistics_Equip or {
 LR_AccountStatistics_Equip.SelfData = {}
 LR_AccountStatistics_Equip.AllUsrData = {}
 
-
-
 LR_AccountStatistics_Equip.tEquipPos = {
 	{position = EQUIPMENT_INVENTORY.BANGLE, name = "BANGLE", frameid = 60, }, -- 护臂
 	{position = EQUIPMENT_INVENTORY.CHEST, name = "CHEST", frameid = 62, }, -- 上衣
@@ -97,115 +95,47 @@ end
 local charinfo_frame_flag = 0	--0：原来为关闭状态 1：原来为打开状态 (隐藏) 2：原来为打开状态（可见）
 local charinfomore_frame_flag = 0	--同上
 function LR_AccountStatistics_Equip.GetEquipScore()
-	local player = GetClientPlayer()
-	if not player then
+	local me = GetClientPlayer()
+	if not me then
 		return
 	end
-	----打开界面
-	local charinfo_frame = Station.Lookup("Normal/CharInfo")
-	if not charinfo_frame then
-		charinfo_frame_flag = 0
-		Wnd.OpenWindow("CharInfo"):Hide()
-		local CharacterPanel_frame = Station.Lookup("Normal/CharacterPanel")
-		CharacterPanel_frame:SetSize(610, 535)
-	elseif not charinfo_frame:IsVisible() then
-		charinfo_frame_flag = 1
-	else
-		charinfo_frame_flag = 2
+
+	local nIndex = me.GetEquipIDArray(0)
+	local TotalEquipScore = me.GetTotalEquipScore()	--总分
+	local BaseEquipScore = me.GetBaseEquipScore()	--基础分数
+	local StrengthEquipScore = me.GetStrengthEquipScore()	--强化分数
+	local MountsEquipScore = me.GetMountsEquipScore()	--镶嵌分数
+
+	local score = {}
+	score.TotalEquipScore = TotalEquipScore
+	score.BaseEquipScore = BaseEquipScore
+	score.StrengthEquipScore = StrengthEquipScore
+	score.MountsEquipScore = MountsEquipScore
+
+	local tFenLei, tContent, tTip = CharInfoMore_GetShowValue()
+	local char_infomore = {}
+	local k, flag = 1, true
+	for i = 1, #tContent, 1 do
+		if flag then
+			char_infomore[#char_infomore + 1] = {bText = true, value = tFenLei[k][1],}
+			char_infomore[#char_infomore + 1] = {bDevide = true,}
+			flag = false
+		end
+		if i > tFenLei[k][2] then
+			flag = true
+			k = k +1
+		end
+		char_infomore[#char_infomore + 1] = {}
+		char_infomore[#char_infomore].label = tContent[i][1]
+		char_infomore[#char_infomore].value = tContent[i][2]
+		char_infomore[#char_infomore].tip = tTip[tContent[i][3]]
 	end
 
-	local charinfomore_frame = Station.Lookup("Normal/CharInfoMore")
-	if not charinfomore_frame then
-		charinfomore_frame_flag = 0
-		Wnd.OpenWindow("CharInfoMore"):SetRelPos(-500, -500)
-		local CharacterPanel_frame = Station.Lookup("Normal/CharacterPanel")
-		CharacterPanel_frame:SetSize(840, 535)
-	elseif not charinfomore_frame:IsVisible() then
-		charinfomore_frame_flag = 1
-	else
-		charinfomore_frame_flag = 2
-	end
+	LR_AccountStatistics_Equip.SelfData[tostring(nIndex)] = LR_AccountStatistics_Equip.SelfData[tostring(nIndex)] or {}
+	LR_AccountStatistics_Equip.SelfData[tostring(nIndex)].score = clone(score)
+	LR_AccountStatistics_Equip.SelfData[tostring(nIndex)].char_infomore = clone(char_infomore)
 
-	LR.DelayCall(500,function()
-		local nIndex = player.GetEquipIDArray(0)
-		local TotalEquipScore = player.GetTotalEquipScore()	--总分
-		local BaseEquipScore = player.GetBaseEquipScore()	--基础分数
-		local StrengthEquipScore = player.GetStrengthEquipScore()	--强化分数
-		local MountsEquipScore = player.GetMountsEquipScore()	--镶嵌分数
-
-		---获取属性
-		local charinfo_frame = Station.Lookup("Normal/CharInfo")
-		local PVEscore, PVPscore
-		local data2 = {}
-		if charinfo_frame then
-			local charinfo_handle = charinfo_frame:Lookup("","")
-			PVEscore = charinfo_handle:Lookup("Text_PVEValue"):GetText()
-			PVPscore = charinfo_handle:Lookup("Text_PVPValue"):GetText()
-			local handle = charinfo_frame:Lookup("WndScroll_Property", "")
-			for i = 0, handle:GetVisibleItemCount() -1 do
-				local h = handle:Lookup(i)
-				data2[#data2+1] = {
-					szTip = h.szTip,
-					label = h:Lookup("Text_ClassInfoLabel"):GetText(),
-					value = h:Lookup("Text_ClassInfoValue"):GetText(),
-				}
-			end
-		else
-			--Output("ss")
-		end
-
-		--获取更多属性
-		local charinfomore_frame = Station.Lookup("Normal/CharInfoMore")
-		local data3 = {}
-		if charinfomore_frame then
-			local handle3 = charinfomore_frame:Lookup("WndScroll_Property", "")
-			for i = 0, handle3:GetVisibleItemCount() -1 do
-				local h = handle3:Lookup(i)
-				if h:GetName() == "Handle_Text" then
-					data3[#data3+1] = {
-						bText = true,
-						value = h:Lookup("Text_GroupName"):GetText(),
-					}
-				elseif h:GetName() == "Handle_Divide" then
-					data3[#data3+1] = { bDivide = true,}
-				else
-					if h:Lookup("Text_ClassInfoValue"):GetText() ~= "9999" then
-						data3[#data3+1] = {
-							label = h:Lookup("Text_ClassInfoLabel"):GetText(),
-							value = h:Lookup("Text_ClassInfoValue"):GetText(),
-						}
-					end
-				end
-			end
-			if charinfomore_frame_flag == 0 then
-				Wnd.CloseWindow("CharInfoMore")
-				local CharacterPanel_frame = Station.Lookup("Normal/CharacterPanel")
-				CharacterPanel_frame:SetSize(610, 535)
-			elseif charinfomore_frame_flag == 1 then
-				charinfomore_frame:Hide()
-			end
-		else
-			--Output("xx")
-		end
-
-		local score = {}
-		score.TotalEquipScore = TotalEquipScore
-		score.BaseEquipScore = BaseEquipScore
-		score.StrengthEquipScore = StrengthEquipScore
-		score.MountsEquipScore = MountsEquipScore
-		score.PVEscore = PVEscore
-		score.PVPscore = PVPscore
-
-		local char_info = clone(data2)
-		local char_infomore = clone(data3)
-
-		LR_AccountStatistics_Equip.SelfData[tostring(nIndex)] = LR_AccountStatistics_Equip.SelfData[tostring(nIndex)] or {}
-		LR_AccountStatistics_Equip.SelfData[tostring(nIndex)].score = clone(score)
-		LR_AccountStatistics_Equip.SelfData[tostring(nIndex)].char_info = clone(char_info)
-		LR_AccountStatistics_Equip.SelfData[tostring(nIndex)].char_infomore = clone(char_infomore)
-
-		LR_AccountStatistics_Equip.SaveData(DB)
-	end)
+	LR_AccountStatistics_Equip.SaveData(DB)
 end
 
 function LR_AccountStatistics_Equip.SaveData(DB)
@@ -214,13 +144,13 @@ function LR_AccountStatistics_Equip.SaveData(DB)
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	local SelfData = LR_AccountStatistics_Equip.SelfData
-	local DB_REPLACE = DB:Prepare("REPLACE INTO equipment_data ( szKey, nSuitIndex, equipment_data, score, char_info, char_infomore, bDel ) VALUES ( ?, ?, ?, ?, ?, ?, 0 )")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO equipment_data ( szKey, nSuitIndex, equipment_data, score, char_infomoreV2, bDel ) VALUES ( ?, ?, ?, ?, ?, 0 )")
 	local DB_REPLACE2 = DB:Prepare("REPLACE INTO equipment_data ( szKey, nSuitIndex, bDel ) VALUES ( ?, ?, 1 )")
 	for nSuitIndex, v in pairs (SelfData) do
 		if true then
 		--if LR_AccountStatistics.UsrData.OthersCanSee then
 			DB_REPLACE:ClearBindings()
-			DB_REPLACE:BindAll(szKey, nSuitIndex, LR.JsonEncode(v.equipment_data), LR.JsonEncode(v.score), LR.JsonEncode(v.char_info), LR.JsonEncode(v.char_infomore))
+			DB_REPLACE:BindAll(szKey, nSuitIndex, LR.JsonEncode(v.equipment_data), LR.JsonEncode(v.score), LR.JsonEncode(v.char_infomore))
 			DB_REPLACE:Execute()
 		else
 			DB_REPLACE2:ClearBindings()
@@ -232,7 +162,7 @@ end
 
 function LR_AccountStatistics_Equip.LoadData(DB, realArea, realServer, dwID)
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-	local DB_SELECT = DB:Prepare("SELECT * FROM equipment_data WHERE szKey = ? AND bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT * FROM equipment_data WHERE szKey = ? AND bDel = 0 AND szKey IS NOT NULL AND nSuitIndex IS NOT NULL")
 	DB_SELECT:ClearBindings()
 	DB_SELECT:BindAll(szKey)
 	local Data = DB_SELECT:GetAll() or {}
@@ -241,8 +171,7 @@ function LR_AccountStatistics_Equip.LoadData(DB, realArea, realServer, dwID)
 		t[v.nSuitIndex] = {}
 		t[v.nSuitIndex].equipment_data = LR.JsonDecode(v.equipment_data)
 		t[v.nSuitIndex].score = LR.JsonDecode(v.score)
-		t[v.nSuitIndex].char_info = LR.JsonDecode(v.char_info)
-		t[v.nSuitIndex].char_infomore = LR.JsonDecode(v.char_infomore)
+		t[v.nSuitIndex].char_infomore = LR.JsonDecode(v.char_infomoreV2)
 	end
 	LR_AccountStatistics_Equip.AllUsrData[szKey] = clone(t)
 	return t
@@ -488,11 +417,16 @@ function LR_AS_Equip_Panel:Init()
 	end
 
 	local tt = self:Append("Text", frame, "tt", {x = 10, y = 420, w = 180, h = 33, text  = _L["You can only see original attribute of others"], font  = 169})
+
+	----------关于
+	LR.AppendAbout(LR_AS_Equip_Panel, frame)
+
 	---属性
 	local charinfo_handle = Wnd.OpenWindow("interface\\LR_Plugin\\LR_AccountStatistics\\UI\\WndFrameThin.ini", "charinfo_frame"):Lookup("Wnd_Window")
 	charinfo_handle:ChangeRelation(frame:GetSelf(), true, true)
 	charinfo_handle:SetName("WndWindow_Charinfo")
 	Wnd.CloseWindow("charinfo_frame")
+
 	local WndWindow_Charinfo = frame:Lookup("WndWindow_Charinfo")
 	WndWindow_Charinfo:SetRelPos(w - 5, 0)
 	local w2, h2 = WndWindow_Charinfo:GetSize()
@@ -501,11 +435,7 @@ function LR_AS_Equip_Panel:Init()
 	local Image_Equipment = LR.AppendUI("Image", WndWindow_Charinfo:Lookup("",""), "Image_Equipment", {w = 106, h = 103, x = 3, y = 30})
 	Image_Equipment:FromUITex("ui\\image\\uicommon\\commonpanel7.uitex", 23)
 
-	local Image_Devide1 = LR.AppendUI("Image", WndWindow_Charinfo:Lookup("",""), "Image_Devide1", {w = 212, h = 68, x = 11, y = 126})
-	Image_Devide1:FromUITex("ui\\image\\minimap\\mapmark.uitex", 50)
-	Image_Devide1:SetImageType(10)
-
-	local Image_Devide2 = LR.AppendUI("Image", WndWindow_Charinfo:Lookup("",""), "Image_Devide2", {w = 212, h = 303, x = 11, y = 197})
+	local Image_Devide2 = LR.AppendUI("Image", WndWindow_Charinfo:Lookup("",""), "Image_Devide2", {w = 212, h = 371, x = 11, y = 126})
 	Image_Devide2:FromUITex("ui\\image\\minimap\\mapmark.uitex", 50)
 	Image_Devide2:SetImageType(10)
 
@@ -513,38 +443,14 @@ function LR_AS_Equip_Panel:Init()
 	local Text_score = LR.AppendUI("Text", WndWindow_Charinfo:Lookup("",""), "Text_score", {w = 100, h = 30, x = 106, y = 81, text = ""})
 	Text_score:SetFontScheme(200)
 
-	local Text_PVELabel = LR.AppendUI("Text", WndWindow_Charinfo:Lookup("",""), "Text_PVELabel", {w = 125, h = 25, x = 26, y = 137, text = _L["PVEscore"]})
-	local Text_PVEValue = LR.AppendUI("Text", WndWindow_Charinfo:Lookup("",""), "Text_PVEValue", {w = 80, h = 25, x = 130, y = 137, text = ""})
-	Text_PVELabel:SetHAlign(0)
-	Text_PVEValue:SetHAlign(2)
-
-	local Text_PVPLabel = LR.AppendUI("Text", WndWindow_Charinfo:Lookup("",""), "Text_PVPLabel", {w = 125, h = 25, x = 26, y = 161, text = _L["PVPscore"]})
-	local Text_PVPValue = LR.AppendUI("Text", WndWindow_Charinfo:Lookup("",""), "Text_PVPValue", {w = 80, h = 25, x = 130, y = 161, text = ""})
-	Text_PVPLabel:SetHAlign(0)
-	Text_PVPValue:SetHAlign(2)
-
-	local Text_Property = LR.AppendUI("Text", WndWindow_Charinfo:Lookup("",""), "Text_Property", {w = 125, h = 25, x = 26, y = 209, text = _L["Property"]})
-	local Image_Property = LR.AppendUI("Image", WndWindow_Charinfo:Lookup("",""), "Image_Property", {w = 200, h = 5, x = 26, y = 235})
+	local Text_Property = LR.AppendUI("Text", WndWindow_Charinfo:Lookup("",""), "Text_Property", {w = 125, h = 25, x = 26, y = 135, text = _L["Property"]})
+	local Image_Property = LR.AppendUI("Image", WndWindow_Charinfo:Lookup("",""), "Image_Property", {w = 200, h = 5, x = 26, y = 159})
 	Image_Property:FromUITex("ui\\Image\\uicommon\\commonpanel.UITex", 45)
 
-	local hScroll = LR.AppendUI("Scroll", WndWindow_Charinfo, "Scroll", {x = 23, y = 246, w = 200, h = 260})
+	local hScroll = LR.AppendUI("Scroll", WndWindow_Charinfo, "Scroll", {x = 23, y = 166, w = 200, h = 330})
 	LR_AS_Equip_Panel.Scroll = hScroll
 
-	--详细属性
-	local charinfo_handle2 = Wnd.OpenWindow("interface\\LR_Plugin\\LR_AccountStatistics\\UI\\WndFrameThin.ini", "charinfo_frame"):Lookup("Wnd_Window")
-	charinfo_handle2:ChangeRelation(frame:GetSelf(), true, true)
-	charinfo_handle2:SetName("WndWindow_Charmoreinfo")
-	Wnd.CloseWindow("charinfo_frame")
-	local WndWindow_Charinfo2 = frame:Lookup("WndWindow_Charmoreinfo")
-	WndWindow_Charinfo2:SetRelPos(w + w2 -10, 0)
-	WndWindow_Charinfo2:Lookup("","Text_Title"):SetText(_L["charmoreinfo"])
-	local hScroll2 = self:Append("Scroll", WndWindow_Charinfo2, "Scroll2", {x = 10, y = 40, w = 220, h = 450})
-	LR_AS_Equip_Panel.Scroll2 = hScroll2
-	frame:SetSize(w + w2 * 2, h2)
-	self:LoadEquipSuit(0)
-
-	----------关于
-	LR.AppendAbout(LR_AS_Equip_Panel, frame)
+	LR_AS_Equip_Panel:LoadEquipSuit(0)
 end
 
 function LR_AS_Equip_Panel:Open(szplayerName, szplayerRealArea, szplayerRealServer, szPlayerMenPai, dwID)
@@ -576,6 +482,11 @@ function LR_AS_Equip_Panel.OnItemLinkDown(item, ui)
 	return OnItemLinkDown(ui)
 end
 
+function LR_AS_Equip_Panel:Output()
+	Output("22")
+end
+
+
 function LR_AS_Equip_Panel:LoadCharscore(nIndex)
 	local player = GetClientPlayer()
 	if not player then
@@ -602,68 +513,46 @@ function LR_AS_Equip_Panel:LoadCharscore(nIndex)
 	local frame = Station.Lookup("Normal/LR_AS_Equip_Panel")
 	local WndWindow_Charinfo = frame:Lookup("WndWindow_Charinfo")
 	local hCharinfo = WndWindow_Charinfo:Lookup("","")
-	local Text_PVEValue = hCharinfo:Lookup("Text_PVEValue")
-	local Text_PVPValue = hCharinfo:Lookup("Text_PVPValue")
 	local Text_Equipmentscore = hCharinfo:Lookup("Text_score")
+
+	Text_Equipmentscore:SetText(score.TotalEquipScore or "")
 
 	local hScroll = LR_AS_Equip_Panel.Scroll
 	hScroll:ClearHandle()
+	local char_infomore = data2.char_infomore or {}
 
-	local hScroll2 = LR_AS_Equip_Panel.Scroll2
-	hScroll2:ClearHandle()
-
-	if next(score) ~= nil then
-		Text_PVEValue:SetText(score.PVEscore or "")
-		Text_PVPValue:SetText(score.PVPscore or "")
-		Text_Equipmentscore:SetText(score.TotalEquipScore or "")
-
-		local char_info = data2.char_info or {}
-		for k, v in pairs(char_info or {}) do
-			local handle = LR.AppendUI("Handle", hScroll, sformat("handle_%d", k), {w = 200, h = 25})
-			local Text_Label = LR.AppendUI("Text", handle, sformat("Text_Label_%d", k), {x = 0, y = 0, w = 125, h = 25, text = v.label})
-			local Text_Value = LR.AppendUI("Text", handle, sformat("Text_Value_%d", k), {x = 100 , y = 0, w = 80, h = 25, text = v.value})
-			Text_Label:SetHAlign(0)
-			Text_Value:SetHAlign(2)
-			handle.OnEnter = function()
-				local x, y = this:GetAbsPos()
-				local w, h = this:GetSize()
-				OutputTip(v.szTip, 720, {x, y, w, h})
-			end
-
-			handle.OnLeave = function()
-				HideTip()
-			end
-		end
-
-		local char_infomore = data2.char_infomore
+	if next(char_infomore) ~= nil then
 		for k, v in pairs(char_infomore or {}) do
-			if v.bDivide then
-				local handle = LR.AppendUI("Handle", hScroll2, sformat("Handle2_%d", k), {w = 220, h = 8})
-				local Image_Divide = LR.AppendUI("Image", handle, sformat("Image2_Divide_%d", k), {x = 0, y = 0, w = 220, h = 8})
+			if v.bDevide then
+				local handle = LR.AppendUI("Handle", hScroll, sformat("Handle2_%d", k), {w = 210, h = 8})
+				local Image_Divide = LR.AppendUI("Image", handle, sformat("Image2_Divide_%d", k), {x = 0, y = 0, w = 210, h = 8})
 				Image_Divide:FromUITex("ui\\Image\\uicommon\\commonpanel.UITex", 45)
 			elseif v.bText then
-				local handle = LR.AppendUI("Handle", hScroll2, sformat("Handle2_%d", k), {w = 220, h = 20})
-				local Text = LR.AppendUI("Text", handle, sformat("Text2_%d", k), {x = 0, y = 0, w = 220, h = 20, text = v.value})
+				local handle = LR.AppendUI("Handle", hScroll, sformat("Handle2_%d", k), {w = 210, h = 20})
+				local Text = LR.AppendUI("Text", handle, sformat("Text2_%d", k), {x = 0, y = 0, w = 210, h = 20, text = v.value})
 				Text:SetFontScheme(27)
 			else
-				local handle = LR.AppendUI("Handle", hScroll2, sformat("Handle2_%d", k), {w = 220, h = 25})
+				local handle = LR.AppendUI("Handle", hScroll, sformat("Handle2_%d", k), {w = 210, h = 25})
 				local Text_Label = LR.AppendUI("Text", handle, sformat("Text2_Label_%d", k), {x = 0, y = 0, w = 125, h = 25, text = v.label})
 				local Text_Value = LR.AppendUI("Text", handle, sformat("Text2_Value_%d", k), {x = 120 , y = 0, w = 80, h = 25, text = v.value})
+				handle.OnEnter = function()
+					local x, y = this:GetAbsPos()
+					local w, h = this:GetSize()
+					OutputTip(v.tip, 720, {x, y, w, h})
+				end
+
+				handle.OnLeave = function()
+					HideTip()
+				end
 			end
 		end
 	else
-		Text_PVEValue:SetText("--")
-		Text_PVPValue:SetText("--")
 		Text_Equipmentscore:SetText("--")
-
 		local handle = LR.AppendUI("Handle", hScroll, "Handle2_nodata", {w = 220, h = 20})
 		local Text = LR.AppendUI("Text", handle, "Text2_nodata", {x = 0, y = 0, w = 220, h = 20, text = _L["No data"]})
-
-		local handle2 = LR.AppendUI("Handle", hScroll2, "Handle3_nodata", {w = 220, h = 20})
-		local Text = LR.AppendUI("Text", handle2, "Text3_nodata", {x = 0, y = 0, w = 220, h = 20, text = _L["No data"]})
 	end
+
 	hScroll:UpdateList()
-	hScroll2:UpdateList()
 end
 
 
@@ -812,18 +701,24 @@ end
 
 function LR_AccountStatistics_Equip.Hack()
 	local frame = Station.Lookup("Normal/CharacterPanel")
-	local Btn_LR_Equipment = frame:Lookup("Btn_LR_Equipment")
-	if Btn_LR_Equipment then
-		Btn_LR_Equipment:Destroy()
+	if frame then --背包界面添加一个按钮
+		local Btn_Equipment = frame:Lookup("LR_Btn_Equipment")
+		if Btn_Equipment then
+			Btn_Equipment:Destroy()
+		end
+		local Btn_Equipment = LR.AppendUI("UIButton", frame, "LR_Btn_Equipment", {x = 45 , y = 0 , w = 36 , h = 36, ani = {"ui\\Image\\Button\\SystemButton.UITex", 35, 36, 37, 38}})
+		Btn_Equipment:SetAlpha(200)
+		Btn_Equipment.OnClick = function()
+			LR_AccountStatistics_Equip.OpenPanel()
+		end
 	end
-	LR_AccountStatistics.WndButton("Btn_LR_Equipment", 40, 8, _L["LR Equipment Statistics"], LR_AccountStatistics_Equip.OpenPanel, frame)
 end
 
 -----切换套装EQUIP_CHANGE
 function LR_AccountStatistics_Equip.EQUIP_CHANGE()
 	LR_AccountStatistics_Equip.bLock = true	--防止处理切换装备时大量产生的EQUIP_ITEM_UPDATE事件
 	LR_AccountStatistics_Equip.GetEquipScore()
-	LR.DelayCall(500, function() LR_AccountStatistics_Equip.bLock = false end)
+	LR.DelayCall(250, function() LR_AccountStatistics_Equip.bLock = false end)
 end
 
 ---更换装备
@@ -837,18 +732,7 @@ end
 
 function LR_AccountStatistics_Equip.FIRST_LOADING_END()
 	LR_AccountStatistics_Equip.Hack()
-	LR.DelayCall(1000,function()
-		local charinfo_frame = Station.Lookup("Normal/CharInfo")
-		if charinfo_frame then
-			Wnd.CloseWindow("CharInfo")
-		end
-		local CharInfoMore_frame = Station.Lookup("Normal/CharInfoMore")
-		if CharInfoMore_frame then
-			Wnd.CloseWindow("CharInfoMore")
-		end
-		local CharacterPanel_frame = Station.Lookup("Normal/CharacterPanel")
-		CharacterPanel_frame:SetSize(380, 535)
-	end)
+	LR_AccountStatistics_Equip.GetEquipScore()
 end
 
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_AccountStatistics_Equip.FIRST_LOADING_END() end)

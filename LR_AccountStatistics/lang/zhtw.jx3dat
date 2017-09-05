@@ -356,8 +356,6 @@ data={
 	["Use common QiYu settings"]="使用奇遇公共設置",
 
 	--20160913add--
-	["HUIGUANG"]="7周年丸子",
-	["HUASHAN"]="沉香扇骨",
 	["7 YEAR"]="扇子成就",
 	["LR_7Year"]="懶人七周年扇子成就統計",
 
@@ -469,7 +467,7 @@ data={
 	["TRADE DB Settings"]="收支記錄數據庫",
 	["TRADE DB Batch Import"]="批量導入(舊)",
 	["Are you sure to vacuum main database ?"]="你確定要優化主數據庫嗎？",
-	["VACUUM Success!"]="數據庫優化成功！",
+	["VACUUM Success!"]="懶人賬目本數據庫優化成功！",
 	["Are you sure to backup main database ?"]="你確定要備份主數據庫嗎？",
 	["Please backup manually."]="請手動備份數據庫。",
 	["Are you sure to patch import data (database version) ?"]="你確定要根據現有的角色列表，批量導入各角色的舊版交易數據('.jx3dat')嗎?\n這個操作將花費很多時間，並占用大量磁盤資源。",
@@ -606,4 +604,12 @@ data={
 	["Custom quest under"]="以下為自定義任務",
 	["Sure to delete"]="確定要刪除",
 
+	--20170901add--
+	["NPC dwTemplateID"]="NPC模版ID",
+	["Input quest npc dwTemplateID"]="輸入接取任務的NPC的模版ID。部分一次性任務可輸入0，但是大部分循環任務必須輸入正確。",
+	["Quest npc dwTemplateID must be number.\n"]="任務NPC的模版ID必須為數字。\n",
+	["Error, no this quest.\n"]="錯誤，沒有這個任務。\n",
+
+	["HUIGUANG"]="領輝光流影",
+	["HUASHAN"]="山海間",
 }

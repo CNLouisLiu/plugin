@@ -415,7 +415,7 @@ function LR_ACS_QiYu.LoadAllUsrData(DB)
 	local realArea, realServer = ServerInfo[5], ServerInfo[6]
 	local dwID = me.dwID
 	local szSelfKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-	local DB_SELECT = DB:Prepare("SELECT * FROM qiyu_data WHERE bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT * FROM qiyu_data WHERE bDel = 0 AND szKey IS NOT NULL")
 	local Data = DB_SELECT:GetAll() or {}
 	local AllUsrData = {}
 	for k, v in pairs (Data) do
@@ -444,7 +444,7 @@ function LR_ACS_QiYu.LoadAllUsrData(DB)
 end
 
 function LR_ACS_QiYu.ClearAllData(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM qiyu_data WHERE bDel = 0")
+	local DB_SELECT = DB:Prepare("SELECT * FROM qiyu_data WHERE bDel = 0 AND szKey IS NOT NULL")
 	local Data = DB_SELECT:GetAll() or {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_data ( szKey, qiyu_data, qiyu_achievement, bDel ) VALUES ( ?, ?, ?, 0 )")
 	if Data and next(Data) ~= nil then
