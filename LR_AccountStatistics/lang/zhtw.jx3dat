@@ -612,4 +612,8 @@ data={
 
 	["HUIGUANG"]="領輝光流影",
 	["HUASHAN"]="山海間",
+
+	["Click to open LR Equipment Statistics Panel"]="點擊打開【懶人裝備統計】面板",
+	["Sort over.\n"]="幫會倉庫整理結束\n",
+	["Move error.\n"]="移動物品失敗\n",
 }

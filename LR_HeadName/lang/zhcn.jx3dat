@@ -281,4 +281,21 @@ data={
 	["Border color"]="边框颜色",
 	["▊ Click to change color"]="▊ 点击修改颜色",
 
+	--20170905add--
+	["Enhance guding show"]="增强蛊鼎显示",
+	["Set Font"]="设置字体",
+	["Font&Color"]="字体和颜色",
+	["Now Font %d, click to change"]="当前字体 %d，点击改变",
+
+	["Set normal color"]="设置普通颜色",
+	["Set highlight color"]="设置高亮颜色",
+
+	["Doodad"]="物件",
+	["Ally"]="友好",
+	["Enemy"]="敌对",
+	["Neutrality"]="中立",
+	["Party"]="团队内",
+
+	["Reset font&color"]="重置字体和颜色",
+	["Sure to reset font&color?"]="确定要重置字体和颜色？",
 }

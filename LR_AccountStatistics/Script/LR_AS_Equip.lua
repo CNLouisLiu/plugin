@@ -92,8 +92,6 @@ end
 -------------------------------------------------------------------------
 ----------获取装分
 --------------------------------------------------------------------------
-local charinfo_frame_flag = 0	--0：原来为关闭状态 1：原来为打开状态 (隐藏) 2：原来为打开状态（可见）
-local charinfomore_frame_flag = 0	--同上
 function LR_AccountStatistics_Equip.GetEquipScore()
 	local me = GetClientPlayer()
 	if not me then
@@ -267,6 +265,10 @@ end
 function LR_AS_Equip_Panel:Init()
 	local frame = self:Append("Frame", "LR_AS_Equip_Panel", {title = _L["LR Equipment Statistics"], style = "SMALL"})
 	local w, h = frame:GetSize()
+
+	local Image_Icon = LR.AppendUI("Image", frame, "Image_Icon", {x = 5, y = 0, w = 36, h = 36})
+	Image_Icon:FromUITex("ui\\Image\\Button\\SystemButton.UITex", 35)
+	Image_Icon:SetAlpha(180)
 
 	--------------人物选择
 	local hComboBox = self:Append("ComboBox", frame, "hComboBox", {w = 160, x = 105, y = 45, text = LR_AS_Equip_Panel.playerName})
@@ -443,14 +445,15 @@ function LR_AS_Equip_Panel:Init()
 	local Text_score = LR.AppendUI("Text", WndWindow_Charinfo:Lookup("",""), "Text_score", {w = 100, h = 30, x = 106, y = 81, text = ""})
 	Text_score:SetFontScheme(200)
 
+	--[[
 	local Text_Property = LR.AppendUI("Text", WndWindow_Charinfo:Lookup("",""), "Text_Property", {w = 125, h = 25, x = 26, y = 135, text = _L["Property"]})
 	local Image_Property = LR.AppendUI("Image", WndWindow_Charinfo:Lookup("",""), "Image_Property", {w = 200, h = 5, x = 26, y = 159})
 	Image_Property:FromUITex("ui\\Image\\uicommon\\commonpanel.UITex", 45)
-
-	local hScroll = LR.AppendUI("Scroll", WndWindow_Charinfo, "Scroll", {x = 23, y = 166, w = 200, h = 330})
+]]
+	local hScroll = LR.AppendUI("Scroll", WndWindow_Charinfo, "Scroll", {x = 23, y = 135, w = 200, h = 360})
 	LR_AS_Equip_Panel.Scroll = hScroll
 
-	LR_AS_Equip_Panel:LoadEquipSuit(0)
+	LR_AS_Equip_Panel:LoadEquipSuit(GetClientPlayer().GetEquipIDArray(0))
 end
 
 function LR_AS_Equip_Panel:Open(szplayerName, szplayerRealArea, szplayerRealServer, szPlayerMenPai, dwID)
@@ -622,10 +625,11 @@ function LR_AS_Equip_Panel:LoadEquipSuit(nIndex)
 						Icon:Show()
 						Icon.OnEnter = function()
 							local nMouseX, nMouseY = Cursor.GetPos()
-							if player.szName ~= szplayerName then
+							local itm = GetItem(item.dwID)
+							if not itm then
 								OutputItemTip(UI_OBJECT_ITEM_INFO, GLOBAL.CURRENT_ITEM_VERSION, item.dwTabType, item.dwIndex, {nMouseX, nMouseY, 0, 0})
 							else
-								OutputItemTip(UI_OBJECT_ITEM_ONLY_ID, item.dwID, nil, nil, {nMouseX, nMouseY, 0, 0}, nil, "loot")
+								OutputItemTip(UI_OBJECT_ITEM_ONLY_ID, item.dwID, nil, nil, {nMouseX, nMouseY, 0, 0})
 							end
 						end
 						Icon.OnLeave = function()
@@ -707,9 +711,20 @@ function LR_AccountStatistics_Equip.Hack()
 			Btn_Equipment:Destroy()
 		end
 		local Btn_Equipment = LR.AppendUI("UIButton", frame, "LR_Btn_Equipment", {x = 45 , y = 0 , w = 36 , h = 36, ani = {"ui\\Image\\Button\\SystemButton.UITex", 35, 36, 37, 38}})
-		Btn_Equipment:SetAlpha(200)
+		Btn_Equipment:SetAlpha(180)
 		Btn_Equipment.OnClick = function()
 			LR_AccountStatistics_Equip.OpenPanel()
+		end
+		Btn_Equipment.OnEnter = function()
+			local x, y = this:GetAbsPos()
+			local w, h = this:GetSize()
+			local szTip = {}
+			szTip[#szTip+1] = GetFormatText(sformat("%s\n", _L["LR Equipment Statistics"]), 163)
+			szTip[#szTip+1] = GetFormatText(_L["Click to open LR Equipment Statistics Panel"], 162)
+			OutputTip(tconcat(szTip), 400, {x, y, w, h})
+		end
+		Btn_Equipment.OnLeave = function()
+			HideTip()
 		end
 	end
 end

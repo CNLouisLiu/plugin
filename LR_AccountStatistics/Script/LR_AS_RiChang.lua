@@ -1044,6 +1044,7 @@ function LR_AccountStatistics_RiChang.ResetData()
 		ClearTime10R = 0,
 		ClearTime25R = 0,
  	}
+
 	if Data and next(Data) ~= nil then
 		for k, v in pairs(Data) do
 			RC_ResetTime[v.szName] = v.nTime
@@ -1700,8 +1701,10 @@ function LR_AccountStatistics_RiChang.FIRST_LOADING_END()
 	LR_AccountStatistics_RiChang.GetCustomQuestStatus()
 
 	LR_AccountStatistics_RiChang.LoadCommomMenuList()
-	LR_AccountStatistics_RiChang.ResetData()
-	LR_AccountStatistics_RiChang.CheckAll()
+	LR.DelayCall(300, function()
+		LR_AccountStatistics_RiChang.ResetData()
+		LR_AccountStatistics_RiChang.CheckAll()
+	end)
 end
 
 LR.RegisterEvent("QUEST_ACCEPTED", function() LR_AccountStatistics_RiChang.QUEST_ACCEPTED() end)

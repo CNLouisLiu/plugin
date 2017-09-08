@@ -693,6 +693,220 @@ end
 
 LR.RegisterEvent("OPEN_WINDOW", function() LR_AccountStatistics_Mail_None.Open_Window() end)
 
+-----------------------------------------------------------
+-----帮会仓库
+-----------------------------------------------------------
+LR_GuildBank = {}
+LR_GuildBank.Data = {}
+local SORT_KEY = {
+	ITEM_GENRE.EQUIPMENT,
+	ITEM_GENRE.POTION,
+	ITEM_GENRE.MATERIAL,
+	ITEM_GENRE.BOOK,
+	ITEM_GENRE.COLOR_DIAMOND,
+	ITEM_GENRE.DIAMOND,
+}
+
+function LR_GuildBank.Sort(t)
+	local tt = clone(t)
+	tsort(tt, function(a, b)
+		if a.nGenre == b.nGenre then
+			if a.nGenre == ITEM_GENRE.BOOK then
+				if a.nQuality == b.nQuality then
+					if a.nBookID == b.nBookID then
+						return a.dwX < b.dwX
+					else
+						return a.nBookID < b.nBookID
+					end
+				else
+					return a.nQuality > b.nQuality
+				end
+			else
+				if a.nSub == b.nSub then
+					if a.nDetail == b.nDetail then
+						if a.nQuality == b.nQuality then
+							if a.nUiId == b.nUiId then
+								if a.nStackNum == b.nStackNum then
+									return a.dwX < b.dwX
+								else
+									return a.nStackNum > b.nStackNum
+								end
+							else
+								return a.nUiId < b.nUiId
+							end
+						else
+							return a.nQuality > b.nQuality
+						end
+					else
+						return a.nDetail < b.nDetail
+					end
+				else
+					return a.nSub < b.nSub
+				end
+			end
+		else
+			return a.nGenre < b.nGenre
+		end
+	end)
+	return tt
+end
+
+function LR_GuildBank.LogicSortGuildBank()
+	local Data = clone(LR_GuildBank.Data or {})
+	local data_all = LR_GuildBank.Sort(Data)
+	return data_all
+end
+
+function LR_GuildBank.PhysicSortGuildBank()
+	local me = GetClientPlayer()
+	LR_GuildBank.Data = clone(LR_GuildBank.GetGuildBankData())
+	LR_GuildBank.Data = clone(LR_GuildBank.LogicSortGuildBank())
+
+	local t, x = {}, {}
+	for k, v in pairs(LR_GuildBank.Data) do
+		if not x[v.szName] then
+			t[#t+1] = v.szName
+			x[v.szName] = true
+		end
+	end
+	--Output(tconcat(t, ","))
+	if not LR_GuildBank.ExchangeItem() then
+		LR.DelayCall(125, function() LR_GuildBank.PhysicSortGuildBank() end)
+	else
+		local frame = Station.Lookup("Normal/GuildBankPanel")
+		if frame then
+			--LR_GuildBank.Btn:Enable(true)
+		end
+		LR.SysMsg(_L["Sort over.\n"])
+	end
+end
+
+function LR_GuildBank.GetGuildData(dwBox, dwX)
+	local data = {}
+	local me = GetClientPlayer()
+	local item = GetPlayerItem(me, dwBox, dwX)
+	if item then
+		data.szKey = sformat("%d_%d", item.dwTabType, item.dwIndex)
+		data.nUiId = item.nUiId
+		data.dwTabType = item.dwTabType
+		data.dwIndex = item.dwIndex
+		data.nStackNum = 1
+		data.bCanStack = item.bCanStack
+		if item.bCanStack then
+			data.nStackNum = item.nStackNum
+		end
+		data.nMaxStackNum = item.nMaxStackNum
+		data.nGenre = item.nGenre
+		data.nBookID = 0
+		if item.nGenre == ITEM_GENRE.BOOK then
+			data.nBookID = item.nBookID
+		end
+		data.nSub = item.nSub
+		data.nDetail = item.nDetail
+		data.nQuality = item.nQuality
+		data.szName = item.szName
+		data.dwX = dwX
+	end
+
+	return data
+end
+
+function LR_GuildBank.GetGuildBankData()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local frame = Station.Lookup("Normal/GuildBankPanel")
+	if not frame then
+		return
+	end
+	local data = {}
+	local dwBox = INVENTORY_GUILD_BANK
+	local dwPageSize = INVENTORY_GUILD_PAGE_SIZE
+	local nPage = frame.nPage
+	LR_GuildBank.nPage = nPage
+	local nStart = nPage * dwPageSize
+	for dwX = nStart, nStart + dwPageSize - 1, 1 do
+		local data2 = LR_GuildBank.GetGuildData(dwBox, dwX)
+		if next(data2) ~= nil then
+			data[#data + 1] = clone(data2)
+		end
+	end
+	return data
+end
+
+function LR_GuildBank.ModifyData(data, k, dwX)
+	local data2 = clone(data)
+	for k, v in pairs(data2) do
+		if v.dwX == k then
+			data2[k].dwX = dwX
+		end
+	end
+	return data2
+end
+
+function LR_GuildBank.ExchangeItem()
+	local data2 = LR_GuildBank.Data
+	local frame = Station.Lookup("Normal/GuildBankPanel")
+	if not frame then
+		return true
+	end
+	local nPage = frame.nPage
+	local me = GetClientPlayer()
+	if not me then
+		return true
+	end
+	local dwBox = INVENTORY_GUILD_BANK
+	local dwPageSize = INVENTORY_GUILD_PAGE_SIZE
+	for k = 1, #data2 , 1 do
+		local item = LR_GuildBank.GetGuildData(dwBox, dwPageSize * nPage + k - 1)
+		local TargetItem = data2[k]
+		local move_flag = true
+		if item then
+			if item.nGenre == ITEM_GENRE.BOOK then
+				if TargetItem.nGenre == ITEM_GENRE.BOOK and TargetItem.nBookID == item.nBookID then
+					move_flag = false
+				end
+			else
+				if TargetItem.dwTabType == item.dwTabType and TargetItem.dwIndex == item.dwIndex and TargetItem.nStackNum == item.nStackNum then
+					move_flag = false
+				end
+			end
+		end
+		if move_flag then
+			--Output(TargetItem.dwX, "to", dwPageSize * nPage + k - 1, TargetItem.szName, item.szName)
+			if OnExchangeItem(dwBox, TargetItem.dwX, dwBox, dwPageSize * nPage + k - 1) then
+				return false
+			else
+				LR.SysMsg(_L["Move error.\n"])
+				return true
+			end
+		end
+	end
+	return true
+end
+
+function LR_GuildBank.HookGuildBank()
+	local frame = Station.Lookup("Normal/GuildBankPanel")
+	if frame then --背包界面添加一个按钮
+		local Btn_Refresh = frame:Lookup("Btn_Refresh")
+		if Btn_Refresh then
+			Btn_Refresh.OnRButtonUp = function()
+				LR_GuildBank.PhysicSortGuildBank()
+			end
+		end
+	end
+end
+
+function LR_GuildBank.ON_FRAME_CREATE()
+	local frame = arg0
+	local szName = frame:GetName()
+	if szName == "GuildBankPanel" then
+		LR.DelayCall(150, function() LR_GuildBank.HookGuildBank() end)
+	end
+end
+
+LR.RegisterEvent("ON_FRAME_CREATE", function() LR_GuildBank.ON_FRAME_CREATE() end)
 ------------------------------------------------------------------------------------------------------
 ----界面
 ------------------------------------------------------------------------------------------------------
@@ -971,6 +1185,20 @@ function LR_AccountStatistics_Bag_Panel:Init()
 	local hButtonRefresh = self:Append("Button", frame, "hButtonRefresh", {w  = 100, x = 30, y = 460, text = _L["Refresh"]})
 	hButtonRefresh:Enable(true)
 	hButtonRefresh.OnClick = function ()
+		local frame = Station.Lookup("NORMAL/MailPanel")
+		if frame then
+			LR_AccountStatistics_Mail.info = {}
+			LR_AccountStatistics_Mail.ItemInMail = {}
+			LR_AccountStatistics_Mail.MailData = {}
+			LR_AccountStatistics_Mail.GetItemByMail()
+			local path = sformat("%s\\%s", SaveDataPath, DB_name)
+			local DB = SQLite3_Open(path)
+			DB:Execute("BEGIN TRANSACTION")
+			LR_AccountStatistics_Mail.SaveData(DB)
+			DB:Execute("END TRANSACTION")
+			DB:Release()
+		end
+
 		local realArea = LR_AccountStatistics_Bag_Panel.realArea
 		local realServer = LR_AccountStatistics_Bag_Panel.realServer
 		local dwID = LR_AccountStatistics_Bag_Panel.dwID
@@ -1925,7 +2153,7 @@ function LR_AccountStatistics_Mail_Check.CheckAllMail()
 		DB_SELECT:ClearBindings()
 		DB_SELECT:BindAll(nEndTime, GetCurrentTime())
 		local Data = DB_SELECT:GetAll() or {}
-		if Data[1].COUNT > 0 then
+		if next(Data) ~= nil and Data[1].COUNT > 0 then
 			local msg = sformat("%s\n", _L["LR_Mail:Someone's mail is about to expire. Open [LR_Bag] to have a look."])
 			LR.SysMsg(msg)
 			--LR.RedAlert(msg)
@@ -1951,7 +2179,7 @@ function LR_AccountStatistics_Mail_Check.CheckAllMail()
 		DB_SELECT:ClearBindings()
 		DB_SELECT:BindAll(szKey)
 		local Data = DB_SELECT:GetAll() or {}
-		if next(Data) == nil or Data[1].nTime < GetCurrentTime() - 60 * 60 * 24 * LR_AccountStatistics_Mail.UsrData.remindDay then
+		if next(Data) ~= nil and Data[1].nTime < GetCurrentTime() - 60 * 60 * 24 * LR_AccountStatistics_Mail.UsrData.remindDay then
 			local msg = sformat(_L["LR_Mail:You have not received letters for at least %d days.\n"], LR_AccountStatistics_Mail.UsrData.remindDay)
 			if Data[1] then
 				local day = mfloor ((GetCurrentTime() - Data[1].nTime) / 60 / 60 / 24)

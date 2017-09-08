@@ -168,4 +168,9 @@ data={
 
 	--20170820add--
 	["Helpers"]="小助手",
+
+	--20170905add---
+	["Font%d"]="字体%d",
+	["LR Font Table"]="懒人字体面板",
+	["Auto close"]="自动关闭",
 }

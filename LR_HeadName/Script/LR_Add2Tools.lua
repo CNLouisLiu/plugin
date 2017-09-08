@@ -292,6 +292,7 @@ LR_HeadName_UI = {
 						else
 							LR_HeadName.ResumeSysHead()
 						end
+						LR_HeadName.SaveCommonSettings()
 					end}
 				local menu = {}
 				local szOption = {_L["Neutrality NPC"], _L["Ally NPC"], _L["Enemy NPC"]}
@@ -368,6 +369,7 @@ LR_HeadName_UI = {
 						else
 							LR_HeadName.ResumeSysHead()
 						end
+						LR_HeadName.SaveCommonSettings()
 					end}
 				local menu = {}
 				local szOption = {_L["Self"], _L["Neutrality Player"], _L["Ally Player"], _L["Enemy Player"], _L["In Group"]}
@@ -564,6 +566,13 @@ LR_HeadName_UI = {
 						LR_HeadName.ReDrawAll()
 					end,
 				}
+				m[#m+1] = {szOption = _L["Enhance guding show"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bEnhanceGuDing end,
+					fnAction = function()
+						LR_HeadName.UsrData.bEnhanceGuDing = not LR_HeadName.UsrData.bEnhanceGuDing
+						LR_HeadName.SaveCommonSettings()
+						LR_HeadName.ReDrawAll()
+					end,
+				}
 				PopupMenu(m)
 			end
 		}, {name = "LR_Head_Mineral", type = "ComboBox", x = 150, y = 270, w = 140, text = _L["Show Mineral"],
@@ -711,7 +720,82 @@ LR_HeadName_UI = {
 				tTips[#tTips+1] = {szText = _L["LifeBar Instructions03\n"], font = 5, r = 255, g = 255, b = 255, }
 				return tTips
 			end,
-		}, {name = "LR_Head_an2", type = "Button", x = 330, y = 330, text = _L["Reset settings"], w = 100,
+		},
+		--[[
+		{name = "LR_Head_FontColor", type = "ComboBox", x = 300, y = 300, w = 140, text = _L["Font&Color"],
+			enable =  function ()
+				return LR_HeadName.bOn
+			end,
+			callback = function(m)
+				m[#m + 1] = {szOption = _L["Set Font"],
+					{szOption = sformat(_L["Now Font %d, click to change"], LR_HeadName.UsrData.font),
+					fnAction = function()
+						local function fun (font)
+							LR_HeadName.UsrData.font = font
+							LR_HeadName.SaveCommonSettings()
+							LR_HeadName.ReDrawAll()
+						end
+						LR.OpenFontPanel(fun, LR_HeadName.UsrData.font)
+					end},
+				}
+				m[#m + 1] = {bDevide = true}
+
+				local szKey = {"Doodad", "Ally", "Enemy", "Neutrality", "Party", "Self"}
+				m[#m + 1] = {szOption = _L["Set normal color"]}
+				local menu1 = m[#m]
+				for k, v in pairs(szKey) do
+					menu1[#menu1 + 1] = {szOption = _L[v],
+						fnAction = function()
+							local function fun (r, g, b)
+								LR_HeadName.Color[v] = {r, g, b}
+								LR_HeadName.SaveCommonSettings()
+								LR_HeadName.ReDrawAll()
+							end
+							LR.OpenColorTablePanel(fun, LR_HeadName.Color[v])
+						end,
+					}
+				end
+
+				m[#m + 1] = {szOption = _L["Set highlight color"]}
+				local menu2 = m[#m]
+				for k, v in pairs(szKey) do
+					menu2[#menu2 + 1] = {szOption = _L[v],
+						fnAction = function()
+							local function fun (r, g, b)
+								LR_HeadName.HighLightColor[v] = {r, g, b}
+								LR_HeadName.SaveCommonSettings()
+								LR_HeadName.ReDrawAll()
+							end
+							LR.OpenColorTablePanel(fun, LR_HeadName.HighLightColor[v])
+						end,
+					}
+				end
+
+				m[#m + 1] = {bDevide = true}
+				m[#m + 1] = {szOption = _L["Reset font&color"],
+					fnAction = function()
+						local reset = function()
+							LR_HeadName.ResetFontAndColor()
+							LR_HeadName.SaveCommonSettings()
+							LR_HeadName.ReDrawAll()
+						end
+
+						local msg = {
+							szMessage = _L["Sure to reset font&color?"],
+							szName = "reset",
+							fnAutoClose = function() return false end,
+							{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() reset() end, },
+							{szOption = g_tStrings.STR_HOTKEY_CANCEL, fnAction = function() end, },
+						}
+						MessageBox(msg)
+					end,
+				}
+
+				PopupMenu(m)
+			end,
+		},
+		]]
+		{name = "LR_Head_an2", type = "Button", x = 330, y = 330, text = _L["Reset settings"], w = 100,
 			enable =  function ()
 				return LR_HeadName.bOn
 			end,

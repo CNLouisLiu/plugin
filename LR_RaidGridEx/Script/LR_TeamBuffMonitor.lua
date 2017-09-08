@@ -746,9 +746,9 @@ LR.RegisterEvent("LOGIN_GAME",function() LR_TeamBuffSettingPanel.LOGIN_GAME() en
 ----------------------------------------------------------------
 ----Debuff监控
 ----------------------------------------------------------------
-LR_TeamBuffMonitor={}
-local _MemberBuff={}		----用于存放成员的监控buff，缓存
-local _hMemberBuff={}	----用于存放监控buff的handleUI，缓存
+LR_TeamBuffMonitor = {}
+local _MemberBuff = {}		----用于存放成员的监控buff，缓存
+local _hMemberBuff = {}	----用于存放监控buff的handleUI，缓存
 
 function LR_TeamBuffMonitor.isBuffInMonitorList(tBuff)
 	local me = GetClientPlayer()
@@ -789,15 +789,16 @@ function LR_TeamBuffMonitor.BUFF_UPDATE()
 		isValid= arg10,
 		nLeftFrame = arg11,
 	}
+
 	if tBuff.bDelete and not (tBuff.nStackNum and tBuff.nStackNum > 1) then
 		local hMemberBuff = _hMemberBuff[tBuff.dwPlayerID] or {}
 		if hMemberBuff[tBuff.dwID] then
 			hMemberBuff[tBuff.dwID]:Remove()
 			hMemberBuff[tBuff.dwID]=nil
-			MemberBuff= _MemberBuff[tBuff.dwPlayerID] or {}
+			MemberBuff = _MemberBuff[tBuff.dwPlayerID] or {}
 			for k, v in pairs (MemberBuff) do
 				if v.dwID == tBuff.dwID then
-					MemberBuff[k]=nil
+					MemberBuff[k] = {}
 					--LR_TeamBuffMonitor.SortBuff(tBuff.dwPlayerID)
 					return
 				end
@@ -815,7 +816,7 @@ function LR_TeamBuffMonitor.BUFF_UPDATE()
 	tBuff.bOnlySelf = MonitorList[LR.Trim(Table_GetBuffName(tBuff.dwID, tBuff.nLevel))].bOnlySelf
 	tBuff.col = MonitorList[LR.Trim(Table_GetBuffName(tBuff.dwID, tBuff.nLevel))].col or {}
 	tBuff.source="LR_Team"
-	LR_TeamBuffMonitor.AddBuff(tBuff.dwPlayerID, tBuff)
+	FireEvent("LR_RAID_BUFF_REC", tBuff.dwPlayerID, tBuff)
 end
 
 function LR_TeamBuffMonitor.JH_RAID_REC_BUFF()
@@ -848,21 +849,19 @@ function LR_TeamBuffMonitor.JH_RAID_REC_BUFF()
 	if not player then
 		return
 	end
---[[		Output("2",data)
-	if Table_GetBuffName(data.dwID, data,nLevel) == "极乐" then
-		Output("JH_dddd",data)
-	end]]
+
 	local BuffList = LR.GetBuffList(player)
 	local nEndFrameMax = 0
 	local buffdata={}
 	if  data.bOnlySelf then
 		for k, v in pairs(BuffList) do
-			if (data.nLevel == 0 or v.nLevel == data.nLevelEx) and v.dwSkillSrcID == me.dwID and v.dwID == data.dwID then
+			if v.dwSkillSrcID == me.dwID and v.dwID == data.dwID then
 				if Table_BuffIsVisible(v.dwID, v.nLevel) then
 					v.bOnlySelf = true
 					v.col = data.col or {}
 					v.nIcon = data.nIcon
-					LR_TeamBuffMonitor.AddBuff(dwMemberID, v)
+					v.source = "JH"
+					FireEvent("LR_RAID_BUFF_REC", dwMemberID, v)
 					return
 				end
 			end
@@ -874,32 +873,59 @@ function LR_TeamBuffMonitor.JH_RAID_REC_BUFF()
 				--if Table_BuffIsVisible(v.dwID, v.nLevel) then
 					if v.nEndFrame > nEndFrameMax then
 						nEndFrameMax = v.nEndFrame
-						buffdata=clone(v)
+						buffdata = clone(v)
 						bFound = true
 					end
 				--end
 			end
 		end
 		if bFound then
-			buffdata.bOnlySelf=false
-			buffdata.col=data.col or {}
-			buffdata.nIcon=data.nIcon
-			buffdata.source="JH"
-			LR_TeamBuffMonitor.AddBuff(dwMemberID, buffdata)
+			buffdata.bOnlySelf = false
+			buffdata.col = data.col or {}
+			buffdata.nIcon = data.nIcon
+			buffdata.source = "JH"
+			FireEvent("LR_RAID_BUFF_REC", dwMemberID, buffdata)
 		end
-		return
 	end
 end
 
-function LR_TeamBuffMonitor.AddBuff(dwPlayerID, tBuff)
---[[	if Table_GetBuffName(tBuff.dwID, tBuff.nLevel) == "极乐" then
-		Output(tBuff)
-	end]]
-	local MemberBuff = _MemberBuff[dwPlayerID] or {}
+function LR_TeamBuffMonitor.LR_RAID_BUFF_REC()
+	local dwPlayerID = arg0
+	local tBuff = arg1
+
+	local MemberBuff = clone(_MemberBuff[dwPlayerID] or {})
 	local BuffList = {}
 	BuffList[1] = clone(tBuff)
-	local n = 0
 	local bFound = false
+	for i = 1, 4, 1 do
+		MemberBuff[i] = MemberBuff[i] or {}
+		if next(MemberBuff[i]) ~= nil and not bFound then
+			if MemberBuff[i].dwID == tBuff.dwID then
+				MemberBuff[i] = {}
+				n = i
+				bFound = true
+			end
+		end
+	end
+
+	local n = 2
+	for i = 1, 4, 1 do
+		MemberBuff[i] = MemberBuff[i] or {}
+		if next(MemberBuff[i]) ~= nil then
+			BuffList[n] = clone(MemberBuff[i])
+			n = n + 1
+		elseif i >= n then
+			BuffList[n] = clone(MemberBuff[i])
+			n = n + 1
+		end
+	end
+	local buffMonitorNum = LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffMonitorNum
+	for i = buffMonitorNum + 1, #BuffList, 1 do
+		BuffList[i]=nil
+	end
+
+--[[
+
 	for i=1, 4 do
 		if (MemberBuff[i] == nil or MemberBuff[i].dwID == tBuff.dwID) and not bFound then
 			n = i
@@ -911,10 +937,12 @@ function LR_TeamBuffMonitor.AddBuff(dwPlayerID, tBuff)
 			end
 		end
 	end
-	for i=1,n-1 do
-		BuffList[i+1]=clone(MemberBuff[i])
+	for i = 1, n - 1 do
+		if MemberBuff[i] then
+			BuffList[i + 1] = clone(MemberBuff[i])
+		end
 	end
-	for i=n,4 do
+	for i = n, 4 do
 		if MemberBuff[i] and MemberBuff[i].dwID ~= tBuff.dwID then
 			BuffList[i] = clone(MemberBuff[i])
 		end
@@ -923,6 +951,8 @@ function LR_TeamBuffMonitor.AddBuff(dwPlayerID, tBuff)
 	for i=buffMonitorNum+1,#BuffList do
 		BuffList[i]=nil
 	end
+
+	]]
 	_MemberBuff[dwPlayerID] = clone(BuffList)
 	LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
 end
@@ -936,7 +966,7 @@ function LR_TeamBuffMonitor.RefreshBuff()
 					v[dwID] = nil
 					for k3, v3 in pairs (_MemberBuff[dwMemberID]) do
 						if v3.dwID == dwID then
-							_MemberBuff[dwMemberID][k3]=nil
+							_MemberBuff[dwMemberID][k3] = {}
 						end
 					end
 					--LR_TeamBuffMonitor.SortBuff(dwMemberID)
@@ -952,8 +982,10 @@ function LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
 	local newTable = {}
 	MemberBuff = _MemberBuff[dwPlayerID] or {}
 	for k, v in pairs (MemberBuff) do
-		newTable[v.dwID]=clone(v)
-		newTable[v.dwID].nOrder=k
+		if next(v) ~= nil then
+			newTable[v.dwID] = clone(v)
+			newTable[v.dwID].nOrder = k
+		end
 	end
 	local BuffHandle = LR_TeamGrid.GetRoleGridBuffHandle(dwPlayerID)
 	_hMemberBuff[dwPlayerID] = _hMemberBuff[dwPlayerID] or {}
@@ -970,7 +1002,7 @@ function LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
 				v:SetBuff(v2):SetIcon():Show()
 			else
 				v:Remove()
-				hMemberBuff[dwID]=nil
+				hMemberBuff[dwID] = nil
 			end
 		end
 		for dwID, v in pairs(newTable) do
@@ -978,7 +1010,7 @@ function LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
 			if not v2 then
 				local h = _BuffBox:new(v.dwID, BuffHandle, v):Create()
 				h:SetBuff(v):SetOrder(v.nOrder):SetStartFrame():SetEndFrame(v.nEndFrame):SetIcon():SetSize():SetRelPos():Show()
-				hMemberBuff[dwID]=h
+				hMemberBuff[dwID] = h
 			end
 		end
 		BuffHandle:FormatAllItemPos()
@@ -1035,4 +1067,4 @@ function LR_TeamBuffMonitor.SortBuff(dwPlayerID)
 	end
 end
 
-
+LR.RegisterEvent("LR_RAID_BUFF_REC", function() LR_TeamBuffMonitor.LR_RAID_BUFF_REC() end)

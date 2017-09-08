@@ -370,8 +370,8 @@ function LR_AS_DB.MainDBVacuum(skip)
 		end
 
 		local SQL2 = "DELETE FROM %s WHERE %s IS NULL"
-		local TABLE2 = {"player_info", "bag_item_data", "bank_item_data", "bookrd_data", "exam_data", "fb_data", "mail_data", "mail_item_data", "mail_receive_time", "qiyu_data", "richang_data"}
-		local KEY2 = {"szKey", "szKey", "szKey", "szKey", "szKey", "szKey", "nMailID", "szKey", "szKey", "szKey", "szKey", }
+		local TABLE2 = {"player_info", "bag_item_data", "bank_item_data", "bookrd_data", "exam_data", "fb_data", "mail_data", "mail_item_data", "mail_receive_time", "qiyu_data", "richang_data", "richang_clear_time", "achievement_data", "equipment_data", "group_list", "player_group"}
+		local KEY2 = {"szKey", "szKey", "szKey", "szKey", "szKey", "szKey", "nMailID", "szKey", "szKey", "szKey", "szKey", "szName", "szKey", "szKey", "groupID", "szKey"}
 		for k, v in pairs(TABLE2) do
 			local DB_DELETE = DB:Prepare(sformat(SQL2, v, KEY2[k]))
 			DB_DELETE:Execute()

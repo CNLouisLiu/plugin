@@ -98,6 +98,7 @@ LR_HeadName.default = {
 		nOffset = 0, 	--头顶相对高度
 		nLifeBarOffset = 0, 		--血条高度偏移量
 		bShowBalloon = false, 		--是否显示泡泡
+		bEnhanceGuDing = true,		--增强蛊鼎显示
 		NPC = {
 			bShow = true,
 			bAlwaysHideSysNpcTop = true,
@@ -279,7 +280,7 @@ LR_HeadName.default = {
 		{szName = _L["BaiZhu"], bShow = true, },
 		{szName = _L["ZiSu"], bShow = true, },
 	},
-	Version = "20170824b2",
+	Version = "20170906",
 	CustomDoodad = {
 		[_L["LiangCaoDui"]] = true,
 		[_L["SanLuoDeBiaoYin"]] = true,
@@ -314,7 +315,7 @@ LR_HeadName.DoodadKindDescribe = {
 	[DOODAD_KIND.NPCDROP] = "NPCDROP",
 }
 
-LR_HeadName.HighLightColor = {
+LR_HeadName.DefaultHighLightColor = {
 	["Doodad"] = {255, 200, 255},
 	["Ally"] = {176 , 240, 180},
 	["Enemy"] = {249, 137 , 104},
@@ -322,8 +323,9 @@ LR_HeadName.HighLightColor = {
 	["Party"] = {129 , 201, 239},
 	["Self"] = {129 , 201, 239},
 }
+LR_HeadName.HighLightColor = clone(LR_HeadName.DefaultHighLightColor)
 
-LR_HeadName.Color = {
+LR_HeadName.DefaultColor = {
 	["Doodad"] = {255, 155, 255},
 	["Ally"] = {33 , 184, 40},
 	["Enemy"] = {195, 51 , 9},
@@ -331,6 +333,7 @@ LR_HeadName.Color = {
 	["Party"] = {26 , 156, 227},
 	["Self"] = {26 , 156, 227},
 }
+LR_HeadName.Color = clone(LR_HeadName.DefaultColor)
 
 LR_HeadName.MissionPatch = {}
 LR_HeadName.MissionPatch2 = {}
@@ -362,6 +365,15 @@ LR_HeadName.DoodadDonotAddPatch = {
 local _tPartyMark = {}
 local tMarkerImageList = {66, 67, 73, 74, 75, 76, 77, 78, 81, 82} --图片id
 local tMarkerTextList  = {_L["White Cloud"], _L["Dagger"], _L["Axe"], _L["Hook"], _L["Red Drum"], _L["Scissors"], _L["Cudgel"], _L["Ruyi"], _L["Darts"], _L["Fan"], }
+
+local _GuDing = {}
+_GuDing.nExistMaxTime = 60000
+_GuDing.dwTemplateID = 2418
+_GuDing.dwSkillID = 2234
+_GuDing.tCastList = {}
+_GuDing.tDoodadList = {}
+_GuDing.nDelayTime = 500
+
 -----------------------------
 ---头顶显示类
 -----------------------------
@@ -1159,31 +1171,39 @@ function LR_HeadName.SortHandle()
 			t3[#t3+1] = { handle = tab:GetHandle():GetHandle(), index = tab:GetHandle():GetnIndex() , bring2Top = true , }
 		end
 	end
+	for dwID, v in pairs(_GuDing.tDoodadList or {}) do
+		local tab = LR_HeadName._Role[dwID]
+		if tab  and tab:GetHandle() then
+			t3[#t3+1] = { handle = tab:GetHandle():GetHandle(), index = tab:GetHandle():GetnIndex() , bring2Top = true , }
+		end
+	end
 
 	if m<= freq_limit then
 		for dwID, tab in pairs(LR_HeadName._Role) do
-			n = n + 1
-			if tab:GetHandle() then
-				PostThreadCall(function(tab, xScreen, yScreen)
-					local handle = tab:GetHandle()
-					handle:SetnIndex( yScreen or 99999 )
-				end, tab, "Scene_GetCharacterTopScreenPos", dwID)
-				local bring2Top = false
-				local IsMissionObj = tab:GetIsMissionObj()
-				local CanAcceptQuest = tab:GetCanAcceptQuest()
-				local CanFinishQuest = tab:GetCanFinishQuest()
-				if IsMissionObj or CanAcceptQuest or CanFinishQuest then
-					bring2Top = true
-				end
+			if not _tPartyMark[dwID] and not _GuDing.tDoodadList[dwID] then
+				n = n + 1
+				if tab:GetHandle() then
+					PostThreadCall(function(tab, xScreen, yScreen)
+						local handle = tab:GetHandle()
+						handle:SetnIndex( yScreen or 99999 )
+					end, tab, "Scene_GetCharacterTopScreenPos", dwID)
+					local bring2Top = false
+					local IsMissionObj = tab:GetIsMissionObj()
+					local CanAcceptQuest = tab:GetCanAcceptQuest()
+					local CanFinishQuest = tab:GetCanFinishQuest()
+					if IsMissionObj or CanAcceptQuest or CanFinishQuest then
+						bring2Top = true
+					end
 
-				if n<= 90 or bring2Top then
-					if bring2Top then
-						if not (dwID ==  _dwTargetID or dwID == me.dwID) then
-							t2[#t2+1] = { handle = tab:GetHandle():GetHandle(), index = tab:GetHandle():GetnIndex() , bring2Top = bring2Top , }
-						end
-					else
-						if not (dwID ==  _dwTargetID or (dwID == me.dwID and me.bFightState)) then
-							t[#t+1] = { handle = tab:GetHandle():GetHandle(), index = tab:GetHandle():GetnIndex() , bring2Top = bring2Top , }
+					if n<= 90 or bring2Top then
+						if bring2Top then
+							if not (dwID ==  _dwTargetID or dwID == me.dwID) then
+								t2[#t2+1] = { handle = tab:GetHandle():GetHandle(), index = tab:GetHandle():GetnIndex() , bring2Top = bring2Top , }
+							end
+						else
+							if not (dwID ==  _dwTargetID or (dwID == me.dwID and me.bFightState)) then
+								t[#t+1] = { handle = tab:GetHandle():GetHandle(), index = tab:GetHandle():GetnIndex() , bring2Top = bring2Top , }
+							end
 						end
 					end
 				end
@@ -1202,12 +1222,26 @@ function LR_HeadName.SortHandle()
 	end
 	-- adjust
 	local n = 1
+	for i = 1, #t do
+		if m<= freq_limit then
+			if t[i].handle and t[i].handle:GetIndex() ~=  (i - 1) then
+				t[i].handle:ExchangeIndex(i - 1)
+			end
+		else
+			if t[i].handle and t[i].handle:GetIndex() ~=  (m - #t + i - 1) then
+				t[i].handle:ExchangeIndex(m - #t + i - 1)
+			end
+		end
+	end
+	LR_HeadName.handle:Sort()
+	--[[
 	for i = #t, 1, -1 do
 		if t[i].handle and t[i].handle:GetIndex() ~=  (m - n) then
 			t[i].handle:ExchangeIndex(m - n)
 		end
 		n = n+1
 	end
+	]]
 end
 
 function LR_HeadName.OpenFrame()
@@ -1767,6 +1801,26 @@ function LR_HeadName.Check(dwID, nType, bForced)
 					end
 				end
 
+				if LR_HeadName.UsrData.bEnhanceGuDing then
+					if obj.dwTemplateID == _GuDing.dwTemplateID then
+						bShow = true
+						bFresh = true
+						szName = sformat("%s·%d", szName, mfloor((_GuDing.tDoodadList[obj.dwID].nEndFrame - GetLogicFrameCount()) / 16))
+						if _GuDing.tDoodadList[obj.dwID].szName ~= "" then
+							szName = sformat("%s·%s", _GuDing.tDoodadList[obj.dwID].szName, szName)
+						else
+							local flag = true
+							for k, v in pairs(_GuDing.tCastList) do
+								if mabs(_GuDing.tDoodadList[obj.dwID].nTime - v.nTime) <= 1 and flag then
+									_GuDing.tDoodadList[obj.dwID].szName = v.szName
+									_GuDing.tCastList[k] = nil
+									flag = false
+								end
+							end
+						end
+					end
+				end
+
 				local handle = _Role:GetHandle()
 				if bShow or bFresh then
 					if not handle then
@@ -2105,12 +2159,12 @@ function LR_HeadName.NPC_LEAVE_SCENE()
 end
 
 function LR_HeadName.DOODAD_ENTER_SCENE()
-	LR_HeadName.DoodadList[arg0] = {dwID = arg0, nType = TARGET.DOODAD, Quest_List = {}, }
+	local dwID = arg0
+	LR_HeadName.DoodadList[arg0] = {dwID = dwID, nType = TARGET.DOODAD, Quest_List = {}, nTime = GetCurrentTime(), nFrame = GetLogicFrameCount()}
 	if not LR_HeadName.bOn then
 		return
 	end
-	local dwID = arg0
-	LR.DelayCall(100, LR_HeadName.AddSingleDoodad2AllList(dwID))
+	LR.DelayCall(100, function() LR_HeadName.AddSingleDoodad2AllList(dwID) end)
 end
 
 function LR_HeadName.DOODAD_LEAVE_SCENE()
@@ -2554,6 +2608,31 @@ function LR_HeadName.AddSingleDoodad2AllList(dwID)
 				end
 			end
 		end
+		if obj.dwTemplateID == _GuDing.dwTemplateID then
+			bAdd = true
+			if not _GuDing.tDoodadList[dwID] then
+				_GuDing.tDoodadList[dwID] = {szName = "", nTime = LR_HeadName.DoodadList[dwID].nTime, nEndFrame = LR_HeadName.DoodadList[dwID].nFrame + 60 * 16}
+				local flag = true
+				for k, v in pairs(_GuDing.tCastList) do
+					if mabs(_GuDing.tDoodadList[dwID].nTime - v.nTime) <= 1 and flag then
+						_GuDing.tDoodadList[dwID].szName = v.szName
+						_GuDing.tCastList[k] = nil
+						flag = false
+					end
+				end
+
+				LR.DelayCall(60000, function() _GuDing.tDoodadList[dwID] = nil end)
+			elseif _GuDing.tDoodadList[dwID].szName == "" then
+				local flag = true
+				for k, v in pairs(_GuDing.tCastList) do
+					if mabs(_GuDing.tDoodadList[dwID].nTime - v.nTime) <= 1 and flag then
+						_GuDing.tDoodadList[dwID].szName = v.szName
+						_GuDing.tCastList[k] = nil
+						flag = false
+					end
+				end
+			end
+		end
 		if bAdd then
 			LR_HeadName.AllList[dwID] = LR_HeadName.DoodadList[dwID]
 		end
@@ -2845,6 +2924,13 @@ function LR_HeadName.ResetSettings()
 	LR_HeadName.DoodadKind = clone(LR_HeadName.default.DoodadKind)
 	LR_HeadName.bUseCommonData = LR_HeadName.default.bUseCommonData
 	LR_HeadName.CustomDoodad = clone(LR_HeadName.default.CustomDoodad)
+	LR_HeadName.HighLightColor = clone(LR_HeadName.DefaultHighLightColor)
+	LR_HeadName.Color = clone(LR_HeadName.DefaultColor)
+end
+
+function LR_HeadName.ResetFontAndColor()
+	LR_HeadName.HighLightColor = clone(LR_HeadName.DefaultHighLightColor)
+	LR_HeadName.Color = clone(LR_HeadName.DefaultColor)
 end
 
 --这是任务完成条件的patch
@@ -2877,6 +2963,8 @@ function LR_HeadName.LoadCommonSettings()
 	LR_HeadName.UsrData = clone(CommonSetting.UsrData)
 	LR_HeadName.DoodadKind =  clone(CommonSetting.DoodadKind)
 	LR_HeadName.CustomDoodad = clone(CommonSetting.CustomDoodad)
+	LR_HeadName.HighLightColor = clone(CommonSetting.HighLightColor)
+	LR_HeadName.Color = clone(CommonSetting.Color)
 end
 
 function LR_HeadName.SaveCommonSettings()
@@ -2888,6 +2976,8 @@ function LR_HeadName.SaveCommonSettings()
 	CommonSetting.UsrData = clone(LR_HeadName.UsrData)
 	CommonSetting.DoodadKind =  clone(LR_HeadName.DoodadKind)
 	CommonSetting.CustomDoodad =  clone(LR_HeadName.CustomDoodad)
+	CommonSetting.HighLightColor = clone(LR_HeadName.HighLightColor)
+	CommonSetting.Color = clone(LR_HeadName.Color)
 	SaveLUAData (path, CommonSetting)
 end
 
@@ -2898,6 +2988,8 @@ function LR_HeadName.CheckCommonSettings()
 		return
 	end
 	CommonSetting = clone(LR_HeadName.default)
+	CommonSetting.HighLightColor = clone(LR_HeadName.DefaultHighLightColor)
+	CommonSetting.Color = clone(LR_HeadName.Color)
 	SaveLUAData (path, CommonSetting)
 end
 
@@ -2985,16 +3077,58 @@ function LR_HeadName.FIRST_LOADING_END()
 	LR_HeadName.GetAllMissionNeed()
 	LR_HeadName.Tree()
 	LR_HeadName.AddAllDoodad2AllList()
+	LR_HeadName.ReDrawAll()
 end
 
 function LR_HeadName.CUSTOM_DATA_LOADED()
 
 end
 
+function LR_HeadName.DO_SKILL_CAST()
+	local dwCasterID = arg0
+	local dwSkillID = arg1
+	local dwSkillLevel = arg2
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	if dwSkillID == _GuDing.dwSkillID and dwCasterID == me.dwID  then
+		_GuDing.tCastList[dwCasterID] = {szName = me.szName, nTime = GetCurrentTime()}
+		if me.IsInParty() or me.IsInRaid() then
+			local msg = {dwCasterID = dwCasterID, szName = me.szName, nTime = GetCurrentTime()}
+			LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_HeadName_GuDing", "Send", msg)
+		end
+	end
+end
+
+function LR_HeadName.ON_BG_CHANNEL_MSG()
+	local szKey = arg0
+	local nChannel = arg1
+	local dwTalkerID = arg2
+	local szTalkerName = arg3
+	local data = arg4
+	if szKey ~= "LR_HeadName_GuDing" then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+
+	if data[1] == "Send" then
+		local dwCasterID = data[2].dwCasterID
+		local szName = data[2].szName
+		local nTime = data[2].nTime
+		_GuDing.tCastList[dwCasterID] = {szName = szName, nTime = nTime}
+	end
+end
+
 LR.RegisterEvent("LOGIN_GAME", function() LR_HeadName.LOGIN_GAME() end)
 LR.RegisterEvent("LOADING_END", function() LR_HeadName.LOADING_END() end)
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_HeadName.FIRST_LOADING_END() end)
 LR.RegisterEvent("CUSTOM_DATA_LOADED", function() LR_HeadName.CUSTOM_DATA_LOADED() end)
+LR.RegisterEvent("DO_SKILL_CAST", function() LR_HeadName.DO_SKILL_CAST() end)
+LR.RegisterEvent("ON_BG_CHANNEL_MSG",function() LR_HeadName.ON_BG_CHANNEL_MSG() end)
 
 Wnd.OpenWindow(sformat("%s\\UI\\LR_HeadNameNone.ini", AddonPath), "LR_HeadName"):Hide()
 
