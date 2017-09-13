@@ -6,6 +6,8 @@ local sformat, slen, sgsub, ssub, sfind = string.format, string.len, string.gsub
 local mfloor, mceil, mmin, mmax = math.floor, math.ceil, math.min, math.max
 local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remove, table.sort
 ----------------------------------------------------------
+local VERSION = "20170912"
+--------------------------------------------------------
 LR_AccountStatistics_FBList =  LR_AccountStatistics_FBList or {}
 LR_AccountStatistics_FBList.src = "%s\\%s\\%s\\%s\\FBList_%s.dat"
 LR_AccountStatistics_FBList.SettingsSrc = "%s\\CommonSetting_FBList.dat"
@@ -47,64 +49,37 @@ local DefaultUsrData = {
 		{dwMapID = 248},
 		{dwMapID = 263},
 	},
-	Version = "20170602v2",
+	VERSION = VERSION,
 }
-
 LR_AccountStatistics_FBList.UsrData = clone( DefaultUsrData )
-local CustomVersion = "20170602v2"
-RegisterCustomData("LR_AccountStatistics_FBList.UsrData", CustomVersion)
+RegisterCustomData("LR_AccountStatistics_FBList.UsrData", VERSION)
 
-function LR_AccountStatistics_FBList.CheckVersion()
-	local UsrData = LR_AccountStatistics_FBList.UsrData
-	local Version = UsrData.Version or "1.0"
-	if Version ~=  DefaultUsrData.Version then
-		LR_AccountStatistics_FBList.UsrData = clone ( DefaultUsrData )
-	end
-
-	local path = sformat(LR_AccountStatistics_FBList.SettingsSrc, SaveDataPath)
-	local t =  LoadLUAData(path) or {}
-	if not (t.Version and t.Version == DefaultUsrData.Version and t.nType and t.nType == "FBCommSet" )then
-		local data = {}
-		data.Version = DefaultUsrData.Version
-		data.nType = "FBCommSet"
-		data.data = DefaultUsrData.bShowMapID or {}
-		local path = sformat(LR_AccountStatistics_FBList.SettingsSrc, SaveDataPath)
-		SaveLUAData(path, data)
-	end
-end
-
-function LR_AccountStatistics_FBList.LoadCommonSetting ()
+------------------------------------------------------------
+function LR_AccountStatistics_FBList.LoadCommonSetting()
 	if not LR_AccountStatistics_FBList.UsrData.CommonSetting then
 		return
 	end
-	local path = sformat(LR_AccountStatistics_FBList.SettingsSrc, SaveDataPath)
-	local t =  LoadLUAData(path) or {}
-	if t.Version and t.Version == DefaultUsrData.Version and t.nType and t.nType == "FBCommSet" then
-		LR_AccountStatistics_FBList.UsrData.bShowMapID = t.data or {}
+	local path = sformat("%s\\CommonSetting_FBList.dat", SaveDataPath)
+	local data = LoadLUAData(path) or {}
+	if data.VERSION and data.VERSION == VERSION then
+		LR_AccountStatistics_FBList.UsrData.bShowMapID = clone(data.bShowMapID or {})
 	else
 		LR_AccountStatistics_FBList.UsrData.bShowMapID =  clone( DefaultUsrData.bShowMapID )
-		LR_AccountStatistics_FBList.UsrData.Version = DefaultUsrData.Version
+		LR_AccountStatistics_FBList.SaveCommonSetting ()
 	end
 end
 
-function LR_AccountStatistics_FBList.SaveCommonSetting ()
-	if LR_AccountStatistics_FBList.UsrData.CommonSetting then
-		local data = {}
-		data.Version = DefaultUsrData.Version
-		data.nType = "FBCommSet"
-		data.data = LR_AccountStatistics_FBList.UsrData.bShowMapID or {}
-		local path = sformat(LR_AccountStatistics_FBList.SettingsSrc, SaveDataPath)
-		SaveLUAData(path, data)
-	end
-end
-
------重置副本数据
-function LR_AccountStatistics_FBList.ClearData()
-	----合并到RC里面 LR_AccountStatistics_RiChang.ResetData()
-	if true then
+function LR_AccountStatistics_FBList.SaveCommonSetting()
+	if not LR_AccountStatistics_FBList.UsrData.CommonSetting then
 		return
 	end
+	local data = {}
+	data.VERSION = VERSION
+	data.bShowMapID = LR_AccountStatistics_FBList.UsrData.bShowMapID or {}
+	local path = sformat("%s\\CommonSetting_FBList.dat", SaveDataPath)
+	SaveLUAData(path, data)
 end
+
 
 ------↓↓↓清除所有人的每周可获得监本数量
 function LR_AccountStatistics_FBList.ClearAllReaminJianBen(DB)
@@ -268,22 +243,10 @@ end
 
 
 function LR_AccountStatistics_FBList.FIRST_LOADING_END()
-	LR_AccountStatistics_FBList.CheckVersion()
-	----------检查是否有副本cd配置文件
-	--------以下
-	local SettingsSrc1 = sformat("%s\\CommonSetting_FBList.dat.jx3dat", SaveDataPath)
-	local SettingsSrc2 = sformat("%s\\CommonSetting_FBList.dat", SaveDataPath)
-	local bShowMapID = clone( DefaultUsrData.bShowMapID )
-	if IsFileExist(SettingsSrc1) then
-
-	else
-		SaveLUAData(SettingsSrc2, bShowMapID)
-	end
-	--------以上
-	if not (LR_AccountStatistics_FBList.UsrData and LR_AccountStatistics_FBList.UsrData.Version and LR_AccountStatistics_FBList.UsrData.Version ==  DefaultUsrData.Version ) then
-		LR_AccountStatistics_FBList.ResetData()
-	end
 	LR_AccountStatistics_FBList.LoadCommonSetting()
+	LR.DelayCall(6000, function()
+		LR_AccountStatistics_FBList.GetFBList()
+	end)
 end
 
 function LR_AccountStatistics_FBList.ResetData()

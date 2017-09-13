@@ -119,6 +119,7 @@ function LR.LoadDragonMapData()
 end
 LR.LoadDragonMapData()
 
+--------------------------------------
 function LR.Table_GetBookItemIndex(dwBookID, dwSegmentID)
 	local dwBookItemIndex = 0
 
@@ -129,6 +130,21 @@ function LR.Table_GetBookItemIndex(dwBookID, dwSegmentID)
 
 	return dwBookItemIndex
 end
+
+function LR.GetBookReadStatusByName(szName)
+	local RowCount = g_tTable.BookSegment:GetRowCount()
+	local i = 2
+	while i <= RowCount do
+		local t = g_tTable.BookSegment:GetRow(i)
+		if LR.Trim(szName) == LR.Trim(t.szSegmentName) then
+			return GetClientPlayer().IsBookMemorized(t.dwBookID, t.dwSegmentID)
+		end
+		i = i + 1
+	end
+	return false
+
+end
+
 
 function LR.Table_GetSegmentName(dwBookID, dwSegmentID)
 	local szSegmentName = ""
@@ -656,9 +672,19 @@ function LR.GetBuffByID(obj, dwID)
 end
 
 
-------------------------------------------
------表操作
------------------------------------------
+-- 追加小地图标记
+-- (void) LR.UpdateMiniFlag(number dwType, KObject tar, number nF1[, number nF2])
+-- dwType	-- 类型，8 - 红名，5 - Doodad，7 - 功能 NPC，2 - 提示点，1 - 队友，4 - 任务 NPC
+-- tar			-- 目标对象 KPlayer，KNpc，KDoodad
+-- nF1			-- 图标帧次
+-- nF2			-- 箭头帧次，默认 48 就行
+function LR.UpdateMiniFlag(dwType, tar, nF1, nF2)
+	local nX, nZ = Scene_PlaneGameWorldPosToScene(tar.nX, tar.nY)
+	local m = Station.Lookup("Normal/Minimap/Wnd_Minimap/Minimap_Map")
+	if m then
+		m:UpdataArrowPoint(dwType, tar.dwID, nF1, nF2 or 48, nX, nZ, 16)
+	end
+end
 
 
 ----------------------------------------
@@ -922,7 +948,7 @@ function LR.Talk(nChannel, szText, szUUID, bNoEmotion, bSaveDeny, bNotLimit)
 		return
 	end
 
-	-- say body
+	-- say bodyT
 	local tSay = nil
 	if type(szText) == "table" then
 		tSay = szText

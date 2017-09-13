@@ -196,7 +196,7 @@ function LR_AccountStatistics_Bag.SaveData(DB)
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local belong = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	--先清数据
-	local DB_SELECT = DB:Prepare("SELECT szKey FROM bag_item_data WHERE nStackNum > 0 AND bDel = 0 AND belong = ? AND szKey IS NOT NULL AND belong IS NOT NULL")
+	local DB_SELECT = DB:Prepare("SELECT szKey FROM bag_item_data WHERE belong = ? AND szKey IS NOT NULL")
 	DB_SELECT:ClearBindings()
 	DB_SELECT:BindAll(belong)
 	local result = DB_SELECT:GetAll() or {}
@@ -269,7 +269,7 @@ function LR_AccountStatistics_Bank.SaveData(DB)
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local belong = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	--先清数据
-	local DB_SELECT = DB:Prepare("SELECT szKey FROM bank_item_data WHERE nStackNum > 0 AND bDel = 0 AND belong = ? AND szKey IS NOT NULL AND belong IS NOT NULL")
+	local DB_SELECT = DB:Prepare("SELECT szKey FROM bank_item_data WHERE belong = ? AND szKey IS NOT NULL")
 	DB_SELECT:ClearBindings()
 	DB_SELECT:BindAll(belong)
 	local result = DB_SELECT:GetAll() or {}
@@ -466,7 +466,7 @@ function LR_AccountStatistics_Mail.GetItemByMail ()
 			----金钱记录
 			if MailInfo.bMoneyFlag then
 				local nMoney = MailInfo.nMoney
-				if nMoney>0 then
+				if nMoney > 0 then
 					local t_item = {}
 					local szKey = "Money_0_0"
 					t_item.nUiId = 0
@@ -474,7 +474,9 @@ function LR_AccountStatistics_Mail.GetItemByMail ()
 					t_item.nStackNum = nMoney
 					t_item.nQuality = 5
 					t_item.szName = _L["Money"]
-					t_item.nGenre = ITEM_GENRE.BOX
+					t_item.nGenre = 0
+					t_item.nSub = 0
+					t_item.nDetail = 0
 					t_item.dwTabType = 0
 					t_item.dwIndex = 0
 					t_item.nBookID = 0
@@ -1845,7 +1847,7 @@ function LR_AccountStatistics_Bag_Panel.LoadUserMailData(DB)
 					MailData2[v2.nMailID].item_record = LR.JsonDecode(v2.item_record)
 				end
 				--获取邮件中的物品信息
-				local SQL2 = "SELECT * FROM mail_item_data WHERE belong = ? AND bDel = 0 AND szKey IS NOT NULL AND belong IS NOT NULL"
+				local SQL2 = "SELECT * FROM mail_item_data WHERE belong = ? AND bDel = 0 AND szKey IS NOT NULL AND belong IS NOT NULL AND nStackNum > 0"
 				if LR_AccountStatistics_Bag_Panel.bShowExpireMail then
 					local t_szKey2 = {}
 					for k3, v3 in pairs(MailData2) do
@@ -1858,7 +1860,7 @@ function LR_AccountStatistics_Bag_Panel.LoadUserMailData(DB)
 					for k2, v2 in pairs(t_szKey2) do
 						t_szKey[#t_szKey+1] = sformat("'%s'", k2)
 					end
-					SQL2 = sformat("SELECT * FROM mail_item_data WHERE belong = ? AND bDel = 0 AND szKey IN ( %s ) AND szKey IS NOT NULL AND belong IS NOT NULL", tconcat(t_szKey, ", "))
+					SQL2 = sformat("SELECT * FROM mail_item_data WHERE belong = ? AND bDel = 0 AND szKey IN ( %s ) AND szKey IS NOT NULL AND belong IS NOT NULL AND nStackNum > 0", tconcat(t_szKey, ", "))
 				end
 				local DB_SELECT2 = DB:Prepare(SQL2)
 				DB_SELECT2:ClearBindings()
@@ -1881,9 +1883,9 @@ function LR_AccountStatistics_Bag_Panel.LoadUserMailData(DB)
 		for k3, v3 in pairs(ItemInMail2) do
 			if ItemInMail[v3.szKey] then
 				if LR_AccountStatistics_Bag_Panel.bShowExpireMail then
-					ItemInMail[v3.szKey].nStackNum = ItemInMail[v3.szKey].nStackNum + t_num[v3.szKey]
+					ItemInMail[v3.szKey].nStackNum = ItemInMail[v3.szKey].nStackNum + t_num[v3.szKey] or 0
 				else
-					ItemInMail[v3.szKey].nStackNum = ItemInMail[v3.szKey].nStackNum + v3.nStackNum
+					ItemInMail[v3.szKey].nStackNum = ItemInMail[v3.szKey].nStackNum + v3.nStackNum or 0
 				end
 			else
 				ItemInMail[v3.szKey] = clone(v3)

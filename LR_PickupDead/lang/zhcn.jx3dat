@@ -1,0 +1,36 @@
+data = {
+	--20170820add--
+	["Helpers"]="小助手",
+	["LR PickupDead"]="懒人捡尸助手",
+	["Enable pickup dead"]="开启捡尸小助手",
+	["Quality Settings"]="拾取品质设定",
+	["Any Quality"]="拾取灰色及以上物品",
+	["Quality 0"]="拾取白色及以上物品",
+	["Quality 1"]="拾取绿色及以上物品",
+	["Quality 2"]="拾取蓝色及以上物品",
+	["Quality 3"]="拾取紫色及以上物品",
+
+	["Item Filter Settings"]="物品过滤设置",
+	["Pickup task item"]="拾取任务物品",
+	["Pickup unread book"]="仅拾取没读过的书籍",
+	["Pickup White List"]="开启拾取白名单",
+	["Pickup Black List"]="开启拾取黑名单",
+	["Error, no this item"]="错误，没有这个物品",
+	["Add Item"]="添加物品",
+	["Only pickup item in white list which is checked"]="只拾取白名单中勾选的物品",
+	["Sure to delete"]="确定要删除：",
+
+	--20170824add--
+	["Refresh black/white list"]="刷新黑白名单列表",
+	["Are you sure to refresh black/white list?"]="确定要刷新黑白名单列表？",
+
+	--20170827add--
+	["Book filter settings"]="书籍过滤设置",
+	["Pickup only one bind book"]="相同的绑定书籍只拾取一本",
+	["Give up items beyond the limit of number"]="不拾取超过数量上限的物品",
+	["Pickup only one not bind book"]="相同的非绑定书籍只拾取一本",
+
+	--20170912add--
+	["TIP"]="※请取消系统的【自动全部拾取】，否则过滤失效。位置：【ESC】-【界面设置】-【基础设置】-【自动全部拾取】",
+	["TIP2"]="物品添加有以下3种格式：\n1、输入物品名字\n2、输入物品UIID\n3、输入物品ID的2个数字，中间用','相隔。\n\n物品的UIID和ID的2个数字可以按住CTRL，鼠标悬停于物品上时，看调试信息获得。"
+}

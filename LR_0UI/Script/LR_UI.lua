@@ -2628,7 +2628,9 @@ function ItemTreeLeaf:GetShowIndex()
 	return self.__this:GetShowIndex()
 end
 
+-------------------------------------------
 -- Addon Class
+-------------------------------------------
 local CreateAddon = class()
 local Addon_List = {}
 function CreateAddon_new(__name)

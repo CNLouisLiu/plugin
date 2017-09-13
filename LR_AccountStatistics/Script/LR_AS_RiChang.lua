@@ -994,6 +994,10 @@ function LR_AS_Exam.CheckExam()
 	if LR.HasBuff(buffList, 4125) then
 		LR_AS_Exam.SelfData["HuiShi"] = 1
 	end
+	if LR.GetItemNumInBagAndBank(5, 6261) > 0 then
+		LR_AS_Exam.SelfData["ShengShi"] = 1		---会试行文(省市buff有时会消失)
+	end
+
 	LR_AS_Exam.AllUsrData[szKey] = clone(LR_AS_Exam.SelfData)
 end
 

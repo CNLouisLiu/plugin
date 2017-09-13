@@ -1,0 +1,10 @@
+data = {
+	--20170820add--
+	["Helpers"]="小助手",
+	["Remember last recipe"]="开启五行石助手（开启后会按照上次的配方合成）",
+	["LR DiamondHelper"]="五行石小助手",
+
+	---20170825add--
+	["Distinguish by bind"]="区分绑定属性",
+
+}

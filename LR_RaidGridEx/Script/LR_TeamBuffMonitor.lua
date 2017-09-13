@@ -3,11 +3,13 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
+local VERSION = "20170913"
+---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
 local _DefaultBuffMonitorData={
-	Version="20161125v4",
+	VERSION = VERSION,
 	data={},
 }
 ----------------------------------------------------------------
@@ -106,8 +108,8 @@ end
 function _BuffBox:SetIcon()
 	local handle = self.handle
 	local box = handle:Lookup("Box")
-	if self.tBuff.nIcon then
-		self.nIcon = self.tBuff.nIcon
+	if self.tBuff.nIconID and self.tBuff.nIconID > 0 then
+		self.nIcon = self.tBuff.nIconID
 	else
 		self.nIcon = Table_GetBuffIconID(self.tBuff.dwID, self.tBuff.nLevel)
 	end
@@ -259,6 +261,7 @@ LR_TeamBuffSettingPanel.handleListSelected = nil
 -- 存档的BUFF/DEBUFF列表内容, 主表是个 Array
 -- 子表格式为 {szName = "组名", szDesc = "我是描述，我是TIP。", szContent = "普渡八音(红),火里栽莲,王手截脉(蓝)", bEnable = true}
 LR_TeamBuffSettingPanel.tDebuffListContent = {}
+local JH_DBM_BUFF_LIST = {}	---用于存放DBM过来的BUFF数据
 
 local nEnableIcon = 6933
 local nDisableIcon = 6942
@@ -284,37 +287,56 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 		local szContent = tInfo.szContent
 		if tInfo.bEnable and szContent and type(szContent) == "string" and szContent ~= "" then
 			szContent = sgsub(szContent, "%s", "")
+			szContent = sgsub(szContent, " ", "")
+			szContent = sgsub(szContent, "；", ";")
 			szContent = sgsub(szContent, "，", ",")
 			szContent = sgsub(szContent, "（", "(")
 			szContent = sgsub(szContent, "）", ")")
-			szContent = sformat("%s,", szContent)
+			szContent = sformat("%s;", szContent)
 			local t={}
-			for s in sgfind(szContent,"(.-),") do
-				if s~="" then
-					t[#t+1]=s
+			for s in sgfind(szContent, "(.-);") do
+				if s ~= "" then
+					t[#t + 1] = s
 				end
 			end
 
-			for i=1,#t,1 do
-				local buff={szName="",col={},bOnlySelf=false,}
-				local text=t[i]
+			for i = 1, #t, 1 do
+				local buff = {dwID = 0, szName = "", col = {}, bOnlySelf = false, nIconID = 0, nLevel = 0,}
+				local text = t[i]
 
-				local _s,_e,bSelf=sfind(text,"%[(.-)%]")
+				local _s, _e, bSelf = sfind(text, "%[(.-)%]")
 				if bSelf and bSelf == _L["self"] then
-					buff.bOnlySelf=true
+					buff.bOnlySelf = true
 				end
-				text=sgsub(text,"%[(.-)%]","")
+				text = sgsub(text, "%[(.-)%]", "")
 
-				local _s,_e,_color=sfind(text,"%((.-)%)")
+				local _s, _e, _color = sfind(text,"%((.-)%)")
 				if _color then
-					buff.col=LR_TeamBuffSettingPanel.tColorCover[_color] or {}
+					local _s, _e, r, g, b = sfind(text, "(%d+),(%d+),(%d+)")
+					if _s then
+						buff.col = {r, g, b}
+					else
+						buff.col = LR_TeamBuffSettingPanel.tColorCover[_color] or {}
+					end
 				end
-				text=sgsub(text,"%((.-)%)","")
+				text = sgsub(text, "%((.-)%)", "")
 
-				buff.szName = text
+				local _s, _e, _nIconID = sfind(text, "#(%d+)")
+				if _s then
+					buff.nIconID = tonumber(_nIconID)
+				end
+				text = sgsub(text, "#(%d+)", "")
 
-				if not tSplitTextTable[buff.szName] then
-					tSplitTextTable[buff.szName] = buff
+				if type(tonumber(text)) == "number" then
+					buff.dwID = tonumber(text)
+					if not tSplitTextTable[buff.szName] then
+						tSplitTextTable[buff.dwID] = buff
+					end
+				else
+					buff.szName = text
+					if not tSplitTextTable[buff.szName] then
+						tSplitTextTable[buff.szName] = buff
+					end
 				end
 			end
 		end
@@ -428,7 +450,6 @@ function LR_TeamBuffSettingPanel.UpdateScrollInfo()
 end
 
 -------------------------------------------------------------------------------------------------------------
-
 function LR_TeamBuffSettingPanel.OnItemMouseEnter()
 	local szName = this:GetName()
 	if szName:match("HI") then
@@ -488,7 +509,8 @@ function LR_TeamBuffSettingPanel.OnItemLButtonClick()
 				nIconID = nEnableIcon
 			end
 			box:SetObjectIcon(nIconID)
-			LR_TeamBuffSettingPanel.OnItemMouseEnter()
+			LR_TeamBuffSettingPanel.FormatDebuffNameList()
+			--LR_TeamBuffSettingPanel.OnItemMouseEnter()
 		end
 	elseif szName:match("HI") then
 		LR_TeamBuffSettingPanel.SelectListHandle(this)
@@ -539,6 +561,7 @@ function LR_TeamBuffSettingPanel.OnEditChanged()
 				tInfo.szContent = this:GetText()
 			end
 		end
+
 		LR_TeamBuffSettingPanel.FormatDebuffNameList()
 	end
 end
@@ -689,7 +712,7 @@ function LR_TeamBuffSettingPanel.LoadSettingsFile(szText)
 	local szMsg = LR_TeamBuffSettingPanel.tDebuffListContent
 	local path = sformat("%s\\UsrData\\Data_%s.dat", SaveDataPath, szName)
 	if IsFileExist(sformat("%s.jx3dat", path)) then
-		local t=LoadLUAData(path) or {}
+		local t = LoadLUAData(path) or {}
 		LR.SysMsg(_L["Import Successful!"])
 		LR_TeamBuffSettingPanel.tDebuffListContent = t
 		LR_TeamBuffSettingPanel.UpdateList()
@@ -703,33 +726,28 @@ end
 function LR_TeamBuffSettingPanel.SaveCommonData()
 	local path = sformat("%s\\UsrData\\CommonBuffMonitorData.dat", SaveDataPath)
 	local data = {}
-	data.Version = _DefaultBuffMonitorData.Version
+	data.VERSION =VERSION
 	data.data = clone(LR_TeamBuffSettingPanel.tDebuffListContent)
 	SaveLUAData(path,data)
 end
 
 function LR_TeamBuffSettingPanel.LoadCommonData()
-	LR_TeamBuffSettingPanel.CheckCommonData()
 	local path = sformat("%s\\UsrData\\CommonBuffMonitorData.dat", SaveDataPath)
 	local data = LoadLUAData(path) or {}
-	LR_TeamBuffSettingPanel.tDebuffListContent = clone(data.data)
-	LR_TeamBuffSettingPanel.FormatDebuffNameList()
-end
-
-function LR_TeamBuffSettingPanel.CheckCommonData()
-	local path = sformat("%s\\UsrData\\CommonBuffMonitorData.dat", SaveDataPath)
-	local data = LoadLUAData(path) or {}
-	if data.Version and data.Version == _DefaultBuffMonitorData.Version then
-		return
+	if data.VERSION and data.VERSION == VERSION then
+		LR_TeamBuffSettingPanel.tDebuffListContent = clone(data.data)
+		LR_TeamBuffSettingPanel.FormatDebuffNameList()
+	else
+		local path2 = sformat("%s\\Script\\DefaultBuffMonitorData.dat", AddonPath)
+		data2 = LoadLUAData(path2) or {}
+		LR_TeamBuffSettingPanel.tDebuffListContent = clone(data2.data)
+		LR_TeamBuffSettingPanel.FormatDebuffNameList()
+		LR_TeamBuffSettingPanel.SaveCommonData()
 	end
-	local path2 = sformat("%s\\Script\\DefaultBuffMonitorData.dat", AddonPath)
-	data2 = LoadLUAData(path2) or {}
-	LR_TeamBuffSettingPanel.tDebuffListContent = clone(data2)
-	LR_TeamBuffSettingPanel.SaveCommonData()
 end
 
 function LR_TeamBuffSettingPanel.LoadDefaultData()
-	local path=sformat("%s\\Script\\DefaultBuffMonitorData.dat", AddonPath)
+	local path = sformat("%s\\Script\\DefaultBuffMonitorData.dat", AddonPath)
 	local data = LoadLUAData(path) or {}
 	LR_TeamBuffSettingPanel.tDebuffListContent = clone(data.data)
 	LR_TeamBuffSettingPanel.SaveCommonData()
@@ -750,25 +768,104 @@ LR_TeamBuffMonitor = {}
 local _MemberBuff = {}		----用于存放成员的监控buff，缓存
 local _hMemberBuff = {}	----用于存放监控buff的handleUI，缓存
 
-function LR_TeamBuffMonitor.isBuffInMonitorList(tBuff)
+function LR_TeamBuffMonitor.Check(MonitorBuff, nType)
 	local me = GetClientPlayer()
 	if not me then
-		return false
+		return
+	end
+	local player = GetPlayer(MonitorBuff.dwPlayerID)
+	if not player then
+		return
+	end
+	local tBuffList = LR.GetBuffList(player)
+	local buff, nEndFrame = {}, 0
+	local bOnlySelf = MonitorBuff.bOnlySelf
+	for k, v in pairs(tBuffList) do
+		if v.dwID == MonitorBuff.dwID then
+			if bOnlySelf then
+				if v.dwSkillSrcID == me.dwID and v.nEndFrame > nEndFrame and (MonitorBuff.nLevel == 0 or v.nLevel == MonitorBuff.nLevel) then
+					buff = clone(v)
+					nEndFrame = v.nEndFrame
+				end
+			else
+				if v.nEndFrame >nEndFrame and (MonitorBuff.nLevel == 0 or v.nLevel == MonitorBuff.nLevel) then
+					buff = clone(v)
+					nEndFrame = v.nEndFrame
+				end
+			end
+		end
+	end
+	local hMemberBuff = _hMemberBuff[MonitorBuff.dwPlayerID] or {}
+	if next(buff) == nil then
+		if hMemberBuff[MonitorBuff.dwID] then
+			hMemberBuff[MonitorBuff.dwID]:Remove()
+			hMemberBuff[MonitorBuff.dwID]=nil
+			MemberBuff = _MemberBuff[MonitorBuff.dwPlayerID] or {}
+			for k, v in pairs (MemberBuff) do
+				if v.dwID == MonitorBuff.dwID then
+					MemberBuff[k] = {}
+					--LR_TeamBuffMonitor.SortBuff(tBuff.dwPlayerID)
+					return
+				end
+			end
+		end
+		return
+	else
+		buff.bOnlySelf = MonitorBuff.bOnlySelf
+		buff.col = MonitorBuff.col
+		buff.nIconID = MonitorBuff.nIconID
+		buff.source = nType
+		FireEvent("LR_RAID_BUFF_REC", MonitorBuff.dwPlayerID, buff)
+		if nType == "JH_DBM" then
+			JH_DBM_BUFF_LIST[buff.dwID] = clone(buff)
+		end
+	end
+end
+
+function LR_TeamBuffMonitor.SYS_MSG()
+	if arg0 == "UI_OME_BUFF_LOG" then	--xx获得/失去xxbuff
+		local dwTarget, bCanCancel, dwID, bAddOrDel, nLevel = arg1, arg2, arg3, arg4, arg5
+		LR_TeamBuffMonitor.UI_OME_BUFF_LOG(dwTarget, bCanCancel, dwID, bAddOrDel, nLevel)
+	end
+end
+
+function LR_TeamBuffMonitor.UI_OME_BUFF_LOG(dwTarget, bCanCancel, dwID, bAddOrDel, nLevel)
+	if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bOff then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local tBuff = {
+		dwPlayerID = dwTarget,
+		bDelete = not bAddOrDel,
+		bCanCancel = bCanCancel,
+		dwID = dwID,
+		nLevel = nLevel,
+	}
+	if not IsPlayer(tBuff.dwPlayerID) then
+		return
+	end
+	if not (tBuff.dwPlayerID == me.dwID or me.IsPlayerInMyParty(tBuff.dwPlayerID)) then
+		return
 	end
 	local MonitorList = clone(LR_TeamBuffSettingPanel.BuffList) or {}
-	local tBuff = tBuff
-	local szBuffName = LR.Trim(Table_GetBuffName(tBuff.dwID, tBuff.nLevel))
-	if not MonitorList[szBuffName] then
-		return false
+	local szBuffName = Table_GetBuffName(tBuff.dwID, tBuff.nLevel)
+	if not (MonitorList[szBuffName] or MonitorList[tBuff.dwID] or JH_DBM_BUFF_LIST[tBuff.dwID] ) then
+		return
 	end
-	if MonitorList[szBuffName].bOnlySelf then
-		if tBuff.dwSkillSrcID == me.dwID then
-			return true
+	if MonitorList[szBuffName] then
+		if not Table_BuffIsVisible(tBuff.dwID, tBuff.nLevel) then
+			return
 		end
-	else
-		return true
 	end
-	return false
+	local MonitorBuff = MonitorList[szBuffName] or MonitorList[tBuff.dwID] or JH_DBM_BUFF_LIST[tBuff.dwID]
+	MonitorBuff.szName = szBuffName
+	MonitorBuff.dwID = tBuff.dwID
+	MonitorBuff.dwPlayerID = tBuff.dwPlayerID
+
+	LR_TeamBuffMonitor.Check(MonitorBuff, "LR_Team")
 end
 
 function LR_TeamBuffMonitor.BUFF_UPDATE()
@@ -789,104 +886,72 @@ function LR_TeamBuffMonitor.BUFF_UPDATE()
 		isValid= arg10,
 		nLeftFrame = arg11,
 	}
-
-	if tBuff.bDelete and not (tBuff.nStackNum and tBuff.nStackNum > 1) then
-		local hMemberBuff = _hMemberBuff[tBuff.dwPlayerID] or {}
-		if hMemberBuff[tBuff.dwID] then
-			hMemberBuff[tBuff.dwID]:Remove()
-			hMemberBuff[tBuff.dwID]=nil
-			MemberBuff = _MemberBuff[tBuff.dwPlayerID] or {}
-			for k, v in pairs (MemberBuff) do
-				if v.dwID == tBuff.dwID then
-					MemberBuff[k] = {}
-					--LR_TeamBuffMonitor.SortBuff(tBuff.dwPlayerID)
-					return
-				end
-			end
-		end
-		return
-	end
-	if not Table_BuffIsVisible(tBuff.dwID, tBuff.nLevel) then
-		return
-	end
-	if not LR_TeamBuffMonitor.isBuffInMonitorList(tBuff) then
-		return
-	end
-	local MonitorList = clone(LR_TeamBuffSettingPanel.BuffList) or {}
-	tBuff.bOnlySelf = MonitorList[LR.Trim(Table_GetBuffName(tBuff.dwID, tBuff.nLevel))].bOnlySelf
-	tBuff.col = MonitorList[LR.Trim(Table_GetBuffName(tBuff.dwID, tBuff.nLevel))].col or {}
-	tBuff.source="LR_Team"
-	FireEvent("LR_RAID_BUFF_REC", tBuff.dwPlayerID, tBuff)
-end
-
-function LR_TeamBuffMonitor.JH_RAID_REC_BUFF()
-	if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bOff then
-		return
-	end
-	--arg0 = dwMemberID
-	--arg1 = {
-		--dwID,
-		--nLevel,
-		--nLevelEx,
-		--col,		颜色
-		--nIcon,
-		--bOnlySelf,
-		--nStackNum
-	--}
-	local dwMemberID = arg0
-	local data = arg1
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
-	if not(me.IsInParty() or me.IsInRaid()) then
+	if not IsPlayer(tBuff.dwPlayerID) then
 		return
 	end
-	if not me.IsPlayerInMyParty(dwMemberID) then
+	if not (tBuff.dwPlayerID == me.dwID or me.IsPlayerInMyParty(tBuff.dwPlayerID)) then
 		return
 	end
-	local player = GetPlayer(dwMemberID)
-	if not player then
+	local MonitorList = clone(LR_TeamBuffSettingPanel.BuffList) or {}
+	local szBuffName = Table_GetBuffName(tBuff.dwID, tBuff.nLevel)
+	if not (MonitorList[szBuffName] or MonitorList[dwID] or JH_DBM_BUFF_LIST[tBuff.dwID] ) then
 		return
 	end
+	if MonitorList[szBuffName] then
+		if not Table_BuffIsVisible(tBuff.dwID, tBuff.nLevel) then
+			return
+		end
+	end
+	local MonitorBuff = MonitorList[szBuffName] or MonitorList[dwID] or JH_DBM_BUFF_LIST[tBuff.dwID]
+	MonitorBuff.szName = szBuffName
+	MonitorBuff.dwID = tBuff.dwID
+	MonitorBuff.dwPlayerID = tBuff.dwPlayerID
 
-	local BuffList = LR.GetBuffList(player)
-	local nEndFrameMax = 0
-	local buffdata={}
-	if  data.bOnlySelf then
-		for k, v in pairs(BuffList) do
-			if v.dwSkillSrcID == me.dwID and v.dwID == data.dwID then
-				if Table_BuffIsVisible(v.dwID, v.nLevel) then
-					v.bOnlySelf = true
-					v.col = data.col or {}
-					v.nIcon = data.nIcon
-					v.source = "JH"
-					FireEvent("LR_RAID_BUFF_REC", dwMemberID, v)
-					return
-				end
-			end
-		end
-	else
-		local bFound = false
-		for k, v in pairs (BuffList) do
-			if (data.nLevel == 0 or v.nLevel == data.nLevel) and v.dwID == data.dwID then
-				--if Table_BuffIsVisible(v.dwID, v.nLevel) then
-					if v.nEndFrame > nEndFrameMax then
-						nEndFrameMax = v.nEndFrame
-						buffdata = clone(v)
-						bFound = true
-					end
-				--end
-			end
-		end
-		if bFound then
-			buffdata.bOnlySelf = false
-			buffdata.col = data.col or {}
-			buffdata.nIcon = data.nIcon
-			buffdata.source = "JH"
-			FireEvent("LR_RAID_BUFF_REC", dwMemberID, buffdata)
-		end
+	LR_TeamBuffMonitor.Check(MonitorBuff, "LR_Team")
+end
+
+--arg0 = dwMemberID
+--arg1 = {
+	--dwID,
+	--nLevel,
+	--nLevelEx,
+	--col,		颜色
+	--nIcon,
+	--bOnlySelf,
+	--nStackNum
+--}
+function LR_TeamBuffMonitor.JH_RAID_REC_BUFF()
+	if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bOff then
+		return
 	end
+	local tBuff={
+		dwPlayerID = arg0,
+		dwID = arg1.dwID or 0,
+		bOnlySelf = arg1.bOnlySelf or false,
+		nLevel = arg1.nLevel or 0,
+		nLevelEx = arg1.nLevelEx,
+		nIconID = arg1.nIcon or 0,
+		col = arg1.col or {},
+		nStackNum = arg1.nStackNum,
+	}
+
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	if not IsPlayer(tBuff.dwPlayerID) then
+		return
+	end
+	if not (tBuff.dwPlayerID == me.dwID or me.IsPlayerInMyParty(tBuff.dwPlayerID)) then
+		return
+	end
+	local MonitorBuff = tBuff
+
+	LR_TeamBuffMonitor.Check(MonitorBuff, "JH_DBM")
 end
 
 function LR_TeamBuffMonitor.LR_RAID_BUFF_REC()
@@ -924,35 +989,6 @@ function LR_TeamBuffMonitor.LR_RAID_BUFF_REC()
 		BuffList[i]=nil
 	end
 
---[[
-
-	for i=1, 4 do
-		if (MemberBuff[i] == nil or MemberBuff[i].dwID == tBuff.dwID) and not bFound then
-			n = i
-			bFound = true
-			if MemberBuff[i] and MemberBuff[i].col and type(MemberBuff[i].col) == "table" and next(MemberBuff[i].col) ~= nil then
-				if not (tBuff.col and type(tBuff.col) == "table" and next(tBuff.col) ~= nil) then
-					BuffList[1].col = clone(MemberBuff[i].col)
-				end
-			end
-		end
-	end
-	for i = 1, n - 1 do
-		if MemberBuff[i] then
-			BuffList[i + 1] = clone(MemberBuff[i])
-		end
-	end
-	for i = n, 4 do
-		if MemberBuff[i] and MemberBuff[i].dwID ~= tBuff.dwID then
-			BuffList[i] = clone(MemberBuff[i])
-		end
-	end
-	local buffMonitorNum = LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffMonitorNum
-	for i=buffMonitorNum+1,#BuffList do
-		BuffList[i]=nil
-	end
-
-	]]
 	_MemberBuff[dwPlayerID] = clone(BuffList)
 	LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
 end

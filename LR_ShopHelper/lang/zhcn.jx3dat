@@ -1,0 +1,27 @@
+data = {
+	["LR ShopHelper"]="懒人商店助手",
+	["Enable auto sell"]="允许打开商店时即刻卖物品",
+	["Enable auto repare"]="允许打开商店时即刻修理",
+	["Enable buy more"]="允许购买物品时输入更多的数量",
+	["Helpers"]="小助手",
+
+	--20170821add--
+	["Auto sell grey item"]="自动卖出灰色物品",
+	["Sell Item List"]="卖出物品列表",
+	["Enable sell items in list"]="允许卖出列表中的物品",
+	["Error, no this item"]="错误，没有这个物品",
+	["Sure to delete"]="你确定要删除：",
+	["Add Item"]="添加物品",
+	["Reset list"]="重置列表",
+	["Are you sure to reset item list?"]="确定要重置列表？",
+	["LR: Sell item:"]="懒人：卖出物品",
+
+	--20170824add--
+	["Black List"]="不卖出物品列表",
+	["Enable black list"]="以下物品不自动卖出",
+	["LR:You are locked\n"]="懒人卖店：你没解锁，不能卖出物品。\n",
+
+	--20170912add--
+	["TIP"]="物品添加有以下3种格式：\n1、输入物品名字\n2、输入物品UIID\n3、输入物品ID的2个数字，中间用','相隔。\n\n物品的UIID和ID的2个数字可以按住CTRL，鼠标悬停于物品上时，看调试信息获得。",
+	["TIP2"]="※黑名单功能需要关闭系统的卖店功能，以免系统把物品卖掉。位置在打开的商店界面的下方。",
+}

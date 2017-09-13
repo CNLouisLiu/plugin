@@ -391,7 +391,7 @@ function LR_ACS_QiYu.SaveData()
 	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_data ( szKey, qiyu_data, qiyu_achievement, bDel ) VALUES ( ?, ?, ?, ? )")
 	if LR_AccountStatistics.UsrData.OthersCanSee then
 		local SelfData = {}
-		for k, v in pairs(LR_ACS_QiYu.SelfData) do
+		for k, v in pairs(LR_ACS_QiYu.SelfData or {}) do
 			SelfData[tostring(k)] = v
 		end
 		DB_REPLACE:ClearBindings()

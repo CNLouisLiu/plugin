@@ -1564,8 +1564,10 @@ function LR_TeamGrid.OnFrameCreate()
 	this:RegisterEvent("RIAD_READY_CONFIRM_RECEIVE_ANSWER")	--团队就位确认响应
 	this:RegisterEvent("TEAM_VOTE_REQUEST")	--踢人、是否同意发工资请求
 	this:RegisterEvent("TEAM_VOTE_RESPOND")	--踢人、是否同意发工资响应
+	-----
 	this:RegisterEvent("BUFF_UPDATE")	--BUFF
 	this:RegisterEvent("JH_RAID_REC_BUFF")		--dbm
+	this:RegisterEvent("SYS_MSG")	--途径2监控BUFF
 	----自身技能监控
 	this:RegisterEvent("SKILL_MOUNT_KUNG_FU")
 	this:RegisterEvent("SKILL_UPDATE")
@@ -1723,6 +1725,8 @@ function LR_TeamGrid.OnEvent(szEvent)
 		LR_TeamBuffMonitor.BUFF_UPDATE()
 	elseif szEvent == "JH_RAID_REC_BUFF" then
 		LR_TeamBuffMonitor.JH_RAID_REC_BUFF()
+	elseif szEvent == "SYS_MSG" then
+		LR_TeamBuffMonitor.SYS_MSG()
 	elseif szEvent == "SKILL_MOUNT_KUNG_FU" then
 		LR_TeamSkillMonitor.SKILL_MOUNT_KUNG_FU()
 	elseif szEvent == "SKILL_UPDATE" then

@@ -54,9 +54,6 @@ function LR_AccountStatistics.AutoSave()
 		return
 	end
 
-	---获取人物数据
-
-
 	local _check_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, DB_name)
 	local DB = SQLite3_Open(path)
@@ -69,21 +66,16 @@ function LR_AccountStatistics.AutoSave()
 	LR_AccountStatistics_Bank.SaveData(DB)
 	------保存背包
 	LR_AccountStatistics_Bag.SaveData(DB)
-	------保存装备
+	------保存装备、属性、装分
 	LR_AccountStatistics_Equip.SaveData(DB)
-	------保存装备分数
-	--LR_AccountStatistics_Equip.SaveEquipScore()
 	-----保存副本数据
 	LR_AccountStatistics_FBList.SaveData(DB)
 	-----保存阅读数据
 	LR_AccountStatistics_BookRd.SaveData(DB)
-
 	----日常数据
 	LR_AccountStatistics_RiChang.SaveData(DB)
-
 	--保存考试
 	LR_AS_Exam.SaveData(DB)
-
 	----记录成就
 	LR_AccountStatistics_Achievement.SaveData(DB)
 
@@ -308,32 +300,43 @@ function LR_AccountStatistics.DelOneData (key, DB)
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
 	LR_AccountStatistics.AllUsrList[szKey] = nil
 
+	-----删除成就数据
+	DB:Execute(sformat("DELETE FROM achievement_data WHERE szKey = '%s'", szKey))
+
+	-----删除背包数据
+	DB:Execute(sformat("DELETE FROM bag_item_data WHERE belong = '%s'", szKey))
+
+	-----删除仓库数据
+	DB:Execute(sformat("DELETE FROM bank_item_data WHERE belong = '%s'", szKey))
+
+	----删除阅读信息
+	DB:Execute(sformat("DELETE FROM bookrd_data WHERE szKey = '%s'", szKey))
+
+	----删除装备信息
+	DB:Execute(sformat("DELETE FROM equipment_data WHERE szKey = '%s'", szKey))
+
+	----删除考试数据
+	DB:Execute(sformat("DELETE FROM exam_data WHERE szKey = '%s'", szKey))
+
+	----删除副本数据
+	DB:Execute(sformat("DELETE FROM fb_data WHERE szKey = '%s'", szKey))
+
+	----删除邮件数据
+	DB:Execute(sformat("DELETE FROM mail_data WHERE belong = '%s'", szKey))
+	DB:Execute(sformat("DELETE FROM mail_item_data WHERE belong = '%s'", szKey))
+	DB:Execute(sformat("DELETE FROM mail_receive_time WHERE szKey = '%s'", szKey))
+
+	----删除人物所在分组
+	DB:Execute(sformat("DELETE FROM player_group WHERE szKey = '%s'", szKey))
+
 	-----删除角色信息数据
 	DB:Execute(sformat("DELETE FROM player_info WHERE szKey = '%s' ", szKey))
 
-	-----删除背包数据
-	local bagPath = sformat(LR_AccountStatistics_Bag.src, SaveDataPath, realArea, realServer, szName, szName)
-	SaveLUAData(bagPath, {})
-
-	-----删除仓库数据
-	local bankPath = sformat(LR_AccountStatistics_Bank.src, SaveDataPath, realArea, realServer, szName, szName)
-	SaveLUAData(bankPath, {})
-
-	----删除副本数据
-	local FBPath = sformat(LR_AccountStatistics_FBList.src, SaveDataPath, realArea, realServer, szName, szName)
-	SaveLUAData(FBPath, {})
+	----删除角色奇遇数据
+	DB:Execute(sformat("DELETE FROM qiyu_data WHERE szKey = '%s'", szKey))
 
 	----删除日常数据
-	local RCPath = sformat("%s\\%s\\%s\\%s\\RC_%s.dat", SaveDataPath, realArea, realServer, szName, szName)
-	SaveLUAData(RCPath, {})
-
-	----删除阅读信息
-	local BookRecordPath = sformat("%s\\%s\\%s\\%s\\BookRecord_%s.dat", SaveDataPath, realArea, realServer, szName, szName)
-	SaveLUAData(RCPath, {})
-
-	----删除装备信息
-	local EquipmentPath = sformat("%s\\%s\\%s\\%s\\EquipRecord_%s.dat", SaveDataPath, realArea, realServer, szName, szName)
-	SaveLUAData(EquipmentPath, {})
+	DB:Execute(sformat("DELETE FROM richang_data WHERE szKey = '%s'", szKey))
 
 	LR.SysMsg(_L["Delete successful!\n"])
 end
@@ -431,6 +434,7 @@ function LR_AccountStatistics.OnFrameCreate()
 	LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
 	LR_AccountStatistics_RiChang.CheckAll()
 	LR_AccountStatistics_FBList.LoadAllUsrData(DB)
+	LR_ACS_QiYu.LoadAllUsrData(DB)		--奇遇数据
 
 	this:RegisterEvent("UI_SCALED")
 	this:RegisterEvent("CUSTOM_DATA_LOADED")
@@ -497,14 +501,10 @@ function LR_AccountStatistics.OnFrameCreate()
 		HideTip()
 	end
 
-
 	-------打开面板时保存数据
 	if LR_AccountStatistics.UsrData.AutoSave and LR_AccountStatistics.UsrData.OpenSave then
 		LR_AccountStatistics.AutoSave()
 	end
-
-	-----------周一周四重置副本数据
-	LR_AccountStatistics_FBList.ClearData()
 
 	-----------邮件提醒
 	LR_AccountStatistics_Mail_Check.CheckAllMail()
@@ -1523,14 +1523,13 @@ function LR_AccountStatistics.FIRST_LOADING_END()
 	LR_AccountStatistics.LoadAllUserGroup(DB)
 	--装备获取及装分
 	LR_AccountStatistics_Equip.LoadSelfData(DB)
-	LR_AccountStatistics_Equip.GetEquipScore()
 	----获取奇遇数据
 	LR_ACS_QiYu.LoadAllUsrData(DB)
 
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 	FireEvent("LR_ACS_REFRESH_FP")
-	LR.DelayCall(8000, LR_AccountStatistics.AutoSave())
+	LR.DelayCall(15000, LR_AccountStatistics.AutoSave())
 end
 
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_AccountStatistics.FIRST_LOADING_END() end)

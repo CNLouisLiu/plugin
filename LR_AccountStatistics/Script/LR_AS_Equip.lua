@@ -132,8 +132,6 @@ function LR_AccountStatistics_Equip.GetEquipScore()
 	LR_AccountStatistics_Equip.SelfData[tostring(nIndex)] = LR_AccountStatistics_Equip.SelfData[tostring(nIndex)] or {}
 	LR_AccountStatistics_Equip.SelfData[tostring(nIndex)].score = clone(score)
 	LR_AccountStatistics_Equip.SelfData[tostring(nIndex)].char_infomore = clone(char_infomore)
-
-	LR_AccountStatistics_Equip.SaveData(DB)
 end
 
 function LR_AccountStatistics_Equip.SaveData(DB)
@@ -141,7 +139,7 @@ function LR_AccountStatistics_Equip.SaveData(DB)
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	local SelfData = LR_AccountStatistics_Equip.SelfData
+	local SelfData = LR_AccountStatistics_Equip.SelfData or {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO equipment_data ( szKey, nSuitIndex, equipment_data, score, char_infomoreV2, bDel ) VALUES ( ?, ?, ?, ?, ?, 0 )")
 	local DB_REPLACE2 = DB:Prepare("REPLACE INTO equipment_data ( szKey, nSuitIndex, bDel ) VALUES ( ?, ?, 1 )")
 	for nSuitIndex, v in pairs (SelfData) do
@@ -160,7 +158,7 @@ end
 
 function LR_AccountStatistics_Equip.LoadData(DB, realArea, realServer, dwID)
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-	local DB_SELECT = DB:Prepare("SELECT * FROM equipment_data WHERE szKey = ? AND bDel = 0 AND szKey IS NOT NULL AND nSuitIndex IS NOT NULL")
+	local DB_SELECT = DB:Prepare("SELECT * FROM equipment_data WHERE szKey = ? AND bDel = 0 AND nSuitIndex IS NOT NULL")
 	DB_SELECT:ClearBindings()
 	DB_SELECT:BindAll(szKey)
 	local Data = DB_SELECT:GetAll() or {}
@@ -181,10 +179,7 @@ function LR_AccountStatistics_Equip.LoadSelfData(DB)
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	LR_AccountStatistics_Equip.SelfData = clone(LR_AccountStatistics_Equip.LoadData(DB, realArea, realServer, me.dwID))
-	LR_AccountStatistics_Equip.GetAllEquipBox()
-	LR_AccountStatistics_Equip.AllUsrData[szKey] = clone(LR_AccountStatistics_Equip.SelfData)
 end
-
 
 -------------------------------------------------------------------------
 ----------装备界面
@@ -228,12 +223,11 @@ function LR_AS_Equip_Panel:OnCreate()
 
 	LR_AS_Equip_Panel.UpdateAnchor(this)
 	-------打开面板时保存数据
-
+	LR_AccountStatistics_Equip.GetAllEquipBox()
+	LR_AccountStatistics_Equip.GetEquipScore()
 	local path = sformat("%s\\%s", SaveDataPath, DB_name)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
-	--LR_AccountStatistics_Equip.LoadSelfData(DB)
-	LR_AccountStatistics_Equip.GetAllEquipBox()
 	LR_AccountStatistics_Equip.SaveData(DB)
 	DB:Execute("END TRANSACTION")
 	DB:Release()
@@ -445,11 +439,6 @@ function LR_AS_Equip_Panel:Init()
 	local Text_score = LR.AppendUI("Text", WndWindow_Charinfo:Lookup("",""), "Text_score", {w = 100, h = 30, x = 106, y = 81, text = ""})
 	Text_score:SetFontScheme(200)
 
-	--[[
-	local Text_Property = LR.AppendUI("Text", WndWindow_Charinfo:Lookup("",""), "Text_Property", {w = 125, h = 25, x = 26, y = 135, text = _L["Property"]})
-	local Image_Property = LR.AppendUI("Image", WndWindow_Charinfo:Lookup("",""), "Image_Property", {w = 200, h = 5, x = 26, y = 159})
-	Image_Property:FromUITex("ui\\Image\\uicommon\\commonpanel.UITex", 45)
-]]
 	local hScroll = LR.AppendUI("Scroll", WndWindow_Charinfo, "Scroll", {x = 23, y = 135, w = 200, h = 360})
 	LR_AS_Equip_Panel.Scroll = hScroll
 
@@ -732,7 +721,18 @@ end
 -----切换套装EQUIP_CHANGE
 function LR_AccountStatistics_Equip.EQUIP_CHANGE()
 	LR_AccountStatistics_Equip.bLock = true	--防止处理切换装备时大量产生的EQUIP_ITEM_UPDATE事件
-	LR_AccountStatistics_Equip.GetEquipScore()
+	--获取装备、装分、属性
+	LR.DelayCall(100, function()
+		LR_AccountStatistics_Equip.GetAllEquipBox()
+		LR_AccountStatistics_Equip.GetEquipScore()
+		--保存
+		local path = sformat("%s\\%s", SaveDataPath, DB_name)
+		local DB = SQLite3_Open(path)
+		DB:Execute("BEGIN TRANSACTION")
+		LR_AccountStatistics_Equip.SaveData(DB)
+		DB:Execute("END TRANSACTION")
+		DB:Release()
+	end)
 	LR.DelayCall(250, function() LR_AccountStatistics_Equip.bLock = false end)
 end
 
@@ -740,14 +740,25 @@ end
 function LR_AccountStatistics_Equip.EQUIP_ITEM_UPDATE()
 	LR.DelayCall(100, function()
 		if not LR_AccountStatistics_Equip.bLock then
+			LR_AccountStatistics_Equip.GetAllEquipBox()
 			LR_AccountStatistics_Equip.GetEquipScore()
+			--保存
+			local path = sformat("%s\\%s", SaveDataPath, DB_name)
+			local DB = SQLite3_Open(path)
+			DB:Execute("BEGIN TRANSACTION")
+			LR_AccountStatistics_Equip.SaveData(DB)
+			DB:Execute("END TRANSACTION")
+			DB:Release()
 		end
 	end)
 end
 
 function LR_AccountStatistics_Equip.FIRST_LOADING_END()
 	LR_AccountStatistics_Equip.Hack()
-	LR_AccountStatistics_Equip.GetEquipScore()
+	LR.DelayCall(4000, function()
+		LR_AccountStatistics_Equip.GetAllEquipBox()
+		LR_AccountStatistics_Equip.GetEquipScore()
+	end)
 end
 
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_AccountStatistics_Equip.FIRST_LOADING_END() end)

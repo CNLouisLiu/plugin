@@ -298,4 +298,7 @@ data={
 
 	["Reset font&color"]="重置字體和顏色",
 	["Sure to reset font&color?"]="確定要重置字體和顏色？",
+
+	["be read"]="已讀",
+	["Mark in minimap"]="在小地圖中標記",
 }

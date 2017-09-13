@@ -592,6 +592,13 @@ LR_HeadName_UI = {
 					}
 				end
 				m[#m+1] = {bDevide = true, }
+				m[#m+1] = {szOption = _L["Mark in minimap"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bMiniMapMine end,
+					fnAction = function()
+						LR_HeadName.UsrData.bMiniMapMine = not LR_HeadName.UsrData.bMiniMapMine
+						LR_HeadName.SaveCommonSettings()
+					end,
+				}
+				m[#m+1] = {bDevide = true, }
 				m[#m+1] = {szOption = _L["Reset settings"],
 					fnAction = function()
 						LR_HeadName_UI.ResetMineral()
@@ -617,6 +624,13 @@ LR_HeadName_UI = {
 							LR_HeadName.SaveCommonSettings()
 						end, }
 				end
+				m[#m+1] = {bDevide = true, }
+				m[#m+1] = {szOption = _L["Mark in minimap"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bMiniMapAgriculture end,
+					fnAction = function()
+						LR_HeadName.UsrData.bMiniMapAgriculture = not LR_HeadName.UsrData.bMiniMapAgriculture
+						LR_HeadName.SaveCommonSettings()
+					end,
+				}
 				m[#m+1] = {bDevide = true, }
 				m[#m+1] = {szOption = _L["Reset settings"],
 					fnAction = function()
