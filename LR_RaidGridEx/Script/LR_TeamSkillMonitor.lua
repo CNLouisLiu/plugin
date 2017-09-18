@@ -381,7 +381,7 @@ function LR_TeamSkillMonitor.LOGIN_GAME()
 end
 
 function LR_TeamSkillMonitor.SKILL_MOUNT_KUNG_FU()
-	LR.DelayCall(250,function()
+	LR.DelayCall(250, function()
 		LR_TeamSkillMonitor.ShowSkillPanel()
 	end)
 end
@@ -394,7 +394,7 @@ function LR_TeamSkillMonitor.SKILL_UPDATE()
 		_hSkillBox[szName]:SetSkillID(dwID)
 		_hSkillBox[szName]:SetSkillLevel(nLevel)
 	end
-	LR.DelayCall(250,function() LR_TeamSkillMonitor.ReFreshAllSkillLevel() end)
+	LR.DelayCall(250, function() LR_TeamSkillMonitor.ReFreshAllSkillLevel() end)
 end
 
 function LR_TeamSkillMonitor.DO_SKILL_CAST()

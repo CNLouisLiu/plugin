@@ -1347,6 +1347,9 @@ function LR_Acc_Trade.TRADING_CLOSE()
 end
 
 function LR_Acc_Trade.SYS_MSG()
+	if not (arg0 == "UI_OME_SHOP_RESPOND" or arg0 == "UI_OME_TRADING_RESPOND" or arg0 == "UI_OME_LOOT_RESPOND") then
+		return
+	end
 	if arg0 == "UI_OME_SHOP_RESPOND" then
 		Dbug.Debug(arg1)
 		Dbug.Debug(g_tStrings.g_ShopStrings[arg1])
@@ -1384,8 +1387,6 @@ function LR_Acc_Trade.SYS_MSG()
 		Dbug.Debug(arg1)
 		Dbug.Debug(g_tStrings.tLootResult[arg1])
 	end
-
-
 
 	if arg0 == "UI_OME_SHOP_RESPOND" or arg0 == "UI_OME_TRADING_RESPOND" or arg0 == "UI_OME_LOOT_RESPOND" then
 		if _Event_Trace[#_Event_Trace].szName ==  "UI_OME_SHOP_RESPOND_1" then	----出售物品成功
@@ -1728,6 +1729,7 @@ function LR_Acc_Trade.SYNC_LOOT_LIST()
 	if not _Doodad_Cache[dwDoodadID] then
 		local doodad =  GetDoodad (dwDoodadID)
 		if doodad then
+			--[[
 			local nMoney = doodad.GetLootMoney()
 			if nMoney>0 then
 				_Doodad_item["money"] = _Doodad_item["money"] or {}
@@ -1753,6 +1755,7 @@ function LR_Acc_Trade.SYNC_LOOT_LIST()
 					end
 				end
 			end
+			]]
 			_Doodad_Cache[dwDoodadID] = {dwID = doodad.dwID, szName = LR.Trim(doodad.szName), nKind = doodad.nKind}
 		end
 	end
@@ -2522,8 +2525,6 @@ LR.RegisterEvent("OPEN_DOODAD", function() LR_Acc_Trade.OPEN_DOODAD() end)
 LR.RegisterEvent("SYNC_LOOT_LIST", function() LR.DelayCall(70, LR_Acc_Trade.SYNC_LOOT_LIST()) end)
 
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() LR_Acc_Trade.ON_BG_CHANNEL_MSG() end)
-
-LR.RegisterEvent("DOODAD_ENTER_SCENE", function() LR_Acc_Trade.DOODAD_ENTER_SCENE() end)
 
 LR.RegisterEvent("AUCTION_SELL_RESPOND", function() LR_Acc_Trade.AUCTION_SELL_RESPOND() end)
 LR.RegisterEvent("AUCTION_MESSAGE_NOTIFY", function() LR_Acc_Trade.AUCTION_MESSAGE_NOTIFY() end)

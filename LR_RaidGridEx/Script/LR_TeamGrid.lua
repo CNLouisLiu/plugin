@@ -1568,6 +1568,8 @@ function LR_TeamGrid.OnFrameCreate()
 	this:RegisterEvent("BUFF_UPDATE")	--BUFF
 	this:RegisterEvent("JH_RAID_REC_BUFF")		--dbm
 	this:RegisterEvent("SYS_MSG")	--途径2监控BUFF
+	this:RegisterEvent("LR_RAID_BUFF_ADD_FRESH")
+	this:RegisterEvent("LR_RAID_BUFF_DELETE")
 	----自身技能监控
 	this:RegisterEvent("SKILL_MOUNT_KUNG_FU")
 	this:RegisterEvent("SKILL_UPDATE")
@@ -1725,8 +1727,12 @@ function LR_TeamGrid.OnEvent(szEvent)
 		LR_TeamBuffMonitor.BUFF_UPDATE()
 	elseif szEvent == "JH_RAID_REC_BUFF" then
 		LR_TeamBuffMonitor.JH_RAID_REC_BUFF()
+	elseif szEvent == "LR_RAID_BUFF_ADD_FRESH" then
+		LR_TeamBuffMonitor.LR_RAID_BUFF_ADD_FRESH()
+	elseif szEvent == "LR_RAID_BUFF_DELETE" then
+		LR_TeamBuffMonitor.LR_RAID_BUFF_DELETE()
 	elseif szEvent == "SYS_MSG" then
-		LR_TeamBuffMonitor.SYS_MSG()
+		LR_TeamGrid.SYS_MSG()
 	elseif szEvent == "SKILL_MOUNT_KUNG_FU" then
 		LR_TeamSkillMonitor.SKILL_MOUNT_KUNG_FU()
 	elseif szEvent == "SKILL_UPDATE" then
@@ -1922,7 +1928,7 @@ function LR_TeamGrid.SwitchPanel()
 	else
 		LR_TeamGrid.ClosePanel()
 	end
-	LR.DelayCall(70,function()
+	LR.DelayCall(70, function()
 		LR_TeamGrid.SwitchSystemRaidPanel()
 		LR_TeamGrid.SwitchSystemTeamPanel()
 	end)
@@ -2071,7 +2077,7 @@ function LR_TeamGrid.UpdateSingleMemberInfo(dwID)
 	local team= GetClientTeam()
 	if not team then return end
 	local MemberInfo = team.GetMemberInfo(dwID)
-	_Members[dwID]=clone (MemberInfo)
+	_Members[dwID] = clone (MemberInfo)
 end
 
 function LR_TeamGrid.UpdateTeamMember()
@@ -2750,7 +2756,7 @@ function LR_TeamGrid.ShowVoteText(bFresh)
 	end
 	LR_TeamGrid.SetTitleText(szText)
 	if not bFresh then
-		LR.DelayCall(100,function() LR_TeamGrid.ShowVoteText() end)
+		LR.DelayCall(100, function() LR_TeamGrid.ShowVoteText() end)
 	end
 end
 
@@ -2764,6 +2770,7 @@ function LR_TeamGrid.PARTY_ADD_MEMBER()
 		LR_TeamGrid.UpdateTeamMember()
 		LR_TeamGrid.DrawAllMembers()
 	end)
+	LR_TeamBuffSettingPanel.TeamMember[dwMemberID] = true
 end
 
 function LR_TeamGrid.PARTY_DELETE_MEMBER()
@@ -2781,6 +2788,7 @@ function LR_TeamGrid.PARTY_DELETE_MEMBER()
 		LR_TeamGrid.ClosePanel()
 	end
 	LR_TeamBuffMonitor.ClearOneCache(dwMemberID)
+	LR_TeamBuffSettingPanel.TeamMember[dwMemberID] = nil
 end
 
 function LR_TeamGrid.TEAM_CHANGE_MEMBER_GROUP()	--有人换队伍
@@ -2792,7 +2800,7 @@ function LR_TeamGrid.TEAM_CHANGE_MEMBER_GROUP()	--有人换队伍
 	LR_TeamGrid.DrawAllMembers()
 
 	---换队时，阵眼交换有时并不会触发阵眼交换的事件。
-	LR.DelayCall(150,function()
+	LR.DelayCall(150, function()
 		for dwID, v in pairs (_tRoleGrids) do
 			v:DrawGroupEye()
 		end
@@ -2811,7 +2819,7 @@ end
 function LR_TeamGrid.PARTY_UPDATE_MEMBER_INFO()		--切换心法\死亡\复活
 	local dwTeamID = arg0
 	local dwMemberID = arg1
-	LR.DelayCall(70,function()
+	LR.DelayCall(70, function()
 		LR_TeamGrid.UpdateSingleMemberInfo(dwMemberID)
 		if _tRoleGrids[dwMemberID] then
 			_tRoleGrids[dwMemberID]:DrawRoleNameText():DrawLifeText():DrawLifeBar():DrawManaBar():DrawKungFu()
@@ -2886,7 +2894,7 @@ function LR_TeamGrid.PARTY_DISBAND()
 end
 
 function LR_TeamGrid.PARTY_LEVEL_UP_RAID()
-	LR.DelayCall(70,function()
+	LR.DelayCall(70, function()
 		LR_TeamGrid.SwitchSystemRaidPanel()
 		LR_TeamGrid.SwitchPanel()
 	end)
@@ -2920,7 +2928,7 @@ function LR_TeamGrid.TEAM_VOTE_REQUEST()
 	for dwID ,v in pairs(_tRoleGrids) do
 		v:ShowVoteImage()
 	end
-	LR.DelayCall(30.3*1000,function() LR_TeamGrid.ClearVoteImage() end)
+	LR.DelayCall(30.3*1000, function() LR_TeamGrid.ClearVoteImage() end)
 	LR_TeamGrid.ShowVoteText()
 end
 
@@ -2950,7 +2958,7 @@ function LR_TeamGrid.PARTY_SET_MARK()
 end
 
 function LR_TeamGrid.MONEY_UPDATE()
-	LR.DelayCall(100,function()
+	LR.DelayCall(100, function()
 		local handle = Station.Lookup("Topmost2/Announce", "")
 		if  handle then
 			local text = handle:Lookup(4)
@@ -2960,6 +2968,22 @@ function LR_TeamGrid.MONEY_UPDATE()
 			end
 		end
 	end)
+end
+
+function LR_TeamGrid.SYS_MSG()
+	if arg0 == "UI_OME_BUFF_LOG" then
+		local dwTarget, bCanCancel, dwID, bAddOrDel, nLevel = arg1, arg2, arg3, arg4, arg5
+		LR_TeamBuffMonitor.UI_OME_BUFF_LOG(arg1, arg2, arg3, arg4, arg5)
+	elseif arg0 == "UI_OME_DEATH_NOTIFY" then -- 死亡记录
+		--arg1:死亡的人的id
+		--arg2:杀死他的人的id
+		--Output("UI_OME_DEATH_NOTIFY",arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7)
+		LR_TeamTools.DeathRecord.OnDeath(arg1, arg2)
+	elseif arg0 == "UI_OME_SKILL_EFFECT_LOG" then -- 技能记录
+		LR_TeamTools.DeathRecord.OnSkillEffectLog(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+	elseif arg0 == "UI_OME_COMMON_HEALTH_LOG" then
+		--LR_TeamTools.DeathRecord.OnCommonHealthLog(arg1,arg2)
+	end
 end
 
 -----------------------------------------------------------------------
@@ -2988,6 +3012,7 @@ function LR_TeamGrid.LOADING_END()
 	if LR_TeamGrid.CheckIsbOpenPanel() then
 		LR_TeamGrid.SwitchPanel()
 	end
+	LR_TeamBuffSettingPanel.TeamMember = {}
 end
 
 function LR_TeamGrid.LOGIN_GAME()

@@ -837,7 +837,7 @@ function _Role:new(obj, nType)
 	o.dwID = obj.dwID
 	o.self = obj
 	o.dwTemplateID = 0
-	if nType ==  TARGET.NPC then
+	if nType == TARGET.NPC or nType == TARGET.DOODAD then
 		o.dwTemplateID = obj.dwTemplateID
 	end
 
@@ -1926,7 +1926,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 				szName = LR.Trim(Table_GetNpcTemplateName(obj.dwTemplateID))
 			end
 		end
-		if szName~= "" then
+		if szName ~= "" then
 			LR_HeadName._Role[dwID] = _Role:new(obj, nType)
 			LR_HeadName._Role[dwID]:SetType(nType)
 			LR_HeadName._Role[dwID]:SetShip(LR_HeadName.GetShip(obj, nType))
@@ -2156,8 +2156,8 @@ function LR_HeadName.NPC_ENTER_SCENE()
 	end
 	local dwID = arg0
 	LR.DelayCall(100, LR_HeadName.GetQuest(dwID))	------获取npc身上的任务列表
-	LR.DelayCall(200, LR_HeadName.Check(dwID, TARGET.NPC), true)	------刷新强制刷新npc，一刷handle
-	LR.DelayCall(300, LR_HeadName.Check(dwID, TARGET.NPC), true)	------刷新强制刷新npc，二刷名字
+	LR.DelayCall(200, LR_HeadName.Check(dwID, TARGET.NPC, true))	------刷新强制刷新npc，一刷handle
+	LR.DelayCall(300, LR_HeadName.Check(dwID, TARGET.NPC, true))	------刷新强制刷新npc，二刷名字
 	LR.DelayCall(400, LR_HeadName.OnEventCheckMission(dwID))	------三设置npc的任务状态
 	if _tPartyMark[arg0] then
 		LR.DelayCall(400, function() LR_HeadName.PARTY_SET_MARK() end)
@@ -2175,6 +2175,7 @@ function LR_HeadName.NPC_LEAVE_SCENE()
 		LR_HeadName._Role[dwID] = nil
 	end
 	LR_HeadName.AllList[dwID] = nil
+	MINIMAP_LIST[arg0] = nil
 end
 
 function LR_HeadName.DOODAD_ENTER_SCENE()
@@ -3173,7 +3174,7 @@ function LR_HeadName.MiniMapBreatheCall()
 end
 
 
-LR.BreatheCall(1000, function() LR_HeadName.MiniMapBreatheCall() end)
+LR.BreatheCall("LR_HEAD_NAME_MINIMAP", function() LR_HeadName.MiniMapBreatheCall() end, 500)
 LR.RegisterEvent("LOGIN_GAME", function() LR_HeadName.LOGIN_GAME() end)
 LR.RegisterEvent("LOADING_END", function() LR_HeadName.LOADING_END() end)
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_HeadName.FIRST_LOADING_END() end)

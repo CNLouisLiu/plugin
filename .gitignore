@@ -4,4 +4,5 @@
 @DATA/
 __pycache__/
 UsrData/
+*.zip
 

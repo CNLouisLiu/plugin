@@ -1,8 +1,8 @@
 data = {
 	--20170820add--
 	["Helpers"]="小助手",
-	["LR PickupDead"]="懒人捡尸助手",
-	["Enable pickup dead"]="开启捡尸小助手",
+	["LR PickupDead"]="懒人拾取助手",
+	["Enable pickup dead"]="开启拾取小助手",
 	["Quality Settings"]="拾取品质设定",
 	["Any Quality"]="拾取灰色及以上物品",
 	["Quality 0"]="拾取白色及以上物品",

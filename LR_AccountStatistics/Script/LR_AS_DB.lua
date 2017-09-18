@@ -10,6 +10,8 @@ local _L = LR.LoadLangPack(AddonPath)
 local DB_name = "maindb.db"
 ---------------------------------------------------------------
 LR_AS_DB = LR_AS_DB or {}
+LR_AS_DEBUG = false
+
 
 ---------------------------------------------------------------
 ------数据库表项定义

@@ -436,6 +436,7 @@ function LR_AccountStatistics.OnFrameCreate()
 	LR_AccountStatistics_FBList.LoadAllUsrData(DB)
 	LR_ACS_QiYu.LoadAllUsrData(DB)		--ÆæÓöÊý¾Ý
 
+
 	this:RegisterEvent("UI_SCALED")
 	this:RegisterEvent("CUSTOM_DATA_LOADED")
 
@@ -518,7 +519,6 @@ function LR_AccountStatistics.OnFrameCreate()
 	DB:Release()
 
 	FireEvent("LR_ACS_REFRESH_FP")
-
 	LR.AppendAbout(Addon, this)
 end
 

@@ -565,8 +565,11 @@ function LR_ACS_QiYu.OPEN_WINDOW()
 
 	local dwTemplateID = npc.dwTemplateID
 	local scene = npc.GetScene()
-	local dwMapID = scene.dwMapID
+	if scene.nType ==  MAP_TYPE.DUNGEON or scene.nType ==  MAP_TYPE.BATTLE_FIELD then
+		return
+	end
 
+	local dwMapID = scene.dwMapID
 	for k, v in pairs(QIYU) do
 		if QIYU_WINDOW_DIALOG[v] then
 			local data = QIYU_WINDOW_DIALOG[v] or {}
@@ -644,8 +647,11 @@ function LR_ACS_QiYu.ON_WARNING_MESSAGE()
 		return
 	end
 	local scene = me.GetScene()
-	local dwMapID = scene.dwMapID
+	if scene.nType ==  MAP_TYPE.DUNGEON or scene.nType == MAP_TYPE.BATTLE_FIELD then
+		return
+	end
 
+	local dwMapID = scene.dwMapID
 	for k, v in pairs(QIYU) do
 		if QIYU_WARNING_MSG[v] then
 			local data = QIYU_WARNING_MSG[v] or {}

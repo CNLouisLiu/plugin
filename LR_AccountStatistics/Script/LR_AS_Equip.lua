@@ -720,6 +720,10 @@ end
 
 -----切换套装EQUIP_CHANGE
 function LR_AccountStatistics_Equip.EQUIP_CHANGE()
+	local me = GetClientPlayer()
+	if me.bFightState then
+		return
+	end
 	LR_AccountStatistics_Equip.bLock = true	--防止处理切换装备时大量产生的EQUIP_ITEM_UPDATE事件
 	--获取装备、装分、属性
 	LR.DelayCall(100, function()
@@ -738,6 +742,10 @@ end
 
 ---更换装备
 function LR_AccountStatistics_Equip.EQUIP_ITEM_UPDATE()
+	local me = GetClientPlayer()
+	if me.bFightState then
+		return
+	end
 	LR.DelayCall(100, function()
 		if not LR_AccountStatistics_Equip.bLock then
 			LR_AccountStatistics_Equip.GetAllEquipBox()

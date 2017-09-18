@@ -1694,8 +1694,8 @@ function LR.OnFrameBreathe()
 	local nFrame = GetLogicFrameCount()
 	for k, v in pairs(LR.tBreatheCall) do
 		if v then
-			if nFrame >= v.nNext then
-				v.nNext = nFrame + v.nFrame
+			if nFrame >= v.nNextFrame then
+				v.nNextFrame = nFrame + v.nStep
 				local res, err = pcall(v.fnAction)
 				if not res then
 
@@ -1707,34 +1707,46 @@ end
 
 function LR.OnFrameRender()
 	local nTime = GetTime()
-	for k = #LR.tDelayCall, 1, -1 do
-		local v = LR.tDelayCall[k]
-		if v.nTime <= nTime then
-			local res, err = pcall(v.fnAction)
-			if not res then
+	for k, v in pairs (LR.tDelayCall) do
+		if v then
+			if v.nTime <= nTime then
+				local res, err = pcall(v.fnAction)
+				if not res then
 
+				end
+				tremove(LR.tDelayCall, k)
 			end
-			tremove(LR.tDelayCall, k)
 		end
 	end
 end
 
-function LR.DelayCall (nDelayTime,fnAction)
+function LR.DelayCall(nDelayTime, fnAction, szKey)
 	----nDelayTime 延迟时间 单位：毫秒
-	local nTime = nDelayTime+GetTime()
-	tinsert(LR.tDelayCall, { nTime = nTime, fnAction = fnAction })
+	local _time = GetTime()
+	local nTime = nDelayTime + _time
+	if szKey then
+		local szKey = tostring(szKey)
+		LR.tDelayCall[szKey] = {nTime = nTime, fnAction = fnAction, szKey = szKey,}
+	else
+		tinsert(LR.tDelayCall, {nTime = nTime, fnAction = fnAction})
+	end
 end
 
+function LR.UnDelayCall(szKey)
+	LR.tDelayCall[szKey] = {nTime = GetTime() + 1, fnAction = function()  end, szKey = szKey,}
+end
+
+
 function LR.BreatheCall(szKey, fnAction, nTime)
-	local key = StringLowerW(szKey)
-	if type(fnAction) == "function" then
+	local key = tostring(szKey)
+	if fnAction and type(fnAction) == "function" then
 		local nFrame = 1
 		if nTime and nTime > 0 then
 			nFrame = mceil(nTime / 62.5)
 		end
-		LR.tBreatheCall[key] = { fnAction = fnAction, nNext = GetLogicFrameCount() + 1, nFrame = nFrame }
+		LR.tBreatheCall[key] = {fnAction = fnAction, nNextFrame = GetLogicFrameCount() + 1, nStep = nFrame }
 	else
-		LR.tBreatheCall[key] = { fnAction = function() LR.tBreatheCall[key] = nil end, nNext = GetLogicFrameCount() + 1, nFrame = 1 }
+		LR.tBreatheCall[key] = {fnAction = function() LR.tBreatheCall[key] = nil end, nNextFrame = GetLogicFrameCount() + 1, nStep = 1 }
 	end
 end
 
@@ -1839,7 +1851,7 @@ function LR.Black_FIRST_LOADING_END()
 	if me.IsInParty() then
 		if LR.BlackACK==0 then
 			LR.BgTalk(PLAYER_TALK_CHANNEL.RAID,"LR_BlackFB","Get",msg)
-			LR.DelayCall(5000,function() LR.Black_FIRST_LOADING_END() end)
+			LR.DelayCall(5000, function() LR.Black_FIRST_LOADING_END() end)
 		end
 	end
 end
@@ -1905,7 +1917,7 @@ function LR.Black_PARTY_ADD_MEMBER()
 		return
 	end
 	if me.IsPartyLeader() then
-		LR.DelayCall(1000,function()
+		LR.DelayCall(1000, function()
 			for dwMapID , v in pairs(LR.BlackFBList) do
 				for nCopyIndex , v2 in pairs(v) do
 					local msg={dwMapID=dwMapID,nCopyIndex=nCopyIndex,szName=v2.szName,nTime=v2.nTime}

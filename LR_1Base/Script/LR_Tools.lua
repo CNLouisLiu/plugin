@@ -649,6 +649,10 @@ function LR_TOOLS.CHANGE_TONG_NOTIFY(flag)
 	if not me then
 		return
 	end
+	local scene = me.GetScene()
+	if scene.nType == MAP_TYPE.BATTLE_FIELD then
+		return
+	end
 	if LR_TOOLS.NeverShowTongS then
 		return
 	end

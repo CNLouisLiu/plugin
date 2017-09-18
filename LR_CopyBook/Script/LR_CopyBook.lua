@@ -100,10 +100,10 @@ function LR_CopyBook.ON_FRAME_CREATE()
 	local szName=frame:GetName()
 	if szName == "CraftReadManagePanel" then
 		---------阅读界面增加抄书按钮
-		LR.DelayCall(500,function() LR_CopyBook.HookReadPanel() end)
+		LR.DelayCall(500, function() LR_CopyBook.HookReadPanel() end)
 	elseif szName == "BookExchangePanel" then
 		---------书籍兑换界面增加抄书按钮
-		LR.DelayCall(500,function() LR_CopyBook.HookBookExchangePanel() end)
+		LR.DelayCall(500, function() LR_CopyBook.HookBookExchangePanel() end)
 	end
 end
 

@@ -311,19 +311,6 @@ function LR_TeamTools.DeathRecord.OnDeath (dwTarget, dwCaster)
 	end
 end
 
-RegisterEvent("SYS_MSG",function()
-	if arg0 == "UI_OME_DEATH_NOTIFY" then -- 死亡记录
-		--arg1:死亡的人的id
-		--arg2:杀死他的人的id
-		--Output("UI_OME_DEATH_NOTIFY",arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7)
-		LR_TeamTools.DeathRecord.OnDeath(arg1, arg2)
-	elseif arg0 == "UI_OME_SKILL_EFFECT_LOG" then -- 技能记录
-		LR_TeamTools.DeathRecord.OnSkillEffectLog(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9)
-	elseif arg0 == "UI_OME_COMMON_HEALTH_LOG" then
-		--LR_TeamTools.DeathRecord.OnCommonHealthLog(arg1,arg2)
-	end
-end)
-
 function LR_TeamTools.DeathRecord.OutputDeathRecord(dwID,rc)
 	local hTeam = GetClientTeam()
 	local v = hTeam.GetMemberInfo(dwID)
@@ -434,7 +421,7 @@ function LR_TeamTools.DistributeAttention.FIGHT_HINT()
 			if me.IsInRaid() then
 				if team.nLootMode ~= 2 then
 					LR_TeamGrid.SetTitleText(sformat(_L["Warning: You are in [%s] loot mode"], szLootMode[team.nLootMode]))
-					LR.DelayCall(12000,function() LR_TeamGrid.SetTitleText("") end)
+					LR.DelayCall(12000, function() LR_TeamGrid.SetTitleText("") end)
 				end
 			else
 				if team.nLootMode ~= 3 then
@@ -456,7 +443,7 @@ function LR_TeamTools.HackSystemTeamPanel.ON_FRAME_CREATE()
 	local frame = arg0
 	if frame:GetName() == "RaidPanel_Main" then
 		--Output("sdf")
-		LR.DelayCall(500,function()
+		LR.DelayCall(500, function()
 			local Wnd_Tabs = frame:Lookup("Wnd_Tabs")
 			--if Wnd_Tabs then Output("1") end
 			local Wnd_Btn = Wnd_Tabs:Lookup("Wnd_Btn")
@@ -469,10 +456,9 @@ function LR_TeamTools.HackSystemTeamPanel.ON_FRAME_CREATE()
 			Wnd_Tabs:SetSize(39, 300)
 			LR_TeamGrid_Button:SetRelPos(6, 270)
 			if LR_TeamGrid_Button then
-				Output("ererer")
+				--Output("ererer")
 			end
 		end)
-
 	end
 end
 

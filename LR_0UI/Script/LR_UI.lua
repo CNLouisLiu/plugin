@@ -290,15 +290,12 @@ function WndFrame:ctor(__name, __data)
 			self:Scale(self._scale,self._scale)
 			self:Show()
 			self:FadeIn(6)
-			LR.DelayCall(2,function() self:ccc() end)
+			LR.DelayCall(2, function() self:ccc() end)
 		end)
 	else
 		self:SetAlpha(255)
 		LR.DelayCall(20,function() self:_FireEvent("ScaleEnd") end)
 	end
-	--self:FadeIn(11)
-	--frame:Show()
-	--LR.DelayCall(25,function() self:ccc() end)
 end
 
 function WndFrame:ccc()
@@ -308,7 +305,7 @@ function WndFrame:ccc()
 		local scale=self._startScale + (1-self._startScale)*( GetTime() - self._startTime)/(self._endTime - self._startTime)
 		self:Scale(scale/self._scale,scale/self._scale)
 		self._scale=scale
-		LR.DelayCall(2,function() self:ccc() end)
+		LR.DelayCall(2, function() self:ccc() end)
 	else
 		self.__this:SetSize(self.__w, self.__h)
 		self:_FireEvent("ScaleEnd")
@@ -2737,7 +2734,7 @@ function CreateAddon:Destroy(__name)
 					end
 					local alpha2=_stopAlpha + math.floor(( self._endTime - GetTime() - 1 )/(self._endTime - self._startTime) * (255 - _stopAlpha))
 					__h:SetAlpha(alpha2)
-					LR.DelayCall(2,function() self:Destroy(__name) end)
+					LR.DelayCall(2, function() self:Destroy(__name) end)
 				else
 					for k,v in pairs (self.__items) do
 						if v:GetType() == "WndUICheckBox" then
@@ -2781,7 +2778,7 @@ function CreateAddon:Destroy(__name)
 					end
 					local alpha2=_stopAlpha + math.floor(( self._endTime - GetTime() - 1 )/(self._endTime - self._startTime) * (255 - _stopAlpha))
 					__h:SetAlpha(alpha2)
-					LR.DelayCall(2,function() self:Destroy(__name) end)
+					LR.DelayCall(2, function() self:Destroy(__name) end)
 				else
 					for k,v in pairs (self.__items) do
 						--Output(k,v:GetName())

@@ -59,13 +59,13 @@ function LR_PickupDead.SaveCustomData()
 	if not me then
 		return
 	end
-	local path = AddonPath.."\\UsrData\\CustomData.dat"
+	local path = sformat("%s\\UsrData\\CustomData.dat", SaveDataPath)
 	local data = clone(LR_PickupDead.customData)
 	SaveLUAData (path,data)
 end
 
 function LR_PickupDead.LoadCustomData()
-	local path = AddonPath.."\\UsrData\\CustomData.dat"
+	local path = sformat("%s\\UsrData\\CustomData.dat", SaveDataPath)
 	local data = LoadLUAData(path) or {ignorList = {},pickList = {},}
 	LR_PickupDead.customData = clone(data)
 end
