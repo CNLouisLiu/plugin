@@ -106,7 +106,7 @@ function LR_TOOLS.Init2()
 	Window_Welcome:Show()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if realArea ==  "电信六区" and realServer == "红尘寻梦" then
+	if realArea ==  "电信一区" and realServer == "红尘寻梦" then
 		local text_tone = self:Append("Text", Window_Welcome, "text_Welcome2" , {w = 515, x = 0, y = 225, h = 20, text  = "电六 大一统\n中恶休闲养老帮会【么么哒萌萌哒】收人\n15神行、帮修、骑马跑商已开\n欢迎各类人士加入", font  = 230})
 		text_tone:SetVAlign(2)
 		text_tone:SetHAlign(2)
@@ -664,7 +664,7 @@ function LR_TOOLS.CHANGE_TONG_NOTIFY(flag)
 	end
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if not (realArea == "电信六区" and realServer == "红尘寻梦" ) then
+	if not (realArea == "电信一区" and realServer == "红尘寻梦" ) then
 		return
 	end
 	if me.nLevel <20 or me.nCamp == 1 then
@@ -751,7 +751,7 @@ RegisterEvent("FIRST_LOADING_END", function()
 			default = function ()
 				local ServerInfo = {GetUserServer()}
 				local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-				if not (Area == "电信六区" and realServer == "红尘寻梦") then
+				if not (realArea == "电信一区" and realServer == "红尘寻梦") then
 					local box = LR_TOOLS:Fetch("LR_TOOLS_Tong_S")
 					if box then
 						box:Hide()
@@ -767,7 +767,7 @@ RegisterEvent("FIRST_LOADING_END", function()
 	}
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if Area ==  "电信六区" and realServer == "红尘寻梦" then
+	if realArea ==  "电信一区" and realServer == "红尘寻梦" then
 		tinsert(LR_TOOLS_About.tWidget, {
 			name = "LR_TOOLS_About_shouren", type = "Text", x = 5, y = 225, w = 515, h = 20, font  = 230, VAlign = 2, HAlign = 2, IsMultiLine = true, IsRichText = true,
 			text  = "电六 大一统\n中恶休闲养老帮会【么么哒萌萌哒】收人\n15神行、帮修、骑马跑商已开\n欢迎各类人士加入",

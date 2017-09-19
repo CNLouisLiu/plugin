@@ -441,4 +441,7 @@ data={
 	["Show buff remain time"]="顯示buff剩餘時間",
 	["Do not show"]="不顯示",
 
+	--20170919add--
+	["Clear Panel"]="清理/刷新面板",
+
 }

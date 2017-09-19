@@ -247,7 +247,7 @@ data = {
 		PosType = 0,
 		Width = 32,
 		Height = 24,
-		LockShowAndHide = 1,
+		 LockShowAndHide = 1,
 	},
 	{	name = "Handle_Debuffs",
 		nType = "Handle",

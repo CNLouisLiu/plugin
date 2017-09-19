@@ -791,7 +791,7 @@ function LR.bCanDebug()
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if realArea == "电信六区" and realServer == "红尘寻梦" and IsShiftKeyDown() and IsAltKeyDown() then
+	if realArea == "电信一区" and realServer == "红尘寻梦" and IsShiftKeyDown() and IsAltKeyDown() then
 		return true
 	else
 		return false
@@ -802,7 +802,7 @@ function LR.bCanDebug2()
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if realArea == "电信六区" and realServer == "红尘寻梦" and LR.GetTongName(me.dwTongID) == "么么哒萌萌哒" then
+	if realArea == "电信一区" and realServer == "红尘寻梦" and LR.GetTongName(me.dwTongID) == "么么哒萌萌哒" then
 		return true
 	else
 		return false
@@ -1714,7 +1714,11 @@ function LR.OnFrameRender()
 				if not res then
 
 				end
-				tremove(LR.tDelayCall, k)
+				if type(k) == "number" then
+					tremove(LR.tDelayCall, k)
+				else
+					LR.tDelayCall[k] = nil
+				end
 			end
 		end
 	end

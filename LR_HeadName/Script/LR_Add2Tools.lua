@@ -563,6 +563,7 @@ LR_HeadName_UI = {
 				m[#m+1] = {szOption = _L["Show Doodad Type"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowDoodadKind end,
 					fnAction = function()
 						LR_HeadName.UsrData.bShowDoodadKind = not LR_HeadName.UsrData.bShowDoodadKind
+						LR_HeadName.SaveCommonSettings()
 						LR_HeadName.ReDrawAll()
 					end,
 				}
@@ -570,6 +571,16 @@ LR_HeadName_UI = {
 					fnAction = function()
 						LR_HeadName.UsrData.bEnhanceGuDing = not LR_HeadName.UsrData.bEnhanceGuDing
 						LR_HeadName.SaveCommonSettings()
+						LR_HeadName.ReDrawAll()
+					end,
+				}
+				m[#m+1] = {szOption = _L["Show quest pickup doodad"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowQuestDoodad end,
+					fnAction = function()
+						LR_HeadName.UsrData.bShowQuestDoodad = not LR_HeadName.UsrData.bShowQuestDoodad
+						LR_HeadName.SaveCommonSettings()
+						if LR_HeadName.UsrData.bShowQuestDoodad then
+							LR_HeadName.AddAllDoodad2AllList()
+						end
 						LR_HeadName.ReDrawAll()
 					end,
 				}

@@ -614,11 +614,12 @@ function LR_TeamMenu.BuffMonitorMenu()
 	end
 
 	menu[#menu+1]={bDevide=true,}
-	szText = {_L["Show buff stack"], _L["Show buff remain time"], _L["Do not show"]}
+	szText = {_L["Show buff stack"], _L["Show buff remain time"]}
+	local key = {"bShowStack", "bShowLeftTime"}
 	for k, v in pairs(szText) do
-		menu[#menu+1] = {szOption = v, bCheck = true, bMCheck = true, bChecked = function() return LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType == k end,
+		menu[#menu+1] = {szOption = v, bCheck = true, bMCheck = false, bChecked = function() return LR_TeamGrid.UsrData.CommonSettings.debuffMonitor[key[k]] end,
 			fnAction = function()
-				LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType = k
+				LR_TeamGrid.UsrData.CommonSettings.debuffMonitor[key[k]] = not LR_TeamGrid.UsrData.CommonSettings.debuffMonitor[key[k]]
 				LR_TeamGrid.SaveCommonData()
 			end,
 		}
@@ -850,6 +851,10 @@ function LR_TeamMenu.PopOptions()
 		end,
 	}
 
+	tOptions[#tOptions+1]= {szOption = _L["Clear Panel"], fnAction = function()
+		LR_TeamBuffMonitor.ClearAllCache()
+		LR_TeamGrid.ReDrawAllMembers(true)
+	end}
 	if LR_TeamGrid.IsLeader(GetClientPlayer().dwID) then
 		--мех╥
 		tOptions[#tOptions+1]={bDevide = true}

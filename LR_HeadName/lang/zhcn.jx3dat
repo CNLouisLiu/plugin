@@ -301,4 +301,9 @@ data={
 
 	["be read"]="已读",
 	["Mark in minimap"]="在小地图中标记",
+
+	--20170919add--
+	["Agriculture"]="神农",
+	["Mineral"]="矿藏",
+	["Show quest pickup doodad"]="显示任务拾取物品",
 }

@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local VERSION = "20170913"
+local VERSION = "20170919"
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_TeamGrid"
@@ -28,7 +28,7 @@ function _BuffBox:new(dwID, BuffHandle, tBuff)
 	o.dwMemberID = dwMemberID
 	o.tBuff = clone(tBuff)
 	o.nOrder = 1
-	o.parentHandle = BuffHandle
+	o.parentHandle = BuffHandle:GetHandle()
 	o.nStartFrame = GetLogicFrameCount()
 	return o
 end
@@ -91,6 +91,7 @@ function _BuffBox:SetSize()
 	handle:Lookup("Shadow_Color"):SetSize(width + border * 2, height + border * 2)
 	handle:Lookup("Shadow_Color"):SetRelPos(-border, -border)
 	handle:Lookup("Text_BuffStacks"):SetSize(width, height)
+	handle:Lookup("Text_LeftTime"):SetSize(width, height)
 	handle:SetSize(width, height)
 	handle:FormatAllItemPos()
 	return self
@@ -104,7 +105,8 @@ function _BuffBox:SetRelPos()
 	local left = UIConfig.handleBuffBox[nOrder].left * fx
 	local handle = self.handle
 	local parentHandle = self.parentHandle
-	handle:SetRelPos(left,top)
+	handle:SetRelPos(left, top)
+	handle:FormatAllItemPos()
 	parentHandle:FormatAllItemPos()
 	return self
 end
@@ -136,6 +138,7 @@ function _BuffBox:Show()
 	local box = handle:Lookup("Box")
 	local box2 = handle:Lookup("Box2")
 	local Text_BuffStacks = handle:Lookup("Text_BuffStacks")
+	local Text_LeftTime = handle:Lookup("Text_LeftTime")
 	local UIConfig = LR_TeamGrid.UIConfig
 	local nOrder = self.nOrder
 	local fx, fy = LR_TeamGrid.UsrData.CommonSettings.scale.fx, LR_TeamGrid.UsrData.CommonSettings.scale.fy
@@ -145,8 +148,12 @@ function _BuffBox:Show()
 	local fp = n / 16
 	Text_BuffStacks:SetFontScheme(15)
 	Text_BuffStacks:SetSize(height, width)
-	Text_BuffStacks:SetVAlign(1)
-	Text_BuffStacks:SetHAlign(1)
+	Text_BuffStacks:SetVAlign(0)
+	Text_BuffStacks:SetHAlign(0)
+	Text_LeftTime:SetFontScheme(15)
+	Text_LeftTime:SetSize(height, width)
+	Text_LeftTime:SetVAlign(2)
+	Text_LeftTime:SetHAlign(2)
 	if fp < 1 then
 		Text_BuffStacks:SetFontScale(fp)
 	end
@@ -211,37 +218,55 @@ function _BuffBox:Draw()
 		end
 	end
 
+	local Text_LeftTime = handle:Lookup("Text_LeftTime")
+	Text_LeftTime:SetFontScheme(7)
+	Text_LeftTime:SetAlpha(180)
+	Text_LeftTime:SetFontScale(0.9)
+	Text_LeftTime:SetHAlign(2)
+	Text_LeftTime:SetVAlign(2)
+	Text_LeftTime:SetFontColor(255, 255, 0)
+
 	local Text_BuffStacks = handle:Lookup("Text_BuffStacks")
+	Text_BuffStacks:SetSize(w, h)
 	Text_BuffStacks:SetFontScheme(7)
 	Text_BuffStacks:SetAlpha(180)
 	Text_BuffStacks:SetFontScale(0.9)
 	Text_BuffStacks:SetHAlign(2)
 	Text_BuffStacks:SetVAlign(2)
 	Text_BuffStacks:SetFontColor(255, 255, 0)
+
 	local w, h = box:GetSize()
-	Text_BuffStacks:SetSize(w, h)
-	if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType == 2 then
+	if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bShowLeftTime then
 		if nLeftFrame / 16 < 9 then
-			Text_BuffStacks:SprintfText("%0.0f", mfloor(nLeftFrame / 16) )
-			Text_BuffStacks:Show()
+			Text_LeftTime:SprintfText("%0.0f", mfloor(nLeftFrame / 16) )
+			Text_LeftTime:Show()
 			if nLeftFrame / 16 <=3 then
-				Text_BuffStacks:SetFontColor(237, 168, 168)
+				Text_LeftTime:SetFontColor(237, 168, 168)
 			elseif nLeftFrame / 16 < 6 then
-				Text_BuffStacks:SetFontColor(255, 255, 128)
+				Text_LeftTime:SetFontColor(255, 255, 128)
 			else
-				Text_BuffStacks:SetFontColor(255, 255, 255)
+				Text_LeftTime:SetFontColor(255, 255, 255)
 			end
 		else
-			Text_BuffStacks:Hide()
+			Text_LeftTime:Hide()
 		end
-	elseif LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType == 1 then
+	end
+
+	local Text_BuffStacks = handle:Lookup("Text_BuffStacks")
+	Text_BuffStacks:SetFontScheme(7)
+	Text_BuffStacks:SetAlpha(180)
+	Text_BuffStacks:SetFontScale(0.9)
+	Text_BuffStacks:SetHAlign(0)
+	Text_BuffStacks:SetVAlign(0)
+	Text_BuffStacks:SetFontColor(255, 255, 0)
+	if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bShowStack then
 		if self.tBuff.nStackNum and self.tBuff.nStackNum > 1 then
 			Text_BuffStacks:SetText(self.tBuff.nStackNum)
 			Text_BuffStacks:SetFontColor(255, 255, 255)
 		else
 			Text_BuffStacks:SetText("")
 		end
-	elseif LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType == 3 then
+	else
 		Text_BuffStacks:Hide()
 	end
 --[[	if GetLogicFrameCount()%16 == 0 then
@@ -816,9 +841,9 @@ function LR_TeamBuffMonitor.Check2(MonitorBuff)
 				if v.dwSkillSrcID == me.dwID and (MonitorBuff.nMonitorLevel == 0 or v.nLevel == MonitorBuff.nLevel) then
 					buff = clone(v)
 					buff.dwCaster = v.dwSkillSrcID
-					buff.bOnlySelf = MonitorBuff.bOnlySelf
-					buff.col = MonitorBuff.col
-					buff.nIconID = MonitorBuff.nIconID
+					buff.bOnlySelf = MonitorBuff.bOnlySelf or false
+					buff.col = MonitorBuff.col or {}
+					buff.nIconID = MonitorBuff.nIconID or 0
 					cache[v.nIndex] = clone(buff)
 					FireEvent("LR_RAID_BUFF_ADD_FRESH", MonitorBuff.dwPlayerID, buff)
 					return
@@ -841,9 +866,9 @@ function LR_TeamBuffMonitor.Check2(MonitorBuff)
 		return
 	else
 		local buff = cache[_nIndex]
-		buff.bOnlySelf = MonitorBuff.bOnlySelf
-		buff.col = MonitorBuff.col
-		buff.nIconID = MonitorBuff.nIconID
+		buff.bOnlySelf = MonitorBuff.bOnlySelf or false
+		buff.col = MonitorBuff.col or {}
+		buff.nIconID = MonitorBuff.nIconID or 0
 		FireEvent("LR_RAID_BUFF_ADD_FRESH", MonitorBuff.dwPlayerID, buff)
 	end
 end
@@ -855,7 +880,7 @@ function LR_TeamBuffMonitor.ReCheck(dwPlayerID, dwID, szKey)
 	local n = 1
 	while tBuff[n] do
 		if tBuff[n].szKey == szKey then
-			Output("Fix", Table_GetBuffName(tBuff[n].dwID, tBuff[n].nLevel))
+			--Output("Fix", Table_GetBuffName(tBuff[n].dwID, tBuff[n].nLevel))
 			LR_TeamBuffMonitor.Check2(tBuff[n])
 			Log("LR_TEAM_BUFF_MONITOR_FIX\n")
 			tremove(tBuff, n)
@@ -923,10 +948,6 @@ function LR_TeamBuffMonitor.UI_OME_BUFF_LOG(dwTarget, bCanCancel, dwID, bAddOrDe
 
 		LR.DelayCall(150, function() LR_TeamBuffMonitor.ReCheck(dwTarget, dwID, szKey) end, buff.DelayCallKey)
 	end
-
-
-	--Output("1111", szKey, BUFF_REFRESH_LIST[szKey])
-	--LR.DelayCall(150, function() LR_TeamBuffMonitor.ReCheck(szKey) end, BUFF_REFRESH_LIST[szKey].DelayCallKey)
 end
 
 --[[
@@ -1005,10 +1026,10 @@ function LR_TeamBuffMonitor.BUFF_UPDATE()
 		IsValid = IsValid,
 		nLeftFrame = nLeftFrame,
 	}
-	tBuff.bOnlySelf = MonitorList[dwID].bOnlySelf
-	tBuff.col = MonitorList[dwID].col
-	tBuff.nIconID = MonitorList[dwID].nIconID
-	tBuff.nMonitorLevel = MonitorList[dwID].nMonitorLevel
+	tBuff.bOnlySelf = MonitorList[dwID].bOnlySelf or false
+	tBuff.col = MonitorList[dwID].col or {}
+	tBuff.nIconID = MonitorList[dwID].nIconID or 0
+	tBuff.nMonitorLevel = MonitorList[dwID].nMonitorLevel or 0
 
 	BUFF_CACHE[dwPlayerID] = BUFF_CACHE[dwPlayerID]  or {}
 	BUFF_CACHE[dwPlayerID][dwID] = BUFF_CACHE[dwPlayerID][dwID] or {}
@@ -1159,7 +1180,8 @@ end
 
 function LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
 	local newTable = {}
-	MemberBuff = _MemberBuff[dwPlayerID] or {}
+	_MemberBuff[dwPlayerID] = _MemberBuff[dwPlayerID] or {}
+	MemberBuff = _MemberBuff[dwPlayerID]
 	for k, v in pairs (MemberBuff) do
 		if next(v) ~= nil then
 			newTable[v.dwID] = clone(v)
@@ -1169,7 +1191,6 @@ function LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
 	local BuffHandle = LR_TeamGrid.GetRoleGridBuffHandle(dwPlayerID)
 	_hMemberBuff[dwPlayerID] = _hMemberBuff[dwPlayerID] or {}
 	local hMemberBuff = _hMemberBuff[dwPlayerID] or {}
-
 	if BuffHandle then
 		for dwID, v in pairs(hMemberBuff) do
 			local v2 = newTable[dwID]
@@ -1192,7 +1213,7 @@ function LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
 				hMemberBuff[dwID] = h
 			end
 		end
-		BuffHandle:FormatAllItemPos()
+		BuffHandle:GetHandle():FormatAllItemPos()
 	end
 end
 
@@ -1222,7 +1243,8 @@ function LR_TeamBuffMonitor.ClearhMemberBuff()
 end
 
 function LR_TeamBuffMonitor.SortBuff(dwPlayerID)
-	local MemberBuff = _MemberBuff[dwPlayerID] or {}
+	_MemberBuff[dwPlayerID] = _MemberBuff[dwPlayerID] or {}
+	local MemberBuff = _MemberBuff[dwPlayerID]
 	local BuffList = {}
 	for i=1,4 do
 		if MemberBuff[i] then

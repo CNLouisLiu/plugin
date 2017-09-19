@@ -250,10 +250,11 @@ local LR_PickupDead_UI  = {
 
 				PopupMenu(m)
 			end,
-		},{	name = "LR_PickupDead_Text2", type = "Scroll_Text", x = 0, y = 100, w = 540, h = 360,
+		},{	name = "LR_PickupDead_Text2", type = "Scroll_Text", x = 0, y = 100, w = 540, h = 270,
 			Text = {
 				{szText = _L["TIP"], font = 61 },
 				{szText = _L["TIP2"], font = 61 },
+				{szText = _L["TIP3"], font = 61 },
 			},
 		},
 	}

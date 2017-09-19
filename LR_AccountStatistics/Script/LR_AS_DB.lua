@@ -19,7 +19,7 @@ LR_AS_DEBUG = false
 ---主数据库
 local schema_table_info = {
 	name = "table_info",
-	version = "20170623",
+	version = "20170919",
 	data = {
 		{name = "table_name", sql = "table_name VARCHAR(60)"},
 		{name = "version", sql = "version VARCHAR(20)"}
@@ -29,7 +29,7 @@ local schema_table_info = {
 
 local schema_group_list = {
 	name = "group_list",
-	version = "20170625",
+	version = "20170919",
 	data = {
 		{name = "groupID", 	sql = "groupID INTEGER"},		--主键
 		{name = "szName", sql = "szName VARCHAR(30) DEFAULT('DEFAULT GROUP')"},
@@ -44,7 +44,7 @@ local schema_group_list = {
 
 local schema_player_info = {
 	name = "player_info",
-	version = "20170628",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "dwID", 	sql = "dwID INTEGER DEFAULT(0)"},
@@ -81,7 +81,7 @@ local schema_player_info = {
 
 local schema_player_group = {
 	name = "player_group",
-	version = "20170628",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "groupID", sql = "groupID INTEGER DEFAULT(0)"},
@@ -91,7 +91,7 @@ local schema_player_group = {
 
 local schema_exam_data = {
 	name = "exam_data",
-	version = "20170628",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "ShengShi", 	sql = "ShengShi INTEGER DEFAULT(0)"},
@@ -103,7 +103,7 @@ local schema_exam_data = {
 
 local schema_richang_data = {
 	name = "richang_data",
-	version = "20170825",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "DA", 	sql = "DA TEXT"},
@@ -127,7 +127,7 @@ local schema_richang_data = {
 
 local schema_richang_clear_time = {
 	name = "richang_clear_time",
-	version = "20170726",
+	version = "20170919",
 	data = {
 		{name = "szName", 	sql = "szName VARCHAR(60)"},		--主键
 		{name = "nTime", 	sql = "nTime INTEGER DEFAULT(0)"},
@@ -137,7 +137,7 @@ local schema_richang_clear_time = {
 
 local schema_fb_data = {
 	name = "fb_data",
-	version = "20170628",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "fb_data", sql = "fb_data TEXT"},
@@ -148,7 +148,7 @@ local schema_fb_data = {
 
 local schema_qiyu_data = {
 	name = "qiyu_data",
-	version = "20170824",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "qiyu_data", sql = "qiyu_data TEXT"},
@@ -160,7 +160,7 @@ local schema_qiyu_data = {
 
 local schema_bookrd_data = {
 	name = "bookrd_data",
-	version = "20170629",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "bookrd_data", sql = "bookrd_data TEXT"},
@@ -171,7 +171,7 @@ local schema_bookrd_data = {
 
 local schema_bag_item_data = {
 	name = "bag_item_data",
-	version = "20170826",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "szName", 	sql = "szName VARCHAR(60)"},
@@ -193,7 +193,7 @@ local schema_bag_item_data = {
 
 local schema_bank_item_data = {
 	name = "bank_item_data",
-	version = "20170826",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "szName", 	sql = "szName VARCHAR(60)"},
@@ -215,7 +215,7 @@ local schema_bank_item_data = {
 
 local schema_mail_item_data = {
 	name = "mail_item_data",
-	version = "20170826",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "szName", 	sql = "szName VARCHAR(60)"},
@@ -238,7 +238,7 @@ local schema_mail_item_data = {
 
 local schema_mail_data = {
 	name = "mail_data",
-	version = "20170618",
+	version = "20170919",
 	data = {
 		{name = "nMailID", 	sql = "nMailID INTEGER"},	--主键
 		{name = "belong", 	sql = "belong VARCHAR(60)"},		--主键
@@ -255,7 +255,7 @@ local schema_mail_data = {
 
 local schema_mail_receive_time = {
 	name = "mail_receive_time",
-	version = "20170711",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "nTime", 	sql = "nTime INTEGER DEFAULT(0)"},
@@ -266,7 +266,7 @@ local schema_mail_receive_time = {
 
 local schema_achievement_data = {
 	name = "achievement_data",
-	version = "20170619",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(80)"},		--主键
 		{name = "achievement_data", 	sql = "achievement_data TEXT"},
@@ -277,7 +277,7 @@ local schema_achievement_data = {
 
 local schema_equipment_data = {
 	name = "equipment_data",
-	version = "20170905",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(80)"},		--主键
 		{name = "nSuitIndex", 	sql = "nSuitIndex TEXT"},
@@ -292,7 +292,7 @@ local schema_equipment_data = {
 --收支交易数据库
 local schema_trade_data = {
 	name = "trade_data",
-	version = "20170618",
+	version = "20170919",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(80)"},		--主键
 		{name = "nTime", 	sql = "nTime INTEGER DEFAULT(0)"},		--主键

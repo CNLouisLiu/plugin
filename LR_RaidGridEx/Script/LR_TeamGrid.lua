@@ -3,6 +3,8 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
+local VERSION = "20170918"
+---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
@@ -154,6 +156,8 @@ local DefaultCommonSettings = {
 		bShowDebuffCDAni = true,		--buffCD 阴影
 		debuffCDAniAlpha = 180,		--buffCD阴影透明度
 		buffTextType = 1,		--1:显示buff层数;2:显示buff剩余时间
+		bShowStack = true,
+		bShowLeftTime = true,
 		debuffShadow = {
 			bShow = true,		--显示debuff颜色
 			nBorder = 2,		--debuff颜色边框宽度
@@ -163,9 +167,8 @@ local DefaultCommonSettings = {
 }
 local DefaultData = {
 	UI_Choose = "Classic",
-	Version = "20170418v2",
+	VERSION = VERSION,
 	CommonSettings = clone(DefaultCommonSettings),
-
 }
 ---------------------------------------------------------------
 LR_TeamGrid = LR_TeamGrid or {
@@ -208,9 +211,47 @@ function _RoleGrid:new(dwID)
 	o.nRow = 0
 	o.szName = ""
 	o.nameColor = {255, 255, 255}
+	o.UI = clone({})
 	o.parentHandle = LR_TeamGrid.Handle_Roles
 	return o
 end
+
+function _RoleGrid:AppendRoleGrid()
+	local parentHandle = self.parentHandle
+	local dwID = self.dwID
+	local RoleGridConfig = LoadLUAData(sformat("%s\\UI\\%s\\Role", AddonPath, LR_TeamGrid.UsrData.UI_Choose)) or {}
+	for i = 1, #RoleGridConfig do
+		v = RoleGridConfig[i]
+		local Parent
+		if not v.Parent then
+			Parent = parentHandle
+		else
+			Parent = self.UI[v.Parent]
+		end
+		if v.nType == "Handle" then
+			self.UI[v.name] = LR.AppendUI("Handle", Parent, v.name, {w = v.w, h = v.h, x = v.x, y = v.y, eventid = 0})
+		elseif v.nType == "Image" then
+			self.UI[v.name] = LR.AppendUI("Image", Parent, v.name, {w = v.w, h = v.h, x = v.x, y = v.y, eventid = 0})
+			self.UI[v.name]:FromUITex(v.Image, v.Frame)
+		elseif v.nType == "Text" then
+			self.UI[v.name] = LR.AppendUI("Text", Parent, v.name, {w = v.w, h = v.h, x = v.x, y = v.y, text = v.Text, eventid = 0})
+		elseif v.nType == "Shadow" then
+			self.UI[v.name] = LR.AppendUI("Shadow", Parent, v.name, {w = v.w, h = v.h, x = v.x, y = v.y, eventid = 0})
+		elseif v.nType == "Animate" then
+			self.UI[v.name] = LR.AppendUI("Animate", Parent, v.name, {w = v.w, h = v.h, x = v.x, y = v.y, eventid = 0})
+			self.UI[v.name]:SetAnimate(v.Image, v.Group, v.LoopCount)
+		end
+		if v.LockShowAndHide and v.LockShowAndHide == 1 then self.UI[v.name]:Hide() end
+		if v.Alpha then self.UI[v.name]:SetAlpha(v.Alpha) end
+		if v.ImageType and v.nType == "Image" then self.UI[v.name]:SetImageType(v.ImageType) end
+		if v.PosType then self.UI[v.name]:SetPosType(v.PosType) end
+	end
+
+	self.UI["Handle_RoleDummy"]:SetName(sformat("Handle_RoleGrid_%d", dwID))
+	self.UI[sformat("Handle_RoleGrid_%d", dwID)] = self.UI["Handle_RoleDummy"]
+	return self.UI[sformat("Handle_RoleGrid_%d", dwID)]
+end
+
 
 function _RoleGrid:Create()
 	local parentHandle = self.parentHandle
@@ -218,8 +259,9 @@ function _RoleGrid:Create()
 	--local handle = parentHandle:Lookup(sformat("Handle_RoleGrid_%d", dwID))
 	local handle = parentHandle:Lookup(sformat("Handle_RoleGrid_%d", dwID))
 	if not handle then
-		local szIniFile = sformat("%s\\UI\\%s\\Role.ini", AddonPath, LR_TeamGrid.UsrData.UI_Choose)
-		handle = parentHandle:AppendItemFromIni(szIniFile, "Handle_RoleDummy", sformat("Handle_RoleGrid_%d", dwID))
+		handle = self:AppendRoleGrid()
+		--local szIniFile = sformat("%s\\UI\\%s\\Role.ini", AddonPath, LR_TeamGrid.UsrData.UI_Choose)
+		--handle = parentHandle:AppendItemFromIni(szIniFile, "Handle_RoleDummy", sformat("Handle_RoleGrid_%d", dwID))
 	end
 	self.handle = handle
 	handle:SetRelPos(0, 0)
@@ -230,7 +272,7 @@ function _RoleGrid:Create()
 	----------------------------------------------
 	--鼠标进入
 	----------------------------------------------
-	handle.OnItemMouseEnter=function()
+	handle:GetHandle().OnItemMouseEnter=function()
 		handle:Lookup("Image_Hover"):Show()
 		if bDraged then
 			local dwID = dwID
@@ -278,7 +320,7 @@ function _RoleGrid:Create()
 	----------------------------------------------
 	--鼠标离开
 	----------------------------------------------
-	handle.OnItemMouseLeave=function()
+	handle:GetHandle().OnItemMouseLeave=function()
 		if handle:Lookup("Image_Hover") then handle:Lookup("Image_Hover"):Hide() end
 		LR_TeamGrid.cureLock = false
 		LR_TeamGrid.hoverHandle = nil
@@ -302,7 +344,7 @@ function _RoleGrid:Create()
 	----------------------------------------------
 	--鼠标右击
 	----------------------------------------------
-	handle.OnItemRButtonClick = function()
+	handle:GetHandle().OnItemRButtonClick = function()
 		local team =  GetClientTeam()
 		if not team then return end
 		local dwID = dwID
@@ -342,7 +384,7 @@ function _RoleGrid:Create()
 	----------------------------------------------
 	--鼠标左击
 	----------------------------------------------
-	handle.OnItemLButtonClick = function()
+	handle:GetHandle().OnItemLButtonClick = function()
 		if IsCtrlKeyDown() then
 			LR_TeamGrid.EditBox_AppendLinkPlayer(_Members[dwID].szName)
 		else
@@ -368,7 +410,7 @@ function _RoleGrid:Create()
 	----------------------------------------------
 	--鼠标左击双击
 	----------------------------------------------
-	handle.OnItemLButtonDBClick = function()
+	handle:GetHandle().OnItemLButtonDBClick = function()
 		if IsAltKeyDown() and LR_TeamGrid.UsrData.CommonSettings.mouseAction.LButtonDBClickAlt == 1 then
 			local menu=LR.GetTradeMenu(dwID)
 			if menu then
@@ -391,7 +433,7 @@ function _RoleGrid:Create()
 	----------------------------------------------
 	--鼠标拖拽
 	----------------------------------------------
-	handle.OnItemLButtonDrag = function()
+	handle:GetHandle().OnItemLButtonDrag = function()
 		local me = GetClientPlayer()
 		if not me then
 			return
@@ -414,7 +456,7 @@ function _RoleGrid:Create()
 	----------------------------------------------
 	--鼠标拖拽结束
 	----------------------------------------------
-	handle.OnItemLButtonDragEnd = function()
+	handle:GetHandle().OnItemLButtonDragEnd = function()
 		local me = GetClientPlayer()
 		if not me then
 			return
@@ -1229,7 +1271,7 @@ function _RoleGrid:DrawLifeText()
 		elseif nMaxLife == 0 then
 			nCurrentLife = "--"
 			r, g, b = 255, 255, 255
-		elseif MemberInfo.bDeathFlag or nCurrentLife == 0 then
+		elseif MemberInfo.bDeathFlag then -- or nCurrentLife == 0 then
 			nCurrentLife = _L["Dead"]
 			r, g, b = 255, 0, 0
 		end
@@ -1476,8 +1518,8 @@ function _RoleGrid:ClearVoteImage()
 end
 
 function _RoleGrid:GetBuffHandle()
-	local handle = self.handle
-	return handle:Lookup("Handle_Debuffs")
+	--local handle = self.handle
+	return self.UI["Handle_Debuffs"]
 end
 
 function _RoleGrid:SetDistanceTextSize()
@@ -2036,7 +2078,7 @@ function LR_TeamGrid.CheckCommonData()
 	local src = sformat("%s\\CommonSettings.dat", SaveDataPath)
 	if IsFileExist(sformat("%s.jx3dat", src)) then
 		local data = LoadLUAData(src) or {}
-		if data.Version and data.Version == DefaultData.Version then
+		if data.VERSION and data.VERSION == VERSION then
 			LR_TeamGrid.UsrData = clone(data)
 		else
 			LR_TeamGrid.ResetCommonData()
@@ -2171,7 +2213,6 @@ function LR_TeamGrid.ReDrawAllMembers(bClear)
 		LR_TeamBuffMonitor.ClearhMemberBuff()
 		LR_TeamGrid.Handle_Roles:Clear()
 		_tRoleGrids={}
-
 	end
 	LR_TeamGrid.DrawAllMembers()
 	if bClear then

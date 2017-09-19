@@ -1459,6 +1459,11 @@ function ItemBase:SetName(...)
 	return self
 end
 
+function ItemBase:SetIndex(...)
+	self.__this:SetIndex(...)
+	return self
+end
+
 function ItemBase:GetName()
 	return self.__this:GetName()
 end
@@ -1595,7 +1600,7 @@ local ItemHandle = class(ItemBase)
 function ItemHandle:ctor(__parent, __name, __data)
 	assert(__parent ~= nil, "parent can not be null.")
 	__data = __data or {}
-	local __string = "<handle>w=10 h=10 handletype=0 postype=0 eventid=272 </handle>"
+	local __string = "<handle>w=10 h=10 handletype=0 postype=0 eventid=272 firstpostype=0</handle>"
 	if __data.w then
 		__string = string.gsub(__string, "w=%d+", string.format("w=%d", __data.w))
 	end
@@ -1605,9 +1610,9 @@ function ItemHandle:ctor(__parent, __name, __data)
 	if __data.handletype then
 		__string = string.gsub(__string, "handletype=%d+", string.format("handletype=%d", __data.handletype))
 	end
-	--[[if __data.firstpostype then
+	if __data.firstpostype then
 		__string = string.gsub(__string, "firstpostype=%d+", string.format("firstpostype=%d", __data.firstpostype))
-	end]]
+	end
 	if __data.postype then
 		__string = string.gsub(__string, "postype=%d+", string.format("postype=%d", __data.postype))
 	end
@@ -1652,13 +1657,11 @@ function ItemHandle:RegisterEvent(...)
 end
 
 function ItemHandle:AppendItemFromString(...)
-	self.__this:AppendItemFromString(...)
-	return self
+	return self.__this:AppendItemFromString(...)
 end
 
 function ItemHandle:AppendItemFromIni(...)
-	self.__this:AppendItemFromIni(...)
-	return self
+	return self.__this:AppendItemFromIni(...)
 end
 
 function ItemHandle:AppendItemFromData(...)
@@ -2280,7 +2283,7 @@ local ItemShadow = class(ItemBase)
 function ItemShadow:ctor(__parent, __name, __data)
 	assert(__parent ~= nil, "parent can not be null.")
 	__data = __data or {}
-	local __string = "<shadow>w=15 h=15 postype=0 eventid=277 </shadow>"
+	local __string = "<shadow>w=15 h=15 postype=0 eventid = 0 </shadow>"
 	if __data.w then
 		__string = string.gsub(__string, "w=%d+", string.format("w=%d", __data.w))
 	end

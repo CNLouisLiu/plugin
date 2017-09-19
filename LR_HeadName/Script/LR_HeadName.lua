@@ -100,8 +100,9 @@ LR_HeadName.default = {
 		nLifeBarOffset = 0, 		--血条高度偏移量
 		bShowBalloon = false, 		--是否显示泡泡
 		bEnhanceGuDing = true,		--增强蛊鼎显示
-		bMiniMapAgriculture = true,
-		bMiniMapMine = true,
+		bMiniMapAgriculture = true,	--神农小地图显示
+		bMiniMapMine = true,	--矿藏小地图显示
+		bShowQuestDoodad = false,	--显示任务拾取物品
 		NPC = {
 			bShow = true,
 			bAlwaysHideSysNpcTop = true,
@@ -1536,7 +1537,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 				if bFresh then
 					if IsMissionObj and nType == TARGET.NPC then
 						if LR_HeadName.UsrData.bShowQuestFlag then
-							MINIMAP_LIST[dwID] = {nType = 7, obj = obj, nFrame1 = 34, nFrame2 = 48,}
+							MINIMAP_LIST[dwID] = {nType = 7, obj = obj, nFrame1 = 199, nFrame2 = 48,}
 						end
 					else
 						MINIMAP_LIST[dwID] = nil
@@ -1762,18 +1763,22 @@ function LR_HeadName.Check(dwID, nType, bForced)
 
 			if szName ~=  ""then
 				local IsMissionObj = _Role:GetIsMissionObj()
-
+				local isMineral = false
+				local isAgriculture = false
+				local isBeiMing = false
 				if bForced then
 					bFresh = true
 					bShow = true
 				elseif IsMissionObj then
-					if LR_HeadName.UsrData.bShowQMode ==  2  and LR_HeadName.UsrData.bShowQuestFlag then
-						bFresh = true
+					if LR_HeadName.UsrData.bShowQuestDoodad then
+						if LR_HeadName.UsrData.bShowQMode ==  2  and LR_HeadName.UsrData.bShowQuestFlag then
+							bFresh = true
+						end
+						bShow = true
 					end
-					bShow = true
 				end
 				if obj.nKind ==  DOODAD_KIND.QUEST then
-					if LR_HeadName.DoodadCache[obj.dwID].bHaveQuest then
+					if LR_HeadName.DoodadCache[obj.dwID].bHaveQuest and LR_HeadName.UsrData.bShowQuestDoodad then
 						bShow = true
 					end
 				end
@@ -1781,8 +1786,10 @@ function LR_HeadName.Check(dwID, nType, bForced)
 					bShow = true
 				elseif LR_HeadName.CheckAgriculture(szName) then
 					bShow = true
+					isAgriculture = true
 				elseif LR_HeadName.CheckMineral(szName) then
 					bShow = true
+					isMineral = true
 				elseif LR_HeadName.DoodadBeShow[szName] then
 					bShow = true
 				elseif LR_HeadName.DoodadKind[obj.nKind] then
@@ -1790,13 +1797,14 @@ function LR_HeadName.Check(dwID, nType, bForced)
 						local _start, _end = sfind(szName, _L["BeiMing."])
 						if _start then
 							bShow = true
+							isBeiMing = true
 						end
 					else
 						bShow = true
 					end
 				end
 
-				if not bShow and obj.nKind ==  DOODAD_KIND.QUEST then
+				if not bShow and obj.nKind ==  DOODAD_KIND.QUEST and LR_HeadName.UsrData.bShowQuestDoodad then
 					local MissionList = LR_HeadName.MissionList
 					local dwMapID = LR_HeadName.dwMapID
 					for ii = 1, #MissionList, 1 do
@@ -1843,7 +1851,13 @@ function LR_HeadName.Check(dwID, nType, bForced)
 						local font =  LR_HeadName.UsrData.font
 						local temp = szName
 						if LR_HeadName.UsrData.bShowDoodadKind then
-							temp = sformat("%s(%s)", temp, LR_HeadName.DoodadKindDescribe[obj.nKind])
+							if isAgriculture then
+								temp = sformat("%s(%s)", temp, _L["Agriculture"])
+							elseif isMineral then
+								temp = sformat("%s(%s)", temp, _L["Mineral"])
+							else
+								temp = sformat("%s(%s)", temp, LR_HeadName.DoodadKindDescribe[obj.nKind])
+							end
 						end
 						tinsert(szText, {szText = temp, rgb = rgb , font = font, })
 						handle:DrawDoodad(szText)
@@ -1855,7 +1869,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 							bShow = true
 							local bookname = sgsub(szName, _L["BeiMing."], "")
 							if LR.GetBookReadStatusByName(bookname) then
-								szName = sformat("%s（%s）", szName, _L["be read"])
+								szName = sformat("%s (%s)", szName, _L["be read"])
 							end
 						end
 						local rgb = LR_HeadName.Color["Doodad"]
@@ -1863,7 +1877,13 @@ function LR_HeadName.Check(dwID, nType, bForced)
 						local font =  LR_HeadName.UsrData.font
 						local temp = szName
 						if LR_HeadName.UsrData.bShowDoodadKind then
-							temp = sformat("%s(%s)", temp, LR_HeadName.DoodadKindDescribe[obj.nKind])
+							if isAgriculture then
+								temp = sformat("%s (%s)", temp, _L["Agriculture"])
+							elseif isMineral then
+								temp = sformat("%s (%s)", temp, _L["Mineral"])
+							else
+								temp = sformat("%s (%s)", temp, LR_HeadName.DoodadKindDescribe[obj.nKind])
+							end
 						end
 
 						if IsMissionObj then
@@ -1903,6 +1923,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 				LR_HeadName.AllList[dwID] = nil
 				LR_HeadName.DoodadCache[dwID] = nil
 				LR_HeadName.DoodadList[dwID] = nil
+				MINIMAP_LIST[dwID] = nil
 			end
 		end
 	else
@@ -2583,7 +2604,7 @@ function LR_HeadName.AddSingleDoodad2AllList(dwID)
 		local bAdd = false
 		local szName = LR.Trim(obj.szName)
 		local IsMissionObj = LR_HeadName.IsMissionObj({dwTemplateID = obj.dwTemplateID, nType = TARGET.DOODAD, szName = LR.Trim(obj.szName)})
-		if obj.nKind ==  DOODAD_KIND.QUEST then
+		if obj.nKind ==  DOODAD_KIND.QUEST and LR_HeadName.UsrData.bShowQuestDoodad then
 			if obj.HaveQuest(me.dwID) then
 				bAdd = true
 				if LR_HeadName.DoodadCache[dwID] then
@@ -2612,10 +2633,10 @@ function LR_HeadName.AddSingleDoodad2AllList(dwID)
 			else
 				bAdd = true
 			end
-		elseif IsMissionObj then
+		elseif IsMissionObj and LR_HeadName.UsrData.bShowQuestDoodad then
 			bAdd = true
 		end
-		if not bAdd and obj.nKind ==  DOODAD_KIND.QUEST then
+		if not bAdd and obj.nKind ==  DOODAD_KIND.QUEST and LR_HeadName.UsrData.bShowQuestDoodad then
 			local MissionList = LR_HeadName.MissionList
 			local dwMapID = LR_HeadName.dwMapID
 			for ii = 1, #MissionList, 1 do
@@ -2665,15 +2686,15 @@ function LR_HeadName.AddSingleDoodad2AllList(dwID)
 			if LR_HeadName.UsrData.bShowQuestFlag and obj.nKind ==  DOODAD_KIND.CRAFT_TARGET then
 				local _start, _end = sfind(szName, _L["BeiMing."])
 				if _start then
-					MINIMAP_LIST[dwID] = {nType = 5, obj = obj, nFrame1 = 22, nFrame2 = 48}
+					MINIMAP_LIST[dwID] = {nType = 5, obj = obj, nFrame1 = 265, nFrame2 = 48}
 				end
 			end
 			if IsMissionObj and LR_HeadName.UsrData.bShowQuestFlag then
-				MINIMAP_LIST[dwID] = {nType = 5, obj = obj, nFrame1 = 34, nFrame2 = 48}
+				MINIMAP_LIST[dwID] = {nType = 5, obj = obj, nFrame1 = 199, nFrame2 = 48}
 			end
 			if obj.nKind == DOODAD_KIND.QUEST and LR_HeadName.UsrData.bShowQuestFlag then
 				if obj.HaveQuest(me.dwID) then
-					MINIMAP_LIST[dwID] = {nType = 5, obj = obj, nFrame1 = 34, nFrame2 = 48}
+					MINIMAP_LIST[dwID] = {nType = 5, obj = obj, nFrame1 = 199, nFrame2 = 48}
 				end
 			end
 		end
@@ -3171,6 +3192,7 @@ function LR_HeadName.MiniMapBreatheCall()
 	for k, v in pairs (MINIMAP_LIST) do
 		LR.UpdateMiniFlag(v.nType, v.obj, v.nFrame1, v.nFrame2)
 	end
+
 end
 
 

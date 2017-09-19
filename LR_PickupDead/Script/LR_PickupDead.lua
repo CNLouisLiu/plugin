@@ -81,6 +81,8 @@ end
 --------------------------------------------------------------
 ---事件操作
 --------------------------------------------------------------
+local CRAFT_SUCCESS = false
+
 function LR_PickupDead.SYNC_LOOT_LIST()
 	local dwDoodadID = arg0
 	local doodad = GetDoodad(dwDoodadID)
@@ -119,10 +121,11 @@ function LR_PickupDead.PickItem(dwDoodadID)
 		return
 	end
 
-	if LR_PickupDead.pickedUpList[dwDoodadID] then
+	if LR_PickupDead.pickedUpList[dwDoodadID] and not CRAFT_SUCCESS then
 		LR_PickupDead.doodadList[dwDoodadID] = nil
 		return
 	end
+	CRAFT_SUCCESS = false
 
 	local doodad =  GetDoodad (dwDoodadID)
 	if not doodad then
@@ -148,98 +151,105 @@ function LR_PickupDead.PickItem(dwDoodadID)
 			elseif bLeader then
 				--Output("bLeader")
 			else
-				if item.nGenre ==  ITEM_GENRE.TASK_ITEM then		---如果是任务物品，则直接拾取
-					if LR_PickupDead.UsrData.bPickupTaskItem then
-						LootItem(dwDoodadID, item.dwID)
-					end
-				else
-					local pickFlag = false
-					--白名单
-					if LR_PickupDead.UsrData.bPickupItems then
-						for k, v in pairs(LR_PickupDead.customData.pickList or {}) do
-							if v.bPickup then
-								if v.szName then
-									if v.szName == LR.GetItemNameByItem(item) then
-										pickFlag = true
-									end
-								elseif v.dwTabType then
-									if v.dwTabType == item.dwTabType and v.dwIndex == item.dwIndex then
-										pickFlag = true
-									end
-								elseif v.nUiId then
-									if v.nUiId == item.nUiId then
-										pickFlag = true
-									end
+				local pickFlag = false
+				--[[过滤规则(按顺序)：
+				1、白名单中的放行
+				2、如果只拾取白名单，则不管品级的过滤；否则根据品级过滤
+				3、任务物品和过滤后的书籍不受只拾取白名单控制
+				4、如果拾取后的物品数量超过允许的上限则不捡
+				5、所有物品受黑名单的控制
+				]]
+				--白名单
+				if LR_PickupDead.UsrData.bPickupItems then
+					for k, v in pairs(LR_PickupDead.customData.pickList or {}) do
+						if v.bPickup then
+							if v.szName then
+								if v.szName == LR.GetItemNameByItem(item) then
+									pickFlag = true
+								end
+							elseif v.dwTabType then
+								if v.dwTabType == item.dwTabType and v.dwIndex == item.dwIndex then
+									pickFlag = true
+								end
+							elseif v.nUiId then
+								if v.nUiId == item.nUiId then
+									pickFlag = true
 								end
 							end
 						end
 					end
+				end
 
-					--不在白名单中的
-					if not (LR_PickupDead.UsrData.bPickupItems and LR_PickupDead.UsrData.bOnlyPickupItems) then
-						if item.nQuality >=  LR_PickupDead.UsrData.pickUpLevel then
+				--不在白名单中的
+				if not (LR_PickupDead.UsrData.bPickupItems and LR_PickupDead.UsrData.bOnlyPickupItems) then
+					if item.nQuality >=  LR_PickupDead.UsrData.pickUpLevel then
+						pickFlag = true
+					end
+				end
+
+				if item.nGenre == ITEM_GENRE.BOOK then
+					if LR_PickupDead.UsrData.bPickupUnReadBook then	--只拾取未阅读过的书籍
+						local nBookID, nSegID = GlobelRecipeID2BookID(item.nBookID)
+						if not me.IsBookMemorized(nBookID, nSegID) then
 							pickFlag = true
-						end
-					end
-					--黑名单
-					if LR_PickupDead.UsrData.bnotPickupItems then
-						for k, v in pairs(LR_PickupDead.customData.ignorList or {}) do
-							if v.bnotPickup then
-								if v.szName then
-									if v.szName == LR.GetItemNameByItem(item) then
-										pickFlag = false
-									end
-								elseif v.dwTabType then
-									if v.dwTabType == item.dwTabType and v.dwIndex == item.dwIndex then
-										pickFlag = false
-									end
-								elseif v.nUiId then
-									if v.nUiId == item.nUiId then
-										pickFlag = false
-									end
-								end
-							end
-						end
-					end
-
-					if item.nGenre == ITEM_GENRE.BOOK then
-						if LR_PickupDead.UsrData.bPickupUnReadBook then	--只拾取未阅读过的书籍
-							local nBookID, nSegID = GlobelRecipeID2BookID(item.nBookID)
-							if not me.IsBookMemorized(nBookID, nSegID) then
-								pickFlag = true
-							else
-								pickFlag = false
-							end
-						end
-
-						if LR_PickupDead.UsrData.bPickupOnlyOneBindBook and item.bBind == true then
-							if LR.GetItemNumInBag(item.dwTabType, item.dwIndex, item.nBookID) > 0 then
-								pickFlag = false
-							end
-						end
-						if LR_PickupDead.UsrData.bPickupOnlyOneNotBindBook and item.bBind == false then
-							if LR.GetItemNumInBag(item.dwTabType, item.dwIndex, item.nBookID) > 0 then
-								pickFlag = false
-							end
-						end
-					end
-
-					if LR_PickupDead.UsrData.bGiveUpItemsBTLON then
-						local nMaxExistAmount = item.nMaxExistAmount
-						local nStackNum = 1
-						if item.bCanStack then
-							nStackNum = item.nStackNum
-						end
-						local numInBagAndBank = LR.GetItemNumInBagAndBank(item.dwTabType, item.dwIndex, item.nBookID)
-						if nMaxExistAmount > 0 and nMaxExistAmount < numInBagAndBank + nStackNum then
+						else
 							pickFlag = false
 						end
 					end
-
-
-					if pickFlag then
-						LootItem(dwDoodadID, item.dwID)
+					---只拾取一本
+					if LR_PickupDead.UsrData.bPickupOnlyOneBindBook and item.bBind == true then
+						if LR.GetItemNumInBag(item.dwTabType, item.dwIndex, item.nBookID) > 0 then
+							pickFlag = false
+						end
 					end
+					if LR_PickupDead.UsrData.bPickupOnlyOneNotBindBook and item.bBind == false then
+						if LR.GetItemNumInBag(item.dwTabType, item.dwIndex, item.nBookID) > 0 then
+							pickFlag = false
+						end
+					end
+				end
+
+				if item.nGenre ==  ITEM_GENRE.TASK_ITEM then		---如果是任务物品，则直接拾取
+					if LR_PickupDead.UsrData.bPickupTaskItem then
+						pickFlag = true
+					end
+				end
+
+				if LR_PickupDead.UsrData.bGiveUpItemsBTLON then
+					local nMaxExistAmount = item.nMaxExistAmount
+					local nStackNum = 1
+					if item.bCanStack then
+						nStackNum = item.nStackNum
+					end
+					local numInBagAndBank = LR.GetItemNumInBagAndBank(item.dwTabType, item.dwIndex, item.nBookID)
+					if nMaxExistAmount > 0 and nMaxExistAmount < numInBagAndBank + nStackNum then
+						pickFlag = false
+					end
+				end
+
+				--黑名单
+				if LR_PickupDead.UsrData.bnotPickupItems then
+					for k, v in pairs(LR_PickupDead.customData.ignorList or {}) do
+						if v.bnotPickup then
+							if v.szName then
+								if v.szName == LR.GetItemNameByItem(item) then
+									pickFlag = false
+								end
+							elseif v.dwTabType then
+								if v.dwTabType == item.dwTabType and v.dwIndex == item.dwIndex then
+									pickFlag = false
+								end
+							elseif v.nUiId then
+								if v.nUiId == item.nUiId then
+									pickFlag = false
+								end
+							end
+						end
+					end
+				end
+
+				if pickFlag then
+					LootItem(dwDoodadID, item.dwID)
 				end
 			end
 		end
@@ -286,9 +296,18 @@ function LR_PickupDead.LOGIN_GAME()
 	LR_PickupDead.LoadCustomData()
 end
 
+function LR_PickupDead.SYS_MSG()
+	if arg0 == "UI_OME_CRAFT_RESPOND" then
+		if arg1 == CRAFT_RESULT_CODE.SUCCESS then
+			CRAFT_SUCCESS = true
+		end
+	end
+end
+
+
 LR.BreatheCall("LR_PickupDead", function() LR_PickupDead.BreatheCall() end, 250)
 LR.RegisterEvent("SYNC_LOOT_LIST",function() LR_PickupDead.SYNC_LOOT_LIST() end)
 LR.RegisterEvent("DOODAD_LEAVE_SCENE",function() LR_PickupDead.DOODAD_LEAVE_SCENE() end)
 LR.RegisterEvent("OPEN_DOODAD",function() LR_PickupDead.OPEN_DOODAD() end)
 LR.RegisterEvent("LOGIN_GAME",function() LR_PickupDead.LOGIN_GAME() end)
-
+LR.RegisterEvent("SYS_MSG",function() LR_PickupDead.SYS_MSG() end)
