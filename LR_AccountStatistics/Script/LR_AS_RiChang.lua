@@ -1,10 +1,12 @@
+local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
+local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
+local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+-------------------------------------------------------------
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_AccountStatistics\\UsrData"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local _L = LR.LoadLangPack(AddonPath)
 local DB_name = "maindb.db"
-local sformat, slen, sgsub, ssub, sfind = string.format, string.len, string.gsub, string.sub, string.find
-local mfloor, mceil, mmin, mmax = math.floor, math.ceil, math.min, math.max
-local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remove, table.sort
 -------------------------------------------------------------
 local RI_CHANG = {
 	DA = 1, 	--大战
@@ -36,6 +38,13 @@ local RI_CHANG_NAME = {
 	[RI_CHANG.MI] = _L["MI"], 	--觅宝会/黑市
 	[RI_CHANG.HUIGUANG] = _L["HUIGUANG"], 	--回光(7周年)
 	[RI_CHANG.HUASHAN] = _L["HUASHAN"], 	--扇子(7周年)
+}
+
+local RESET_TYPE = {
+	NONE = 0,
+	EVERY_DAY = 1,
+	MONDAY = 2,
+	THURSDAY = 3,
 }
 
 LR_AccountStatistics_RiChang = LR_AccountStatistics_RiChang or {}
@@ -267,7 +276,7 @@ function LR_AccountStatistics_RiChang.SaveData(DB)
 	local realArea, realServer = serverInfo[5], serverInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	LR_AccountStatistics_RiChang.CheckAll()
-	if LR_AccountStatistics.UsrData.OthersCanSee then
+	if LR_AS_Base.UsrData.OthersCanSee then
 		local name, wen, value = {}, {}, {}
 		for k, v in pairs(RI_CHANG) do
 			name[#name+1] = k
@@ -312,11 +321,16 @@ LR_AccountStatistics_RiChang.List = {
 ----大战副本数据
 LR_AccountStatistics_RiChang.Dazhan = {
 	----[任务id] = true,
-	[14765] = true, 		--14765 大战！英雄微山书院！
+--[[	[14765] = true, 		--14765 大战！英雄微山书院！
 	[14766] = true, 		--14766 大战！英雄天泣林！
 	[14767] = true, 		--14767 大战！英雄梵空禅院！
 	[14768] = true, 		--14768 大战！英雄阴山圣泉！
-	[14769] = true, 		--14769 大战！英雄引仙水榭！
+	[14769] = true, 		--14769 大战！英雄引仙水榭！]]
+	[17816] = true,		--稻香秘事
+	[17817] = true,		--银雾湖
+	[17818] = true,		--刀轮海厅
+	[17819] = true,		--夕颜阁
+	[17820] = true,		--白帝水宫
 }
 ADD2MONITED_QUEST_LIST(LR_AccountStatistics_RiChang.Dazhan)
 
@@ -403,7 +417,6 @@ function LR_AccountStatistics_RiChang.CheckGongShiJian()
 	else
 		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.GONG].finished = false
 	end
-
 end
 
 -------检查茶馆
@@ -950,7 +963,7 @@ function LR_AS_Exam.SaveData(DB)
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	local v = LR_AS_Exam.SelfData or {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO exam_data ( szKey, ShengShi, HuiShi, bDel ) VALUES ( ?, ?, ?, ? )")
-	if LR_AccountStatistics.UsrData.OthersCanSee then
+	if LR_AS_Base.UsrData.OthersCanSee then
 		DB_REPLACE:ClearBindings()
 		DB_REPLACE:BindAll(szKey, v.ShengShi, v.HuiShi, 0)
 		DB_REPLACE:Execute()
@@ -974,6 +987,8 @@ function LR_AS_Exam.ResetData(DB)
 		end
 	end
 end
+LR_AS_Base.Add2ResetData({szKey = "ResetExam_ZC", fnAction = LR_AS_Exam.ResetData, nType = RESET_TYPE.MONDAY, order = 30})
+
 
 function LR_AS_Exam.CheckExam()
 	local me = GetClientPlayer()
@@ -1002,6 +1017,7 @@ function LR_AS_Exam.CheckExam()
 end
 
 -------------------------------------------------
+--[[
 function LR_AccountStatistics_RiChang.ResetData()
 	local CurrentTime =  GetCurrentTime()
 	local _date = TimeToDate(CurrentTime)
@@ -1090,26 +1106,7 @@ function LR_AccountStatistics_RiChang.ResetData()
 		---由于特殊性，奇遇数据要重新Load一下--不能通过游戏api函数获得
 		LR_ACS_QiYu.LoadAllUsrData(DB)
 
-		---将所有数据写回数据库
-		local name, wen = {}, {}
-		for k, v in pairs(RI_CHANG) do
-			name[#name + 1] = k
-			wen[#wen + 1] = "?"
-		end
-		name[#name + 1] = "CUSTOM_QUEST"
-		wen[#wen + 1] = "?"
-		local DB_REPLACE = DB:Prepare(sformat("REPLACE INTO richang_data ( bDel, szKey, %s ) VALUES ( ?, %s, ? )", tconcat(name, ", "), tconcat(wen, ", ")))
-		for szKey, v in pairs (LR_AccountStatistics_RiChang.AllUsrData) do
-			local value = {}
-			for  k2, v2 in pairs(RI_CHANG) do
-				value[#value+1] = LR.JsonEncode(v[v2])
-			end
-			value[#value + 1] = LR.JsonEncode(v.CUSTOM_QUEST)
 
-			DB_REPLACE:ClearBindings()
-			DB_REPLACE:BindAll(0, szKey, unpack(value))
-			DB_REPLACE:Execute()
-		end
 		--记录保存时间
 		local szName = {"ClearTimeZC", "ClearTimeRC", "ClearTime5R", "ClearTime10R", "ClearTime25R"}
 		local DB_REPLACE2 = DB:Prepare("REPLACE INTO richang_clear_time (szName, nTime) VALUES ( ?, ? )")
@@ -1122,8 +1119,33 @@ function LR_AccountStatistics_RiChang.ResetData()
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 end
+]]
 
-function LR_AccountStatistics_RiChang.ClearZC()
+function LR_AccountStatistics_RiChang.SaveClearData(DB)
+	---将所有数据写回数据库
+	local name, wen = {}, {}
+	for k, v in pairs(RI_CHANG) do
+		name[#name + 1] = k
+		wen[#wen + 1] = "?"
+	end
+	name[#name + 1] = "CUSTOM_QUEST"
+	wen[#wen + 1] = "?"
+	local DB_REPLACE = DB:Prepare(sformat("REPLACE INTO richang_data ( bDel, szKey, %s ) VALUES ( ?, %s, ? )", tconcat(name, ", "), tconcat(wen, ", ")))
+	for szKey, v in pairs (LR_AccountStatistics_RiChang.AllUsrData) do
+		local value = {}
+		for  k2, v2 in pairs(RI_CHANG) do
+			value[#value+1] = LR.JsonEncode(v[v2])
+		end
+		value[#value + 1] = LR.JsonEncode(v.CUSTOM_QUEST)
+
+		DB_REPLACE:ClearBindings()
+		DB_REPLACE:BindAll(0, szKey, unpack(value))
+		DB_REPLACE:Execute()
+	end
+end
+
+function LR_AccountStatistics_RiChang.ClearZC(DB)
+	LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
 	local t_Table =  LR_AccountStatistics_RiChang.List
 	for szKey, v in pairs(LR_AccountStatistics_RiChang.AllUsrData) do
 		for k2, v2 in pairs(t_Table) do
@@ -1147,10 +1169,13 @@ function LR_AccountStatistics_RiChang.ClearZC()
 			end
 		end
 	end
+	LR_AccountStatistics_RiChang.SaveClearData(DB)
 end
+LR_AS_Base.Add2ResetData({szKey = "ResetRC_ZC", fnAction = LR_AccountStatistics_RiChang.ClearZC, nType = RESET_TYPE.MONDAY, order = 10})
 
 ------清除日常记录
-function LR_AccountStatistics_RiChang.ClearRC()
+function LR_AccountStatistics_RiChang.ClearRC(DB)
+	LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
 	local t_Table =  LR_AccountStatistics_RiChang.List
 	for szKey, v in pairs(LR_AccountStatistics_RiChang.AllUsrData) do
 		for k2, v2 in pairs(t_Table) do
@@ -1172,7 +1197,9 @@ function LR_AccountStatistics_RiChang.ClearRC()
 			end
 		end
 	end
+	LR_AccountStatistics_RiChang.SaveClearData(DB)
 end
+LR_AS_Base.Add2ResetData({szKey = "ResetRC_RC", fnAction = LR_AccountStatistics_RiChang.ClearZC, nType = RESET_TYPE.EVERYDAY, order = 20})
 
 ---------------------------------
 -----记录所有任务状态
@@ -1216,18 +1243,22 @@ function LR_AccountStatistics_RiChang.CheckAll()
 
 	----考试
 	LR_AS_Exam.CheckExam()
-
 end
 
-function LR_AccountStatistics_RiChang.ListRC()
+------------------------------------------------------
+-----主界面显示日常
+------------------------------------------------------
+LR_AccountStatistics_RiChang.Container = nil
+
+function LR_AccountStatistics_RiChang.ReFreshTitle()
 	local frame = Station.Lookup("Normal/LR_AccountStatistics")
 	if not frame then
 		return
 	end
-	local title_handle = LR_AccountStatistics.LR_RCList_Title_handle
+	local title_handle = frame:Lookup("PageSet_Menu"):Lookup("Page_LR_RCList"):Lookup("", "")
 	local n = 1
 	local List = LR_AccountStatistics_RiChang.List
-
+	--插件自己定义的日常
 	for i = 1, #List, 1 do
 		if LR_AccountStatistics_RiChang.UsrData.List[List[i].order] and n<= 8 then
 			local text = title_handle:Lookup(sformat("Text_RC%d_Break", n))
@@ -1235,7 +1266,7 @@ function LR_AccountStatistics_RiChang.ListRC()
 			n = n+1
 		end
 	end
-
+	---玩家自己设置的日常
 	for k, v in pairs (LR_AccountStatistics_RiChang.CustomQuestList) do
 		if v.bShow and n <= 8 then
 			local text = title_handle:Lookup(sformat("Text_RC%d_Break", n))
@@ -1248,15 +1279,21 @@ function LR_AccountStatistics_RiChang.ListRC()
 		local text = title_handle:Lookup(sformat("Text_RC%d_Break", j))
 		text:SetText("")
 	end
-
-	local TempTable_Cal, TempTable_NotCal = LR_AccountStatistics.SeparateUsrList()
-
-	LR_AccountStatistics.LR_RCList_Container:Clear()
-	num = LR_AccountStatistics_RiChang.ShowItem (TempTable_Cal, 255, 1, 0)
-	num = LR_AccountStatistics_RiChang.ShowItem (TempTable_NotCal, 60, 1, num)
-	LR_AccountStatistics.LR_RCList_Container:FormatAllContentPos()
 end
 
+function LR_AccountStatistics_RiChang.ListRC()
+	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+	if not frame then
+		return
+	end
+	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
+
+	LR_AccountStatistics_RiChang.Container = frame:Lookup("PageSet_Menu/Page_LR_RCList/WndScroll_LR_RCList_Record/Wnd_LR_RCList_Record_List")
+	LR_AccountStatistics_RiChang.Container:Clear()
+	num = LR_AccountStatistics_RiChang.ShowItem (TempTable_Cal, 255, 1, 0)
+	num = LR_AccountStatistics_RiChang.ShowItem (TempTable_NotCal, 60, 1, num)
+	LR_AccountStatistics_RiChang.Container:FormatAllContentPos()
+end
 
 function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 	local num = _num
@@ -1269,7 +1306,7 @@ function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 
 	for i = 1, #TempTable, 1 do
 		num = num+1
-		local wnd = LR_AccountStatistics.LR_RCList_Container:AppendContentFromIni("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_RCList_Item.ini", "RCList_WndWindow", num)
+		local wnd = LR_AccountStatistics_RiChang.Container:AppendContentFromIni("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_RCList_Item.ini", "RCList_WndWindow", num)
 		local items = wnd:Lookup("", "")
 		if num % 2 ==  0 then
 			items:Lookup("Image_Line"):Hide()
@@ -1460,6 +1497,18 @@ function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 	return num
 end
 
+function LR_AccountStatistics_RiChang.AddPageButton()
+	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+	if not frame then
+		return
+	end
+	local page = frame:Lookup("PageSet_Menu/Page_LR_RCList")
+	LR_AS_Base.AddButton(page, "btn_5", _L["Show Group"], 340, 555, 110, 36, function() LR_AS_Group.ShowGroup() end)
+	LR_AS_Base.AddButton(page, "btn_4", _L["Reading Statistics"], 470, 555, 110, 36, function() LR_BookRd_Panel:Open() end)
+	LR_AS_Base.AddButton(page, "btn_3", _L["Quest Tools"], 600, 555, 110, 36, function() LR_QuestTools:Open() end)
+	LR_AS_Base.AddButton(page, "btn_2", _L["Settings"], 730, 555, 110, 36, function() LR_AccountStatistics.SetOption() end)
+	LR_AS_Base.AddButton(page, "btn_1", _L["7 YEAR"], 730, 555, 110, 36, function() LR_Acc_Achievement_Panel:Open() end)
+end
 
 -----------------------------------------------------------------
 LR_QuestTools = CreateAddon("LR_QuestTools")
@@ -1625,6 +1674,27 @@ function LR_QuestTools:LoadItemBox(hWin)
 
 		hIconViewContent.OnClick = function()
 			--------
+			---local dwQuestID = 1650
+			local tQuest = g_tTable.Quest:Search(dwQuestID)
+			if tQuest then
+				Output("-----------------------------------")
+				Output("dbQuest", tQuest)
+				for k, v in pairs (LR_HeadName.SpliteString(tQuest.szAccept)) do
+					if v.nType == "D" or v.nType == "N" then
+						Output("接任务npc", "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName)
+					end
+				end
+				for k, v in pairs (LR_HeadName.SpliteString(tQuest.szFinish)) do
+					if v.nType == "D" or v.nType == "N" then
+						Output("交任务npc", "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName)
+					end
+				end
+				--Output("QuestTraceInfo", me.GetQuestTraceInfo(dwQuestID))
+				--Output("QuestPoint", LR.Table_GetQuestPoint(dwQuestID, "quest_state", 0))
+				---Output("Table_GetQuestStringInfo", LR.Table_GetQuestStringInfo(dwQuestID))
+				--LR_HeadName.OutputSingleMissionNeed(dwQuestID)
+				--LR_HeadName.Get_quest_state(dwQuestID, true)
+			end
 		end
 	end
 end

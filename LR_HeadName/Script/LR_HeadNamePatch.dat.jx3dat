@@ -49,6 +49,10 @@ data={
 		{dwQuestID=2452,dwTemplateID=671,dwMapID=16,nType="D",mode="quest_state",nMinD=9999,nZ=0,},
 	},
 
+	[2544]={	--------七秀任务[恶贯满盈]
+		{dwQuestID=2544, dwTemplateID=57891, dwMapID=16, nType="N", mode="need_item", nMinD=9999, nZ=0, k = 1},
+	},
+
 
 	--巴陵--
 	[3585]={	----巴陵任务《找到幸存者》
@@ -157,6 +161,12 @@ data={
 		{dwQuestID=1650,mode="need_item2",type=5,index=1890,data={dwQuestID=1650,dwTemplateID=1854,dwMapID=13,nType="N",mode="need_item",nMinD=9999,nZ=0,},},	--地鼠门令牌
 		{dwQuestID=1650,mode="need_item2",type=5,index=1891,data={dwQuestID=1650,dwTemplateID=1857,dwMapID=13,nType="N",mode="need_item",nMinD=9999,nZ=0,},},	--铜钱会令牌
 	},
+	[2700]={	---[猝死？他杀？]
+		{dwQuestID = 2700, dwTemplateID = 17591, dwMapID = 13, nType = "N", mode = "quest_state", nMinD = 9999, nZ = 0,},  --
+	},
+	[1649]={	---
+		--{dwQuestID = 1649, dwTemplateID = 17591, dwMapID = 13, nType = "N", mode = "quest_state", nMinD = 9999, nZ = 0,},  --
+	},
 
 	--中秋节日任务--
 	[7465]={	---[金秋会饼共团圆·莲子]
@@ -170,5 +180,25 @@ data={
 	[7468]={	----[金秋会饼共团圆·蛋黄]
 		{dwQuestID=7468,dwTemplateID=2970,dwMapID=6,nType="D",mode="need_item",nMinD=9999,nZ=0,},  --扬州鸟蛋
 	},
+
+	--重阳节日任务--
+	[12234]={	---[慰问老人·菊花酿]
+		{dwQuestID=12234,dwTemplateID=37176,dwMapID=6,nType="N",mode="all",nMinD=9999,nZ=0,},  --
+		{dwQuestID=12234,dwTemplateID=37175,dwMapID=6,nType="N",mode="all",nMinD=9999,nZ=0,},  --
+		{dwQuestID=12234,dwTemplateID=37174,dwMapID=6,nType="N",mode="all",nMinD=9999,nZ=0,},  --
+		{dwQuestID=12234,dwTemplateID=37173,dwMapID=6,nType="N",mode="all",nMinD=9999,nZ=0,},  --
+		{dwQuestID=12234,dwTemplateID=37177,dwMapID=6,nType="N",mode="all",nMinD=9999,nZ=0,},  --
+	},
+	[12235]={	---[慰问老人·重阳糕]
+		{dwQuestID=12235,dwTemplateID=37166,dwMapID=108,nType="N",mode="all",nMinD=9999,nZ=0,},  --
+		{dwQuestID=12235,dwTemplateID=37167,dwMapID=108,nType="N",mode="all",nMinD=9999,nZ=0,},  --
+		{dwQuestID=12235,dwTemplateID=37172,dwMapID=108,nType="N",mode="all",nMinD=9999,nZ=0,},  --
+		{dwQuestID=12235,dwTemplateID=37171,dwMapID=108,nType="N",mode="all",nMinD=9999,nZ=0,},  --
+		{dwQuestID=12235,dwTemplateID=37170,dwMapID=108,nType="N",mode="all",nMinD=9999,nZ=0,},  --
+	},
+	[12242]={	---[慰问老人·秋茶忆当年]
+		{dwQuestID = 12242,dwTemplateID=4822,dwMapID=16,nType="D",mode="need_item",nMinD=9999,nZ=0,},  --
+	},
+
 
 }

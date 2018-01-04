@@ -1,5 +1,5 @@
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_AccountStatistics\\UsrData"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local DB_name = "maindb.db"
 local _L = LR.LoadLangPack(AddonPath)
 local sformat, slen, sgsub, ssub, sfind = string.format, string.len, string.gsub, string.sub, string.find
@@ -144,7 +144,7 @@ function LR_AccountStatistics_Equip.SaveData(DB)
 	local DB_REPLACE2 = DB:Prepare("REPLACE INTO equipment_data ( szKey, nSuitIndex, bDel ) VALUES ( ?, ?, 1 )")
 	for nSuitIndex, v in pairs (SelfData) do
 		if true then
-		--if LR_AccountStatistics.UsrData.OthersCanSee then
+		--if LR_AS_Base.UsrData.OthersCanSee then
 			DB_REPLACE:ClearBindings()
 			DB_REPLACE:BindAll(szKey, nSuitIndex, LR.JsonEncode(v.equipment_data), LR.JsonEncode(v.score), LR.JsonEncode(v.char_infomore))
 			DB_REPLACE:Execute()
@@ -268,7 +268,7 @@ function LR_AS_Equip_Panel:Init()
 	local hComboBox = self:Append("ComboBox", frame, "hComboBox", {w = 160, x = 105, y = 45, text = LR_AS_Equip_Panel.playerName})
 	hComboBox:Enable(true)
 	hComboBox.OnClick = function (m)
-		local TempTable_Cal, TempTable_NotCal = LR_AccountStatistics.SeparateUsrList()
+		local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 		tsort(TempTable_Cal, function(a, b)
 			if a.nLevel == b.nLevel then
 				return a.dwForceID < b.dwForceID

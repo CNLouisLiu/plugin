@@ -1,5 +1,5 @@
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_AccountStatistics\\UsrData"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local _L = LR.LoadLangPack(AddonPath)
 local DB_name = "maindb.db"
 local sformat, slen, sgsub, ssub, sfind = string.format, string.len, string.gsub, string.sub, string.find
@@ -21,17 +21,16 @@ LR_AccountStatistics_BookRd.bHookedBookExchangePanel = false
 
 function LR_AccountStatistics_BookRd.HookReadPanel()
 	local frame = Station.Lookup("Normal/CraftReadManagePanel")
-	if not LR_AccountStatistics_BookRd.bHookedReadPanel and frame and frame:IsVisible() then --阅读界面添加一个按钮
-		local temp = Wnd.OpenWindow("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_ReadButton.ini", "LR_AccountStatistics_ReadButton")
-		if not frame:Lookup("Btn_Read") then
-			local hBtnRead = temp:Lookup("Btn_Read")
-			if hBtnRead then
-				hBtnRead:ChangeRelation(frame, true, true)
-				hBtnRead:SetRelPos(55, 0)
-				hBtnRead.OnLButtonClick = function()
+	if frame then --背包界面添加一个按钮
+		local Btn_Read = frame:Lookup("Btn_Read")
+		if not Btn_Read then
+			if true then
+				local Btn_Read = LR.AppendUI("Button", frame, "Btn_Read", {w = 90, h = 28, x = 55, y = 0})
+				Btn_Read:SetText(_L["LR Mail"])
+				Btn_Read.OnClick = function()
 					LR_BookRd_Panel:Open()
 				end
-				hBtnRead.OnMouseEnter = function()
+				Btn_Read.OnEnter = function()
 					local x, y = this:GetAbsPos()
 					local w, h = this:GetSize()
 					local szTip = {}
@@ -40,15 +39,11 @@ function LR_AccountStatistics_BookRd.HookReadPanel()
 					local szOutputTip = tconcat(szTip)
 					OutputTip(szOutputTip, 400, {x, y, w, h})
 				end
-				hBtnRead.OnMouseLeave = function()
+				Btn_Read.OnLeave = function()
 					HideTip()
 				end
 			end
 		end
-		Wnd.CloseWindow(temp)
-		LR_AccountStatistics_BookRd.bHookedReadPanel = false
-	elseif not frame or not frame:IsVisible() then
-		LR_AccountStatistics_BookRd.bHookedReadPanel = false
 	end
 end
 
@@ -106,7 +101,7 @@ function LR_AccountStatistics_BookRd.SaveData(DB)
 		end
 	end
 	local DB_REPLACE = DB:Prepare("REPLACE INTO bookrd_data ( szKey, bookrd_data, bDel ) VALUES ( ?, ?, ? )")
-	if LR_AccountStatistics.UsrData.OthersCanSee then
+	if LR_AS_Base.UsrData.OthersCanSee then
 		DB_REPLACE:ClearBindings()
 		DB_REPLACE:BindAll(szKey, LR.JsonEncode(RecordList), 0)
 		DB_REPLACE:Execute()
@@ -116,6 +111,7 @@ function LR_AccountStatistics_BookRd.SaveData(DB)
 		DB_REPLACE:Execute()
 	end
 end
+--LR_AS_Base.Add2AutoSave({szKey = "SaveBookRdData", fnAction = LR_AccountStatistics_BookRd.SaveData, order = 40})
 
 function LR_AccountStatistics_BookRd.LoadAllUsrData(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM bookrd_data WHERE bDel = 0 AND szKey IS NOT NULL")
@@ -280,8 +276,8 @@ function LR_BookRd_Panel:OnCreate()
 		return
 	end
 	-------打开面板时保存数据
-	if LR_AccountStatistics.UsrData.AutoSave and LR_AccountStatistics.UsrData.OpenSave then
-		LR_AccountStatistics.AutoSave()
+	if LR_AS_Base.UsrData.AutoSave and LR_AS_Base.UsrData.OpenSave then
+		LR_AS_Base.AutoSave()
 	end
 	--加载阅读数据
 	local path = sformat("%s\\%s", SaveDataPath, DB_name)
@@ -737,7 +733,7 @@ function LR_BookRd_Panel:LoadUsrNameBox(hWin)
 				Image_Line:SetImageType(10)
 				Image_Line:SetAlpha(200)
 
-				local User = LR_AccountStatistics.AllUsrData[szKey]
+				local User = LR_AS_Info.AllUsrData[szKey]
 				if User then
 					local r, g, b = LR.GetMenPaiColor(User.dwForceID)
 					local Image_MenPai = self:Append("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 15, y = 0, w = 30, h = 30})

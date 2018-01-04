@@ -1,12 +1,12 @@
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_AccountStatistics\\UsrData"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local _L = LR.LoadLangPack(AddonPath)
 local DB_name = "maindb.db"
 local sformat, slen, sgsub, ssub, sfind = string.format, string.len, string.gsub, string.sub, string.find
 local mfloor, mceil, mmin, mmax = math.floor, math.ceil, math.min, math.max
 local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remove, table.sort
 ----------------------------------------------------------
-local VERSION = "20170912"
+local VERSION = "20171228"
 --------------------------------------------------------
 LR_AccountStatistics_FBList =  LR_AccountStatistics_FBList or {}
 LR_AccountStatistics_FBList.src = "%s\\%s\\%s\\%s\\FBList_%s.dat"
@@ -17,6 +17,13 @@ LR_AccountStatistics_FBList.SelfData = {}
 LR_AccountStatistics_FBList.FB25R = {}
 LR_AccountStatistics_FBList.FB10R = {}
 LR_AccountStatistics_FBList.FB5R = {}
+
+local RESET_TYPE = {
+	NONE = 0,
+	EVERY_DAY = 1,
+	MONDAY = 2,
+	THURSDAY = 3,
+}
 
 function LR_AccountStatistics_FBList.GetFBData()
 	local fenlei = {
@@ -42,12 +49,12 @@ local DefaultUsrData = {
 	On = true,
 	CommonSetting = true,
 	bShowMapID = {
-		{dwMapID = 270},
-		{dwMapID = 271},
-		{dwMapID = 273},
-		{dwMapID = 249},
-		{dwMapID = 248},
-		{dwMapID = 263},
+		{dwMapID = 289},
+		{dwMapID = 288},
+		{dwMapID = 287},
+		{dwMapID = 286},
+		{dwMapID = 284},
+		{dwMapID = 283},
 	},
 	VERSION = VERSION,
 }
@@ -92,6 +99,7 @@ function LR_AccountStatistics_FBList.ClearAllReaminJianBen(DB)
 		DB_REPLACE:Execute()
 	end
 end
+LR_AS_Base.Add2ResetData({szKey = "ResetJianBen", fnAction = LR_AccountStatistics_FBList.ClearAllReaminJianBen, nType = RESET_TYPE.MONDAY, order = 30})
 
 ------↓↓↓清除所有人的副本数据，包括10人本，25人本，5人本
 function LR_AccountStatistics_FBList.ClearAllData(DB)
@@ -104,6 +112,7 @@ function LR_AccountStatistics_FBList.ClearAllData(DB)
 		DB_REPLACE:Execute()
 	end
 end
+LR_AS_Base.Add2ResetData({szKey = "Reset_All_FB", fnAction = LR_AccountStatistics_FBList.ClearAllData, nType = RESET_TYPE.MONDAY, order = 40})
 
 ------↓↓↓清除所有人物的10人本数据
 function LR_AccountStatistics_FBList.ClearAllData10R(DB)
@@ -125,6 +134,7 @@ function LR_AccountStatistics_FBList.ClearAllData10R(DB)
 		DB_REPLACE:Execute()
 	end
 end
+LR_AS_Base.Add2ResetData({szKey = "Reset_All_10RFB", fnAction = LR_AccountStatistics_FBList.ClearAllData10R, nType = RESET_TYPE.THURSDAY, order = 50})
 
 ------↓↓↓清除所有人物的5人副本数据
 function LR_AccountStatistics_FBList.ClearAllData5R(DB)
@@ -152,6 +162,7 @@ function LR_AccountStatistics_FBList.ClearAllData5R(DB)
 		DB_REPLACE:Execute()
 	end
 end
+LR_AS_Base.Add2ResetData({szKey = "Reset_All_5RFB", fnAction = LR_AccountStatistics_FBList.ClearAllData5R, nType = RESET_TYPE.EVERY_DAY, order = 60})
 
 ------↓↓↓获取副本CD（异步）
 function LR_AccountStatistics_FBList.GetFBList()
@@ -172,7 +183,7 @@ function LR_AccountStatistics_FBList.SaveData(DB)
 	local realArea, realServer = serverInfo[5], serverInfo[6]
 	local dwID = me.dwID
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-	if LR_AccountStatistics.UsrData.OthersCanSee then
+	if LR_AS_Base.UsrData.OthersCanSee then
 		if next(LR_AccountStatistics_FBList.SelfData) ~=  nil then
 			local FB_Record = {}
 			for dwMapID, nCopyIndex in pairs (LR_AccountStatistics_FBList.SelfData) do
@@ -287,32 +298,39 @@ function LR_AccountStatistics_FBList.GetFBIDByMapID(fb_data, dwMapID)
 	end
 end
 
+------------------------------------------------------
+----主界面显示副本数据
+------------------------------------------------------
+LR_AccountStatistics_FBList.Container = nil
+
+function LR_AccountStatistics_FBList.ReFreshTitle()
+	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+	if not frame then
+		return
+	end
+	local title_handle = frame:Lookup("PageSet_Menu"):Lookup("Page_LR_FBList"):Lookup("", "")
+	for i = 1, #LR_AccountStatistics_FBList.UsrData.bShowMapID, 1 do
+		local text = title_handle:Lookup(sformat("Text_FB%d_Break", i))
+		text:SetText(LR_AccountStatistics_FBList.GetFBNameByID(LR_AccountStatistics_FBList.UsrData.bShowMapID[i].dwMapID))
+	end
+	for i = #LR_AccountStatistics_FBList.UsrData.bShowMapID+1, 6, 1 do
+		local text = title_handle:Lookup(sformat("Text_FB%d_Break", i))
+		text:SetText("")
+	end
+end
+
+
 function LR_AccountStatistics_FBList.ListFB()
 	local frame = Station.Lookup("Normal/LR_AccountStatistics")
 	if not frame then
 		return
 	end
-	local title_handle = LR_AccountStatistics.LR_FBList_Title_handle
-	for i = 1, #LR_AccountStatistics_FBList.UsrData.bShowMapID, 1 do
-		local text = title_handle:Lookup(sformat("Text_FB%d_Break", i))
-		text:SetText(LR_AccountStatistics_FBList.GetFBNameByID(LR_AccountStatistics_FBList.UsrData.bShowMapID[i].dwMapID))
-	end
-
-	for i = #LR_AccountStatistics_FBList.UsrData.bShowMapID+1, 6, 1 do
-		local text = title_handle:Lookup(sformat("Text_FB%d_Break", i))
-		text:SetText("")
-	end
-
-	local TempTable_Cal, TempTable_NotCal = LR_AccountStatistics.SeparateUsrList()
-
-	LR_AccountStatistics.LR_FBList_Container:Clear()
+	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
+	LR_AccountStatistics_FBList.Container = frame:Lookup("PageSet_Menu/Page_LR_FBList/WndScroll_LR_FBList_Record/Wnd_LR_FBList_Record_List")
+	LR_AccountStatistics_FBList.Container:Clear()
 	num = LR_AccountStatistics_FBList.ShowItem (TempTable_Cal, 255, 1, 0)
 	num = LR_AccountStatistics_FBList.ShowItem (TempTable_NotCal, 60, 1, num)
-	LR_AccountStatistics.LR_FBList_Container:FormatAllContentPos()
-end
-
-function LR_AccountStatistics.OpenFBDetail_Panel ()
-	LR_Acc_FB_Detail_Panel:Open()
+	LR_AccountStatistics_FBList.Container:FormatAllContentPos()
 end
 
 function LR_AccountStatistics_FBList.ShowItem (t_Table, Alpha, bCal, _num)
@@ -326,7 +344,7 @@ function LR_AccountStatistics_FBList.ShowItem (t_Table, Alpha, bCal, _num)
 
 	for i = 1, #TempTable, 1 do
 		num = num+1
-		local wnd = LR_AccountStatistics.LR_FBList_Container:AppendContentFromIni("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_FBList_Item.ini", "FBList_WndWindow", num)
+		local wnd = LR_AccountStatistics_FBList.Container:AppendContentFromIni("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_FBList_Item.ini", "FBList_WndWindow", num)
 		local items = wnd:Lookup("", "")
 		if num % 2 ==  0 then
 			items:Lookup("Image_Line"):Hide()
@@ -412,7 +430,7 @@ function LR_AccountStatistics_FBList.ShowItem (t_Table, Alpha, bCal, _num)
 			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
 			szTipInfo[#szTipInfo+1] = GetFormatText("\n", 41)
 			for dwMapID, v in pairs (FB_Record) do
-				local str = sformat("\tID：%6d \n", v[1])
+				local str = sformat("\tID：%6d \n", v[1] or -1)
 				szTipInfo[#szTipInfo+1] = GetFormatText(Table_GetMapName(dwMapID), 224)
 				szTipInfo[#szTipInfo+1] = GetFormatText(str, 27)
 			end
@@ -439,6 +457,20 @@ function LR_AccountStatistics_FBList.ShowItem (t_Table, Alpha, bCal, _num)
 	end
 	return num
 end
+
+--添加底部按钮
+function LR_AccountStatistics_FBList.AddPageButton()
+	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+	if not frame then
+		return
+	end
+	local page = frame:Lookup("PageSet_Menu/Page_LR_FBList")
+	LR_AS_Base.AddButton(page, "btn_5", _L["Show Group"], 340, 555, 110, 36, function() LR_AS_Group.ShowGroup() end)
+	LR_AS_Base.AddButton(page, "btn_4", _L["Reading Statistics"], 470, 555, 110, 36, function() LR_BookRd_Panel:Open() end)
+	LR_AS_Base.AddButton(page, "btn_3", _L["FB Detail"], 600, 555, 110, 36, function() LR_Acc_FB_Detail_Panel:Open() end)
+	LR_AS_Base.AddButton(page, "btn_2", _L["Settings"], 730, 555, 110, 36, function() LR_AccountStatistics.SetOption() end)
+end
+
 
 ------------------------------------------------------------------------------------
 -----明细小窗口
@@ -468,8 +500,8 @@ function LR_Acc_FB_Detail_Panel:OnCreate()
 	LR_Acc_FB_Detail_Panel.UpdateAnchor(this)
 
 	-------打开面板时保存数据
-	if LR_AccountStatistics.UsrData.AutoSave and LR_AccountStatistics.UsrData.OpenSave then
-		LR_AccountStatistics.AutoSave()
+	if LR_AS_Base.UsrData.AutoSave and LR_AS_Base.UsrData.OpenSave then
+		LR_AS_Base.AutoSave()
 	end
 
 	RegisterGlobalEsc("LR_Acc_FB_Detail_Panel", function () return true end , function() LR_Acc_FB_Detail_Panel:Open() end)
@@ -545,7 +577,7 @@ function LR_Acc_FB_Detail_Panel:Init()
 
 
 	hComboBox.OnClick = function (m)
-		local TempTable_Cal, TempTable_NotCal = LR_AccountStatistics.SeparateUsrList()
+		local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 		tsort(TempTable_Cal, function(a, b)
 			if a.nLevel ==  b.nLevel then
 				return a.dwForceID < b.dwForceID
@@ -639,8 +671,8 @@ function LR_Acc_FB_Detail_Panel:LoadItemBox(hWin)
 	local FB_Record = LR_AccountStatistics_FBList.AllUsrData[szKey] or {}
 
 	local szName = ""
-	if LR_AccountStatistics.AllUsrList[szKey] then
-		szName = LR_AccountStatistics.AllUsrList[szKey].szName
+	if LR_AS_Info.AllUsrList[szKey] then
+		szName = LR_AS_Info.AllUsrList[szKey].szName
 	end
 	hComboBox:SetText(szName)
 

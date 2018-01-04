@@ -4,7 +4,7 @@ local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, 
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_1Base"
-local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_1Base"
+local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_1Base"
 ---------------------------------------------------------------
 LR = LR or {
 	tDelayCall={},
@@ -21,8 +21,18 @@ RegisterCustomData("LR.UsrData", CustomVersion)
 ---------------------------------------------------------------------------------
 -- 多语言处理
 -- (table) MY.LoadLangPack(void)
+local SZLANG = ""
+function LR.GetszLang()
+	if SZLANG == "" then
+		local _, _, szLang = GetVersion()
+		SZLANG = szLang
+	end
+end
+LR.GetszLang()
+
 function LR.LoadLangPack(szLangFolder)
 	local _, _, szLang = GetVersion()
+	SZLANG = szLang
 	local t0 = LoadLUAData(sformat("%s\\lang\\default", AddonPath)) or {}
 --[[	local t1 = LoadLUAData(AddonPath.."\\lang\\" .. szLang) or {}
 	for k, v in pairs(t1) do
@@ -73,9 +83,24 @@ end
 function LR.AscIIDecode(szText)
 	return szText:gsub('(%x%x)', function(s) return schar(tonumber(s, 16)) end)
 end
+
+function LR.StrDB2Game(szText)
+	local szText = szText
+	if SZLANG == "zhcn" then
+		szText = UTF8ToAnsi(szText)
+	end
+	return szText
+end
+
+function LR.StrGame2DB(szText)
+	local szText = szText
+	if SZLANG == "zhcn" then
+		szText = AnsiToUTF8(szText)
+	end
+	return szText
+end
 -----------------------------------------------------------------------
 LR.MapType = {}
-
 function LR.LoadDragonMapData()
 	local nCount = g_tTable.DungeonInfo:GetRowCount()
 	--row 1 for default
@@ -99,23 +124,31 @@ function LR.LoadDragonMapData()
 		local szBossInfo = sgsub(tLine.szBossInfo, "(%s+)", ",")
 		LR.MapType[dwMapID] = {szName = szName, dwMapID = dwMapID, nMaxPlayerCount = tonumber(num_limit), bossList = szBossInfo, Level = tLine.nDivideLevel, szVersionName = tLine.szVersionName, path = tLine.szDungeonImage2, nFrame = tLine.nDungeonFrame2 }
 	end
+
 	---下面是重定义bossList
-	LR.MapType[206].bossList = _L["BossZhuHu"]
-	LR.MapType[199].bossList = _L["BossZhuHu"]
-	LR.MapType[212].bossList = _L["BossZhuHu"]
-	LR.MapType[192].bossList = _L["BossZhuHu"]
+	local boss = {
+		[206] = _L["BossZhuHu"],
+		[199] = _L["BossZhuHu"],
+		[212] = _L["BossZhuHu"],
+		[192] = _L["BossZhuHu"],
 
-	LR.MapType[171].bossList = _L["BossZhanBaoJunXieKu"]
-	LR.MapType[160].bossList = _L["BossZhanBaoJunXieKu"]
+		[171] = _L["BossZhanBaoJunXieKu"],
+		[160] = _L["BossZhanBaoJunXieKu"],
 
-	LR.MapType[72].bossList = _L["BossDiHuaShengDian"]
-	LR.MapType[70].bossList = _L["BossDiHuaShengDian"]
-	LR.MapType[69].bossList = _L["BossDiHuaShengDian"]
-	LR.MapType[68].bossList = _L["BossDiHuaShengDian"]
+		[72] = _L["BossDiHuaShengDian"],
+		[70] = _L["BossDiHuaShengDian"],
+		[69] = _L["BossDiHuaShengDian"],
+		[68] = _L["BossDiHuaShengDian"],
 
-	LR.MapType[271].bossList = _L["BossDuanDaoTing"]
-	LR.MapType[273].bossList = _L["BossDuanDaoTing"]
-	LR.MapType[263].bossList = _L["BossDuanDaoTing"]
+		[271] = _L["BossDuanDaoTing"],
+		[273] = _L["BossDuanDaoTing"],
+		[263] = _L["BossDuanDaoTing"],
+	}
+	for k, v in pairs (boss) do
+		if LR.MapType[k] then
+			LR.MapType[k].bossList = v
+		end
+	end
 end
 LR.LoadDragonMapData()
 
@@ -142,9 +175,7 @@ function LR.GetBookReadStatusByName(szName)
 		i = i + 1
 	end
 	return false
-
 end
-
 
 function LR.Table_GetSegmentName(dwBookID, dwSegmentID)
 	local szSegmentName = ""
@@ -753,7 +784,7 @@ end
 ---------------------------------------------
 --------发布系统消息
 function LR.SysMsg (szText, nType, bRich, nFont, tColor)
-	local nType=nType or "MSG_SYS"
+	local nType = nType or "MSG_SYS"
 	OutputMessage(nType,szText, bRich, nFont, tColor)
 end
 
@@ -809,7 +840,9 @@ function LR.bCanDebug2()
 	end
 end
 
-
+---------------------------------------------
+---发布系统警告
+---------------------------------------------
 function LR.RedAlert(...)
 	OutputWarningMessage("MSG_WARNING_RED", ...)
 end
@@ -822,6 +855,10 @@ function LR.GreenAlert(...)
 	OutputWarningMessage("MSG_WARNING_GREEN", ...)
 end
 
+---------------------------------------------
+---发布频道喊话
+---------------------------------------------
+local TALK_BAN = false
 
 LR.tTalkChannelHeader = {
 	[PLAYER_TALK_CHANNEL.NEARBY] = "/s ",
@@ -890,7 +927,7 @@ end
 
 -- 判断某个频道能否发言
 -- (bool) LR.CanTalk(number nChannel)
-function LR.CanTalk (nChannel)
+function LR.CanTalk(nChannel)
 	for _, v in ipairs({"WHISPER", "TEAM", "RAID", "BATTLE_FIELD", "NEARBY", "TONG", "TONG_ALLIANCE" }) do
 		if nChannel == PLAYER_TALK_CHANNEL[v] then
 			return true
@@ -901,7 +938,7 @@ end
 
 -- 切换聊天频道
 -- (void) LR.SwitchChat(number nChannel)
-function LR.SwitchChat (nChannel)
+function LR.SwitchChat(nChannel)
 	local szHeader = LR.tTalkChannelHeader[nChannel]
 	if szHeader then
 		SwitchChatChannel(szHeader)
@@ -923,8 +960,10 @@ end
 
 --新版 LR.Talk()
 function LR.Talk(nChannel, szText, szUUID, bNoEmotion, bSaveDeny, bNotLimit)
+	if TALK_BAN then
+		return
+	end
 	local szTarget, me = "", GetClientPlayer()
-
 	-- channel
 	if not nChannel then
 		nChannel = PLAYER_TALK_CHANNEL.TONG_ALLIANCE
@@ -1982,6 +2021,14 @@ function LR.LOGIN_GAME()
 	LR.RegisterHotKey()
 end
 
+function LR.SYS_MSG()
+	if arg0 == "UI_OME_CHAT_RESPOND" then
+		if arg1 == PLAYER_TALK_ERROR.BAN then
+			TALK_BAN = true
+		end
+	end
+end
+
 LR.BreatheCall("Black_BreatheCheck",function() LR.Black_BreatheCheck() end)
 LR.RegisterEvent("LOADING_END",function() LR.Black_LOADING_END() end)
 LR.RegisterEvent("FIRST_LOADING_END",function()
@@ -1991,4 +2038,4 @@ end)
 LR.RegisterEvent("ON_BG_CHANNEL_MSG",function() LR.Black_ON_BG_CHANNEL_MSG() end)
 LR.RegisterEvent("PARTY_ADD_MEMBER",function() LR.Black_PARTY_ADD_MEMBER() end)
 LR.RegisterEvent("LOGIN_GAME", function() LR.LOGIN_GAME() end)
-
+LR.RegisterEvent("SYS_MSG", function() LR.SYS_MSG() end)

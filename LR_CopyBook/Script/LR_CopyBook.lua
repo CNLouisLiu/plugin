@@ -29,19 +29,16 @@ LR_CopyBook.bHookedBookExchangePanel=false
 
 function LR_CopyBook.HookReadPanel()
 	local frame = Station.Lookup("Normal/CraftReadManagePanel")
-	if not LR_CopyBook.bHookedReadPanel and frame and frame:IsVisible() then --阅读界面添加一个按钮
-		local temp = Wnd.OpenWindow("Interface\\LR_Plugin\\LR_CopyBook\\UI\\Button.ini","LR_CopyBook_Button")
-		if not frame:Lookup("WndButton") then
-			local hBtnCopy = temp:Lookup("WndButton")
-			if hBtnCopy then
-				hBtnCopy:ChangeRelation(frame, true, true)
-				hBtnCopy:SetRelPos(60, 474)
-				hBtnCopy:SetAlpha(200)
-				hBtnCopy:Lookup("","Text_Default"):SetText(_L["LR Copy Book"])
-				hBtnCopy.OnLButtonClick = function()
+	if frame then --背包界面添加一个按钮
+		local Btn_CopyBook = frame:Lookup("Btn_CopyBook")
+		if not Btn_CopyBook then
+			if true then
+				local Btn_CopyBook = LR.AppendUI("Button", frame, "Btn_CopyBook", {w = 90, h = 22, x = 60, y = 477})
+				Btn_CopyBook:SetText(_L["LR Copy Book"])
+				Btn_CopyBook.OnClick = function()
 					LR_TOOLS:OpenPanel(_L["LR Printing Machine"])
 				end
-				hBtnCopy.OnMouseEnter = function()
+				Btn_CopyBook.OnEnter = function()
 					local x, y = this:GetAbsPos()
 					local w, h = this:GetSize()
 					local szTip = {}
@@ -49,33 +46,26 @@ function LR_CopyBook.HookReadPanel()
 					szTip[#szTip+1] = GetFormatText(_L["Click to Open LR Printing Machine Interface"], 162)
 					OutputTip(tconcat(szTip), 400, {x, y, w, h})
 				end
-				hBtnCopy.OnMouseLeave = function()
+				Btn_CopyBook.OnLeave = function()
 					HideTip()
 				end
 			end
 		end
-		Wnd.CloseWindow(temp)
-		LR_CopyBook.bHookedReadPanel = false
-	elseif not frame or not frame:IsVisible() then
-		LR_CopyBook.bHookedReadPanel = false
 	end
 end
 
 function LR_CopyBook.HookBookExchangePanel()
 	local frame = Station.Lookup("Normal/BookExchangePanel")
-	if not LR_CopyBook.bHookedBookExchangePanel and frame and frame:IsVisible() then --书籍兑换界面添加一个按钮
-		local temp = Wnd.OpenWindow("Interface\\LR_Plugin\\LR_CopyBook\\UI\\Button.ini","LR_CopyBook_Button")
-		if not frame:Lookup("WndButton") then
-			local hBtnCopy = temp:Lookup("WndButton")
-			if hBtnCopy then
-				hBtnCopy:ChangeRelation(frame, true, true)
-				hBtnCopy:SetRelPos(60, 474)
-				hBtnCopy:SetAlpha(200)
-				hBtnCopy:Lookup("","Text_Default"):SetText(_L["LR Copy Book"])
-				hBtnCopy.OnLButtonClick = function()
+	if frame then --背包界面添加一个按钮
+		local Btn_CopyBook = frame:Lookup("Btn_CopyBook")
+		if not Btn_CopyBook then
+			if true then
+				local Btn_CopyBook = LR.AppendUI("Button", frame, "Btn_CopyBook", {w = 90, h = 22, x = 60, y = 477})
+				Btn_CopyBook:SetText(_L["LR Copy Book"])
+				Btn_CopyBook.OnClick = function()
 					LR_TOOLS:OpenPanel(_L["LR Printing Machine"])
 				end
-				hBtnCopy.OnMouseEnter = function()
+				Btn_CopyBook.OnEnter = function()
 					local x, y = this:GetAbsPos()
 					local w, h = this:GetSize()
 					local szTip = {}
@@ -83,15 +73,11 @@ function LR_CopyBook.HookBookExchangePanel()
 					szTip[#szTip+1] = GetFormatText(_L["Click to Open LR Printing Machine Interface"], 162)
 					OutputTip(tconcat(szTip), 400, {x, y, w, h})
 				end
-				hBtnCopy.OnMouseLeave = function()
+				Btn_CopyBook.OnLeave = function()
 					HideTip()
 				end
 			end
 		end
-		Wnd.CloseWindow(temp)
-		LR_CopyBook.bHookedBookExchangePanel = false
-	elseif not frame or not frame:IsVisible() then
-		LR_CopyBook.bHookedBookExchangePanel = false
 	end
 end
 

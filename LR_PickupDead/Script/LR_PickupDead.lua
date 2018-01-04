@@ -4,7 +4,7 @@ local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, 
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
 local AddonPath = "Interface\\LR_Plugin\\LR_PickupDead"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_PickupDead"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_PickupDead"
 local _L=LR.LoadLangPack(AddonPath)
 ---------------------------------------------------------------
 local VERSION = "20170912"
@@ -13,7 +13,7 @@ local VERSION = "20170912"
 ----自动拾取Doodad
 -------------------------------------------------------------------------------------------------------------
 -----SYNC_LOOT_LIST在DOODAD_ENTER_SCENE之后
------SYNC_LOOT_LIST:在有可拾取的DOODAD出现后会触发，任务物品不会触发
+-----SYNC_LOOT_LIST:在有可拾取的DOODAD出现后会触发，任务物品不会触发，另外当拾取物品后，会产生SYNC_LOOT_LIST
 -----所以优先使用SYNC_LOOT_LIST
 -----步骤：
 -----SYNC_LOOT_LIST将doodad加入doodadList
@@ -264,6 +264,10 @@ function LR_PickupDead.BreatheCall()
 		return
 	end
 	if not LR_PickupDead.UsrData.bOn then
+		return
+	end
+	local scene = me.GetScene()
+	if scene.dwMapID == 296 then
 		return
 	end
 

@@ -1,5 +1,5 @@
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_AccountStatistics\\UsrData"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local _L = LR.LoadLangPack(AddonPath)
 local _log_time = 0		--防刷屏设置
 local _log_flag = 0		--防刷屏设置
@@ -841,7 +841,7 @@ end
 function LR_Acc_Trade.BatchImportOldData()
 	local batch_import = function ()
 		local t = GetTickCount()
-		local AllUsrList = clone(LR_AccountStatistics.AllUsrList)
+		local AllUsrList = clone(LR_AS_Info.AllUsrList)
 		for szKey, v in pairs (AllUsrList) do
 			local realArea = v.realArea
 			local realServer = v.realServer
@@ -873,7 +873,7 @@ function LR_Acc_Trade.ImportNewVersionData()
 	end
 	local serverInfo = {GetUserServer()}
 	local realArea, realServer = serverInfo[5], serverInfo[6]
-	local filepath = sformat(_L["file locate at 'Interface/LR_Plugin/@Data/LR_AccountStatistics/UsrData/TradeData/[Area]/[Server]/[PlayerName]'"])
+	local filepath = sformat(_L["file locate at 'Interface/LR_Plugin@Data/LR_AccountStatistics/UsrData/TradeData/[Area]/[Server]/[PlayerName]'"])
 	local step_3 = function(szFile)
 		local path = szFile
 		local DB = SQLite3_Open(path)
@@ -907,7 +907,7 @@ function LR_Acc_Trade.ImportNewVersionData()
 		if szFile == "" then
 			return
 		else
-			local _s1, _e1, _area, _server, _szName = sfind(slower(szFile), "interface\\lr_plugin\\@data\\lr_accountstatistics\\usrdata\\tradedata\\(.-)\\(.-)\\(.-)\\")
+			local _s1, _e1, _area, _server, _szName = sfind(slower(szFile), "interface\\lr_plugin@data\\lr_accountstatistics\\usrdata\\tradedata\\(.-)\\(.-)\\(.-)\\")
 			if not _s1 then
 				LR.SysMsg(sformat("%s\n", _L["File path wrong."]))
 				LR.RedAlert(sformat("%s\n", _L["File path wrong."]))
@@ -934,7 +934,7 @@ function LR_Acc_Trade.ImportNewVersionData()
 			LR.SysMsg(sformat("%s\n", _L["File open error."]))
 			LR.RedAlert(sformat("%s\n", _L["File open error."]))
 		else
-			local _s1, _e1, _area, _server, _szName = sfind(slower(szFile), "interface\\lr_plugin\\@data\\lr_accountstatistics\\usrdata\\tradedata\\(.-)\\(.-)\\(.-)\\tradedb.db")
+			local _s1, _e1, _area, _server, _szName = sfind(slower(szFile), "interface\\lr_plugin@data\\lr_accountstatistics\\usrdata\\tradedata\\(.-)\\(.-)\\(.-)\\tradedb.db")
 			local msg = {
 				szMessage = sformat(_L["File correct, sure to import?\nArea: %s , Server: %s , Name: %s"], _area, _server, _szName),
 				szName = "file correct",
@@ -966,6 +966,7 @@ function LR_Acc_Trade.ImportNewVersionData()
 	}
 	MessageBox(msg)
 end
+
 ----------------------------------------------------------------
 ------事件处理
 ----------------------------------------------------------------
@@ -1258,8 +1259,7 @@ function LR_Acc_Trade.MONEY_UPDATE()
 
 				LR_Acc_Trade.AddRecord(Temp_Record)
 			end
-		end
-		if #_Event_Trace>= 2 then
+		elseif #_Event_Trace>= 2 then
 			if nMoney2 > 0 then
 				if _Event_Trace[#_Event_Trace-1].szName ==  "OPEN_DOODAD" then
 					if GetTime() - _Event_Trace[#_Event_Trace-1].Obj:GetOrderTime() < 30000 then
@@ -2360,22 +2360,6 @@ function LR_Acc_Trade.FIRST_LOADING_END()
 	LR_Acc_Trade.Login_Money = nMoney.nCopper+nMoney.nSilver*100+nMoney.nGold*10000
 end
 
-function LR_Acc_Trade.ON_FRAME_CREATE()
-	local frame = arg0
-	local szName = LR.Trim(frame:GetName())
-	if szName ==  "OptionPanel" then
-		---
-	elseif szName ==  "ExitPanel" then
-		---操作都在LR_AS_Info里
-	elseif szName ==  "AuctionPanel" then
-		LR_Acc_Trade.GetItemInBag()
-	elseif szName ==  "MB_SellItemSure" then
-
-	elseif szName ==  "MailPanel" then
-		LR_Acc_Trade.OpenMailPanel()
-	end
-end
-
 -------------金钱变动提醒
 function LR_Acc_Trade.OutPutMoneyChange()
 	local me = GetClientPlayer()
@@ -2505,7 +2489,7 @@ LR.RegisterEvent("SHOP_OPENSHOP", function() LR_Acc_Trade.OpenShop() end)
 LR.RegisterEvent("MONEY_UPDATE", function() LR_Acc_Trade.MONEY_UPDATE() end)
 
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_Acc_Trade.FIRST_LOADING_END() end)
-LR.RegisterEvent("ON_FRAME_CREATE", function() LR_Acc_Trade.ON_FRAME_CREATE() end)
+--LR.RegisterEvent("ON_FRAME_CREATE", function() LR_Acc_Trade.ON_FRAME_CREATE() end)
 LR.RegisterEvent("OPEN_WINDOW", function() LR_Acc_Trade.OPEN_WINDOW() end)
 
 LR.RegisterEvent("BAG_ITEM_UPDATE", function() LR_Acc_Trade.BAG_ITEM_UPDATE() end)

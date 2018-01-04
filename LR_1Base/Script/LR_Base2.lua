@@ -4,7 +4,7 @@ local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, 
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_1Base"
-local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_1Base"
+local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_1Base"
 local _L = LR.LoadLangPack(AddonPath)
 ---------------------------------------------------------------
 LR = LR or {}
@@ -35,6 +35,14 @@ function ItemBox:new(item)
 			self.item_data[k] = v
 		end
 	end
+	o.UI_data = {
+		width = 48,
+		height = 48,
+		margin_x = 2,
+		margin_y = 2,
+		text_nStackNum_x = 20,
+		text_nStackNum_y = 20,
+	}
 	return o
 end
 
@@ -142,6 +150,11 @@ function ItemBox:Hover(flag)
 	else
 		self.Bg_Hover:Hide()
 	end
+	return self
+end
+
+function ItemBox:SetRelPos(...)
+	self.handle:SetRelPos(...)
 	return self
 end
 

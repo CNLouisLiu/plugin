@@ -1,0 +1,85 @@
+data={
+	["LR_GKP_RECORD"]="懶人金團記錄",
+	["GKP List"]="金團記錄",
+	["Trade List"]="交易記錄",
+	["szItemName"]="物品名稱",
+	["Purchaser"]="購買者",
+	["Money"]="金錢",
+	["Source"]="來源",
+	["Time"]="獲取時間",
+	["New Bill"]="新建賬單",
+	["New"]="新建",
+	["Cancel"]="取消",
+	["Main_Name"]="主名字",
+	["Sub_Name"]="後綴",
+	["%s_%s_%04dy%02dm%02dd_%02d:%02d:%02d"]="%s_%s_%04d年%02d月%02d日_%02d:%02d:%02d",
+	["Some Dungeon"]="某秘境",
+	["You have no bill now. Create one or load One?"]="你還沒有賬單。新建還是載入？",
+	["Load"]="載入",
+
+	["To:"]="分配給:",
+	["Item Name:"]="物品名字:",
+	["Source:"]="來源:",
+	["Money:"]="拍賣金額:",
+	["OK"]="確定",
+	["Bill Options"]="賬單選項",
+	["Open LR_GKP Panel"]="打開懶人金團記錄",
+	["LR GKP"]="懶人金團記錄",
+	["Create a bill"]="新建賬單",
+	["Change to another bill"]="切換賬單",
+	["%04dy%02dm%02dd %02d:%02d:%02d"]="%04d年%02d月%02d日 %02d:%02d:%02d",
+	["Total:"]="拍賣總計：",
+
+	["Treasure Box"]="寶箱",
+	["Penalty"]="罰款",
+	["Boss"]="老闆",
+	["Other"]="其他",
+
+	["Add record"]="手動添加",
+	["Trade record"]="發佈拍賣紀錄",
+	["Debt record"]="發佈欠債記錄",
+	["You must be in a team, and be distributor.\n"]="必須在組隊狀態下，且擁有分配權限。\n",
+
+	["No such bill.\n"]="賬單不存在。\n",
+	["Distribute  manual"]="手動分配",
+	["unknown"]="未知來源",
+	["Distribute Item"]="分配物品",
+	["Please choose"]="請選擇",
+
+	[":%d Gold"]="：%d金",
+	["====Consumption Statistics===="]="=======消費統計=======",
+	["=========END========="]="========結束========",
+	["======Debt Statistics======"]="======欠賬統計=======",
+	["Total: %d Gold"]="總計拍賣金額：%d金",
+
+	["Trade Target"]="交易對象",
+	["Jiang"]="將",
+	["for %d Gold dis to"]="以%d金記錄給",
+
+
+	["Modify"]="修改",
+	["Delete"]="刪除",
+
+	["Received"]="收到",
+	["Send"]="付給",
+	["%d Gold"]="%d金",
+
+	["szBelongBill"]="所屬",
+	["this login, in any bill"]="本次登錄記錄，不在任何賬單中",
+	
+	["Sync begin\n"]="同步開始\n",
+	["Sync end\n"]="同步結束\n",
+	["Sync record"]="同步數據給其他人",
+	["Are you sure to sync record to others?"]="確定同步數據給其他人？",
+	["Yes"]="是的",
+	["No"]="不",
+
+	--20180102add--
+	["GKP_TIP01"]="1、懶人金團記錄以賬單為單位進行顯示，請在【賬單選項】->【賬單切換】中選擇要顯示的賬單。\n",
+	["GKP_TIP02"]="2、只有組隊狀態下的，擁有分配權限的人才有資格新建賬單。\n",
+	["GKP_TIP03"]="3、只有組隊狀態下的，擁有分配權限的人才有資格添加刪除拍賣記錄。\n",
+	["GKP_TIP04"]="4、添加的拍賣記錄會錄入當前顯示的賬單\n",
+	["Received money: %d Gold"]="收到金額：%d金",
+	["Not received money: %d Gold"]="未收金額：%d金",
+
+}

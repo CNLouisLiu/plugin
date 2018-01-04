@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 local AddonPath = "Interface\\LR_Plugin\\LR_HeadName"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_HeadName"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_HeadName"
 local _L = LR.LoadLangPack(AddonPath)
 local szIniFile = sformat("%s\\UI\\LR_HeadNameItem.ini", AddonPath)
 ---------------------------------------------------------
@@ -217,9 +217,9 @@ LR_HeadName.default = {
 				bShowBody = true, 		----显示本体
 			},
 			["Enemy"] = {
-				bShow = true, 				----开关
-				bShowShadow = true, 	----显示影子
-				bShowBody = true, 		----显示本体
+				bShow = false, 				----开关
+				bShowShadow = false, 	----显示影子
+				bShowBody = false, 		----显示本体
 			},
 			["Neutrality"] = {
 				bShow = false, 				----开关
@@ -377,6 +377,9 @@ _GuDing.dwSkillID = 2234
 _GuDing.tCastList = {}
 _GuDing.tDoodadList = {}
 _GuDing.nDelayTime = 500
+
+local _BeiMing = {}
+
 
 -----------------------------
 ---头顶显示类
@@ -915,7 +918,7 @@ end
 
 ------任务状态
 function _Role:SetIsMissionObj()
-	self.IsMissionObj = LR_HeadName.IsMissionObj({szName = self.szName, nType = self.nType, dwTemplateID = self.dwTemplateID, })
+	self.IsMissionObj = LR_HeadName.IsMissionObj({szName = self.szName, nType = self.nType, dwTemplateID = self.dwTemplateID, nX = self.self.nX, nY = self.self.nY})
 	return self
 end
 function _Role:GetIsMissionObj()
@@ -1255,13 +1258,14 @@ function LR_HeadName.OpenFrame()
 	end
 
 	if LR_HeadName.bOn then
-		frame:Show()
-		LR_HeadName.HideSysHead()
-		HM_Doodad = HM_Doodad or {}
-		HM_Doodad.bShowName = HM_Doodad.bShowName or false
-		if HM_Doodad.bShowName then
-			HM_Doodad.bShowName = false
-			LR_HeadName.TurnOffHMHead()
+		local me = GetClientPlayer()
+		local scene = me.GetScene()
+		if scene.dwMapID ~= 296 then		--296
+			frame:Show()
+			LR_HeadName.HideSysHead()
+		else
+			frame:Hide()
+			LR_HeadName.Convert2SysHead()
 		end
 	else
 		frame:Hide()
@@ -1270,13 +1274,6 @@ function LR_HeadName.OpenFrame()
 end
 
 --------------------------------------------------------------------------
-function LR_HeadName.TurnOffHMHead()
-	frame = Station.Lookup("Lowest/HM_Doodad")
-	if frame then
-		Wnd.CloseWindow(frame)
-	end
-end
-
 function LR_HeadName.GetSysHeadSettings()
 	LR_HeadName.tSysSettings = {
 		["HEAD_NPC_NAME"] = GetGlobalTopHeadFlag(HEAD_NPC, HEAD_NAME ),
@@ -1350,6 +1347,24 @@ function LR_HeadName.ResumeSysHead()
 	end
 end
 
+function LR_HeadName.Convert2SysHead()
+	if LR_HeadName.bOn and LR_HeadName.UsrData.NPC.bShow then
+		SetGlobalTopHeadFlag(HEAD_NPC         , HEAD_NAME , 	LR_HeadName.UsrData.NPC["Enemy"].Name)
+		SetGlobalTopHeadFlag(HEAD_NPC         , HEAD_TITLE, 		LR_HeadName.UsrData.NPC["Enemy"].Title)
+		SetGlobalTopHeadFlag(HEAD_NPC         , HEAD_LEFE , 		LR_HeadName.UsrData.NPC["Enemy"].LifeBar)
+	end
+	if LR_HeadName.bOn and LR_HeadName.UsrData.Player.bShow then
+		SetGlobalTopHeadFlag(HEAD_OTHERPLAYER , HEAD_NAME , 	LR_HeadName.UsrData.Player["Enemy"].Name)
+		SetGlobalTopHeadFlag(HEAD_OTHERPLAYER , HEAD_TITLE, 		LR_HeadName.UsrData.Player["Enemy"].Title)
+		SetGlobalTopHeadFlag(HEAD_OTHERPLAYER , HEAD_LEFE , 		LR_HeadName.UsrData.Player["Enemy"].LifeBar)
+		SetGlobalTopHeadFlag(HEAD_OTHERPLAYER , HEAD_GUILD, 	LR_HeadName.UsrData.Player["Enemy"].Tong)
+
+		SetGlobalTopHeadFlag(HEAD_CLIENTPLAYER, HEAD_NAME , 	LR_HeadName.UsrData.Player["Self"].Name)
+		SetGlobalTopHeadFlag(HEAD_CLIENTPLAYER, HEAD_TITLE,		LR_HeadName.UsrData.Player["Self"].Title)
+		SetGlobalTopHeadFlag(HEAD_CLIENTPLAYER, HEAD_LEFE , 		LR_HeadName.UsrData.Player["Self"].LifeBar)
+		SetGlobalTopHeadFlag(HEAD_CLIENTPLAYER, HEAD_GUILD, 		LR_HeadName.UsrData.Player["Self"].Tong)
+	end
+end
 ------------------------------------
 
 function LR_HeadName.Check(dwID, nType, bForced)
@@ -1458,10 +1473,12 @@ function LR_HeadName.Check(dwID, nType, bForced)
 				end
 				if LR_HeadName._Role[dwEmployer] then
 					nEmployerShip = LR_HeadName._Role[dwEmployer]:GetShip()
-					if _Role:GetTemplateID() ==  46297 then
-						bShowChangGeShadow = LR_HeadName.GetShadowbShow("bShowShadow", nEmployerShip)
-					elseif  _Role:GetTemplateID() == 46140 then
-						bShowChangGeShadow = LR_HeadName.GetShadowbShow("bShowBody", nEmployerShip)
+					if nEmployerShip ~= "Enemy" then
+						if _Role:GetTemplateID() ==  46297 then
+							bShowChangGeShadow = LR_HeadName.GetShadowbShow("bShowShadow", nEmployerShip)
+						elseif  _Role:GetTemplateID() == 46140 then
+							bShowChangGeShadow = LR_HeadName.GetShadowbShow("bShowBody", nEmployerShip)
+						end
 					end
 					--Output(nEmployerShip, bShowChangGeShadow)
 				end
@@ -1841,6 +1858,9 @@ function LR_HeadName.Check(dwID, nType, bForced)
 
 				local handle = _Role:GetHandle()
 				if bShow or bFresh then
+					if isBeiMing then
+						_BeiMing[dwID] = true
+					end
 					if not handle then
 						local _h = _HandleRole:new(dwID)
 						_Role:SetHandle(_h)
@@ -1929,10 +1949,14 @@ function LR_HeadName.Check(dwID, nType, bForced)
 	else
 		local szName = LR.Trim(obj.szName)
 		if nType == TARGET.NPC then
-			if LR_HeadName.NpcTemplateSee[obj.dwTemplateID] then
-				szName = LR.Trim(Table_GetNpcTemplateName(obj.dwTemplateID))
+			if obj.CanSeeName() then
+				if LR.Trim(obj.szName) == "" then
+					szName = LR.Trim(Table_GetNpcTemplateName(obj.dwTemplateID))
+				end
+			else
+				szName = ""
 			end
-			if LR.Trim(obj.szName) == "" and obj.CanSeeName() then
+			if LR_HeadName.NpcTemplateSee[obj.dwTemplateID] then
 				szName = LR.Trim(Table_GetNpcTemplateName(obj.dwTemplateID))
 			end
 			if obj.dwTemplateID ==  46297 then
@@ -2220,6 +2244,7 @@ function LR_HeadName.DOODAD_LEAVE_SCENE()
 	LR_HeadName.DoodadCache[arg0] = nil
 	LR_HeadName.DoodadList[arg0] = nil
 	MINIMAP_LIST[arg0] = nil
+	_BeiMing[arg0] = nil
 end
 
 function LR_HeadName.OnEventCheckMission(dwID)
@@ -2245,8 +2270,52 @@ LR.RegisterEvent("PARTY_UPDATE_BASE_INFO", function() LR_HeadName.PARTY_UPDATE_B
 ----------------------------------
 -------任务相关
 ----------------------------------
-local _QuestTraceInfo = {}
-local _QuestInfo = {}
+--[[
+官方有两个表用于存放任务的相关信息。
+g_tTable.Quest：包含了接取npc、交任务npc、各种条件下，需要完成的条件的doodad、npc、place地点信息
+g_tTable.Quests：包含了任务的文本信息，名字、各种条件下的对话框中的文字
+]]
+
+local _QuestTraceInfo = {}	---用于追踪任务的完成度
+local _QuestInfo = {}	--用于存放任务的文字内容
+local _dbQuestInfo = {}	---用于存放任务的执行内容，包含接取npc、交任务npc、击杀npc等各种内容
+
+function LR_HeadName.SpliteString(szText, bOutput)
+	local tList = {}
+
+	for szType, szData in sgmatch(szText, "<(%a) ([%d,;|]+)>") do
+		if szType == "D" or szType == "N" then
+			if bOutput then
+				Output(szData)
+			end
+			for szData2 in sgmatch(szData, "([%d,]+);?") do
+				if bOutput then
+					Output(szData2)
+				end
+				local tNum = {}
+				for nNum in sgmatch(szData2, "(%d+),?") do
+					tNum[#tNum + 1] = tonumber(nNum)
+				end
+				local szName = ""
+				if szType == "N" then
+					szName = Table_GetNpcTemplateName(tNum[2])
+				else
+					szName = LR.TABLE_GetDoodadTemplateName(tNum[2])
+				end
+				tList[#tList + 1] = {nType = szType, dwMapID = tNum[1], dwTemplateID = tNum[2], szName = szName}
+			end
+		else
+			for szData2 in sgmatch(szData, "([%d,]+);?") do
+				local tNum = {}
+				for nNum in sgmatch(szData2, "(%d+),?") do
+					tNum[#tNum + 1] = tonumber(nNum)
+				end
+				tList[#tList + 1] = {nType = szType, dwMapID = tNum[1], nX = tNum[2], nY = tNum[3]}
+			end
+		end
+	end
+	return tList
+end
 
 function LR_HeadName.GetAllMissionNeed()
 	local me = GetControlPlayer()
@@ -2271,7 +2340,9 @@ function LR_HeadName.GetSingleMissionNeed(dwQuestID)
 	end
 
 	_QuestTraceInfo[dwQuestID] = me.GetQuestTraceInfo(dwQuestID) or {}
-	_QuestInfo[dwQuestID]  = 	LR.Table_GetQuestStringInfo(dwQuestID) or {}
+	_QuestInfo[dwQuestID] =	LR.Table_GetQuestStringInfo(dwQuestID) or {}
+	_dbQuestInfo[dwQuestID] = g_tTable.Quest:Search(dwQuestID) or {}
+
 	if _QuestInfo[dwQuestID].szName ==  LR_HeadName.szMissionName then
 		Output(dwQuestID, _QuestTraceInfo[dwQuestID], _QuestInfo[dwQuestID])
 	end
@@ -2285,6 +2356,11 @@ function LR_HeadName.GetSingleMissionNeed(dwQuestID)
 	if _QuestInfo[dwQuestID].szName ==  LR_HeadName.szMissionName then
 		Output(dwQuestID, LR_HeadName.MissionNeed[dwQuestID])
 	end
+end
+
+function LR_HeadName.OutputSingleMissionNeed(dwQuestID)
+	LR_HeadName.GetSingleMissionNeed(dwQuestID)
+	Output(LR_HeadName.MissionNeed[dwQuestID])
 end
 
 function LR_HeadName.GetPatched(dwQuestID)
@@ -2304,64 +2380,48 @@ function LR_HeadName.Get_need_item(dwQuestID)
 	local MissionPatch = LR_HeadName.MissionPatch[dwQuestID]
 	local QuestTraceInfo = _QuestTraceInfo[dwQuestID] or {}
 	local QuestInfo =  _QuestInfo[dwQuestID] or {}
+	local dbQuestInfo = _dbQuestInfo[dwQuestID] or {}
 	local szMissionName = LR_HeadName.szMissionName
 	local need_item = QuestTraceInfo.need_item or {}
-	if not ( type(need_item) ==  "table" and next(need_item)~= nil ) then
+	local MissionPatch = LR_HeadName.MissionPatch[dwQuestID]
+	if next(need_item) == nil then
 		return
 	end
+	local flag, finish_flag = {}, true
 	for k, v in pairs(need_item) do
-		local itemInfo = GetItemInfo(v.type, v.index)
-		local dwMapID = 0
-		local nBookID = v.need
-		if itemInfo.nGenre ==  ITEM_GENRE.BOOK then
-			v.need = 1
-		end
 		if v.have < v.need then
+			finish_flag = false
+			local dbInfo = dbQuestInfo[sformat("szNeedItem%d", v.i +1)]
+			if dbInfo and dbInfo ~= "" then
+				for k2, v2 in pairs(LR_HeadName.SpliteString(dbInfo)) do
+					MissionNeed[#MissionNeed + 1] = v2
+				end
+			end
 			if MissionPatch then
-				if QuestInfo.szName ==  szMissionName then
-					Output (dwQuestID, "need_item_MissionPatch", MissionPatch)
-				end
-				for k1, v1 in pairs (MissionPatch) do
-					if v1.dwQuestID ==  dwQuestID and v1.mode == "need_item" then
-						MissionNeed[#MissionNeed+1] = v1
-					end
-					if v1.dwQuestID ==  dwQuestID and v1.mode == "need_item2" then
-						if v1.type ==  v.type and v1.index == v.index then
-							MissionNeed[#MissionNeed+1] = v1.data
-						end
+				for k2, v2 in pairs (MissionPatch) do
+					if v2.dwQuestID == dwQuestID and v2.mode == "need_item" and v2.k == k then
+						MissionNeed[#MissionNeed+1] = v2
 					end
 				end
 			end
-			local tPointList = LR.Table_GetQuestPoint(dwQuestID, "need_item", v.i)
-			if tPointList then
-				if QuestInfo.szName ==  szMissionName then
-					Output (dwQuestID, "need_item", tPointList)
-				end
-
-				for k1, v1 in pairs(tPointList) do
-					dwMapID = k1
-					if #v1>0 then
-						for j = 1, #v1 do
-							local p1 = v1[j][1]
-							local p2 = v1[j][2]
-							local nType = v1[j][3]
-							local dwTemplateID = v1[j][4]
-							local szTemplateName
-							if (nType == "D" or nType == "N" ) and dwTemplateID and dwTemplateID>0 then
-								szTemplateName = Table_GetNpcTemplateName(dwTemplateID)
-							end
-							local szMapName = Table_GetMapName(dwMapID)
-							MissionNeed[#MissionNeed+1] = {p1 = p1, p2 = p2, dwTemplateID = dwTemplateID, nType = nType, dwMapID = dwMapID, nMinD = 99999, nZ = 0}
-						end
+		end
+		flag[v.i + 1] = true
+	end
+	if not finish_flag then
+		for i = 1, 4, 1 do
+			if not flag[i] then
+				local dbInfo = dbQuestInfo[sformat("szNeedItem%d", i)]
+				if dbInfo and dbInfo ~= "" then
+					for k2, v2 in pairs(LR_HeadName.SpliteString(dbInfo)) do
+						MissionNeed[#MissionNeed + 1] = v2
 					end
 				end
 			end
-			if QuestInfo.szName ==  szMissionName then
-				Output (dwQuestID, "need_item", LR.Trim(itemInfo.szName))
-			end
-			MissionNeed[#MissionNeed+1] = {nType = "I", dwMapID = dwMapID, szName = LR.Trim(itemInfo.szName)}
 		end
 	end
+
+
+
 end
 
 function LR_HeadName.Get_kill_npc(dwQuestID)
@@ -2369,89 +2429,73 @@ function LR_HeadName.Get_kill_npc(dwQuestID)
 	local MissionPatch = LR_HeadName.MissionPatch[dwQuestID]
 	local QuestTraceInfo = _QuestTraceInfo[dwQuestID] or {}
 	local QuestInfo =  _QuestInfo[dwQuestID] or {}
-	local kill_npc = QuestTraceInfo.kill_npc or {}
-	if not ( type(kill_npc) ==  "table" and next(kill_npc)~= nil ) then
+	local dbQuestInfo = _dbQuestInfo[dwQuestID] or {}
+	local szMissionName = LR_HeadName.szMissionName
+	local need_item = QuestTraceInfo.kill_npc or {}
+	if next(need_item) == nil then
 		return
 	end
-	for k, v in pairs (kill_npc) do
+	local flag, finish_flag = {}, true
+	for k, v in pairs(need_item) do
 		if v.have < v.need then
-			local tPointList = LR.Table_GetQuestPoint(dwQuestID, "kill_npc", v.i)
-			if tPointList  then
-				local dwTemplateID = v.template_id
-				local dwMapID = 0
-				for k1, v1 in pairs (tPointList) do
-					local dwMapID = k1
+			local dbInfo = dbQuestInfo[sformat("szKillNpc%d", v.i +1)]
+			if dbInfo and dbInfo ~= "" then
+				for k2, v2 in pairs(LR_HeadName.SpliteString(dbInfo)) do
+					MissionNeed[#MissionNeed + 1] = v2
 				end
-				MissionNeed[#MissionNeed+1] = {dwTemplateID = dwTemplateID, nType = "N", dwMapID = dwMapID}
+			end
+		end
+		flag[v.i + 1] = true
+	end
+	if not finish_flag then
+		for i = 1, 4, 1 do
+			if not flag[i] then
+				local dbInfo = dbQuestInfo[sformat("szKillNpc%d", i)]
+				if dbInfo and dbInfo ~= "" then
+					for k2, v2 in pairs(LR_HeadName.SpliteString(dbInfo)) do
+						MissionNeed[#MissionNeed + 1] = v2
+					end
+				end
 			end
 		end
 	end
 end
 
-function LR_HeadName.Get_quest_state(dwQuestID)
+function LR_HeadName.Get_quest_state(dwQuestID, bOutput)
 	local MissionNeed = LR_HeadName.MissionNeed[dwQuestID]
 	local MissionPatch = LR_HeadName.MissionPatch[dwQuestID]
 	local QuestTraceInfo = _QuestTraceInfo[dwQuestID] or {}
 	local QuestInfo =  _QuestInfo[dwQuestID] or {}
+	local dbQuestInfo = _dbQuestInfo[dwQuestID] or {}
+	local szMissionName = LR_HeadName.szMissionName
 	local quest_state = QuestTraceInfo.quest_state or {}
-	if not ( type(quest_state) ==  "table" and next(quest_state)~= nil ) then
+	if next(quest_state) == nil then
 		return
 	end
+
+	local flag, finish_flag = {}, true
 	for k, v in pairs(quest_state) do
 		if v.have < v.need then
-			if MissionPatch then
-				for i = 1, #MissionPatch, 1 do
-					for k1, v1 in pairs (MissionPatch) do
-						if v1.dwQuestID ==  dwQuestID and v1.mode == "quest_state" then
-							MissionNeed[#MissionNeed+1] = v1
-						end
-					end
+			local dbInfo = dbQuestInfo[sformat("szQuestState%d", v.i +1)]
+			if dbInfo and dbInfo ~= "" then
+				if bOutput then
+					Output(dbInfo)
+					Output(LR_HeadName.SpliteString(dbInfo, true))
+				end
+				for k2, v2 in pairs(LR_HeadName.SpliteString(dbInfo)) do
+					MissionNeed[#MissionNeed + 1] = v2
 				end
 			end
-
-			if #QuestTraceInfo.quest_state == 1 then
-				local QuestBaseInfo = g_tTable.Quest:Search(dwQuestID)
-				if QuestBaseInfo then
-					for i = 1, 4, 1 do
-						local szQuestState = QuestBaseInfo[sformat("szQuestState%d", i)]
-						if szQuestState~= "" then
-							local tt = LR.GetQuestPoint(szQuestState)
-							if QuestInfo.szName ==  szMissionName then
-								Output (dwQuestID, tt)
-							end
-							for k3, v3 in pairs(tt) do
-								for k2, v2 in pairs(v3) do
-									MissionNeed[#MissionNeed+1] = {dwTemplateID = v2[4], nType = v2[3], dwMapID = k3, nMinD = 99999, nZ = 0}
-								end
-							end
-						end
-					end
-				end
-			end
-
-			local tPointList = LR.Table_GetQuestPoint(dwQuestID, "quest_state", v.i)
-			if tPointList  then
-				for k1, v1 in pairs(tPointList) do
-					if QuestInfo.szName ==  szMissionName then
-						Output (dwQuestID, "quest_state", v.i, tPointList)
-					end
-					dwMapID = k1
-					if #v1>0 then
-						for j = 1, #v1 do
-							local p1 = v1[j][1]
-							local p2 = v1[j][2]
-							local nType = v1[j][3]
-							local dwTemplateID = v1[j][4]
-							local szTemplateName = ""
-							if (nType == "D" or nType ==  "N" ) and dwTemplateID and dwTemplateID>0 then
-								szTemplateName = Table_GetNpcTemplateName(dwTemplateID)
-							end
-							local szMapName = Table_GetMapName(dwMapID)
-							MissionNeed[#MissionNeed+1] = {p1 = p1, p2 = p2, dwTemplateID = dwTemplateID, nType = nType, dwMapID = dwMapID, nMinD = 99999, nZ = 0}
-							if QuestInfo.szName ==  szMissionName then
-								Output(szTemplateName)
-							end
-						end
+		end
+		flag[v.i + 1] = true
+	end
+	if not finish_flag then
+		for i = 1, 4, 1 do
+			if not flag[i] then
+				local dbInfo = dbQuestInfo[sformat("szQuestState%d", i)]
+				if dbInfo and dbInfo ~= "" then
+					for k2, v2 in pairs(LR_HeadName.SpliteString(dbInfo)) do
+						MissionNeed[#MissionNeed + 1] = v2
 					end
 				end
 			end
@@ -2463,7 +2507,7 @@ function LR_HeadName.GetQuestNeedTree()
 	LR_HeadName.MissionList = {}
 	local MissionList = LR_HeadName.MissionList
 	local MissionNeed = LR_HeadName.MissionNeed
-	for k, v in pairs (MissionNeed) do
+	for dwQuestID, v in pairs (MissionNeed) do
 		for k1, v1 in pairs (v) do
 			MissionList[#MissionList+1] = v1
 		end
@@ -2705,12 +2749,32 @@ function LR_HeadName.IsMissionObj(t)
 	if LR.Trim(t.szName) ==  "" then
 		return false
 	end
+	local me = GetClientPlayer()
+	if not me then
+		return false
+	end
+	local scene = me.GetScene()
+	local dwMapID = scene.dwMapID
 	local MissionList = LR_HeadName.MissionList
 	for i = 1, #MissionList, 1 do
-		if (MissionList[i].dwTemplateID == t.dwTemplateID and t.nType == TARGET.NPC and MissionList[i].nType == "N" )
-		or (MissionList[i].dwTemplateID == t.dwTemplateID and t.nType == TARGET.DOODAD and MissionList[i].nType == "D" )
-		or  (LR.Trim(MissionList[i].szName) == LR.Trim(t.szName) and t.nType == TARGET.DOODAD ) then
-			return true
+		if MissionList[i].dwMapID == dwMapID then
+			if MissionList[i].nType == "N" then
+				if MissionList[i].dwTemplateID == t.dwTemplateID and t.nType == TARGET.NPC then
+					return true
+				end
+			elseif MissionList[i].nType == "D" then
+				if MissionList[i].dwTemplateID == t.dwTemplateID and t.nType == TARGET.DOODAD then
+					return true
+				elseif LR.Trim(MissionList[i].szName) == LR.Trim(t.szName) and t.nType == TARGET.DOODAD then
+					return true
+				end
+			elseif MissionList[i].nType == "P" then
+				if t.nX and t.nY and MissionList[i].nX and MissionList[i].nY then
+					if (MissionList[i].nX - t.nX) * (MissionList[i].nX - t.nX) + (MissionList[i].nY - t.nY) * (MissionList[i].nY - t.nY) < 55 then
+						return true
+					end
+				end
+			end
 		end
 	end
 	return false
@@ -3115,6 +3179,7 @@ function LR_HeadName.LOADING_END()
 	if not LR_HeadName.bOn then
 		return
 	end
+
 	LR_HeadName.OpenFrame()
 	LR.DelayCall(500, function()
 		LR_HeadName.PARTY_SET_MARK()
@@ -3206,8 +3271,13 @@ LR.RegisterEvent("ON_BG_CHANNEL_MSG",function() LR_HeadName.ON_BG_CHANNEL_MSG() 
 
 Wnd.OpenWindow(sformat("%s\\UI\\LR_HeadNameNone.ini", AddonPath), "LR_HeadName"):Hide()
 
+function LR_HeadName.ON_READ_BOOK()
+	for k, v in pairs(_BeiMing) do
+		LR_HeadName.Check(k, TARGET.DOODAD, true)
+	end
+end
 
 
-
+LR.RegisterEvent("ON_READ_BOOK",function() LR_HeadName.ON_READ_BOOK() end)
 
 

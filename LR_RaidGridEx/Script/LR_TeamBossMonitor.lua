@@ -4,7 +4,7 @@ local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, 
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
-local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_TeamGrid"
+local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
 --------------------------------------------------------------
 local ACTION_STATE =
@@ -189,17 +189,17 @@ end
 --BOSS¶ÁÌõ¼à¿Ø
 -------------------------------
 function LR_TeamBossMonitor.CheckOTState(dwID)
-	local dwID=dwID
+	local dwID = dwID
 	if not _OTMonitorList[dwID] then
 		return
 	end
-	local v=_OTMonitorList[dwID]
-	local nType=v.nType
-	local obj=nil
+	local v = _OTMonitorList[dwID]
+	local nType = v.nType
+	local obj = nil
 	if nType == TARGET.NPC then
-		obj=GetNpc(dwID)
+		obj = GetNpc(dwID)
 	elseif nType == TARGET.PLAYER then
-		obj=GetPlayer(dwID)
+		obj = GetPlayer(dwID)
 	end
 	if not obj then
 		return
@@ -208,11 +208,11 @@ function LR_TeamBossMonitor.CheckOTState(dwID)
 	if not me then
 		return
 	end
-	if not (IsEnemy(obj.dwID,me.dwID) and obj.bFightState) then
+	if not (IsEnemy(obj.dwID, me.dwID) and obj.bFightState) then
 		--return
 	end
 	local bPrePare,dwSkillID,dwSkillLevel,fP = obj.GetSkillPrepareState()
-	local OTBar=_OTBarHandle[dwID]
+	local OTBar = _OTBarHandle[dwID]
 
 	if bPrePare and v.nActionState ~= ACTION_STATE.PREPARE then
 		if not OTBar then
@@ -220,15 +220,15 @@ function LR_TeamBossMonitor.CheckOTState(dwID)
 			h:Create():SetAlpha(255):SetPercentage(0):SetSkillName(LR.Trim(Table_GetSkillName(dwSkillID, dwSkillLevel))):SetCasterName(LR.Trim(obj.szName)):SetText()
 			_OTBarHandle[dwID] = h
 		end
-		OTBar=_OTBarHandle[dwID]
+		OTBar = _OTBarHandle[dwID]
 		v.nActionState = ACTION_STATE.PREPARE
 		LR_TeamBossMonitor.ReLoadOTBarPosition()
 	elseif not bPrePare and v.nActionState == ACTION_STATE.PREPARE then
 		v.nActionState = ACTION_STATE.DONE
 		if OTBar then
 			OTBar:Remove()
-			_OTBarHandle[dwID]=nil
-			OTBar=nil
+			_OTBarHandle[dwID] = nil
+			OTBar = nil
 			LR_TeamBossMonitor.ReLoadOTBarPosition()
 		end
 	end
@@ -255,8 +255,8 @@ function LR_TeamBossMonitor.CheckOTState(dwID)
 		end
 	else
 		OTBar:Remove()
-		_OTBarHandle[dwID]=nil
-		OTBar=nil
+		_OTBarHandle[dwID] = nil
+		OTBar = nil
 		LR_TeamBossMonitor.ReLoadOTBarPosition()
 	end
 end
@@ -397,14 +397,14 @@ function LR_TeamBossMonitor.NPC_ENTER_SCENE()
 		return
 	end
 	if LR_TeamBossMonitor.isBoss(npc) then
-		_BossList[dwID]={dwID=dwID,OldTarget=0,isBoss=true,}
-		_OTMonitorList[dwID]={nType=TARGET.NPC,nActionState=ACTION_STATE.NONE,}
+		_BossList[dwID] = {dwID = dwID, OldTarget = 0, isBoss=true,}
+		_OTMonitorList[dwID] = {nType = TARGET.NPC, nActionState = ACTION_STATE.NONE,}
 	else
 		if GetNpcIntensity(npc) == 3 then
-			_BossList[dwID]={dwID=dwID,OldTarget=0,isBoss=false,}
+			_BossList[dwID] = {dwID = dwID, OldTarget = 0, isBoss = false,}
 		elseif GetNpcIntensity(npc) == 4 then
-			_BossList[dwID]={dwID=dwID,OldTarget=0,isBoss=false,}
-			_OTMonitorList[dwID]={nType=TARGET.NPC,nActionState=ACTION_STATE.NONE,}
+			_BossList[dwID] = {dwID = dwID, OldTarget = 0, isBoss = false,}
+			_OTMonitorList[dwID] = {nType = TARGET.NPC, nActionState = ACTION_STATE.NONE,}
 		end
 	end
 end
@@ -415,7 +415,7 @@ function LR_TeamBossMonitor.NPC_LEAVE_SCENE()
 		local v = clone(_BossList[dwID])
 		local handleRole = LR_TeamGrid.GetRoleHandle(v.OldTarget)
 		if handleRole then
-			LR.DelayCall(100,function()
+			LR.DelayCall(100, function()
 				handleRole:DrawBossTargetImage(false):DrawSmallBossTargetImage(false)
 			end)
 		end

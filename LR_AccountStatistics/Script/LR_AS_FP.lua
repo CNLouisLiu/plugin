@@ -1,5 +1,5 @@
 local AddonPath="Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_AccountStatistics"
+local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_AccountStatistics"
 local _L = LR.LoadLangPack(AddonPath)
 local sformat, slen, sgsub, ssub,sfind = string.format, string.len, string.gsub, string.sub, string.find
 local mfloor, mceil, mmin, mmax = math.floor, math.ceil, math.min, math.max
@@ -99,7 +99,7 @@ end
 
 function LR_AccountStatistics_FP.Refresh()
 	local AllMoney=0
-	local TempTable_Cal,TempTable_NotCal=LR_AccountStatistics.SeparateUsrList()
+	local TempTable_Cal,TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 	for i=1,#TempTable_Cal,1 do
 		AllMoney=AllMoney+TempTable_Cal[i].nMoney
 	end
@@ -118,7 +118,7 @@ function LR_AccountStatistics_FP.ShowMoney(nMoney)
 	Animate_Hover:SetRelPos(0, 0)
 	Handle_Money:SetHandleStyle(3)
 	Handle_Money:Clear()
-	Handle_Money:SetSize(500, 30)
+	Handle_Money:SetSize(500, 18)
 	local AllMoney = nMoney
 	local nGoldBrick,nGold,nSilver,nCopper =  LR.MoneyToGoldSilverAndCopper (AllMoney)
 	local Text_GoldBrick,Text_Gold,Text_Silver,Text_Copper=nil,nil,nil,nil
@@ -159,6 +159,7 @@ function LR_AccountStatistics_FP.ShowMoney(nMoney)
 	local w2, h2 = Handle_Total:GetAllItemSize()
 	Animate_Hover:SetSize(w2, h2)
 	Handle_Total:SetSize(w2, h2)
+	frame:Lookup("",""):Lookup("Image_BG"):SetSize(w2, h2)
 	frame:SetSize(w2, h2)
 	frame:SetDragArea(0, 0, w2, h2)
 
@@ -172,7 +173,7 @@ function LR_AccountStatistics_FP.ShowMoney(nMoney)
 end
 ------------------------------------------------------
 function LR_AccountStatistics_FP.OpenPanel()
-	if LR_AccountStatistics.UsrData.FloatPanel then
+	if LR_AS_Base.UsrData.FloatPanel then
 		local frame = Station.Lookup("Normal/LR_AccountStatistics_FP")
 		if not frame then
 			local path = sformat("%s\\UI\\LR_AccountStatistics_FP.ini", AddonPath)
@@ -197,7 +198,7 @@ function LR_AccountStatistics_FP.FIRST_LOADING_END()
 end
 
 function LR_AccountStatistics_FP.MONEY_UPDATE()
-	LR_AccountStatistics.GetUserInfo()
+	LR_AS_Info.GetUserInfo()
 	LR_AccountStatistics_FP.Refresh()
 end
 

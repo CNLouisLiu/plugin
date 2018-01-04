@@ -6,7 +6,7 @@ local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, tabl
 local VERSION = "20170919"
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
-local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_TeamGrid"
+local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
 local _DefaultBuffMonitorData={
 	VERSION = VERSION,
@@ -42,6 +42,8 @@ function _BuffBox:Create()
 		handle = parentHandle:AppendItemFromIni(szIniFile, "Handle_BuffBox", sformat("Handle_BuffBox_%d", dwID))
 	end
 	self.handle = handle
+	handle:Lookup("Text_LeftTime"):SetText("")
+	handle:Lookup("Text_BuffStacks"):SetText("")
 	return self
 end
 
@@ -237,7 +239,7 @@ function _BuffBox:Draw()
 
 	local w, h = box:GetSize()
 	if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bShowLeftTime then
-		if nLeftFrame / 16 < 9 then
+		if nLeftFrame / 16 < 10 then
 			Text_LeftTime:SprintfText("%0.0f", mfloor(nLeftFrame / 16) )
 			Text_LeftTime:Show()
 			if nLeftFrame / 16 <=3 then
@@ -250,6 +252,8 @@ function _BuffBox:Draw()
 		else
 			Text_LeftTime:Hide()
 		end
+	else
+		Text_LeftTime:Hide()
 	end
 
 	local Text_BuffStacks = handle:Lookup("Text_BuffStacks")

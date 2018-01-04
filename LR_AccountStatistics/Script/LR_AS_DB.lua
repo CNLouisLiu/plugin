@@ -4,15 +4,13 @@ local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, 
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_AccountStatistics\\UsrData"
-local BackupPath = "Interface\\LR_Plugin\\@Backup\\LR_AccountStatistics\\"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
+local BackupPath = "Interface\\LR_Plugin@Backup\\LR_AccountStatistics\\"
 local _L = LR.LoadLangPack(AddonPath)
 local DB_name = "maindb.db"
 ---------------------------------------------------------------
 LR_AS_DB = LR_AS_DB or {}
 LR_AS_DEBUG = false
-
-
 ---------------------------------------------------------------
 ------数据库表项定义
 ---------------------------------------------------------------

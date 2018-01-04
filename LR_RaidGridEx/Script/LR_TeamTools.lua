@@ -4,7 +4,7 @@ local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, 
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
-local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_TeamGrid"
+local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
 ------------------------------------
 LR_TeamTools={}
@@ -421,11 +421,13 @@ function LR_TeamTools.DistributeAttention.FIGHT_HINT()
 			if me.IsInRaid() then
 				if team.nLootMode ~= 2 then
 					LR_TeamGrid.SetTitleText(sformat(_L["Warning: You are in [%s] loot mode"], szLootMode[team.nLootMode]))
+					--LR.SysMsg(sformat(_L["Warning: You are in [%s] loot mode"] .. "\n", szLootMode[team.nLootMode]))
 					LR.DelayCall(12000, function() LR_TeamGrid.SetTitleText("") end)
 				end
 			else
 				if team.nLootMode ~= 3 then
 					LR_TeamGrid.SetTitleText(sformat(_L["Warning: You are in [%s] loot mode"], szLootMode[team.nLootMode]))
+					--LR.SysMsg(sformat(_L["Warning: You are in [%s] loot mode"] .. "\n", szLootMode[team.nLootMode]))
 					LR.DelayCall(12000,function() LR_TeamGrid.SetTitleText("") end)
 				end
 			end

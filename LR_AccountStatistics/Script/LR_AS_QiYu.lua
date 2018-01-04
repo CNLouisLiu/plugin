@@ -1,5 +1,5 @@
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_AccountStatistics\\UsrData"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local _L = LR.LoadLangPack(AddonPath)
 local DB_name = "maindb.db"
 local sformat, slen, sgsub, ssub, sfind = string.format, string.len, string.gsub, string.sub, string.find
@@ -12,6 +12,13 @@ local MONITOR_TYPE = {
 	MULTI_ITEM = 3,
 	MSG_NPC_NEARBY = 4,
 	MSG_NPC_NEARBY_AND_WINDOW_DIALOG = 5,
+}
+
+local RESET_TYPE = {
+	NONE = 0,
+	EVERY_DAY = 1,
+	MONDAY = 2,
+	THURSDAY = 3,
 }
 
 local QIYU = {
@@ -33,6 +40,8 @@ local QIYU = {
 	GUAN_WAI_SHANG = 16,
 	BEI_XING_BIAO = 17,
 	DONG_HAI_KE = 18,
+	FENG_MANG_ZHAN = 19,
+	PENG_TIAO_FA = 20,
 }
 
 local QIYU_NAME = {}	--名字
@@ -281,6 +290,31 @@ QIYU_MSG_NPC_NEARBY[QIYU.DONG_HAI_KE] = {
 }
 QIYU_ACHIEVEMENT[QIYU.DONG_HAI_KE] = 5813
 
+--锋芒展 19
+QIYU_NAME[QIYU.FENG_MANG_ZHAN] = _L["FENG_MANG_ZHAN"]
+QIYU_MNTP[QIYU.FENG_MANG_ZHAN] = MONITOR_TYPE.ITEM
+QIYU_MAP[QIYU.FENG_MANG_ZHAN] = 23
+QIYU_NPC[QIYU.FENG_MANG_ZHAN] = 57929
+QIYU_ITEM[QIYU.FENG_MANG_ZHAN] = {
+	{dwTabType = 5, dwIndex = 28808, },
+}
+QIYU_MSG_NPC_NEARBY[QIYU.FENG_MANG_ZHAN] = {
+	{szText = _L["DIALOG_FENG_MANG_ZHAN_01"], bFinish = true, }, 		--满次数
+}
+QIYU_ACHIEVEMENT[QIYU.FENG_MANG_ZHAN] = 6018
+
+--烹调法 20
+QIYU_NAME[QIYU.PENG_TIAO_FA] = _L["PENG_TIAO_FA"]
+QIYU_MNTP[QIYU.PENG_TIAO_FA] = MONITOR_TYPE.MSG_NPC_NEARBY
+QIYU_MAP[QIYU.PENG_TIAO_FA] = 5
+QIYU_NPC[QIYU.PENG_TIAO_FA] = 58137
+--[[QIYU_ITEM[QIYU.PENG_TIAO_FA] = {
+	{dwTabType = 5, dwIndex = 28808, },
+}]]
+QIYU_MSG_NPC_NEARBY[QIYU.PENG_TIAO_FA] = {
+	{szText = _L["DIALOG_PENG_TIAO_FA_01"], bFinish = true, }, 		--满次数
+}
+QIYU_ACHIEVEMENT[QIYU.PENG_TIAO_FA] = 6018
 
 --------------------------------------------------------------------
 LR_ACS_QiYu = LR_ACS_QiYu or {}
@@ -389,7 +423,7 @@ function LR_ACS_QiYu.SaveData()
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
 	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_data ( szKey, qiyu_data, qiyu_achievement, bDel ) VALUES ( ?, ?, ?, ? )")
-	if LR_AccountStatistics.UsrData.OthersCanSee then
+	if LR_AS_Base.UsrData.OthersCanSee then
 		local SelfData = {}
 		for k, v in pairs(LR_ACS_QiYu.SelfData or {}) do
 			SelfData[tostring(k)] = v
@@ -456,6 +490,7 @@ function LR_ACS_QiYu.ClearAllData(DB)
 	end
 	LR_ACS_QiYu.SelfData = {}
 end
+LR_AS_Base.Add2ResetData({szKey = "Reset_QiYu", fnAction = LR_ACS_QiYu.ClearAllData, nType = RESET_TYPE.EVERY_DAY, order = 80})
 
 local _tempTime = 0
 function LR_ACS_QiYu.CheckItemNum(dwTabType, dwIndex)
@@ -626,7 +661,7 @@ function LR_ACS_QiYu.MSG_NPC_NEARBY(szMsg)
 				end
 				if bFound then
 					LR_ACS_QiYu.SelfData[v] = LR_ACS_QiYu.SelfData[v] or 0
-					LR_ACS_QiYu.SelfData[v] = LR_ACS_QiYu.SelfData[v]+1
+					LR_ACS_QiYu.SelfData[v] = LR_ACS_QiYu.SelfData[v] + 1
 					if bFinish then
 						LR_ACS_QiYu.SelfData[v] = 4
 					end
@@ -687,13 +722,18 @@ LR.RegisterEvent("DESTROY_ITEM", function() LR_ACS_QiYu.DESTROY_ITEM() end)
 LR.RegisterEvent("BAG_ITEM_UPDATE", function() LR_ACS_QiYu.BAG_ITEM_UPDATE() end)
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_ACS_QiYu.FIRST_LOADING_END() end)
 LR.RegisterEvent("ON_WARNING_MESSAGE", function() LR_ACS_QiYu.ON_WARNING_MESSAGE() end)
+
 ----------------------------------------------------
-function LR_ACS_QiYu.ListQY()
+------主界面显示奇遇信息
+----------------------------------------------------
+LR_ACS_QiYu.Container = nil
+
+function LR_ACS_QiYu.ReFreshTitle()
 	local frame = Station.Lookup("Normal/LR_AccountStatistics")
 	if not frame then
 		return
 	end
-	local title_handle = LR_AccountStatistics.LR_QYList_Title_handle
+	local title_handle = frame:Lookup("PageSet_Menu"):Lookup("Page_LR_QYList"):Lookup("", "")
 	local n = 1
 	for k, v in pairs (QIYU) do
 		if n<10 then
@@ -720,13 +760,20 @@ function LR_ACS_QiYu.ListQY()
 		local text = title_handle:Lookup(sformat("Text_QY%d_Break", i))
 		text:SetText("")
 	end
+end
 
-	local TempTable_Cal, TempTable_NotCal = LR_AccountStatistics.SeparateUsrList()
+function LR_ACS_QiYu.ListQY()
+	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+	if not frame then
+		return
+	end
+	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 
-	LR_AccountStatistics.LR_QYList_Container:Clear()
+	LR_ACS_QiYu.Container = frame:Lookup("PageSet_Menu/Page_LR_QYList/WndScroll_LR_QYList_Record/Wnd_LR_QYList_Record_List")
+	LR_ACS_QiYu.Container:Clear()
 	num = LR_ACS_QiYu.ShowItem(TempTable_Cal, 255, 1, 0)
 	num = LR_ACS_QiYu.ShowItem(TempTable_NotCal, 60, 1, num)
-	LR_AccountStatistics.LR_QYList_Container:FormatAllContentPos()
+	LR_ACS_QiYu.Container:FormatAllContentPos()
 end
 
 function LR_ACS_QiYu.ShowItem(t_Table, Alpha, bCal, _num)
@@ -740,7 +787,7 @@ function LR_ACS_QiYu.ShowItem(t_Table, Alpha, bCal, _num)
 
 	for i = 1, #TempTable, 1 do
 		num = num+1
-		local wnd = LR_AccountStatistics.LR_QYList_Container:AppendContentFromIni("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_QYList_Item.ini", "QYList_WndWindow", num)
+		local wnd = LR_ACS_QiYu.Container:AppendContentFromIni("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_QYList_Item.ini", "QYList_WndWindow", num)
 		local items = wnd:Lookup("", "")
 		if num % 2 ==  0 then
 			items:Lookup("Image_Line"):Hide()
@@ -867,6 +914,43 @@ function LR_ACS_QiYu.ShowItem(t_Table, Alpha, bCal, _num)
 	return num
 end
 
+function LR_ACS_QiYu.AddPageButton()
+	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+	if not frame then
+		return
+	end
+	local page = frame:Lookup("PageSet_Menu/Page_LR_QYList")
+
+	local fnEnter = function()
+		local nX, nY = this:GetAbsPos()
+		local nW, nH = this:GetSize()
+		local szText = GetFormatText(_L["QiYu Tip"], 224)
+		OutputTip(szText, 360 , {nX, nY, nW, nH})
+	end
+	local fnLeave = function()
+		HideTip()
+	end
+
+	LR_AS_Base.AddButton(page, "btn_5", _L["Show Group"], 340, 555, 110, 36, function() LR_AS_Group.ShowGroup() end)
+	LR_AS_Base.AddButton(page, "btn_4", _L["Reading Statistics"], 470, 555, 110, 36, function() LR_BookRd_Panel:Open() end)
+	LR_AS_Base.AddButton(page, "btn_3", _L["QiYu Detail"], 600, 555, 110, 36, function() LR_ACS_QiYu.OpenQYDetail_Panel() end)
+	LR_AS_Base.AddButton(page, "btn_2", _L["Settings"], 730, 555, 110, 36, function() LR_AccountStatistics.SetOption() end)
+	LR_AS_Base.AddButton(page, "btn_1", _L["QiYu About"], 860, 555, 110, 36, nil, fnEnter, fnLeave)
+end
+
+function LR_ACS_QiYu.OpenQYDetail_Panel()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local ServerInfo = {GetUserServer()}
+	local realArea, realServer = ServerInfo[5], ServerInfo[6]
+	local szName = me.szName
+	local dwID = me.dwID
+
+	LR_ACS_QiYu_Panel:Open(realArea, realServer, dwID)
+end
+
 ----------------------------------------------------
 ----小窗口
 ----------------------------------------------------
@@ -964,7 +1048,7 @@ function LR_ACS_QiYu_Panel:Init()
 	local hComboBox = self:Append("ComboBox", frame, "hComboBox", {w = 160, x = 20, y = 51, text = ""})
 	hComboBox:Enable(true)
 	hComboBox.OnClick = function (m)
-		local TempTable_Cal, TempTable_NotCal = LR_AccountStatistics.SeparateUsrList()
+		local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 		tsort(TempTable_Cal, function(a, b)
 			if a.nLevel ==  b.nLevel then
 				return a.dwForceID < b.dwForceID
@@ -1061,7 +1145,7 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 
 	--设置ComboBox的名字
 	local hComboBox = self:Fetch("hComboBox")
-	hComboBox:SetText(LR_AccountStatistics.AllUsrList[szKey].szName)
+	hComboBox:SetText(LR_AS_Info.AllUsrList[szKey].szName)
 
 	LR_ACS_QiYu.AllUsrData[szKey] = LR_ACS_QiYu.AllUsrData[szKey] or {}
 	local QY_Record = LR_ACS_QiYu.AllUsrData[szKey].qiyu_data or {}

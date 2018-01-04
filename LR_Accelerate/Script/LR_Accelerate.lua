@@ -5,11 +5,11 @@ local mfloor, mceil, mmin, mmax = math.floor, math.ceil, math.min, math.max
 local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remove, table.sort
 --------------------------------------------------
 LR_Accelerate = LR_Accelerate or {
-	delta=0,
-	cd=1.5,
-	jump=1,
-	Lv90=54.782,
-	Lv95=47.17425,
+	delta = 0,
+	cd = 1.5,
+	jump = 1,
+	Lv90 = 54.782,
+	Lv95 = 47.17425,
 }
 
 ---95：95等级第一资料片：剑胆琴心
@@ -18,8 +18,18 @@ LR_Accelerate = LR_Accelerate or {
 ---953:95等级第四资料片：风骨霸刀
 ---954:95等级第五资料片：日月凌空
 LR_Accelerate.UsrData = {
-	bOn=false,
-	version=954,
+	bOn = false,
+	version = 955,
+}
+
+local JIA_SU = {
+	[90] = "Lv90",
+	[95] = "Lv95",
+	[951] = "Lv95",
+	[952] = "Lv95",
+	[953] = "Lv95",
+	[954] = "Lv95",
+	[955] = "Lv95",
 }
 
 LR_Accelerate.QiXueLv90 = {
@@ -106,20 +116,36 @@ LR_Accelerate.QiXueLv954 = {
 	--[12]={szName=_L["YiFeng(BaDao)"],delta=51},
 }
 
+LR_Accelerate.QiXueLv955 = {
+	[1]={szName=_L["Acupoint:None(Default)"],delta=0},		--默认：无加速，GCD1.5s
+	[2]={szName=_L["MengGe(WanHua)"],delta=60},	--梦歌（万花）
+	[3]={szName=_L["ZhenShang(QiXiu)"],delta=50},	--枕上（七秀）
+	[4]={szName=_L["DuShou(WuDu)"],delta=102},	--毒手（五毒）
+	[5]={szName=_L["JuJingNingShen(TangMen)"],delta=204},	--聚精凝神（唐门）
+	--[6]={szName=_L["YuePo(MingJiao)"],delta=52},	--月破（明教）
+	[7]={szName=_L["TaiJiWuJi(ChunYang)"],delta=60},	--太极无极（纯阳）
+	[8]={szName=_L["QinXin/NingJue(ChangGeMen)"],delta=51},	--沁心/凝绝（长歌门）
+	[9]={szName=_L["RuFeng(CangJian)"],delta=51},	--如风（藏剑）
+	[10]={szName=_L["SuiBing(NaiXiu)"],delta=51},		--碎冰（奶秀）
+	--[11]={szName=_L["FaJing(MingJiaoT)"],delta=105},	--法境（明教T）
+	--[12]={szName=_L["YiFeng(BaDao)"],delta=51},
+}
+
 
 LR_Accelerate.QiXue = {}
 
 LR_Accelerate.YuShe = {
 	{szName=_L["Default(1.5sGCD)"],cd=1.5,jump=1,QiXue=1},
-	{szName=_L["MingJiaoDPS"],cd=1,jump=1,QiXue=6},
-	{szName=_L["MingJiaoT"],cd=1,jump=1,QiXue=1},
+	{szName=_L["MingJiaoDPS"],cd=1,jump=1,QiXue=1},
+	--{szName=_L["MingJiaoT"],cd=1,jump=1,QiXue=1},
 	{szName=_L["QiChun"],cd=1.5,delta=0,jump=1,QiXue=7},
-	{szName=_L["BingXin(XinZhuang)"],cd=2.4375,jump=3,QiXue=3},
-	{szName=_L["BingXin(YuSu)"],cd=3,jump=3,QiXue=3},
+	{szName=_L["BingXinDaiXian(XinZhuang)"],cd=2.4375,jump=3,QiXue=3},
+	{szName=_L["BingXinDaiXian(Normal)"],cd=3,jump=3,QiXue=3},
 	{szName=_L["NaiXiu(HuiXuePiaoYao)"],cd=3,jump=3,QiXue=1},
-	{szName=_L["NaiXiu(HuiXuePiaoYao)+SuiBing"],cd=3,jump=3,QiXue=10},
-	{szName=_L["NaiXiu(LingLongKongHou)"],cd=2.5,jump=5,QiXue=1},
-	{szName=_L["NaiXiu(LingLongKongHou)+SuiBing"],cd=2.5,jump=5,QiXue=10},
+	--{szName=_L["NaiXiu(HuiXuePiaoYao)+SuiBing"],cd=3,jump=3,QiXue=10},
+	{szName=_L["NaiXiu(HuiXuePiaoYao)+GuiZi"],cd=2.4375,jump=3,QiXue=1},
+	--{szName=_L["NaiXiu(LingLongKongHou)"],cd=2.5,jump=5,QiXue=1},
+	--{szName=_L["NaiXiu(LingLongKongHou)+SuiBing"],cd=2.5,jump=5,QiXue=10},
 	{szName=_L["HuaJian(KuaiXue)"],cd=5,jump=5,QiXue=2},
 	{szName=_L["HuaJian(KuaiXue-QingGe)"],cd=3.125,jump=5,QiXue=2},
 	{szName=_L["HuaJian(YangMingZhi)"],cd=1.5,jump=1,QiXue=2},
@@ -163,19 +189,22 @@ function LR_Accelerate_Panel:OnCreate()
 
 	LR_Accelerate_Panel.UpdateAnchor(this)
 	RegisterGlobalEsc("LR_Accelerate_Panel",function () return true end ,function() LR_Accelerate_Panel:Open() end)
-	if LR_Accelerate.UsrData.version==95 then
+	--[[
+	if LR_Accelerate.UsrData.version == 95 then
 		LR_Accelerate.QiXue=clone(LR_Accelerate.QiXueLv95)
-	elseif LR_Accelerate.UsrData.version==90 then
+	elseif LR_Accelerate.UsrData.version == 90 then
 		LR_Accelerate.QiXue=clone(LR_Accelerate.QiXueLv90)
-	elseif LR_Accelerate.UsrData.version==951 then
+	elseif LR_Accelerate.UsrData.version == 951 then
 		LR_Accelerate.QiXue=clone(LR_Accelerate.QiXueLv951)
-	elseif LR_Accelerate.UsrData.version==952 then
+	elseif LR_Accelerate.UsrData.version == 952 then
 		LR_Accelerate.QiXue=clone(LR_Accelerate.QiXueLv952)
-	elseif LR_Accelerate.UsrData.version==953 then
+	elseif LR_Accelerate.UsrData.version == 953 then
 		LR_Accelerate.QiXue=clone(LR_Accelerate.QiXueLv953)
-	elseif LR_Accelerate.UsrData.version==954 then
+	elseif LR_Accelerate.UsrData.version == 954 then
 		LR_Accelerate.QiXue=clone(LR_Accelerate.QiXueLv954)
 	end
+	]]
+	LR_Accelerate.QiXue = clone(LR_Accelerate[sformat("QiXueLv%d", LR_Accelerate.UsrData.version)])
 
 	LR_Accelerate.delta=0
 	LR_Accelerate.cd=1.5
@@ -213,6 +242,20 @@ function LR_Accelerate_Panel:Init()
 	local imgTab = self:Append("Image", frame,"TabImg",{w = 381,h = 33,x = 0,y = 50})
     imgTab:SetImage("ui\\Image\\UICommon\\ActivePopularize2.UITex",46)
 	imgTab:SetImageType(11)
+
+	local UIButton_FAQ = self:Append("UIButton", frame, "FAQ" , {x = 318 , y = 14 , w = 22 , h = 22, ani = {"ui\\Image\\UICommon\\CommonPanel2.UITex", 48, 50, 54, 55}, })
+	UIButton_FAQ.OnEnter = function()
+		local x, y = UIButton_FAQ:GetAbsPos()
+		local w, h = UIButton_FAQ:GetSize()
+		local szXml = {}
+		szXml[#szXml+1] = GetFormatText(_L["TIP01"], 136, 255, 128, 0)
+
+		OutputTip(tconcat(szXml), 600, {x, y, 0, 0})
+	end
+	UIButton_FAQ.OnLeave = function()
+		HideTip()
+	end
+
 
 	local hPageSet = self:Append("PageSet", frame, "PageSet", {x = 20, y = 180, w = 360, h = 300})
 	local hWinIconView = self:Append("Window", hPageSet, "WindowItemView", {x = 0, y = 0, w = 360, h = 300})
@@ -315,12 +358,13 @@ function LR_Accelerate_Panel:Init()
 
 	local t_table = LR_Accelerate.QiXue or {}
 	hComboBox.OnClick = function (m)
-			for i=1,#t_table,1 do
-				tinsert (m,{szOption=t_table[i].szName,bCheck=false,bChecked=false,fnAction= function ()
+			for i, v in pairs(t_table) do
+			--for i = 1, #t_table, 1 do
+				tinsert (m, {szOption = t_table[i].szName, bCheck = false, bChecked = false, fnAction = function ()
 					hComboBox:SetText(t_table[i].szName)
 					LR_Accelerate.delta = t_table[i].delta
 
-					local cc=self:Fetch("Scroll")
+					local cc = self:Fetch("Scroll")
 					if cc then
 						self:ClearHandle(cc)
 					end
@@ -360,68 +404,45 @@ function LR_Accelerate_Panel:Init()
 	end
 
 	--------------版本选择
-	local hComboBoxVersion = self:Append("ComboBox", frame, "hComboBoxVersion", {w = 160, x = 20, y = 480, text = _L["Lv954 Version"] })
+	local hComboBoxVersion = self:Append("ComboBox", frame, "hComboBoxVersion", {w = 160, x = 20, y = 480, text = _L[sformat("Lv%d Version", LR_Accelerate.UsrData.version)] })
 	hComboBoxVersion:Enable(true)
 
 	local t_table = LR_Accelerate.QiXue or {}
 	hComboBoxVersion.OnClick = function (m)
-		local menu={
-			{szOption=_L["Lv954 Version"] ,bCheck=true,bMCheck=true,bChecked=function() return LR_Accelerate.UsrData.version==954 end ,fnAction= function ()
-					hComboBoxVersion:SetText(_L["Lv954 Version"])
-					LR_Accelerate.UsrData.version=954
-					LR_Accelerate.QiXue=clone(LR_Accelerate.QiXueLv954)
+		local menu = {}
+		local nVersion = {955, 954, 953, 952, 951, 95, 90}
+		for k, v in pairs(nVersion) do
+			menu[k] = { szOption = _L[sformat("Lv%d Version", v)], bCheck = true, bMCheck = true,
+				bChecked = function() return LR_Accelerate.UsrData.version == v end,
+				fnAction = function()
+					hComboBoxVersion:SetText(_L[sformat("Lv%d Version", v)])
+					LR_Accelerate.UsrData.version = v
+					LR_Accelerate.QiXue = clone(LR_Accelerate[sformat("QiXueLv%d", v)])
+
+					LR_Accelerate.delta = 0
+					LR_Accelerate.cd = 1.5
+					LR_Accelerate.jump = 1
+
+					hComboBox_2:SetText(_L["Default(1.5sGCD)"])
+					hComboBox:SetText(_L["Acupoint:None(Default)"])
+					Editbox_cd:SetText("1.5")
+					Editbox_jump:SetText("1")
+
 					local cc=self:Fetch("Scroll")
 					if cc then
 						self:ClearHandle(cc)
 					end
 					self:LoadItemBox(hScroll)
 					hScroll:UpdateList()
-				end},
-			{szOption=_L["Lv952 Version"] ,bCheck=true,bMCheck=true,bChecked=function() return LR_Accelerate.UsrData.version==952 end ,fnDisable=function() return true end ,fnAction= function ()
-					hComboBoxVersion:SetText(_L["Lv952 Version"])
-					LR_Accelerate.UsrData.version=952
-					LR_Accelerate.QiXue=clone(LR_Accelerate.QiXueLv952)
 					local cc=self:Fetch("Scroll")
 					if cc then
 						self:ClearHandle(cc)
 					end
 					self:LoadItemBox(hScroll)
 					hScroll:UpdateList()
-				end},
-			{szOption=_L["Lv951 Version"] ,bCheck=true,bMCheck=true,bChecked=function() return LR_Accelerate.UsrData.version==951 end ,fnDisable=function() return true end ,fnAction= function ()
-					hComboBoxVersion:SetText(_L["Lv951 Version"])
-					LR_Accelerate.UsrData.version=951
-					LR_Accelerate.QiXue=clone(LR_Accelerate.QiXueLv951)
-					local cc=self:Fetch("Scroll")
-					if cc then
-						self:ClearHandle(cc)
-					end
-					self:LoadItemBox(hScroll)
-					hScroll:UpdateList()
-				end},
-			{szOption=_L["Lv95 Version"] ,bCheck=true,bMCheck=true,bChecked=function() return LR_Accelerate.UsrData.version==95 end ,fnDisable=function() return true end ,fnAction= function ()
-					hComboBoxVersion:SetText(_L["Lv95 Version"])
-					LR_Accelerate.UsrData.version=95
-					LR_Accelerate.QiXue=clone(LR_Accelerate.QiXueLv95)
-					local cc=self:Fetch("Scroll")
-					if cc then
-						self:ClearHandle(cc)
-					end
-					self:LoadItemBox(hScroll)
-					hScroll:UpdateList()
-				end},
-			{szOption=_L["Lv90 Version"] , bCheck=true,bMCheck=true,bChecked=function() return LR_Accelerate.UsrData.version==90 end ,fnDisable=function() return true end ,fnAction= function ()
-					hComboBoxVersion:SetText(_L["Lv90 Version"])
-					LR_Accelerate.UsrData.version=90
-					LR_Accelerate.QiXue=clone(LR_Accelerate.QiXueLv90)
-					local cc=self:Fetch("Scroll")
-					if cc then
-						self:ClearHandle(cc)
-					end
-					self:LoadItemBox(hScroll)
-					hScroll:UpdateList()
-				end},
-		}
+				end
+			}
+		end
 		for i=1,#menu,1 do
 			tinsert(m,menu[i])
 		end
@@ -429,7 +450,7 @@ function LR_Accelerate_Panel:Init()
 	end
 
 	----------关于
-	LR.AppendAbout(LR_Accelerate_Panel,frame)
+	LR.AppendAbout(LR_Accelerate_Panel, frame)
 end
 
 function LR_Accelerate_Panel:Open()
@@ -463,21 +484,7 @@ function LR_Accelerate_Panel:LoadItemBox(hWin)
 		if Zhenshu_Yuan / (Zhenshu_Yuan- i + 1) * 1024 - 1024 == Jiasulvzhi then
 			Jiasulvzhi = Jiasulvzhi + 1
 		end
-		local jiasu=0
-
-		if LR_Accelerate.UsrData.version==95 then
-			jiasu=LR_Accelerate.Lv95
-		elseif LR_Accelerate.UsrData.version==90 then
-			jiasu=LR_Accelerate.Lv90
-		elseif LR_Accelerate.UsrData.version==951 then
-			jiasu=LR_Accelerate.Lv95
-		elseif LR_Accelerate.UsrData.version==952 then
-			jiasu=LR_Accelerate.Lv95
-		elseif LR_Accelerate.UsrData.version==953 then
-			jiasu=LR_Accelerate.Lv95
-		elseif LR_Accelerate.UsrData.version==954 then
-			jiasu=LR_Accelerate.Lv95
-		end
+		local jiasu = LR_Accelerate[JIA_SU[LR_Accelerate.UsrData.version]] or 0
 
 		local YuZhi = mceil ((Jiasulvzhi - LR_Accelerate.delta )  * jiasu / 10.24)
 		if YuZhi <= 0 then

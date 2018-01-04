@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil = math.floor, math.ceil
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 local AddonPath="Interface\\LR_Plugin\\LR_HeadName"
-local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_HeadName"
+local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_HeadName"
 local _L = LR.LoadLangPack(AddonPath)
 -----------------------------------------------
 local sziniFile="Interface\\LR_Plugin\\LR_HeadName\\UI\\LR_Balloon.ini"

@@ -6,7 +6,7 @@ local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, tabl
 local VERSION = "20170918"
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
-local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_TeamGrid"
+local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
 local _KungfuText={
 	[0] = {text=_L["xia"],rgb=LR.MenPaiColor[0]},
@@ -1960,7 +1960,10 @@ function LR_TeamGrid.SwitchPanel()
 		return
 	end
 	if LR_TeamGrid.bOn then
-		if me.IsInRaid() then
+		local scene = me.GetScene()
+		if scene.dwMapID == 296 then
+			LR_TeamGrid.ClosePanel()
+		elseif me.IsInRaid() then
 			LR_TeamGrid.OpenPanel()
 		elseif me.IsInParty() and not LR_TeamGrid.UsrData.CommonSettings.bShowOnlyInRaidMode then
 			LR_TeamGrid.OpenPanel()
@@ -2572,6 +2575,8 @@ function LR_TeamGrid.CheckIsbOpenPanel()
 	if not LR_TeamGrid.bOn then
 		return false
 	end
+	local scene = me.GetScene()
+
 	if me.IsInParty() then
 		return true
 	end
@@ -2706,12 +2711,19 @@ function LR_TeamGrid.SwitchSystemRaidPanel()
 	if not me then
 		return
 	end
+	local scene = me.GetScene()
 	if not LR_TeamGrid.bOn then
 		if me.IsInRaid() and not frame then
 			OpenRaidPanel()
 		end
 		return
 	end
+	--Output("s", scene.dwMapID == 74, me.IsInRaid(), not frame)
+	if scene.dwMapID == 296 and me.IsInRaid() then
+		OpenRaidPanel()
+		return
+	end
+
 	if not LR_TeamGrid.UsrData.CommonSettings.bShowSystemGridPanel then
 		if frame then
 			Wnd.CloseWindow(frame)
@@ -2731,6 +2743,12 @@ function LR_TeamGrid.SwitchSystemTeamPanel()
 		if me.IsInParty() and frame and not frame:IsVisible() then
 			frame:Show()
 		end
+		return
+	end
+
+	local scene = me.GetScene()
+	if scene.dwMapID == 296 and me.IsInParty() and not me.IsInRaid() and not frame:IsVisible()  then
+		frame:Show()
 		return
 	end
 

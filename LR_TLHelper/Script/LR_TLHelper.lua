@@ -648,8 +648,13 @@ function LR_TLHelper.OpenPanel()
 	if LR.GetXinFa() ~= Table_GetSkillName(10225,1) then
 		return
 	end
-	Wnd.OpenWindow("Interface\\LR_Plugin\\LR_TLHelper\\UI\\LR_TLHelper.ini", "LR_TLHelper")
-	LR_TLHelper.FrameLastTime=GetLogicFrameCount()
+	local scene = me.GetScene()
+	if scene.dwMapID == 296 then
+		Wnd.CloseWindow("LR_TLHelper")
+	else
+		Wnd.OpenWindow("Interface\\LR_Plugin\\LR_TLHelper\\UI\\LR_TLHelper.ini", "LR_TLHelper")
+		LR_TLHelper.FrameLastTime=GetLogicFrameCount()
+	end
 end
 
 function LR_TLHelper.BUFF_UPDATE()
@@ -696,6 +701,7 @@ function LR_TLHelper.BUFF_UPDATE()
 end
 
 LR.RegisterEvent("FIRST_LOADING_END",function() LR_TLHelper.OpenPanel() end)
+LR.RegisterEvent("LOADING_END",function() LR_TLHelper.OpenPanel() end)
 LR.RegisterEvent("DO_SKILL_CAST",function() LR_TLHelper.UpdateXinFa() end)
 LR.RegisterEvent("BUFF_UPDATE",function() LR_TLHelper.BUFF_UPDATE() end)
 

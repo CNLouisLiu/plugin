@@ -1,0 +1,85 @@
+data={
+	["LR_GKP_RECORD"]="懒人金团记录",
+	["GKP List"]="金团记录",
+	["Trade List"]="交易记录",
+	["szItemName"]="物品名称",
+	["Purchaser"]="购买者",
+	["Money"]="金钱",
+	["Source"]="来源",
+	["Time"]="获取时间",
+	["New Bill"]="新建账单",
+	["New"]="新建",
+	["Cancel"]="取消",
+	["Main_Name"]="主名字",
+	["Sub_Name"]="后缀",
+	["%s_%s_%04dy%02dm%02dd_%02d:%02d:%02d"]="%s_%s_%04d年%02d月%02d日_%02d:%02d:%02d",
+	["Some Dungeon"]="某秘境",
+	["You have no bill now. Create one or load One?"]="你还没有账单。新建还是载入？",
+	["Load"]="载入",
+
+	["To:"]="分配给:",
+	["Item Name:"]="物品名字:",
+	["Source:"]="来源:",
+	["Money:"]="拍卖金额:",
+	["OK"]="确定",
+	["Bill Options"]="账单选项",
+	["Open LR_GKP Panel"]="打开懒人金团记录",
+	["LR GKP"]="懒人金团记录",
+	["Create a bill"]="新建账单",
+	["Change to another bill"]="切换账单",
+	["%04dy%02dm%02dd %02d:%02d:%02d"]="%04d年%02d月%02d日 %02d:%02d:%02d",
+	["Total:"]="拍卖总计：",
+
+	["Treasure Box"]="宝箱",
+	["Penalty"]="罚款",
+	["Boss"]="老板",
+	["Other"]="其他",
+
+	["Add record"]="手动添加",
+	["Trade record"]="发布拍卖纪录",
+	["Debt record"]="发布欠债记录",
+	["You must be in a team, and be distributor.\n"]="必须在组队状态下，且拥有分配权限。\n",
+
+	["No such bill.\n"]="账单不存在。\n",
+	["Distribute  manual"]="手动分配",
+	["unknown"]="未知来源",
+	["Distribute Item"]="分配物品",
+	["Please choose"]="请选择",
+
+	[":%d Gold"]="：%d金",
+	["====Consumption Statistics===="]="=======消费统计=======",
+	["=========END========="]="========结束========",
+	["======Debt Statistics======"]="======欠账统计=======",
+	["Total: %d Gold"]="总计拍卖金额：%d金",
+
+	["Trade Target"]="交易对象",
+	["Jiang"]="将",
+	["for %d Gold dis to"]="以%d金记录给",
+
+
+	["Modify"]="修改",
+	["Delete"]="删除",
+
+	["Received"]="收到",
+	["Send"]="付给",
+	["%d Gold"]="%d金",
+
+	["szBelongBill"]="所属",
+	["this login, in any bill"]="本次登录记录，不在任何账单中",
+	
+	["Sync begin\n"]="同步开始\n",
+	["Sync end\n"]="同步结束\n",
+	["Sync record"]="同步数据给其他人",
+	["Are you sure to sync record to others?"]="确定同步数据给其他人？",
+	["Yes"]="是的",
+	["No"]="不",
+
+	--20180102add--
+	["GKP_TIP01"]="1、懒人金团记录以账单为单位进行显示，请在【账单选项】->【账单切换】中选择要显示的账单。\n",
+	["GKP_TIP02"]="2、只有组队状态下的，拥有分配权限的人才有资格新建账单。\n",
+	["GKP_TIP03"]="3、只有组队状态下的，拥有分配权限的人才有资格添加删除拍卖记录。\n",
+	["GKP_TIP04"]="4、添加的拍卖记录会录入当前显示的账单\n",
+	["Received money: %d Gold"]="收到金额：%d金",
+	["Not received money: %d Gold"]="未收金额：%d金",
+
+}

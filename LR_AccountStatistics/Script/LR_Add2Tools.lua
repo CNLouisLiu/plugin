@@ -1,5 +1,5 @@
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_AccountStatistics"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics"
 local _L = LR.LoadLangPack(AddonPath)
 local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
 local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
@@ -108,10 +108,10 @@ local LR_AccountStatistics_UI = {
 	tWidget = {
 		{name = "LR_Acc_UI_CheckBox1", type = "CheckBox", text = _L["Allow others to see this character's record"], x = 0, y = 0, w = 200,
 			default = function ()
- 				return LR_AccountStatistics.UsrData.OthersCanSee
+ 				return LR_AS_Base.UsrData.OthersCanSee
 			end,
 			callback = function (enabled)
-				LR_AccountStatistics.UsrData.OthersCanSee = enabled
+				LR_AS_Base.UsrData.OthersCanSee = enabled
 				local frame = Station.Lookup("Normal/LR_AccountStatistics")
 				if frame then
 					LR_AccountStatistics.ListAS()
@@ -139,13 +139,13 @@ local LR_AccountStatistics_UI = {
 			end,
 		},{name = "LR_Acc_UI_AutoSave", type = "CheckBox", text = _L["Auto save"], x = 0, y = 30, w = 200,
 			enable = function()
-				return LR_AccountStatistics.UsrData.OthersCanSee
+				return LR_AS_Base.UsrData.OthersCanSee
 			end,
 			default = function ()
- 				return LR_AccountStatistics.UsrData.AutoSave
+ 				return LR_AS_Base.UsrData.AutoSave
 			end,
 			callback = function (enabled)
-				LR_AccountStatistics.UsrData.AutoSave = enabled
+				LR_AS_Base.UsrData.AutoSave = enabled
 			end,
 			Tip = function()
 				local szXml = {}
@@ -157,11 +157,11 @@ local LR_AccountStatistics_UI = {
 			end,
 		},{name="LR_Acc_UI_FP",type="CheckBox",text=_L["Enable floating bar"],x = 100 , y = 30, w = 200,
 			default = function ()
- 				return LR_AccountStatistics.UsrData.FloatPanel
+ 				return LR_AS_Base.UsrData.FloatPanel
 			end,
 			callback = function (enabled)
-				LR_AccountStatistics.UsrData.FloatPanel=enabled
-				if LR_AccountStatistics.UsrData.FloatPanel then
+				LR_AS_Base.UsrData.FloatPanel=enabled
+				if LR_AS_Base.UsrData.FloatPanel then
 					Wnd.OpenWindow("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_FP.ini", "LR_AccountStatistics_FP")
 				else
 					Wnd.CloseWindow("LR_AccountStatistics_FP")
@@ -199,7 +199,7 @@ local LR_AccountStatistics_UI = {
 			end,
 		},{	name = "LR_Acc_UI_an5", type = "Button", x = 0, y = 200, text = _L["Reset settings"], w = 150, h = 40,
 			callback = function()
-				LR_AccountStatistics.UsrData = clone(LR_AccountStatistics.default.UsrData)
+				LR_AS_Base.UsrData = clone(LR_AS_Base.default.UsrData)
 				LR_AccountStatistics_FBList.ResetData()
 				LR_AccountStatistics_RiChang.ResetMenuList()
 				LR_TOOLS:OpenPanel(_L["LR_AccountStatistics"])
@@ -260,6 +260,7 @@ local LR_AS_Normal_Settings = {
 									LR_AccountStatistics_FBList.SortMapbShow ()
 									LR_AccountStatistics_FBList.SaveCommonSetting ()
 								end
+								LR_AccountStatistics_FBList.ReFreshTitle()
 								LR_AccountStatistics_FBList.ListFB()
 							end,
 							fnMouseEnter = function()
@@ -301,6 +302,7 @@ local LR_AS_Normal_Settings = {
 				LR_AccountStatistics_FBList.UsrData.CommonSetting = enabled
 				if LR_AccountStatistics_FBList.UsrData.CommonSetting then
 					LR_AccountStatistics_FBList.LoadCommonSetting ()
+					LR_AccountStatistics_FBList.ReFreshTitle()
 					LR_AccountStatistics_FBList.ListFB()
 				end
 			end,
@@ -325,6 +327,7 @@ local LR_AS_Normal_Settings = {
 							fnAction = function()
 								LR_AccountStatistics_RiChang.UsrData.List[RI_CHANG[v2]] = not LR_AccountStatistics_RiChang.UsrData.List[RI_CHANG[v2]]
 								LR_AccountStatistics_RiChang.SaveCommomMenuList()
+								LR_AccountStatistics_RiChang.ReFreshTitle()
 								LR_AccountStatistics_RiChang.ListRC()
 							end,
 							fnDisable = function()
@@ -342,6 +345,8 @@ local LR_AS_Normal_Settings = {
 						fnAction = function()
 							v.bShow = not v.bShow
 							LR_AccountStatistics_RiChang.SaveCustomQuestList()
+							LR_AccountStatistics_RiChang.ReFreshTitle()
+							LR_AccountStatistics_RiChang.ListRC()
 						end,
 						fnDisable = function()
 							return _CheckRCData(v.szName)
@@ -357,7 +362,14 @@ local LR_AS_Normal_Settings = {
 								szMessage = sformat("%s %s?", _L["Sure to delete"], v.szName),
 								szName = "delete",
 								fnAutoClose = function() return false end,
-								{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() tremove(LR_AccountStatistics_RiChang.CustomQuestList, k); LR_AccountStatistics_RiChang.SaveCustomQuestList() end, },
+								{szOption = g_tStrings.STR_HOTKEY_SURE,
+									fnAction = function()
+										tremove(LR_AccountStatistics_RiChang.CustomQuestList, k)
+										LR_AccountStatistics_RiChang.SaveCustomQuestList()
+										LR_AccountStatistics_RiChang.ReFreshTitle()
+										LR_AccountStatistics_RiChang.ListRC()
+									end,
+								},
 								{szOption = g_tStrings.STR_HOTKEY_CANCEL, fnAction = function() end, },
 							}
 							MessageBox(msg)
@@ -453,6 +465,7 @@ local LR_AS_Normal_Settings = {
 				LR_AccountStatistics_RiChang.UsrData.bUseCommonData = enabled
 				if LR_AccountStatistics_RiChang.UsrData.bUseCommonData then
 					LR_AccountStatistics_RiChang.LoadCommomMenuList()
+					LR_AccountStatistics_RiChang.ReFreshTitle()
 					LR_AccountStatistics_RiChang.ListRC()
 				end
 			end,
@@ -472,6 +485,7 @@ local LR_AS_Normal_Settings = {
 						fnAction = function()
 							LR_ACS_QiYu.UsrData.List[QiYuName[v]] = not LR_ACS_QiYu.UsrData.List[QiYuName[v]]
 							LR_ACS_QiYu.SaveCommomUsrData()
+							LR_ACS_QiYu.ReFreshTitle()
 							LR_ACS_QiYu.ListQY()
 						end,
 						fnDisable = function()
@@ -494,6 +508,7 @@ local LR_AS_Normal_Settings = {
 				LR_ACS_QiYu.UsrData.bUseCommonData = enabled
 				if LR_ACS_QiYu.UsrData.bUseCommonData then
 					LR_ACS_QiYu.LoadCommomUsrData()
+					LR_ACS_QiYu.ReFreshTitle()
 					LR_ACS_QiYu.ListQY()
 				end
 			end,
@@ -652,11 +667,11 @@ LR_AccountStatistics_UI.menu = {
 	bCheck = true,
 	bMCheck = false,
 	bChecked = function ()
-		return LR_AccountStatistics.UsrData.FloatPanel
+		return LR_AS_Base.UsrData.FloatPanel
 	end,
 	fnAction = function ()
-		LR_AccountStatistics.UsrData.FloatPanel = not LR_AccountStatistics.UsrData.FloatPanel
-		if LR_AccountStatistics.UsrData.FloatPanel then
+		LR_AS_Base.UsrData.FloatPanel = not LR_AS_Base.UsrData.FloatPanel
+		if LR_AS_Base.UsrData.FloatPanel then
 			Wnd.OpenWindow("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_FP.ini", "LR_AccountStatistics_FP")
 		else
 			Wnd.CloseWindow("LR_AccountStatistics_FP")
@@ -667,10 +682,10 @@ LR_AccountStatistics_UI.menu = {
 		bCheck = true,
 		bMCheck = false,
 		bChecked = function ()
-			return LR_AccountStatistics.UsrData.OthersCanSee
+			return LR_AS_Base.UsrData.OthersCanSee
 		end,
 		fnAction = function ()
-			LR_AccountStatistics.UsrData.OthersCanSee = not LR_AccountStatistics.UsrData.OthersCanSee
+			LR_AS_Base.UsrData.OthersCanSee = not LR_AS_Base.UsrData.OthersCanSee
 		end
 	}, {bDevide = true}, {
 		szOption = _L["Open [LR_AccountStatistics] panel"],

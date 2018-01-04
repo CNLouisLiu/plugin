@@ -1,5 +1,5 @@
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_AccountStatistics\\UsrData"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local DB_name = "maindb.db"
 local _L  =  LR.LoadLangPack(AddonPath)
 local sformat, slen, sgsub, ssub, sfind  =  string.format, string.len, string.gsub, string.sub, string.find
@@ -54,7 +54,7 @@ function LR_AccountStatistics_Achievement.SaveData(DB)
 	end
 	local DB_REPLACE = DB:Prepare("REPLACE INTO achievement_data ( szKey, achievement_data, bDel ) VALUES ( ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
-	if LR_AccountStatistics.UsrData.OthersCanSee then
+	if LR_AS_Base.UsrData.OthersCanSee then
 		DB_REPLACE:BindAll(szKey, LR.JsonEncode(SelfData), 0)
 	else
 		DB_REPLACE:BindAll(szKey, LR.JsonEncode({}), 1)
@@ -261,7 +261,7 @@ function LR_Acc_Achievement_Panel:Open()
 end
 
 function LR_Acc_Achievement_Panel:LoadItemBox(hWin)
-	local TempTable_Cal, TempTable_NotCal = LR_AccountStatistics.SeparateUsrList()
+	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 
 	local m
 	m = self:LoadItem(hWin, TempTable_Cal, 1)

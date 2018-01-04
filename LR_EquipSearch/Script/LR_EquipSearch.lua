@@ -4,7 +4,7 @@ local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, 
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_EquipSearch"
-local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_EquipSearch"
+local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_EquipSearch"
 local _L = LR.LoadLangPack(AddonPath)
 local DB_Name = "EquipDB.db"
 local DB_Path = sformat("%s\\%s", SaveDataPath, DB_Name)

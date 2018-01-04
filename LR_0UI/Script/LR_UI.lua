@@ -278,7 +278,7 @@ function WndFrame:ctor(__name, __data)
 		end
 	end
 
-	self.__disableEffect = __data.disableEffect or false
+--[[	self.__disableEffect = __data.disableEffect or false
 	self.__w, self.__h = frame:GetSize()
 	if not LR_TOOLS.DisableEffect and not self.__disableEffect then
 		frame:Hide()
@@ -295,7 +295,7 @@ function WndFrame:ctor(__name, __data)
 	else
 		self:SetAlpha(255)
 		LR.DelayCall(20,function() self:_FireEvent("ScaleEnd") end)
-	end
+	end]]
 end
 
 function WndFrame:ccc()
@@ -935,6 +935,12 @@ function WndRadioBox:ctor(__parent, __name, __data)
 				end
 			end
 			self:_FireEvent("OnCheck", true)
+		end
+	end
+
+	self.__this.OnCheckBoxUncheck = function()
+		if self.__group then
+			self:_FireEvent("OnCheck", false)
 		end
 	end
 end
@@ -1640,6 +1646,9 @@ function ItemHandle:ctor(__parent, __name, __data)
 	end
 	self.__this.OnItemMouseLeave = function()
 		self:_FireEvent("OnLeave")
+	end
+	self.__this.OnItemRButtonClick = function()
+		self:_FireEvent("OnRClick")
 	end
 end
 
@@ -2728,7 +2737,7 @@ function CreateAddon:Destroy(__name)
 		local __h=self:Fetch(__name)
 		if __h then
 			if __h:GetSelf():GetType() == "WndFrame" then
-				local alpha=__h:GetAlpha()
+--[[				local alpha=__h:GetAlpha()
 				local _stopAlpha=50
 				if alpha > _stopAlpha and not LR_TOOLS.DisableEffect and not __h:GetdisableEffect() then
 					if alpha == 255 then
@@ -2738,7 +2747,7 @@ function CreateAddon:Destroy(__name)
 					local alpha2=_stopAlpha + math.floor(( self._endTime - GetTime() - 1 )/(self._endTime - self._startTime) * (255 - _stopAlpha))
 					__h:SetAlpha(alpha2)
 					LR.DelayCall(2, function() self:Destroy(__name) end)
-				else
+				else]]
 					for k,v in pairs (self.__items) do
 						if v:GetType() == "WndUICheckBox" then
 							__UICheckBoxGroups[v:GetGroup()] = nil
@@ -2748,7 +2757,7 @@ function CreateAddon:Destroy(__name)
 					end
 					__h:Destroy()
 					self.__items = {}
-				end
+				--end
 			else
 				local temp = {}
 				for k,v in pairs (self.__items) do
@@ -2772,7 +2781,7 @@ function CreateAddon:Destroy(__name)
 		local __name=__h:GetName()
 		if __h and __name then
 			if __h:GetSelf():GetType() == "WndFrame" then
-				local alpha=__h:GetAlpha()
+--[[				local alpha=__h:GetAlpha()
 				local _stopAlpha=50
 				if alpha > _stopAlpha and not LR_TOOLS.DisableEffect and not __h:GetdisableEffect()  then
 					if alpha == 255 then
@@ -2782,7 +2791,7 @@ function CreateAddon:Destroy(__name)
 					local alpha2=_stopAlpha + math.floor(( self._endTime - GetTime() - 1 )/(self._endTime - self._startTime) * (255 - _stopAlpha))
 					__h:SetAlpha(alpha2)
 					LR.DelayCall(2, function() self:Destroy(__name) end)
-				else
+				else]]
 					for k,v in pairs (self.__items) do
 						--Output(k,v:GetName())
 						if v:GetType() == "WndUICheckBox" then
@@ -2793,7 +2802,7 @@ function CreateAddon:Destroy(__name)
 					end
 					__h:Destroy()
 					self.__items = {}
-				end
+				--end
 			else
 				local temp = {}
 				for k,v in pairs (self.__items) do

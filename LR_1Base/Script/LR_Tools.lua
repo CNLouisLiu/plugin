@@ -39,7 +39,7 @@ RegisterCustomData("LR_TOOLS.DisableEffect", "20170426")
 
 function LR_TOOLS:OnCreate()
 	this:RegisterEvent("UI_SCALED")
-	this:RegisterEvent("ScaleEnd")
+	--this:RegisterEvent("ScaleEnd")
 	self:UpdateAnchor(this)
 
 	RegisterGlobalEsc("LR_TOOLS", function () return true end , function() LR_TOOLS:OpenPanel() end)
@@ -52,19 +52,16 @@ end
 function LR_TOOLS:OnEvents(event)
 	if event ==  "UI_SCALED" then
 		self:UpdateAnchor(this)
-	elseif event ==  "ScaleEnd" then
-		LR_TOOLS:Init2()
-
 	end
 end
 
-function LR_TOOLS.Init2()
+function LR_TOOLS:Init()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
-	local self = LR_TOOLS
-	local frame = self:Fetch("LR_TOOLS")
+	LR_TOOLS.Addons = {}
+	local frame = self:Append("Frame", "LR_TOOLS", {title = _L["JX3 LR Plugin"] , style = "NORMAL"})
 	-- Tab BgImage
 	local imgTab = self:Append("Image", frame, "TabImg", {w = 770, h = 33, x = 0, y = 50})
     imgTab:SetImage("ui\\Image\\UICommon\\ActivePopularize2.UITex", 46)
@@ -137,13 +134,13 @@ function LR_TOOLS.Init2()
 		for j = 1, #tAddonList, 1 do
 			--Addon Box
 			local hBox = self:Append("Handle", hScroll, sformat("tAddonList_hBox_%d_%d", i, j), {w = 160, h = 50, postype = 8})
-			self:Append("Image", hBox, sformat("imgBg_%d_%d", i, j), {w = 155, h = 50, image = "ui\\image\\uicommon\\rankingpanel.UITex", frame = 10})
+			self:Append("Image", hBox, sformat("imgBg_%d_%d", i, j), {w = 160, h = 50, image = "ui\\image\\uicommon\\rankingpanel.UITex", frame = 10})
 
 			local imgHover = self:Append("Image", hBox, sformat("tAddonList_imgHover_%d_%d", i, j), {w = 160, h = 50, image = "ui\\image\\uicommon\\rankingpanel.UITex", frame = 11, lockshowhide = 1})
-			hBox.imgSel = self:Append("Image", hBox, sformat("tAddonList_imgSel_%d_%d", i, j), {w = 160, h = 50, image = "ui\\image\\uicommon\\rankingpanel.UITex", frame = 11, lockshowhide = 1})
+			hBox.imgSel = self:Append("Image", hBox, sformat("tAddonList_imgSel_%d_%d", i, j), {w = 160, h = 50, image = "ui\\image\\uicommon\\rankingpanel.UITex", frame = 12, lockshowhide = 1})
 
-			self:Append("Image", hBox, sformat("tAddonList_imgIcon_%d_%d", i, j), {w = 40, h = 40, x = 5, y = 5}):SetImage(tAddonList[j].dwIcon)
-			self:Append("Text", hBox, sformat("tAddonList_txt_%d_%d", i, j), {w = 100, h = 50, x = 55, y = 0, text = tAddonList[j].szTitle})
+			self:Append("Image", hBox, sformat("tAddonList_imgIcon_%d_%d", i, j), {w = 40, h = 40, x = 8, y = 5}):SetImage(tAddonList[j].dwIcon)
+			self:Append("Text", hBox, sformat("tAddonList_txt_%d_%d", i, j), {w = 100, h = 50, x = 58, y = 0, text = tAddonList[j].szTitle})
 
 			local szName = ssub(sformat("tD_Win_%s", tAddonList[j].szName), 1, 30)
 			hBox.hWin = hWin
@@ -181,13 +178,15 @@ function LR_TOOLS.Init2()
 
 	------≤Â»Îπÿ”⁄
 	LR.AppendAbout(LR_TOOLS, frame)
+
+	LR.Animate(frame:GetSelf()):FadeIn(100):Pos({-20, -20})
 end
 
-function LR_TOOLS:Init()
+--[[function LR_TOOLS:Init()
 	LR_TOOLS.Addons = {}
 	local frame = self:Append("Frame", "LR_TOOLS", {title = _L["JX3 LR Plugin"] , style = "NORMAL"})
 	frame.ScaleEnd = LR_TOOLS.Init2
-end
+end]]
 
 function LR_TOOLS:Selected(hBox, nS, nTotal)
 	for i = 1, nTotal do

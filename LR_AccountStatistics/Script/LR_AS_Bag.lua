@@ -1,5 +1,5 @@
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath = "Interface\\LR_Plugin\\@DATA\\LR_AccountStatistics\\UsrData"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local _L = LR.LoadLangPack(AddonPath)
 local DB_name = "maindb.db"
 local sformat, slen, sgsub, ssub, sfind = string.format, string.len, string.gsub, string.sub, string.find
@@ -74,8 +74,13 @@ function LR_AccountStatistics_Bag.HookBag()
 	if frame then --背包界面添加一个按钮
 		local LR_Btn_Bag = frame:Lookup("LR_Btn_Bag")
 		if not LR_Btn_Bag then
-			local LR_Btn_Bag = LR.AppendUI("UIButton", frame, "LR_Btn_Bag" , {x = 100 , y = 0 , w = 36 , h = 36, ani = {"ui\\Image\\button\\SystemButton_1.UITex", 35, 36, 37}, })
-			LR_Btn_Bag:SetAlpha(200)
+			local x = 55
+			local Btn_Mail = frame:Lookup("Btn_Mail")
+			if Btn_Mail then
+				x = 100
+			end
+			local LR_Btn_Bag = LR.AppendUI("UIButton", frame, "LR_Btn_Bag" , {x = x , y = -2 , w = 40 , h = 40, ani = {"ui\\Image\\button\\SystemButton_1.UITex", 35, 36, 37}, })
+			LR_Btn_Bag:SetAlpha(255)
 			LR_Btn_Bag.OnClick = function()
 				LR_AccountStatistics_Bag_Panel:Open()
 			end
@@ -209,7 +214,7 @@ function LR_AccountStatistics_Bag.SaveData(DB)
 		end
 	end
 	--添加数据
-	if not LR_AccountStatistics.UsrData.OthersCanSee then
+	if not LR_AS_Base.UsrData.OthersCanSee then
 		return
 	end
 	local DB_REPLACE2 = DB:Prepare("REPLACE INTO bag_item_data (szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum, bBind, bDel) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
@@ -219,6 +224,8 @@ function LR_AccountStatistics_Bag.SaveData(DB)
 		DB_REPLACE2:Execute()
 	end
 end
+--LR_AS_Base.Add2AutoSave({szKey = "SaveBagData", fnAction = LR_AccountStatistics_Bag.SaveData, order = 30})
+
 ------------------------------------------------------------------------------------------------------
 ---------记录仓库物品
 ------------------------------------------------------------------------------------------------------
@@ -232,7 +239,6 @@ LR_AccountStatistics_Bank.UsrTable = {}
 LR_AccountStatistics_Bank.Default = {
 	Version = "20170119",
 }
-
 
 function LR_AccountStatistics_Bank.GetItemByGrid ()
 	LR_AccountStatistics_Bank.ItemInBank =  {}
@@ -282,7 +288,7 @@ function LR_AccountStatistics_Bank.SaveData(DB)
 		end
 	end
 	--添加数据
-	if not LR_AccountStatistics.UsrData.OthersCanSee then
+	if not LR_AS_Base.UsrData.OthersCanSee then
 		return
 	end
 	local DB_REPLACE2 = DB:Prepare("REPLACE INTO bank_item_data (szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum, bBind, bDel) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
@@ -292,6 +298,7 @@ function LR_AccountStatistics_Bank.SaveData(DB)
 		DB_REPLACE2:Execute()
 	end
 end
+--LR_AS_Base.Add2AutoSave({szKey = "SaveBankData", fnAction = LR_AccountStatistics_Bank.SaveData, order = 30})
 
 ------------------------------------------------------------------------------------------------------
 ----记录邮件附件
@@ -587,7 +594,7 @@ function LR_AccountStatistics_Mail.SaveData(DB)
 	DB_REPLACE3:BindAll(belong, GetCurrentTime())
 	DB_REPLACE3:Execute()
 
-	if not LR_AccountStatistics.UsrData.OthersCanSee then
+	if not LR_AS_Base.UsrData.OthersCanSee then
 		--return
 	end
 	local DB_REPLACE = DB:Prepare("REPLACE INTO mail_item_data (bDel, szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum, bBind, nBelongMailID) VALUES ( 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
@@ -900,15 +907,6 @@ function LR_GuildBank.HookGuildBank()
 	end
 end
 
-function LR_GuildBank.ON_FRAME_CREATE()
-	local frame = arg0
-	local szName = frame:GetName()
-	if szName == "GuildBankPanel" then
-		LR.DelayCall(150, function() LR_GuildBank.HookGuildBank() end)
-	end
-end
-
-LR.RegisterEvent("ON_FRAME_CREATE", function() LR_GuildBank.ON_FRAME_CREATE() end)
 ------------------------------------------------------------------------------------------------------
 ----界面
 ------------------------------------------------------------------------------------------------------
@@ -983,8 +981,8 @@ function LR_AccountStatistics_Bag_Panel:OnCreate()
 	this:RegisterEvent("CUSTOM_DATA_LOADED")
 	LR_AccountStatistics_Bag_Panel.UpdateAnchor(this)
 	-------打开面板时保存数据
-	if LR_AccountStatistics.UsrData.AutoSave and LR_AccountStatistics.UsrData.OpenSave then
-		LR_AccountStatistics.AutoSave()
+	if LR_AS_Base.UsrData.AutoSave and LR_AS_Base.UsrData.OpenSave then
+		LR_AS_Base.AutoSave()
 	end
 	LR_AccountStatistics_Bag_Panel.ItemInBag = {}
 	LR_AccountStatistics_Bag_Panel.ItemInBank = {}
@@ -1046,7 +1044,7 @@ function LR_AccountStatistics_Bag_Panel:Init()
 
 	local t_table = LR_AccountStatistics_Bag.UsrTable or {}
 	hComboBox.OnClick = function (m)
-		local TempTable_Cal, TempTable_NotCal = LR_AccountStatistics.SeparateUsrList()
+		local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 		tsort(TempTable_Cal, function(a, b)
 			if a.nLevel == b.nLevel then
 				return a.dwForceID < b.dwForceID
@@ -1292,7 +1290,7 @@ function LR_AccountStatistics_Bag_Panel:OutputIconTip(item)
 			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Item belongs:(Mail)\n"], 16)
 			local ItemBelong = LR_AccountStatistics_Bag_Panel.ItemBelong[item.szKey] or {}
 			for szKey , v in pairs (ItemBelong) do
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("（%s_%s）%14s：   ", LR_AccountStatistics.AllUsrList[v.belongUsr].realArea, LR_AccountStatistics.AllUsrList[v.belongUsr].realServer, LR_AccountStatistics.AllUsrList[v.belongUsr].szName), 224)
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("（%s_%s）%14s：   ", LR_AS_Info.AllUsrList[v.belongUsr].realArea, LR_AS_Info.AllUsrList[v.belongUsr].realServer, LR_AS_Info.AllUsrList[v.belongUsr].szName), 224)
 				local mail_num =  (v.mail_num or 0)
 				local string_money = LR.FormatMoneyString(mail_num)
 				szTipInfo[#szTipInfo+1] = string_money .. GetFormatText("\n", 224)
@@ -1301,7 +1299,7 @@ function LR_AccountStatistics_Bag_Panel:OutputIconTip(item)
 			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Item belongs:(Bag/Bank/Mail)\n"], 16)
 			local ItemBelong = LR_AccountStatistics_Bag_Panel.ItemBelong[item.szKey] or {}
 			for szKey , v in pairs (ItemBelong) do
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("（%s_%s）%14s：", LR_AccountStatistics.AllUsrList[v.belongUsr].realArea, LR_AccountStatistics.AllUsrList[v.belongUsr].realServer, LR_AccountStatistics.AllUsrList[v.belongUsr].szName), 224)
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("（%s_%s）%14s：", LR_AS_Info.AllUsrList[v.belongUsr].realArea, LR_AS_Info.AllUsrList[v.belongUsr].realServer, LR_AS_Info.AllUsrList[v.belongUsr].szName), 224)
 				local bag_num = (v.bag_num or 0)
 				local bank_num =  (v.bank_num or 0)
 				local mail_num =  (v.mail_num or 0)
@@ -1313,7 +1311,7 @@ function LR_AccountStatistics_Bag_Panel:OutputIconTip(item)
 			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Item belongs:(Mail)\n"], 16)
 			local ItemBelong = LR_AccountStatistics_Bag_Panel.ItemBelong[item.szKey] or {}
 			for szKey , v in pairs (ItemBelong) do
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("（%s_%s）%14s：   ", LR_AccountStatistics.AllUsrList[v.belongUsr].realArea, LR_AccountStatistics.AllUsrList[v.belongUsr].realServer, LR_AccountStatistics.AllUsrList[v.belongUsr].szName), 224)
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("（%s_%s）%14s：   ", LR_AS_Info.AllUsrList[v.belongUsr].realArea, LR_AS_Info.AllUsrList[v.belongUsr].realServer, LR_AS_Info.AllUsrList[v.belongUsr].szName), 224)
 				local mail_num =  (v.mail_num or 0)
 				local string_money = LR.FormatMoneyString(mail_num)
 				szTipInfo[#szTipInfo+1] = string_money .. GetFormatText("\n", 224)
@@ -1322,7 +1320,7 @@ function LR_AccountStatistics_Bag_Panel:OutputIconTip(item)
 			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Item belongs:(Bag/Bank/Mail)\n"], 16)
 			local ItemBelong = LR_AccountStatistics_Bag_Panel.ItemBelong[item.szKey] or {}
 			for szKey , v in pairs (ItemBelong) do
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("（%s_%s）%14s：", LR_AccountStatistics.AllUsrList[v.belongUsr].realArea, LR_AccountStatistics.AllUsrList[v.belongUsr].realServer, LR_AccountStatistics.AllUsrList[v.belongUsr].szName), 224)
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("（%s_%s）%14s：", LR_AS_Info.AllUsrList[v.belongUsr].realArea, LR_AS_Info.AllUsrList[v.belongUsr].realServer, LR_AS_Info.AllUsrList[v.belongUsr].szName), 224)
 				local bag_num = (v.bag_num or 0)
 				local bank_num =  (v.bank_num or 0)
 				local mail_num =  (v.mail_num or 0)
@@ -1383,9 +1381,9 @@ function LR_AccountStatistics_Bag_Panel:OutputIconTip(item)
 				end
 				if item.szKey == "Money_0_0" then
 					if nLeftTime2 >= 0 then
-						szTimeLeft = sformat(" %s->%s  %14s (%d)   ", szSenderName, LR_AccountStatistics.AllUsrList[v.belong].szName,  szTimeLeft, tonumber(nMailID))
+						szTimeLeft = sformat(" %s->%s  %14s (%d)   ", szSenderName, LR_AS_Info.AllUsrList[v.belong].szName,  szTimeLeft, tonumber(nMailID))
 					else
-						szTimeLeft = sformat(_L[" %s->%s  overdue (%d)   "], szSenderName, LR_AccountStatistics.AllUsrList[v.belong].szName,  tonumber(nMailID))
+						szTimeLeft = sformat(_L[" %s->%s  overdue (%d)   "], szSenderName, LR_AS_Info.AllUsrList[v.belong].szName,  tonumber(nMailID))
 					end
 					if MailData[v.belong][tonumber(nMailID)].nEndTime - GetCurrentTime() < 60 * 60 * 24 * 7 then
 						szTipInfo[#szTipInfo+1] = sformat("%s%s%s", GetFormatText(sformat("%s",  szTimeLeft), 101), LR.FormatMoneyString(nStackNum), GetFormatText(sformat("\n",  szTimeLeft), 101))
@@ -1394,9 +1392,9 @@ function LR_AccountStatistics_Bag_Panel:OutputIconTip(item)
 					end
 				else
 					if nLeftTime2 >= 0 then
-						szTimeLeft = sformat(" %s->%s  %s (%d) \t%d\n", szSenderName, LR_AccountStatistics.AllUsrList[v.belong].szName,  szTimeLeft, tonumber(nMailID), nStackNum)
+						szTimeLeft = sformat(" %s->%s  %s (%d) \t%d\n", szSenderName, LR_AS_Info.AllUsrList[v.belong].szName,  szTimeLeft, tonumber(nMailID), nStackNum)
 					else
-						szTimeLeft = sformat(_L[" %s->%s  overdue (%d) \t%d\n"], szSenderName, LR_AccountStatistics.AllUsrList[v.belong].szName,  tonumber(nMailID), nStackNum)
+						szTimeLeft = sformat(_L[" %s->%s  overdue (%d) \t%d\n"], szSenderName, LR_AS_Info.AllUsrList[v.belong].szName,  tonumber(nMailID), nStackNum)
 					end
 					if MailData[v.belong][tonumber(nMailID)].nEndTime - GetCurrentTime() < 60 * 60 * 24 * 7 then
 						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s",  szTimeLeft), 101)
@@ -2074,7 +2072,7 @@ function LR_AccountStatistics_Bag_Panel:LoadItemBox(hWin)
 	elseif dwID == 0 then
 		hComboBox:SetText(GetClientPlayer().szName)
 	else
-		hComboBox:SetText(LR_AccountStatistics.AllUsrList[sformat("%s_%s_%d", realArea, realServer, dwID)].szName)
+		hComboBox:SetText(LR_AS_Info.AllUsrList[sformat("%s_%s_%d", realArea, realServer, dwID)].szName)
 	end
 
 	local hIconViewContent = self:Append("Handle", hWin, "IconViewContent", {x = 33, y = 33, w = 700, h = 300})

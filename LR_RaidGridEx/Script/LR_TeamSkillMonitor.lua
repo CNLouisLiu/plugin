@@ -3,128 +3,131 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
-local SaveDataPath="Interface\\LR_Plugin\\@DATA\\LR_TeamGrid"
+local AddonPath = "Interface\\LR_Plugin\\LR_RaidGridEx"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
 ------------------------------------------------------
 LR_TeamSkillMonitor = {
 	SkillMonitorData = {},
 }
-local _hSkillBox={}	---´æ·ÅskillboxµÄhandle
+local _hSkillBox = {}	---´æ·ÅskillboxµÄhandle
 ------------------------------------------------------
 -----¼¼ÄÜ¼à¿Ø
 ------------------------------------------------------
-LR_TeamSkillMonitor.SKILL_LIST={
-	[10080]={		----ÄÌÐã
-		{dwID=569,enable=true,},	---ÍõÄ¸
-		{dwID=555,enable=true,},		---·çÐä
-		{dwID=548,enable=true,},		---Áú³ØÀÖ
-		{dwID=557,enable=true,},		---ÌìµØµÍ°º
-		{dwID=551,enable=true,},		---Õ½¸´
-		{dwID=574,enable=false,},		---µûÅª×ã
-		{dwID=552,enable=false,},		---ÁÚÀïÇú
-		{dwID=550,enable=false,},		---ÈµÌ¤Ö¦
-		{dwID=568,enable=true,},		---·±Òô¼±½Ú
-		{dwID=9002,enable=true,},		---·öÒ¡
-		{dwID=9003,enable=true,},		---ÄôÔÆ
+LR_TeamSkillMonitor.SKILL_LIST = {
+	[10080] = {		----ÄÌÐã
+		{dwID = 569, enable = true, }, 	---ÍõÄ¸
+		{dwID = 555, enable = true, }, 		---·çÐä
+		--{dwID = 548, enable = true, }, 		---Áú³ØÀÖ
+		{dwID = 557, enable = true, }, 		---ÌìµØµÍ°º
+		{dwID = 551, enable = true, }, 		---Õ½¸´
+		{dwID = 574, enable = false, }, 		---µûÅª×ã
+		{dwID = 552, enable = false, }, 		---ÁÚÀïÇú
+		{dwID = 550, enable = false, }, 		---ÈµÌ¤Ö¦
+		{dwID = 568, enable = true, }, 		---·±Òô¼±½Ú
+		{dwID = 18221, enable = false, }, 		---Óàº®Ó³ÈÕ
+		{dwID = 9002, enable = true, }, 		---·öÒ¡
+		{dwID = 9003, enable = true, }, 		---ÄôÔÆ
 	},
-	[10028]={		----Àë¾­Ò×µÀ
-		{dwID=132,enable=true,},		---´ºÄà
-		{dwID=140,enable=true,},		---±ËÕë
-		{dwID=2663,enable=true,},		---Ìý·ç´µÑ©
-		{dwID=136,enable=true,},		---Ë®ÔÂÎÞ¼ä
-		{dwID=143,enable=false,},		---´óÕë
-		{dwID=141,enable=true,},		---ºÁÕë
-		{dwID=14963,enable=false,},		---´óÕÐ
-		{dwID=131,enable=true,},		---±ÌË®
-		{dwID=228,enable=true,},		---Ì«ÒõÖ¸
-		{dwID=9002,enable=true,},		---·öÒ¡
-		{dwID=9003,enable=true,},		---ÄôÔÆ
+	[10028] = {		----Àë¾­Ò×µÀ
+		{dwID = 132, enable = true, }, 		---´ºÄà
+		{dwID = 140, enable = true, }, 		---±ËÕë
+		{dwID = 2663, enable = true, }, 		---Ìý·ç´µÑ©
+		{dwID = 136, enable = true, }, 		---Ë®ÔÂÎÞ¼ä
+		{dwID = 143, enable = false, }, 		---´óÕë
+		{dwID = 141, enable = true, }, 		---ºÁÕë
+		{dwID = 14963, enable = false, }, 		---´óÕÐ
+		{dwID = 131, enable = true, }, 		---±ÌË®
+		{dwID = 228, enable = true, }, 		---Ì«ÒõÖ¸
+		{dwID = 9002, enable = true, }, 		---·öÒ¡
+		{dwID = 9003, enable = true, }, 		---ÄôÔÆ
 	},
-	[10176]={		----²¹Ìì
-		{dwID=2231,enable=true,},		---¹Æ»ó
-		{dwID=2957,enable=true,},		---Ê¥ÊÖ
-		{dwID=15132,enable=true,},		---´óÕÐ
-		{dwID=2234,enable=true,},		---¶¦
-		{dwID=2235,enable=true,},		---Ç§µû
-		{dwID=2230,enable=true,},		---Å®æ´
-		{dwID=2226,enable=true,},		---Ï×¼À
-		{dwID=9002,enable=true,},		---·öÒ¡
-		{dwID=9003,enable=true,},		---ÄôÔÆ
+	[10176] = {		----²¹Ìì
+		{dwID = 2231, enable = true, }, 		---¹Æ»ó
+		{dwID = 2957, enable = true, }, 		---Ê¥ÊÖ
+		{dwID = 15132, enable = true, }, 		---Þ§²Ë
+		{dwID = 2234, enable = true, }, 		---¶¦
+		{dwID = 2235, enable = true, }, 		---Ç§µû
+		{dwID = 2230, enable = true, }, 		---Å®æ´
+		{dwID = 2226, enable = true, }, 		---Ï×¼À
+		{dwID = 2228, enable = true, }, 		---»¯µû
+		{dwID = 18584, enable = true, }, 		---Áé¹Æ
+		{dwID = 9002, enable = true, }, 		---·öÒ¡
+		{dwID = 9003, enable = true, }, 		---ÄôÔÆ
 	},
-	[10448]={		-----ÏàÖª
-		{dwID=14082,enable=true,},		---Ó°×Ó
-		{dwID=14075,enable=true,},		---Æ½ÉËº¦¶Ü
-		{dwID=14076,enable=true,},		---¸¡¿Õ
-		{dwID=14084,enable=true,},		---Õ½¸´
-		{dwID=15068,enable=false,},		---Íµbuff
-		{dwID=9002,enable=true,},		---·öÒ¡
-		{dwID=9003,enable=true,},		---ÄôÔÆ
-	},
-}
-
-
-local DefaultSkillMonitorList={
-	[10080]={		----ÄÌÐã
-		{dwID=569,enable=true,},	---ÍõÄ¸
-		{dwID=555,enable=true,},		---·çÐä
-		{dwID=548,enable=true,},		---Áú³ØÀÖ
-		{dwID=557,enable=true,},		---ÌìµØµÍ°º
-		{dwID=551,enable=true,},		---Õ½¸´
-		{dwID=9002,enable=true,},		---·öÒ¡
-		{dwID=9003,enable=true,},		---ÄôÔÆ
-	},
-	[10028]={		----Àë¾­Ò×µÀ
-		{dwID=132,enable=true,},		---´ºÄà
-		{dwID=140,enable=true,},		---±ËÕë
-		{dwID=2663,enable=true,},		---Ìý·ç´µÑ©
-		{dwID=131,enable=true,},		---±ÌË®
-		{dwID=9002,enable=true,},		---·öÒ¡
-		{dwID=9003,enable=true,},		---ÄôÔÆ
-	},
-	[10176]={		----²¹Ìì
-		{dwID=2231,enable=true,},		---¹Æ»ó
-		{dwID=2957,enable=true,},		---Ê¥ÊÖ
-		{dwID=15132,enable=true,},		---´óÕÐ
-		{dwID=2234,enable=true,},		---¶¦
-		{dwID=2235,enable=true,},		---Ç§µû
-		{dwID=2230,enable=true,},		---Å®æ´
-		{dwID=2226,enable=true,},		---Ï×¼À
-		{dwID=9002,enable=true,},		---·öÒ¡
-		{dwID=9003,enable=true,},		---ÄôÔÆ
-	},
-	[10448]={		-----ÏàÖª
-		{dwID=14082,enable=true,},		---Ó°×Ó
-		{dwID=14075,enable=true,},		---Æ½ÉËº¦¶Ü
-		{dwID=14076,enable=true,},		---¸¡¿Õ
-		{dwID=14084,enable=true,},		---Õ½¸´
-		{dwID=9002,enable=true,},		---·öÒ¡
-		{dwID=9003,enable=true,},		---ÄôÔÆ
+	[10448] = {		-----ÏàÖª
+		{dwID = 14082, enable = true, }, 		---Ó°×Ó
+		{dwID = 14075, enable = true, }, 		---Æ½ÉËº¦¶Ü
+		{dwID = 14076, enable = true, }, 		---¸¡¿Õ
+		{dwID = 14084, enable = true, }, 		---Õ½¸´
+		{dwID = 15068, enable = false, }, 		---Íµbuff
+		{dwID = 9002, enable = true, }, 		---·öÒ¡
+		{dwID = 9003, enable = true, }, 		---ÄôÔÆ
 	},
 }
 
-local DefaultSkillMonitorData={
-	Version = "20161204",
+
+local DefaultSkillMonitorList = {
+	[10080] = {		----ÄÌÐã
+		{dwID = 569, enable = true, }, 	---ÍõÄ¸
+		{dwID = 555, enable = true, }, 		---·çÐä
+		--{dwID = 548, enable = true, }, 		---Áú³ØÀÖ
+		{dwID = 557, enable = true, }, 		---ÌìµØµÍ°º
+		{dwID = 551, enable = true, }, 		---Õ½¸´
+		{dwID = 9002, enable = true, }, 		---·öÒ¡
+		{dwID = 9003, enable = true, }, 		---ÄôÔÆ
+	},
+	[10028] = {		----Àë¾­Ò×µÀ
+		{dwID = 132, enable = true, }, 		---´ºÄà
+		{dwID = 140, enable = true, }, 		---±ËÕë
+		{dwID = 2663, enable = true, }, 		---Ìý·ç´µÑ©
+		{dwID = 131, enable = true, }, 		---±ÌË®
+		{dwID = 9002, enable = true, }, 		---·öÒ¡
+		{dwID = 9003, enable = true, }, 		---ÄôÔÆ
+	},
+	[10176] = {		----²¹Ìì
+		{dwID = 2231, enable = true, }, 		---¹Æ»ó
+		{dwID = 2957, enable = true, }, 		---Ê¥ÊÖ
+		{dwID = 15132, enable = true, }, 		---Þ§²Ë
+		{dwID = 2234, enable = true, }, 		---¶¦
+		{dwID = 2235, enable = true, }, 		---Ç§µû
+		{dwID = 2230, enable = true, }, 		---Å®æ´
+		{dwID = 2226, enable = true, }, 		---Ï×¼À
+		{dwID = 9002, enable = true, }, 		---·öÒ¡
+		{dwID = 9003, enable = true, }, 		---ÄôÔÆ
+	},
+	[10448] = {		-----ÏàÖª
+		{dwID = 14082, enable = true, }, 		---Ó°×Ó
+		{dwID = 14075, enable = true, }, 		---Æ½ÉËº¦¶Ü
+		{dwID = 14076, enable = true, }, 		---¸¡¿Õ
+		{dwID = 14084, enable = true, }, 		---Õ½¸´
+		{dwID = 9002, enable = true, }, 		---·öÒ¡
+		{dwID = 9003, enable = true, }, 		---ÄôÔÆ
+	},
+}
+
+local DefaultSkillMonitorData = {
+	Version = "20171231",
 	data = clone(DefaultSkillMonitorList),
 }
 
 -----------------------------------------------
 ----×ÔÉí¼¼ÄÜCD¼à¿Ø
 ------------------------------------------------
-local _SkillBox={
-	handle=nil,
-	dwID=nil,
-	nLevel=0,
-	nEndFrame=0,
-	nTotalFrame=0,
-	nTime=0,
-	nOrder=1,
+local _SkillBox = {
+	handle = nil,
+	dwID = nil,
+	nLevel = 0,
+	nEndFrame = 0,
+	nTotalFrame = 0,
+	nTime = 0,
+	nOrder = 1,
 }
 _SkillBox.__index = _SkillBox
 
 function _SkillBox:new(dwID)
-	local o={}
-	setmetatable(o,self)
+	local o = {}
+	setmetatable(o, self)
 	o.dwID = dwID
 	o.parentHandle = LR_TeamGrid.Handle_Skill_Box
 	return o
@@ -136,9 +139,9 @@ function _SkillBox:Create()
 	local Handle_Skill_Box = parentHandle:Lookup(sformat("Handle_Skill_Box_%d", dwID))
 	if not Handle_Skill_Box then
 		local szIniFile = sformat("%s\\UI\\%s\\SkillBox.ini", AddonPath, LR_TeamGrid.UsrData.UI_Choose)
-		Handle_Skill_Box=parentHandle:AppendItemFromIni(szIniFile, "Handle_Skill_Box", sformat("Handle_Skill_Box_%d", dwID))
+		Handle_Skill_Box = parentHandle:AppendItemFromIni(szIniFile, "Handle_Skill_Box", sformat("Handle_Skill_Box_%d", dwID))
 	end
-	self.handle=Handle_Skill_Box
+	self.handle = Handle_Skill_Box
 	self:SetSkillLevel()
 	self:SetEndFrameTime()
 	self:SetSkillIcon()
@@ -146,9 +149,9 @@ function _SkillBox:Create()
 
 	Handle_Skill_Box:RegisterEvent(4194303)
 	Handle_Skill_Box.OnItemMouseEnter = function()
-		local szName=LR.Trim(Table_GetSkillName(dwID,1))
-		local nX,nY=this:GetAbsPos()
-		local nW,nH=this:GetSize()
+		local szName = LR.Trim(Table_GetSkillName(dwID, 1))
+		local nX, nY = this:GetAbsPos()
+		local nW, nH = this:GetSize()
 		local szText = {}
 		szText[#szText+1] = GetFormatText(sformat("%s\n", szName), 224)
 		szText[#szText+1] = GetFormatText(sformat("dwID:%d\n", dwID), 224)
@@ -163,8 +166,8 @@ end
 
 function _SkillBox:SetRelPos()
 	local handle = self.handle
-	local nOrder =self.nOrder
-	if LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 3 or LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 4 then
+	local nOrder  = self.nOrder
+	if LR_TeamGrid.UsrData.CommonSettings.skillBoxPos  ==  3 or LR_TeamGrid.UsrData.CommonSettings.skillBoxPos  ==  4 then
 		handle:SetRelPos(0, (nOrder - 1) * 41)
 	else
 		handle:SetRelPos((nOrder - 1) * 41, 0)
@@ -177,13 +180,13 @@ function _SkillBox:SetOrder(nOrder)
 end
 
 function _SkillBox:SetTimeText()
-	local Text_Skill_Remain_Time=self.handle:Lookup("Text_Skill_Remain_Time")
-	local nTotalFrame=self.nTotalFrame
-	local nEndFrame=self.nEndFrame
-	local nowFrame=GetLogicFrameCount()
-	local nLeftFrame=nEndFrame-nowFrame
+	local Text_Skill_Remain_Time = self.handle:Lookup("Text_Skill_Remain_Time")
+	local nTotalFrame = self.nTotalFrame
+	local nEndFrame = self.nEndFrame
+	local nowFrame = GetLogicFrameCount()
+	local nLeftFrame = nEndFrame-nowFrame
 	if nLeftFrame >0 then
-		local ntime=mfloor(nLeftFrame / 16)
+		local ntime = mfloor(nLeftFrame / 16)
 		Text_Skill_Remain_Time:SetText(ntime)
 	else
 		Text_Skill_Remain_Time:SetText("")
@@ -192,22 +195,22 @@ function _SkillBox:SetTimeText()
 end
 
 function _SkillBox:SetSkillIcon()
-	local dwID=self.dwID
-	local nLevel=self.nLevel
-	local nIcon=Table_GetSkillIconID(dwID,nLevel)
-	local Box_Skill=self.handle:Lookup("Box_Skill")
+	local dwID = self.dwID
+	local nLevel = self.nLevel
+	local nIcon = Table_GetSkillIconID(dwID, nLevel)
+	local Box_Skill = self.handle:Lookup("Box_Skill")
 	Box_Skill:SetObject(UI_OBJECT_NOT_NEED_KNOWN, 0)
 	Box_Skill:SetObjectIcon(nIcon)
 end
 
 function _SkillBox:SetSkillID(dwID)
-	self.dwID=dwID
+	self.dwID = dwID
 	return self
 end
 
 function _SkillBox:GetTimeLeft()
-	local text="4"
-	local Text_Skill_Remain_Time=self.handle:Lookup("Text_Skill_Remain_Time")
+	local text = "4"
+	local Text_Skill_Remain_Time = self.handle:Lookup("Text_Skill_Remain_Time")
 	Text_Skill_Remain_Time:SetText(text)
 
 	return self
@@ -219,40 +222,40 @@ end
 
 function _SkillBox:SetSkillLevel(nLevel)
 	if nLevel then
-		self.nLevel=nLevel
+		self.nLevel = nLevel
 	else
 		local me = GetClientPlayer()
-		local dwID=self.dwID
+		local dwID = self.dwID
 		if me then
-			self.nLevel=me.GetSkillLevel(dwID)
+			self.nLevel = me.GetSkillLevel(dwID)
 		else
-			self.nLevel=0
+			self.nLevel = 0
 		end
 	end
 	return self
 end
 
 function _SkillBox:SetEndFrameTime()
-	local dwID=self.dwID
-	local nLevel=self.nLevel
+	local dwID = self.dwID
+	local nLevel = self.nLevel
 	local me = GetClientPlayer()
 	if me then
-		local isCDing,nLeftFrame,nTotalFrame,nNum,_=me.GetSkillCDProgress(dwID,nLevel)
-		local nowFrame=GetLogicFrameCount()
-		self.nEndFrame=nowFrame+nLeftFrame
-		self.nTotalFrame=nTotalFrame
+		local isCDing, nLeftFrame, nTotalFrame, nNum, _ = me.GetSkillCDProgress(dwID, nLevel)
+		local nowFrame = GetLogicFrameCount()
+		self.nEndFrame = nowFrame + nLeftFrame
+		self.nTotalFrame = nTotalFrame
 	else
-		self.nEndFrame=0
-		self.nTotalFrame=0
+		self.nEndFrame = 0
+		self.nTotalFrame = 0
 	end
 end
 
 function _SkillBox:SetCoolDownPercentage()
-	local nEndFrame=self.nEndFrame
-	local nowFrame=GetLogicFrameCount()
-	local nTotalFrame=self.nTotalFrame
-	local nLeftFrame=nEndFrame-nowFrame
-	local Box_Skill=self.handle:Lookup("Box_Skill")
+	local nEndFrame = self.nEndFrame
+	local nowFrame = GetLogicFrameCount()
+	local nTotalFrame = self.nTotalFrame
+	local nLeftFrame = nEndFrame-nowFrame
+	local Box_Skill = self.handle:Lookup("Box_Skill")
 	if self.nLevel > 0 then
 		if nLeftFrame > 0 and nTotalFrame > 0 then
 			Box_Skill:SetObjectCoolDown(true)
@@ -290,7 +293,7 @@ end
 function LR_TeamSkillMonitor.CheckCommonData()
 	local path = sformat("%s\\UsrData\\CommonSkillMonitor.dat", SaveDataPath)
 	local data = LoadLUAData(path) or {}
-	if data.Version and data.Version == DefaultSkillMonitorData.Version then
+	if data.Version and data.Version  ==  DefaultSkillMonitorData.Version then
 		return
 	end
 	LR_TeamSkillMonitor.SkillMonitorData = clone(DefaultSkillMonitorData)
@@ -313,7 +316,7 @@ end
 
 ------------------------------------------------------------------
 function LR_TeamSkillMonitor.ShowSkillPanel()
-	local frame=Station.Lookup("Normal/LR_TeamGrid")
+	local frame = Station.Lookup("Normal/LR_TeamGrid")
 	if not frame then
 		return
 	end
@@ -328,19 +331,19 @@ function LR_TeamSkillMonitor.ShowSkillPanel()
 	if not me then
 		return
 	end
-	local kungfu=me.GetKungfuMount()
-	local dwSkillID=kungfu.dwSkillID
-	if dwSkillID==10028 or dwSkillID==10080 or dwSkillID==10176 or dwSkillID==10448  then
-		local data=LR_TeamSkillMonitor.SkillMonitorData.data[dwSkillID] or {}
-		local n=1
-		for i=1,#data,1 do
+	local kungfu = me.GetKungfuMount()
+	local dwSkillID = kungfu.dwSkillID
+	if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448  then
+		local data = LR_TeamSkillMonitor.SkillMonitorData.data[dwSkillID] or {}
+		local n = 1
+		for i = 1, #data, 1 do
 			if data[i].enable then
 				local dwID = data[i].dwID
-				local szName=LR.Trim(Table_GetSkillName(dwID,1))
+				local szName = LR.Trim(Table_GetSkillName(dwID, 1))
 				local h = _SkillBox:new(dwID)
 				h:Create():SetOrder(n):SetRelPos()
 				_hSkillBox[szName] = h
-				n=n+1
+				n = n+1
 			end
 		end
 		LR_TeamGrid.Handle_Skill_Box:FormatAllItemPos()
@@ -355,8 +358,9 @@ end
 function LR_TeamSkillMonitor.RefreshAllSkillBox()
 	-----×ÔÉí¼¼ÄÜCD¼à¿Ø
 	if LR_TeamGrid.UsrData.CommonSettings.bShowSkillBox then
-		for szName,v in pairs (_hSkillBox) do
+		for szName, v in pairs (_hSkillBox) do
 			if _hSkillBox[szName] then
+				_hSkillBox[szName]:SetEndFrameTime()
 				_hSkillBox[szName]:SetTimeText()
 				_hSkillBox[szName]:SetCoolDownPercentage()
 			end
@@ -364,9 +368,9 @@ function LR_TeamSkillMonitor.RefreshAllSkillBox()
 	end
 end
 
-function LR_TeamSkillMonitor.GetSkillMonitorOrder(dwForceID,dwID)
-	for i=1,#LR_TeamSkillMonitor.SkillMonitorData.data[dwForceID],1 do
-		if LR_TeamSkillMonitor.SkillMonitorData.data[dwForceID][i].dwID == dwID then
+function LR_TeamSkillMonitor.GetSkillMonitorOrder(dwForceID, dwID)
+	for i = 1, #LR_TeamSkillMonitor.SkillMonitorData.data[dwForceID], 1 do
+		if LR_TeamSkillMonitor.SkillMonitorData.data[dwForceID][i].dwID  ==  dwID then
 			return i
 		end
 	end
@@ -387,9 +391,9 @@ function LR_TeamSkillMonitor.SKILL_MOUNT_KUNG_FU()
 end
 
 function LR_TeamSkillMonitor.SKILL_UPDATE()
-	local dwID=arg0
-	local nLevel=arg1
-	local szName=LR.Trim(Table_GetSkillName(dwID,nLevel))
+	local dwID = arg0
+	local nLevel = arg1
+	local szName = LR.Trim(Table_GetSkillName(dwID, nLevel))
 	if _hSkillBox[szName] then
 		_hSkillBox[szName]:SetSkillID(dwID)
 		_hSkillBox[szName]:SetSkillLevel(nLevel)
@@ -398,38 +402,83 @@ function LR_TeamSkillMonitor.SKILL_UPDATE()
 end
 
 function LR_TeamSkillMonitor.DO_SKILL_CAST()
-	local dwCaster=arg0
-	local dwSkillID=arg1
-	local dwLevel=arg2
+	local dwCaster = arg0
+	local dwSkillID = arg1
+	local dwLevel = arg2
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
-	if dwCaster == me.dwID then
-		local szName=LR.Trim(Table_GetSkillName(dwSkillID,dwLevel))
+	local kungfu = me.GetKungfuMount()
+	local dwKungSkillID = kungfu.dwSkillID
+	if not (dwKungSkillID == 10028 or dwKungSkillID == 10080 or dwKungSkillID == 10176 or dwKungSkillID == 10448)  then
+		return
+	end
+--[[	local szName = LR.Trim(Table_GetSkillName(dwSkillID, dwLevel))
+	if szName ~= "" then
+		Output(dwCaster, szName, dwSkillID)
+	end]]
+	if dwCaster  ==  me.dwID then
+		local szName = LR.Trim(Table_GetSkillName(dwSkillID, dwLevel))
 		if _hSkillBox[szName] then
-			if szName==_L["MiXian"] and dwSkillID ~=15132 then
+			if szName == _L["MiXian"] and dwSkillID ~= 15132 then
 				return
 			end
-			local nTime=GetTime()
+			local nTime = GetTime()
 			if nTime - _hSkillBox[szName]:GetnTime() > 500 then
-				_hSkillBox[szName]:SetnTime(nTime):SetSkillID(dwSkillID):SetSkillLevel(dwLevel):SetEndFrameTime()
+				--LR.DelayCall(100, function()
+					_hSkillBox[szName]:SetnTime(nTime):SetSkillID(dwSkillID):SetSkillLevel(dwLevel):SetEndFrameTime()
+				--end)
+			end
+		end
+		--Îå¶¾
+		--LR_TeamSkillMonitor.QiXueFreshCD(10176, 14866, dwSkillID, 2957, 2957)	--Ö¯ÐÄÆæÑ¨
+
+	else
+--[[		if not IsPlayer(dwCaster) then
+			local npc = GetNpc(dwCaster)
+			if npc and npc.dwEmployer == me.dwID then
+				--ÄÌ¶¾
+				LR_TeamSkillMonitor.QiXueFreshCD(10176, 18312, dwSkillID, 2474, 2226)	--Ð«¶¾ÆæÑ¨
+				LR_TeamSkillMonitor.QiXueFreshCD(10176, 18312, dwSkillID, 2474, 2228)	--Ð«¶¾ÆæÑ¨
+			end
+		end]]
+	end
+end
+
+function LR_TeamSkillMonitor.QiXueFreshCD(dwKungSkillID, dwQiXueSkillID, dwCastSkillID, dwTriggerSkillID, dwActionSkillID)
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local kungfu = me.GetKungfuMount()
+	local dwKungSkillID = kungfu.dwSkillID
+	if not (dwKungSkillID == 10028 or dwKungSkillID == 10080 or dwKungSkillID == 10176 or dwKungSkillID == 10448)  then
+		return
+	end
+	if dwKungSkillID == dwKungSkillID then	--ÄÌ¶¾
+		if me.GetSkillLevel(dwQiXueSkillID) > 0 and LR.Trim(Table_GetSkillName(dwCastSkillID, 1)) == LR.Trim(Table_GetSkillName(dwTriggerSkillID, 1)) then
+			if _hSkillBox[LR.Trim(Table_GetSkillName(dwActionSkillID, 1))] then
+				LR.DelayCall(100, function()
+					_hSkillBox[LR.Trim(Table_GetSkillName(dwActionSkillID, 1))]:SetEndFrameTime()
+				end)
 			end
 		end
 	end
 end
+
 
 function LR_TeamSkillMonitor.ReFreshAllSkillLevel()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
-	for szName,v in pairs (_hSkillBox) do
+	for szName, v in pairs (_hSkillBox) do
 		if _hSkillBox[szName] then
 			_hSkillBox[szName]:SetSkillLevel()
 		end
 	end
 end
 
-LR.RegisterEvent("LOGIN_GAME",function() LR_TeamSkillMonitor.LOGIN_GAME() end)
+LR.RegisterEvent("LOGIN_GAME", function() LR_TeamSkillMonitor.LOGIN_GAME() end)
 

@@ -30,7 +30,7 @@ def file_c2t(path, filename):
     file.close()
     file2.close()
 
-rootdir = r'C:\JX3\bin\zhcn\interface\LR_Plugin'
+rootdir = r'C:\JX3HD\bin\zhcn_hd\interface\LR_Plugin'
 
 for parent, dirnames, filenames in os.walk(rootdir):
     for filename in filenames:

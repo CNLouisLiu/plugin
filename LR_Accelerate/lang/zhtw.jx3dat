@@ -82,4 +82,13 @@ data={
 	["HuaJian(KuaiXue-QingGe)"]="花間快雪(青歌奇穴)",
 
 	--20170711add--
+	["Lv955 Version"]="重置版",
+	["NaiXiu(HuiXuePiaoYao)+GuiZi"]="奶秀(回血飄搖)瑰姿奇穴",
+
+	--20180102add--
+	["BingXinDaiXian(Normal)"]="冰心玳弦急曲(普通)",
+	["BingXinDaiXian(XinZhuang)"]="冰心玳弦急曲(新妝)",
+	["TIP01"]="不在列表中提示的職業，一般都是1.5sGCD的，直接用預設(1.5sGCD)就行了",
+	
+
 }

@@ -438,7 +438,7 @@ data={
 	["Are you sure to import new version data (database version) ?"]="你确定要导入新版（数据库版'.db'）数据吗？（请勿导入其他角色数据，以免数据混乱）",
 
 	--20170708add--
-	["file locate at 'Interface/LR_Plugin/@Data/LR_AccountStatistics/UsrData/TradeData/[Area]/[Server]/[PlayerName]'"]="文件位于 'Interface/LR_Plugin/@Data/LR_AccountStatistics/UsrData/TradeData/[大区名称]/[服务器名称]/[角色名称]/(tradedb.db)'",
+	["file locate at 'Interface/LR_Plugin@Data/LR_AccountStatistics/UsrData/TradeData/[Area]/[Server]/[PlayerName]'"]="文件位于 'Interface/LR_Plugin/@Data/LR_AccountStatistics/UsrData/TradeData/[大区名称]/[服务器名称]/[角色名称]/(tradedb.db)'",
 	["Choose file"]="选择文件：",
 	["File path wrong."]="文件路径有误。",
 	["File name wrong."]="文件名错误。（正确的为'tradedb.db'）",
@@ -474,12 +474,12 @@ data={
 	["Cost %0.3f s.\n"]="花费 %0.3f 秒\n",
 	["DB Import playerlist"]="导入角色列表(旧)",
 	["Are you sure to import playerlist ?"]="你确定要导入旧数据（'.jx3dat'）的角色列表数据吗？\n导入后将覆盖当前数据。",
-	["Main DB Tip 1"]="1. 主数据库文件位于'Interface/LR_Plugin/@DATA/LR_AccountStatistics/UsrData/'下，文件名：'maindb.db'\n",
+	["Main DB Tip 1"]="1. 主数据库文件位于'Interface/LR_Plugin@DATA/LR_AccountStatistics/UsrData/'下，文件名：'maindb.db'\n",
 	["Main DB Tip 2"]="2. 当前版本为数据库(.db)版本。老版本为'.jx3dat'文件版本。\n",
-	["Main DB Tip 3"]="3. 重装插件时，请事先备份'Interface/LR_Plugin/@DATA/'下的所有文件，保证所有的数据不丢失。\n",
-	["Trade DB Tip 1"]="1. 交易记录数据位于'Interface/LR_Plugin/@DATA/LR_AccountStatistics/UsrData/TradeData/【大区名字】/【服务器名字】/【角色名字】'下，文件名为'tradedb.db'\n",
+	["Main DB Tip 3"]="3. 重装插件时，请事先备份'Interface/LR_Plugin@DATA/'下的所有文件，保证所有的数据不丢失。\n",
+	["Trade DB Tip 1"]="1. 交易记录数据位于'Interface/LR_Plugin@DATA/LR_AccountStatistics/UsrData/TradeData/【大区名字】/【服务器名字】/【角色名字】'下，文件名为'tradedb.db'\n",
 	["Trade DB Tip 2"]="2. 当前版本为数据库(.db)版本，老版本为'.jx3dat'文件版本。老版本下的交易数据请通过【批量导入(旧)】或者【懒人收支记录】中的【导入数据】->【导入旧版数据】手动导入到新版本数据库中。\n",
-	["Trade DB Tip 3"]="3. 重装插件时，请事先备份'Interface/LR_Plugin/@DATA/'下的所有文件，保证所有的数据不丢失。\n",
+	["Trade DB Tip 3"]="3. 重装插件时，请事先备份'Interface/LR_Plugin@DATA/'下的所有文件，保证所有的数据不丢失。\n",
 	["Are you sure to vacuum tradedata ?"]="你确定要优化交易数据吗？",
 	["View mails overdue."]="查看即将到期邮件",
 	["View trade record."]="查看收支记录",
@@ -487,7 +487,7 @@ data={
 	["TIP9\n"]="9. 参加完省试后，监本数量两侧有'△'标记，参加完会试后，监本数量两侧有'▲'标记",
 
 	--20170713add--
-	["Warning 2"]="当插件更新时，尤其是需要删除插件重装时，请手动将'interface/LR_Plugin/@DATA'文件夹备份，该文件夹为懒人插件所有插件记录的存放处。",
+	["Warning 2"]="当插件更新时，尤其是需要删除插件重装时，请手动将'interface/LR_Plugin@DATA'文件夹备份，该文件夹为懒人插件所有插件记录的存放处。",
 
 	--20170716add--
 	["5FB"]="5人副本",
@@ -495,8 +495,8 @@ data={
 
 	--20170718add--
 	["Choose %d at most"]="最多选 %d 个",
-	["DB_TIP_1"]="主数据库文件位于'Interface/LR_Plugin/@DATA/LR_AccountStatistics/UsrData/'下，文件名：'maindb.db'\n",
-	["DB_TIP_2"]="交易记录数据位于'Interface/LR_Plugin/@DATA/LR_AccountStatistics/UsrData/TradeData/【大区名字】/【服务器名字】/【角色名字】'下，文件名为'tradedb.db'\n",
+	["DB_TIP_1"]="主数据库文件位于'Interface/LR_Plugin@DATA/LR_AccountStatistics/UsrData/'下，文件名：'maindb.db'\n",
+	["DB_TIP_2"]="交易记录数据位于'Interface/LR_Plugin@DATA/LR_AccountStatistics/UsrData/TradeData/【大区名字】/【服务器名字】/【角色名字】'下，文件名为'tradedb.db'\n",
 	["LR_AS_Desc"]="说明汇总",
 
 	--20170721--
@@ -616,4 +616,12 @@ data={
 	["Click to open LR Equipment Statistics Panel"]="点击打开【懒人装备统计】面板",
 	["Sort over.\n"]="帮会仓库整理结束\n",
 	["Move error.\n"]="移动物品失败\n",
+
+	--20180102add--
+	["FENG_MANG_ZHAN"]="锋芒展",
+	["DIALOG_FENG_MANG_ZHAN_01"]="你都挖了三次了还没挖到",
+
+	["PENG_TIAO_FA"]="烹调法",
+	["DIALOG_PENG_TIAO_FA_01"]="还望施主嘴下留情",
+
 }

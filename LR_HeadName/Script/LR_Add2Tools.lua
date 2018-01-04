@@ -455,7 +455,7 @@ LR_HeadName_UI = {
 				tinsert(m, Party)
 				tinsert(m, Neutrality)
 				tinsert(m, Ally)
-				tinsert(m, Enemy)
+				--tinsert(m, Enemy)
 				PopupMenu(m)
 			end,
 		}, {

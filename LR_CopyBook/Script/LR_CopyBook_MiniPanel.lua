@@ -130,6 +130,8 @@ function LR_CopyBook_MiniPanel:Init()
 	end
 
 	self:Resize()
+
+	LR.Animate(frame:GetSelf()):FadeIn():Pos({0, -20}):Scale(0.1)
 end
 
 -- 界面创建
