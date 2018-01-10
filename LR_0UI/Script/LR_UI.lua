@@ -946,7 +946,7 @@ function WndRadioBox:ctor(__parent, __name, __data)
 end
 
 function WndRadioBox:SetSize(__w)
-	self.__h:SetSize(__w +8 , 25)
+	self.__h:SetSize(__w + 28 , 25)
 	self.__text:SetSize(__w , 25)
 	self.__h:FormatAllItemPos()
 	return self
@@ -1444,12 +1444,18 @@ local _AppendItem = function(__parent, __string, __name)
 	end
 	if __parent.__addon then
 		__parent = __parent:GetHandle()
+	else
+		if __parent:GetType() == "WndWindow" then
+
+		end
 	end
+
 
 	local __count = __parent:GetItemCount()
 	__parent:AppendItemFromString(__string)
 	local hwnd = __parent:Lookup(__count)
 	hwnd:SetName(__name)
+
 	return hwnd
 end
 

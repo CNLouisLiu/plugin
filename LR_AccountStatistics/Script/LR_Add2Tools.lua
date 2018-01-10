@@ -114,7 +114,17 @@ local LR_AccountStatistics_UI = {
 				LR_AS_Base.UsrData.OthersCanSee = enabled
 				local frame = Station.Lookup("Normal/LR_AccountStatistics")
 				if frame then
-					LR_AccountStatistics.ListAS()
+					LR_AS_Info.ReFreshTitle()
+					LR_AS_Info.ListAS()
+
+					LR_AccountStatistics_FBList.ReFreshTitle()
+					LR_AccountStatistics_FBList.ListFB()
+
+					LR_AccountStatistics_RiChang.ReFreshTitle()
+					LR_AccountStatistics_RiChang.ListRC()
+
+					LR_ACS_QiYu.ReFreshTitle()
+					LR_ACS_QiYu.ListQY()
 				end
 			end,
 			Tip = function()

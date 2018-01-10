@@ -306,4 +306,15 @@ data={
 	["Agriculture"]="神農",
 	["Mineral"]="礦藏",
 	["Show quest pickup doodad"]="顯示任務拾取物品",
+
+	--20180105add--
+	["%s·%0.1f chi"]="%s·%0.1f尺",
+	["Show lifeper beside lifebar"]="血條旁顯示百分比",
+	["Set lifeper text offsetX"]="X軸偏移",
+	["Set lifeper text offsetY"]="Y軸偏移",
+	["Set lifeper text scale"]="文字縮放",
+	["Distance settings"]="距離設置",
+	["Show target distance"]="顯示目標距離",
+	["Show fighting enemy distance"]="顯示戰鬥中敵人的距離",
+
 }

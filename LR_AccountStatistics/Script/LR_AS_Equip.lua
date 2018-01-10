@@ -475,7 +475,7 @@ function LR_AS_Equip_Panel.OnItemLinkDown(item, ui)
 end
 
 function LR_AS_Equip_Panel:Output()
-	Output("22")
+	--Output("22")
 end
 
 

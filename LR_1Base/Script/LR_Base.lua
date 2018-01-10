@@ -192,7 +192,7 @@ function LR.GetItemNameByItem(item)
 		local nBookID, nSegID = GlobelRecipeID2BookID(item.nBookID)
 		return LR.Table_GetSegmentName(nBookID, nSegID) or g_tStrings.BOOK
 	else
-		return Table_GetItemName(item.nUiId)
+		return Table_GetItemName(item.nUiId) or ""
 	end
 end
 
@@ -299,6 +299,8 @@ function LR.AppendUI(__type, parent, szName, data)
 		__h = _G.CreateEdit(parent, szName, data)
 	elseif __type == "CheckBox" then
 		__h = _G.CreateCheckBox(parent, szName, data)
+	elseif __type == "UICheckBox" then
+		__h = _G.CreateUICheckBox(parent, szName, data)
 	elseif __type == "ComboBox" then
 		__h = _G.CreateComboBox(parent, szName, data)
 	elseif __type == "RadioBox" then

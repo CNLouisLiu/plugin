@@ -1199,7 +1199,7 @@ function LR_AccountStatistics_RiChang.ClearRC(DB)
 	end
 	LR_AccountStatistics_RiChang.SaveClearData(DB)
 end
-LR_AS_Base.Add2ResetData({szKey = "ResetRC_RC", fnAction = LR_AccountStatistics_RiChang.ClearZC, nType = RESET_TYPE.EVERYDAY, order = 20})
+LR_AS_Base.Add2ResetData({szKey = "ResetRC_RC", fnAction = LR_AccountStatistics_RiChang.ClearRC, nType = RESET_TYPE.EVERY_DAY, order = 20})
 
 ---------------------------------
 -----记录所有任务状态

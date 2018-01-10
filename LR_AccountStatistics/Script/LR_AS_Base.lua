@@ -102,6 +102,13 @@ LR_AS_Base.ResetDataList = {
 	--{szKey = "", fnAction = function() ... end, order = x,},
 }
 
+function LR_AS_Base.Debug1()
+	for k, v in pairs(LR_AS_Base.ResetDataList) do
+		Output(v.szKey, v.nType)
+	end
+end
+
+
 function LR_AS_Base.Add2ResetData(list)
 	local list = list or {szKey = "none", fnAction = function() return false end, order = 9999, nType = RESET_TYPE.NONE}
 	tinsert(LR_AS_Base.ResetDataList, {szKey = list.szKey, fnAction = list.fnAction, order = list.order, nType = list.nType})

@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local VERSION = "20170919"
+local VERSION = "20170921"
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
@@ -270,6 +270,7 @@ function _BuffBox:Draw()
 		else
 			Text_BuffStacks:SetText("")
 		end
+		Text_BuffStacks:Show()
 	else
 		Text_BuffStacks:Hide()
 	end
@@ -283,6 +284,84 @@ function _BuffBox:Draw()
 	return self
 end
 
+----------------------------------------------------------------
+----边角指示器buff
+----------------------------------------------------------------
+local EdgeIndicator_BUFF_CACHE = {}
+local EdgeIndicator_HANDLE_CACHE = {}
+
+LR_TeamEdgeIndicator = {}
+local EdgeIndicatorDefaultData = {
+	["TopLeft"] = {
+		style = 0,
+		buff = {dwID = 0, szName = "", bOnlySelf = true,},
+	},
+	["TopRight"] = {
+		style = 0,
+		buff = {dwID = 0, szName = "", bOnlySelf = true,},
+	},
+	["BottomLeft"] = {
+		style = 0,
+		buff = {dwID = 0, szName = "", bOnlySelf = false,},
+	},
+	["BottomRight"] = {
+		style = 0,
+		buff = {dwID = 0, szName = "", bOnlySelf = false,},
+	},
+	["yellow"] = 0.5,
+	["red"] = 3,
+}
+LR_TeamEdgeIndicator.UsrData = clone(EdgeIndicatorDefaultData)
+RegisterCustomData("LR_TeamEdgeIndicator.UsrData", VERSION)
+
+function LR_TeamEdgeIndicator.add2bufflist()
+	local MonitorList = LR_TeamBuffSettingPanel.BuffList
+	local szEdge = {"TopLeft", "TopRight", "BottomLeft", "BottomRight"}
+	for k, v in pairs(szEdge) do
+		if LR_TeamEdgeIndicator.UsrData[v].style == 1 then
+			local buff = {dwID = nil, szName = nil, bOnlySelf = false, bEdgeIndicator = true, col = {}, nIconID = 0, nMonitorLevel = 0, edge = v, nMonitorStack = 0}
+			if LR_TeamEdgeIndicator.UsrData[v].buff.dwID and LR_TeamEdgeIndicator.UsrData[v].buff.dwID > 0 then
+				buff.dwID = LR_TeamEdgeIndicator.UsrData[v].buff.dwID
+				buff.bOnlySelf = LR_TeamEdgeIndicator.UsrData[v].buff.bOnlySelf
+				MonitorList[buff.dwID] = clone(buff)
+			else
+				buff.szName = LR_TeamEdgeIndicator.UsrData[v].buff.szName
+				buff.bOnlySelf = LR_TeamEdgeIndicator.UsrData[v].buff.bOnlySelf
+				MonitorList[buff.szName] = clone(buff)
+			end
+		end
+	end
+end
+
+function LR_TeamEdgeIndicator.RefreshEdgeIndicator()
+	for dwPlayerID, v in pairs(EdgeIndicator_HANDLE_CACHE) do
+		for edge, v2 in pairs(v) do
+			if next(v2) ~= nil then
+				local nStartFrame = v2.nStartFrame
+				local nEndFrame = v2.nEndFrame
+				local nNowFrame = GetLogicFrameCount()
+				if nNowFrame > nEndFrame then
+					v2.hShadow:Hide()
+					v2.hShadowBg:Hide()
+					v2 = {}
+				else
+					if (nEndFrame - nNowFrame) < 3 * 16 then
+						v2.hShadow:SetColorRGB(255, 0, 128)
+					elseif (nEndFrame - nNowFrame) / (nEndFrame - nStartFrame) < 0.5 then
+						v2.hShadow:SetColorRGB(255, 255, 0)
+					else
+						v2.hShadow:SetColorRGB(34, 177, 76)
+					end
+					v2.hShadow:Show()
+					v2.hShadowBg:Show()
+				end
+			end
+		end
+	end
+end
+
+
+LR.RegisterEvent("FIRST_LOADING_END", function() LR_TeamEdgeIndicator.add2bufflist() end)
 ----------------------------------------------------------------
 ----Debuff设置
 ----------------------------------------------------------------
@@ -317,6 +396,8 @@ LR_TeamBuffSettingPanel.tColorCover = {
 }
 
 LR_TeamBuffSettingPanel.BuffList = {}
+
+
 -- 格式化Debuff表的数据, 成为直接可用的内容
 function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 	local tSplitTextTable = {}
@@ -329,6 +410,8 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 			szContent = sgsub(szContent, "，", ",")
 			szContent = sgsub(szContent, "（", "(")
 			szContent = sgsub(szContent, "）", ")")
+			szContent = sgsub(szContent, "c", "C")
+			szContent = sgsub(szContent, "l", "L")
 			szContent = sformat("%s;", szContent)
 			local t={}
 			for s in sgfind(szContent, "(.-);") do
@@ -338,7 +421,7 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 			end
 
 			for i = 1, #t, 1 do
-				local buff = {dwID = 0, szName = "", col = {}, bOnlySelf = false, nIconID = 0, nMonitorLevel = 0,}
+				local buff = {dwID = 0, szName = "", col = {}, bOnlySelf = false, nIconID = 0, nMonitorLevel = 0, nMonitorStack = 0}
 				local text = t[i]
 
 				local _s, _e, bSelf = sfind(text, "%[(.-)%]")
@@ -346,6 +429,20 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 					buff.bOnlySelf = true
 				end
 				text = sgsub(text, "%[(.-)%]", "")
+
+				local _s, _e, nMonitorStack = sfind(text, "%(C(.-)%)")
+				if nMonitorStack then
+					local _s, _e, s = sfind(nMonitorStack, "(%d+)")
+					buff.nMonitorStack = tonumber(s)
+				end
+				text = sgsub(text, "%(C(.-)%)", "")
+
+				local _s, _e, nMonitorLevel = sfind(text, "%(L(.-)%)")
+				if nMonitorLevel then
+					local _s, _e, s = sfind(nMonitorLevel, "(%d+)")
+					buff.nMonitorLevel = tonumber(s)
+				end
+				text = sgsub(text, "%(L(.-)%)", "")
 
 				local _s, _e, _color = sfind(text,"%((.-)%)")
 				if _color then
@@ -363,6 +460,7 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 					buff.nIconID = tonumber(_nIconID)
 				end
 				text = sgsub(text, "#(%d+)", "")
+				buff.bEdgeIndicator = false
 
 				if type(tonumber(text)) == "number" then
 					buff.dwID = tonumber(text)
@@ -380,6 +478,8 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 	end
 
 	LR_TeamBuffSettingPanel.BuffList = clone(tSplitTextTable)
+	--Output(tSplitTextTable)
+	LR_TeamEdgeIndicator.add2bufflist()
 end
 
 function LR_TeamBuffSettingPanel.OnFrameCreate()
@@ -818,6 +918,68 @@ function LR_TeamBuffMonitor.GetBuffName(dwID, nLevel)
 	return BUFF_NAME[dwID]
 end
 
+function LR_TeamBuffMonitor.EdgeCheck2(MonitorBuff)
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local player = GetPlayer(MonitorBuff.dwPlayerID)
+	if not player then
+		return
+	end
+
+	EdgeIndicator_HANDLE_CACHE[dwPlayerID] = EdgeIndicator_HANDLE_CACHE[dwPlayerID] or {}
+	EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge] = EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge] or {}
+	local hEdge = EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge]
+
+	EdgeIndicator_BUFF_CACHE[dwPlayerID] = EdgeIndicator_BUFF_CACHE[dwPlayerID] or {}
+	EdgeIndicator_BUFF_CACHE[dwPlayerID][dwID] = EdgeIndicator_BUFF_CACHE[dwPlayerID][dwID] or {}
+
+	local tBuffList = LR.GetBuffList(player)
+	local _nIndex, _nEndFrame = 0, 0
+	local bOnlySelf = MonitorBuff.bOnlySelf
+	for k, v in pairs(tBuffList) do
+		if v.dwID == MonitorBuff.dwID then
+			if bOnlySelf then
+				if v.dwSkillSrcID == me.dwID and (MonitorBuff.nMonitorLevel == 0 or v.nLevel == MonitorBuff.nLevel) then
+					buff = clone(v)
+					buff.dwCaster = v.dwSkillSrcID
+					buff.bOnlySelf = MonitorBuff.bOnlySelf or false
+					buff.bEdgeIndicator = MonitorBuff.bEdgeIndicator
+					buff.edge = MonitorBuff.edge
+					buff.nStartFrame = GetLogicFrameCount()
+
+					cache[v.nIndex] = clone(buff)
+					FireEvent("LR_RAID_EDGE_ADD_FRESH", MonitorBuff.dwPlayerID, buff)
+					return
+				end
+			else
+				if MonitorBuff.nMonitorLevel == 0 or v.nLevel == MonitorBuff.nLevel then
+					v.bEdgeIndicator = MonitorBuff.bEdgeIndicator
+					v.edge = MonitorBuff.edge
+					cache[v.nIndex] = clone(v)
+					cache[v.nIndex].dwCaster = v.dwSkillSrcID
+					if v.nEndFrame > _nEndFrame then
+						_nIndex = v.nIndex
+						_nEndFrame = v.nEndFrame
+					end
+				end
+			end
+		end
+	end
+
+	if _nIndex == 0 then
+		FireEvent("LR_RAID_EDGE_DELETE", MonitorBuff.dwPlayerID, MonitorBuff)
+		return
+	else
+		local buff = cache[_nIndex]
+		buff.bOnlySelf = MonitorBuff.bOnlySelf or false
+		buff.bEdgeIndicator = MonitorBuff.bEdgeIndicator
+		buff.edge = MonitorBuff.edge
+		FireEvent("LR_RAID_EDGE_ADD_FRESH", MonitorBuff.dwPlayerID, buff)
+	end
+end
+
 function LR_TeamBuffMonitor.Check2(MonitorBuff)
 	local me = GetClientPlayer()
 	if not me then
@@ -893,6 +1055,22 @@ function LR_TeamBuffMonitor.ReCheck(dwPlayerID, dwID, szKey)
 	end
 end
 
+function LR_TeamBuffMonitor.EdgeReCheck(dwPlayerID, dwID, szKey)
+	BUFF_REFRESH_LIST[dwPlayerID] = BUFF_REFRESH_LIST[dwPlayerID] or {}
+	BUFF_REFRESH_LIST[dwPlayerID][dwID] = BUFF_REFRESH_LIST[dwPlayerID][dwID] or {}
+	local tBuff = BUFF_REFRESH_LIST[dwPlayerID][dwID]
+	local n = 1
+	while tBuff[n] do
+		if tBuff[n].szKey == szKey then
+			--Output("Fix", Table_GetBuffName(tBuff[n].dwID, tBuff[n].nLevel))
+			LR_TeamBuffMonitor.EdgeCheck2(tBuff[n])
+			Log("LR_TEAM_BUFF_MONITOR_FIX\n")
+			tremove(tBuff, n)
+		end
+		n = n +1
+	end
+end
+
 function LR_TeamBuffMonitor.UI_OME_BUFF_LOG(dwTarget, bCanCancel, dwID, bAddOrDel, nLevel)
 	local me = GetClientPlayer()
 	if not me then
@@ -903,8 +1081,9 @@ function LR_TeamBuffMonitor.UI_OME_BUFF_LOG(dwTarget, bCanCancel, dwID, bAddOrDe
 	end
 	--去除不在buff监控中的
 	local MonitorList = LR_TeamBuffSettingPanel.BuffList
+	local szBuffName = LR_TeamBuffMonitor.GetBuffName(dwID, nLevel)
 	if not MonitorList[dwID] then
-		local szBuffName = LR_TeamBuffMonitor.GetBuffName(dwID, nLevel)
+		--local szBuffName = LR_TeamBuffMonitor.GetBuffName(dwID, nLevel)
 		if not MonitorList[szBuffName] then
 			return
 		end
@@ -913,6 +1092,14 @@ function LR_TeamBuffMonitor.UI_OME_BUFF_LOG(dwTarget, bCanCancel, dwID, bAddOrDe
 		end
 		MonitorList[dwID] = clone(MonitorList[szBuffName])
 		MonitorList[szBuffName] = nil
+	else
+		if MonitorList[dwID] and MonitorList[szBuffName] then
+			if MonitorList[szBuffName].bEdgeIndicator then
+				MonitorList[dwID].bEdgeIndicator = MonitorList[szBuffName].bEdgeIndicator
+				MonitorList[dwID].edge = MonitorList[szBuffName].edge
+			end
+			MonitorList[szBuffName] = nil
+		end
 	end
 	--去除不在队伍里的
 	if not (LR_TeamBuffSettingPanel.TeamMember[dwTarget] or me.IsPlayerInMyParty(dwTarget)) then
@@ -931,26 +1118,35 @@ function LR_TeamBuffMonitor.UI_OME_BUFF_LOG(dwTarget, bCanCancel, dwID, bAddOrDe
 		szKey = sformat("%d_%d_%d", dwTarget, dwID, n)
 	end
 	--Output("1", szKey, BUFF_REFRESH_LIST[szKey])
-	if not tBuff[n] then
-		local buff = {}
-		buff.dwPlayerID = dwTarget
-		buff.bDelete = (bAddOrDel == 0)
-		buff.bCanCancel = bCanCancel
-		buff.dwID = dwID
-		buff.nLevel = nLevel
-		buff.receivedFromLOG = true
-		buff.DelayCallKey = sformat("%s_%d", szKey, nTime)
-		buff.nTime = nTime
-		buff.szKey = szKey
 
-		buff.bOnlySelf = MonitorList[dwID].bOnlySelf or false
-		buff.nMonitorLevel = MonitorList[dwID].nMonitorLevel or 0
-		buff.col = MonitorList[dwID].col or {}
-		buff.nIconID = MonitorList[dwID].nIconID or 0
+	local buff = {}
+	buff.dwPlayerID = dwTarget
+	buff.bDelete = (bAddOrDel == 0)
+	buff.bCanCancel = bCanCancel
+	buff.dwID = dwID
+	buff.nLevel = nLevel
+	buff.receivedFromLOG = true
+	buff.DelayCallKey = sformat("%s_%d", szKey, nTime)
+	buff.nTime = nTime
+	buff.szKey = szKey
 
-		tinsert(tBuff, buff)
+	buff.bOnlySelf = MonitorList[dwID].bOnlySelf or false
+	buff.nMonitorLevel = MonitorList[dwID].nMonitorLevel or 0
+	buff.col = MonitorList[dwID].col or {}
+	buff.nIconID = MonitorList[dwID].nIconID or 0
+	buff.bEdgeIndicator = MonitorList[dwID].bEdgeIndicator or false
+	buff.edge = MonitorList[dwID].edge or ""
 
-		LR.DelayCall(150, function() LR_TeamBuffMonitor.ReCheck(dwTarget, dwID, szKey) end, buff.DelayCallKey)
+	if buff.bEdgeIndicator then
+		if not tBuff[n] then
+			tinsert(tBuff, buff)
+			LR.DelayCall(150, function() LR_TeamBuffMonitor.EdgeReCheck(dwTarget, dwID, szKey) end, buff.DelayCallKey)
+		end
+	else
+		if not tBuff[n] then
+			tinsert(tBuff, buff)
+			LR.DelayCall(150, function() LR_TeamBuffMonitor.ReCheck(dwTarget, dwID, szKey) end, buff.DelayCallKey)
+		end
 	end
 end
 
@@ -979,8 +1175,9 @@ function LR_TeamBuffMonitor.BUFF_UPDATE()
 	local dwPlayerID, bDelete, nIndex, bCanCancel, dwID, nStackNum, nEndFrame, bInit, nLevel, dwCaster, IsValid, nLeftFrame = arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11
 	--去除不在监控buff里的
 	local MonitorList = LR_TeamBuffSettingPanel.BuffList
+	local szBuffName = LR_TeamBuffMonitor.GetBuffName(dwID, nLevel)
 	if not MonitorList[dwID] then
-		local szBuffName = LR_TeamBuffMonitor.GetBuffName(dwID, nLevel)
+		--local szBuffName = LR_TeamBuffMonitor.GetBuffName(dwID, nLevel)
 		if not MonitorList[szBuffName] then
 			return
 		end
@@ -989,6 +1186,14 @@ function LR_TeamBuffMonitor.BUFF_UPDATE()
 		end
 		MonitorList[dwID] = clone(MonitorList[szBuffName])
 		MonitorList[szBuffName] = nil
+	else
+		if MonitorList[dwID] and MonitorList[szBuffName] then
+			if MonitorList[szBuffName].bEdgeIndicator then
+				MonitorList[dwID].bEdgeIndicator = MonitorList[szBuffName].bEdgeIndicator
+				MonitorList[dwID].edge = MonitorList[szBuffName].edge
+			end
+			MonitorList[szBuffName] = nil
+		end
 	end
 	--去除buff刷新对象不在队里的
 	if not (LR_TeamBuffSettingPanel.TeamMember[dwPlayerID] or me.IsPlayerInMyParty(dwPlayerID)) then
@@ -1011,11 +1216,6 @@ function LR_TeamBuffMonitor.BUFF_UPDATE()
 		return
 	end
 
-	_hMemberBuff[dwPlayerID] = _hMemberBuff[dwPlayerID] or {}
-	_MemberBuff[dwPlayerID] = _MemberBuff[dwPlayerID] or {}
-	local hMemberBuff = _hMemberBuff[dwPlayerID]
-	local MemberBuff = _MemberBuff[dwPlayerID]
-
 	local tBuff = {
 		dwPlayerID = dwPlayerID,
 		bDelete = bDelete,
@@ -1034,45 +1234,115 @@ function LR_TeamBuffMonitor.BUFF_UPDATE()
 	tBuff.col = MonitorList[dwID].col or {}
 	tBuff.nIconID = MonitorList[dwID].nIconID or 0
 	tBuff.nMonitorLevel = MonitorList[dwID].nMonitorLevel or 0
+	tBuff.nMonitorStack = MonitorList[dwID].nMonitorStack or 0
+	tBuff.bEdgeIndicator = MonitorList[dwID].bEdgeIndicator or false
+	tBuff.edge = MonitorList[dwID].edge or ""
 
-	BUFF_CACHE[dwPlayerID] = BUFF_CACHE[dwPlayerID]  or {}
-	BUFF_CACHE[dwPlayerID][dwID] = BUFF_CACHE[dwPlayerID][dwID] or {}
-	local cache = BUFF_CACHE[dwPlayerID][dwID]
-	if bDelete then
-		cache[nIndex] = nil
-	else
-		cache[nIndex] = clone(tBuff)
-	end
+	if tBuff.bEdgeIndicator then
+		tBuff.nStartFrame = GetLogicFrameCount()
 
-	local hBuff = hMemberBuff[dwID]
-	if hBuff and hBuff:GetBuffnIndex() == nIndex and not bDelete then
-		FireEvent("LR_RAID_BUFF_ADD_FRESH", tBuff.dwPlayerID, tBuff)
-		return
-	end
+		EdgeIndicator_HANDLE_CACHE[dwPlayerID] = EdgeIndicator_HANDLE_CACHE[dwPlayerID] or {}
+		EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge] = EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge] or {}
+		local hEdge = EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge]
 
-	if MonitorList[dwID].bOnlySelf then
+		EdgeIndicator_BUFF_CACHE[dwPlayerID] = EdgeIndicator_BUFF_CACHE[dwPlayerID] or {}
+		EdgeIndicator_BUFF_CACHE[dwPlayerID][dwID] = EdgeIndicator_BUFF_CACHE[dwPlayerID][dwID] or {}
+		local cache = EdgeIndicator_BUFF_CACHE[dwPlayerID][dwID]
 		if bDelete then
-			FireEvent("LR_RAID_BUFF_DELETE", tBuff.dwPlayerID, tBuff)
-			return
+			cache[nIndex] = nil
 		else
+			cache[nIndex] = clone(tBuff)
+		end
+
+		if next(hEdge) == nil and not bDelete then
+			FireEvent("LR_RAID_EDGE_ADD_FRESH", tBuff.dwPlayerID, tBuff)
+			return
+		end
+
+		if MonitorList[dwID].bOnlySelf then
+			if bDelete then
+				FireEvent("LR_RAID_EDGE_DELETE", tBuff.dwPlayerID, tBuff)
+				return
+			else
+				FireEvent("LR_RAID_EDGE_ADD_FRESH", tBuff.dwPlayerID, tBuff)
+				return
+			end
+		else
+			local _nIndex, _nEndFrame = 0, 0
+			for k, v in pairs(cache) do
+				if v.nEndFrame >= _nEndFrame then
+					_nIndex = v.nIndex
+					_nEndFrame = v.nEndFrame
+				end
+			end
+			if _nIndex == 0 then
+				FireEvent("LR_RAID_EDGE_DELETE", tBuff.dwPlayerID, tBuff)
+				return
+			else
+				FireEvent("LR_RAID_EDGE_ADD_FRESH", tBuff.dwPlayerID, cache[_nIndex])
+				return
+			end
+		end
+	else
+		_hMemberBuff[dwPlayerID] = _hMemberBuff[dwPlayerID] or {}
+		_MemberBuff[dwPlayerID] = _MemberBuff[dwPlayerID] or {}
+		local hMemberBuff = _hMemberBuff[dwPlayerID]
+		local MemberBuff = _MemberBuff[dwPlayerID]
+
+		BUFF_CACHE[dwPlayerID] = BUFF_CACHE[dwPlayerID]  or {}
+		BUFF_CACHE[dwPlayerID][dwID] = BUFF_CACHE[dwPlayerID][dwID] or {}
+		local cache = BUFF_CACHE[dwPlayerID][dwID]
+
+		if tBuff.nMonitorStack > 0 then
+			if tBuff.nStackNum < tBuff.nMonitorStack then
+				bDelete = true
+			end
+		end
+
+		if tBuff.nMonitorLevel > 0 then
+			if tBuff.nLevel ~= tBuff.nMonitorLevel then
+				bDelete = true
+			end
+		end
+
+
+		if bDelete then
+			cache[nIndex] = nil
+		else
+			cache[nIndex] = clone(tBuff)
+		end
+
+		local hBuff = hMemberBuff[dwID]
+		if hBuff and hBuff:GetBuffnIndex() == nIndex and not bDelete then
 			FireEvent("LR_RAID_BUFF_ADD_FRESH", tBuff.dwPlayerID, tBuff)
 			return
 		end
-	else
-		local _nIndex, _nEndFrame = 0, 0
-		for k, v in pairs(cache) do
-			if v.nEndFrame >= _nEndFrame then
-				_nIndex = v.nIndex
-				_nEndFrame = v.nEndFrame
+
+		if MonitorList[dwID].bOnlySelf then
+			if bDelete then
+				FireEvent("LR_RAID_BUFF_DELETE", tBuff.dwPlayerID, tBuff)
+				return
+			else
+				FireEvent("LR_RAID_BUFF_ADD_FRESH", tBuff.dwPlayerID, tBuff)
+				return
+			end
+		else
+			local _nIndex, _nEndFrame = 0, 0
+			for k, v in pairs(cache) do
+				if v.nEndFrame >= _nEndFrame then
+					_nIndex = v.nIndex
+					_nEndFrame = v.nEndFrame
+				end
+			end
+			if _nIndex == 0 then
+				FireEvent("LR_RAID_BUFF_DELETE", tBuff.dwPlayerID, tBuff)
+				return
+			else
+				FireEvent("LR_RAID_BUFF_ADD_FRESH", tBuff.dwPlayerID, cache[_nIndex])
+				return
 			end
 		end
-		if _nIndex == 0 then
-			FireEvent("LR_RAID_BUFF_DELETE", tBuff.dwPlayerID, tBuff)
-			return
-		else
-			FireEvent("LR_RAID_BUFF_ADD_FRESH", tBuff.dwPlayerID, cache[_nIndex])
-			return
-		end
+
 	end
 end
 
@@ -1097,6 +1367,50 @@ function LR_TeamBuffMonitor.JH_RAID_REC_BUFF()
 	LR_TeamBuffSettingPanel.BuffList[arg1.dwID].nIconID = arg1.nIcon or LR_TeamBuffSettingPanel.BuffList[arg1.dwID].nIconID or 0
 	LR_TeamBuffSettingPanel.BuffList[arg1.dwID].nStackNum = arg1.nStackNum or LR_TeamBuffSettingPanel.BuffList[arg1.dwID].nStackNum or 0
 	LR_TeamBuffSettingPanel.BuffList[arg1.dwID].col = arg1.col or LR_TeamBuffSettingPanel.BuffList[arg1.dwID].col or {}
+end
+
+function LR_TeamBuffMonitor.LR_RAID_EDGE_DELETE()
+	local dwPlayerID = arg0
+	local tBuff = arg1
+
+	EdgeIndicator_HANDLE_CACHE[dwPlayerID] = EdgeIndicator_HANDLE_CACHE[dwPlayerID] or {}
+	EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge] = EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge] or {}
+	local hEdge = EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge]
+
+	EdgeIndicator_BUFF_CACHE[dwPlayerID] = EdgeIndicator_BUFF_CACHE[dwPlayerID] or {}
+	EdgeIndicator_BUFF_CACHE[dwPlayerID][tBuff.dwID] = EdgeIndicator_BUFF_CACHE[dwPlayerID][tBuff.dwID] or {}
+	local cache = EdgeIndicator_BUFF_CACHE[dwPlayerID][tBuff.dwID]
+
+	if next(hEdge) ~= nil then
+		hEdge.hShadow:Hide()
+		hEdge.hShadowBg:Hide()
+		EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge] = nil
+	end
+end
+
+function LR_TeamBuffMonitor.LR_RAID_EDGE_ADD_FRESH()
+	local dwPlayerID = arg0
+	local tBuff = arg1
+
+	EdgeIndicator_HANDLE_CACHE[dwPlayerID] = EdgeIndicator_HANDLE_CACHE[dwPlayerID] or {}
+	EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge] = EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge] or {}
+	local hEdge = EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge]
+
+	EdgeIndicator_BUFF_CACHE[dwPlayerID] = EdgeIndicator_BUFF_CACHE[dwPlayerID] or {}
+	EdgeIndicator_BUFF_CACHE[dwPlayerID][tBuff.dwID] = EdgeIndicator_BUFF_CACHE[dwPlayerID][tBuff.dwID] or {}
+	local cache = EdgeIndicator_BUFF_CACHE[dwPlayerID][tBuff.dwID]
+
+	local RoleHandle = LR_TeamGrid.GetRoleHandle(dwPlayerID)
+	if not RoleHandle then
+		return
+	end
+	local hShadow = RoleHandle:GetEdgeIndicatorShadow(sformat("Shadow_Edge%s", tBuff.edge))
+	local hShadowBg = RoleHandle:GetEdgeIndicatorShadow(sformat("Shadow_Edge%sBg", tBuff.edge))
+	if hShadow then
+		EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge] = clone(tBuff)
+		EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge].hShadow = hShadow
+		EdgeIndicator_HANDLE_CACHE[dwPlayerID][tBuff.edge].hShadowBg = hShadowBg
+	end
 end
 
 function LR_TeamBuffMonitor.LR_RAID_BUFF_DELETE()
@@ -1272,3 +1586,6 @@ function LR_TeamBuffMonitor.SortBuff(dwPlayerID)
 	end
 end
 
+---------------------------
+--边角指示器监控
+---------------------------

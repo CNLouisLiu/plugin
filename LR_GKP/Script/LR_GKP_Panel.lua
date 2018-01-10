@@ -150,12 +150,8 @@ function LR_GKP_Panel:Init()
 	hHandle_money_all:SetMinRowHeight(30)
 	self:ShowMoneyAll(0)
 
-	self:LoadGKPItemBox(Scroll_GKP_List)
-	Scroll_GKP_List:UpdateList()
-
+	self:LoadGKPItemBox()
 	self:LoadTradeItemBox()
-	Scroll_Trade_List:UpdateList()
-
 	-------------初始Trade_List界面物品
 	local Handle_Trade_List = self:Append("Handle", Window_Trade_List, "Handle_Trade_List", {x = 18, y = 10, w = 920, h = 480})
 
@@ -596,6 +592,7 @@ function LR_GKP_Panel:LoadGKPItemBox()
 			handleTradeList:SetAlpha(80)
 		end
 	end
+	Scroll_GKP_List:UpdateList()
 	LR_GKP_Panel:ShowMoneyAll(nMoney)
 end
 
@@ -605,7 +602,7 @@ function LR_GKP_Panel:LoadTradeItemBox()
 		return
 	end
 	local Scroll_Trade_List = self:Fetch("Scroll_Trade_List")
-	if not v then
+	if not Scroll_Trade_List then
 		return
 	end
 	Scroll_Trade_List:ClearHandle()
@@ -680,6 +677,7 @@ function LR_GKP_Panel:LoadTradeItemBox()
 			n = n +1
 		end
 	end
+	Scroll_Trade_List:UpdateList()
 end
 
 ----------------------------------------------------------------

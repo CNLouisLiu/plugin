@@ -444,4 +444,24 @@ data={
 	--20170919add--
 	["Clear Panel"]="清理/刷新面板",
 
+	--20180105add--
+	["Edge Indicator"]="邊角指示器",
+	["TopLeft"]="左上角",
+	["TopRight"]="右上角",
+	["BottomLeft"]="左下角",
+	["BottomRight"]="右下角",
+
+	--20180106add--
+	["Style"]="風格",
+	["ColorBlock"]="色塊",
+	["Disable"]="禁用",
+	["Buff"]="Buff",
+	["Only self"]="來自於我",
+	["Left time short in"]="剩餘時間少於",
+
+	--20180107add--
+	["Normal status"]="正常階段",
+	["Open EdgeIndicator"]="打開邊角指示器",
+	
+
 }

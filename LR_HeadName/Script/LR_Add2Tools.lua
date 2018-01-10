@@ -527,6 +527,27 @@ LR_HeadName_UI = {
 				tTips[#tTips+1] = {szText = _L["Teammark Instructions03\n"], font = 5, r = 255, g = 255, b = 255, }
 				return tTips
 			end,
+		}, {name = "LR_Head_Dis", type = "ComboBox", x = 300, w = 140, y = 240, text = _L["Distance settings"],
+			enable =  function ()
+				return LR_HeadName.bOn
+			end,
+			callback = function(m)
+				m[#m + 1] = {szOption = _L["Show target distance"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowTargetDis end,
+					fnAction = function()
+						LR_HeadName.UsrData.bShowTargetDis = not LR_HeadName.UsrData.bShowTargetDis
+						LR_HeadName.ReDrawAll()
+						LR_HeadName.SaveCommonSettings()
+					end,
+				}
+				m[#m + 1] = {szOption = _L["Show fighting enemy distance"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowFightingEnemyDis end,
+					fnAction = function()
+						LR_HeadName.UsrData.bShowFightingEnemyDis = not LR_HeadName.UsrData.bShowFightingEnemyDis
+						LR_HeadName.ReDrawAll()
+						LR_HeadName.SaveCommonSettings()
+					end,
+				}
+				PopupMenu(m)
+			end,
 		}, {name = "LR_Head_DoodadShow", type = "ComboBox", x = 0, y = 270, w = 140, text = _L["Show Doodad"],
 			enable =  function ()
 				return LR_HeadName.bOn
@@ -724,7 +745,7 @@ LR_HeadName_UI = {
 					tinsert(offsetY, {szOption = sformat("%d px", i), bCheck = true, bMCheck = true, bChecked = function() return LifeBar.nOffsetY == i end, fnAction = function() LifeBar.nOffsetY  = i ; LR_HeadName.SaveCommonSettings()  ;LR_HeadName.ReDrawAll()  end, })
 				end
 				local lenth = {szOption = _L["LifeBar lenth"], }
-				for i = 32, 80, 4 do
+				for i = 32, 200, 4 do
 					tinsert(lenth, {szOption = sformat("%d px", i) , bCheck = true, bMCheck = true, bChecked = function() return LifeBar.Lenth == i end, fnAction = function() LifeBar.Lenth  = i ; LR_HeadName.SaveCommonSettings()  ;LR_HeadName.ReDrawAll()  end, })
 				end
 
@@ -735,6 +756,45 @@ LR_HeadName_UI = {
 				tinsert(m, color)
 				tinsert(m, lenth)
 				tinsert(m, offsetY)
+
+				tinsert(m, {bDevide = true})
+				tinsert(m, {szOption = _L["Show lifeper beside lifebar"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.LifeBar.bShowLifePercentText end,
+					fnAction = function()
+						LR_HeadName.UsrData.LifeBar.bShowLifePercentText = not LR_HeadName.UsrData.LifeBar.bShowLifePercentText,
+						LR_HeadName.ReDrawAll()
+						LR_HeadName.SaveCommonSettings()
+					end,
+				})
+				tinsert(m, {szOption = _L["Set lifeper text offsetX"] .. sformat(": %d", LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0) ,
+					fnAction = function()
+						GetUserInputNumber(LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0, 1000, nil, function(arg0)
+							LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX = arg0,
+							LR_HeadName.ReDrawAll()
+							LR_HeadName.SaveCommonSettings()
+						end)
+					end,
+					fnDisable = function() return not LR_HeadName.UsrData.LifeBar.bShowLifePercentText end,
+				})
+				tinsert(m, {szOption = _L["Set lifeper text offsetY"] .. sformat(": %d", LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY or 0) ,
+					fnAction = function()
+						GetUserInputNumber(LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY or 0, 1000, nil, function(arg0)
+							LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY = arg0,
+							LR_HeadName.ReDrawAll()
+							LR_HeadName.SaveCommonSettings()
+						end)
+					end,
+					fnDisable = function() return not LR_HeadName.UsrData.LifeBar.bShowLifePercentText end,
+				})
+				tinsert(m, {szOption = _L["Set lifeper text scale"] .. sformat(": %d%%", (LR_HeadName.UsrData.LifeBar.nLifePercentTextScale or 0) * 100) ,
+					fnAction = function()
+						GetUserInputNumber((LR_HeadName.UsrData.LifeBar.nLifePercentTextScale or 0) * 100, 1000, nil, function(arg0)
+							LR_HeadName.UsrData.LifeBar.nLifePercentTextScale = arg0 * 1.0 / 100,
+							LR_HeadName.ReDrawAll()
+							LR_HeadName.SaveCommonSettings()
+						end)
+					end,
+					fnDisable = function() return not LR_HeadName.UsrData.LifeBar.bShowLifePercentText end,
+				})
 				PopupMenu(m)
 			end,
 			Tip = function()

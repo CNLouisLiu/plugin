@@ -82,4 +82,32 @@ data={
 	["Received money: %d Gold"]="收到金額：%d金",
 	["Not received money: %d Gold"]="未收金額：%d金",
 
+	--20180108add--
+	["Shout everything to raid channel."]="發佈所有物品到團隊頻道",
+	["Pick up everything into my own bag."]="一鍵拾取所有物品到自己背包",
+	["You should distribute other item first.\n"]="請先記錄完上一個物品。\n",
+	["Are you sure to pick up all into your own bag?"]="確定要一鍵拾取到自己包包？",
+	["Pick up everything into the bag of  the boss."]="一鍵分配老闆",
+
+	["OneKey to material boss"]="一鍵分配給材料老闆",
+	["Please set material boss first.\n"]="請先設置材料老闆。\n",
+	["Are you sure to pick up material into bag of material boss?"]="確定要一鍵分配材料給材料老闆？",
+
+	["OneKey to equipment boss"]="一鍵分配給散件老闆",
+	["Please set equipment boss first.\n"]="請先設置散件老闆\n",
+	["Are you sure to pick up equipment into bag of equipment boss?"]="確定要一鍵分配裝備給散件老闆？",
+
+	["Set material boss"]="設置材料老闆",
+	["Set equipment boss"]="設置散件老闆",
+
+	["Error: Doodad is not exesit.\n"]="錯誤：拾取包不存在。\n",
+	["Error: Item is not exesit.\n"]="錯誤：物品不存在。\n",
+	["%s is not in party.\n"]="[%s] 不在團隊中。\n",
+	["%s is not online.\n"]="[%s] 不在線。\n",
+	["%s is not in the same map with you.\n"]="[%s] 和你不在同一個地圖。\n",
+	["%s has no right to pick up item.\n"]="[%s] 沒有資格拾取物品。\n",
+
+	["There is no eligible item.\n"]="沒有符合條件的物品。\n",
+
+
 }

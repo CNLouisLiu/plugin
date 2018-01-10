@@ -162,4 +162,32 @@ data={
 		width=80,
 		height=40,
 	},
+
+	--±ß½ÇÖ¸Ê¾Æ÷
+	edgeIndicato = {
+		["TopLeft"] = {
+			top = 2,
+			left = 0,
+			width = 7,
+			height = 7,
+		},
+		["TopRight"] = {
+			top = 2,
+			left = 107,
+			width = 7,
+			height = 7,
+		},
+		["BottomLeft"] = {
+			top = 38,
+			left = 0,
+			width = 7,
+			height = 7,
+		},
+		["BottomRight"] = {
+			top = 38,
+			left = 107,
+			width = 7,
+			height = 7,
+		},
+	},
 }

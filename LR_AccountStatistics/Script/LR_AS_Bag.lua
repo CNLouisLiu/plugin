@@ -1413,10 +1413,10 @@ function LR_AccountStatistics_Bag_Panel:OutputIconTip(item)
 		szTipInfo[#szTipInfo+1] = GetFormatText(sformat("dwIndex: %d\n", item.dwIndex), 102)
 		--szTipInfo = szTipInfo .. GetFormatText("\n\nµ÷ÊÔÐÅÏ¢:\n", 102)
 		--szTipInfo = szTipInfo .. GetFormatText("nUiId: "..item.nUiId.."\n", 102)
-		--szTipInfo = szTipInfo .. GetFormatText("nGenre: "..item.nGenre.."\n", 102)
+		szTipInfo[#szTipInfo+1] = GetFormatText("nGenre: "..item.nGenre.."\n", 102)
 		--szTipInfo = szTipInfo .. GetFormatText("nQuality: "..item.nQuality.."\n", 102)
-		--szTipInfo = szTipInfo .. GetFormatText("nSub: "..item.nSub.."\n", 102)
-		--szTipInfo = szTipInfo .. GetFormatText("nDetail: "..item.nDetail.."\n", 102)
+		szTipInfo[#szTipInfo+1] = GetFormatText("nSub: "..item.nSub.."\n", 102)
+		szTipInfo[#szTipInfo+1] = GetFormatText("nDetail: "..item.nDetail.."\n", 102)
 	end
 
 	if false and item.nGenre ==   ITEM_GENRE.EQUIPMENT then  --or  item.nGenre ==   ITEM_GENRE.COLOR_DIAMOND then
@@ -2164,7 +2164,7 @@ function LR_AccountStatistics_Mail_Check.CheckAllMail()
 				DB_SELECT2:BindAll(nEndTime, GetCurrentTime())
 				local Data2 = DB_SELECT2:GetAll() or {}
 				for k, v in pairs (Data2) do
-					Output(v.szName)
+					--Output(v.szName)
 				end
 			end
 		end

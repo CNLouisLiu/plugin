@@ -438,9 +438,7 @@ end
 --------------------------------------------------------------------------------------------------------------------
 -----------Hack系统团队面板
 --------------------------------------------------------------------------------------------------------------------
-LR_TeamTools.HackSystemTeamPanel={}
-
-
+--[[LR_TeamTools.HackSystemTeamPanel={}
 function LR_TeamTools.HackSystemTeamPanel.ON_FRAME_CREATE()
 	local frame = arg0
 	if frame:GetName() == "RaidPanel_Main" then
@@ -464,5 +462,236 @@ function LR_TeamTools.HackSystemTeamPanel.ON_FRAME_CREATE()
 	end
 end
 
-LR.RegisterEvent("ON_FRAME_CREATE", function() LR_TeamTools.HackSystemTeamPanel.ON_FRAME_CREATE() end)
+LR.RegisterEvent("ON_FRAME_CREATE", function() LR_TeamTools.HackSystemTeamPanel.ON_FRAME_CREATE() end)]]
+
+
+--------------------------------------------------------------------------------------------------------------------
+----------边角指示器
+--------------------------------------------------------------------------------------------------------------------
+--LR_EdgeIndicator_Panel = {}
+LR_EdgeIndicator_Panel = CreateAddon("LR_EdgeIndicator_Panel")
+LR_EdgeIndicator_Panel.Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0}
+function LR_EdgeIndicator_Panel.OnFrameCreate()
+	this:Lookup("",""):Lookup("Text_Title"):SetText(_L["Edge Indicator"])
+	this:RegisterEvent("UI_SCALED")
+
+	LR_EdgeIndicator_Panel.UpdateAnchor(this)
+
+	RegisterGlobalEsc("LR_EdgeIndicator_Panel", function () return true end , function() LR_EdgeIndicator_Panel.OpenFrame() end)
+	PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
+end
+
+function LR_EdgeIndicator_Panel.OnFrameDestroy()
+	UnRegisterGlobalEsc("LR_EdgeIndicator_Panel")
+	PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
+end
+
+function LR_EdgeIndicator_Panel.OnEvent(szEvent)
+	if szEvent == "UI_SCALED" then
+		LR_EdgeIndicator_Panel.UpdateAnchor(this)
+	end
+end
+
+function LR_EdgeIndicator_Panel.UpdateAnchor(frame)
+	frame:SetPoint(LR_EdgeIndicator_Panel.Anchor.s, 0, 0, LR_EdgeIndicator_Panel.Anchor.r, LR_EdgeIndicator_Panel.Anchor.x, LR_EdgeIndicator_Panel.Anchor.y)
+	frame:CorrectPos()
+end
+
+function LR_EdgeIndicator_Panel.OnLButtonClick()
+	local szName = this:GetName()
+	if szName == "Btn_Close" then
+		Wnd.CloseWindow("LR_EdgeIndicator_Panel")
+	end
+end
+
+function LR_EdgeIndicator_Panel:Init()
+	local frame = self:Append("Frame", "LR_EdgeIndicator_Panel", {path = sformat("%s/UI/LR_EdgeIndicatorPanel.ini", AddonPath)})
+
+	local Handle_Total = frame:Lookup("","")
+	local imgTab = LR.AppendUI("Image", Handle_Total, "TabImg", {w = 354,h = 33,x = 3, y = 40})
+    imgTab:SetImage("ui\\Image\\UICommon\\ActivePopularize2.UITex",46)
+	imgTab:SetImageType(11)
+
+	local hPageSet = LR.AppendUI("PageSet", frame, "PageSet", {x = 0, y = 40, w = 360, h = 130})
+	local szKey = {"TopLeft", "TopRight", "BottomLeft", "BottomRight"}
+	for k, v in pairs(szKey) do
+		local Btn = LR.AppendUI("UICheckBox", hPageSet, sformat("Btn_%s", v), {x = 20 + (k - 1) * 80, y = 0, w = 80, h = 30, text = _L[v], group = "EdgeIndicator"})
+		local Window = self:Append("Window", hPageSet, sformat("Window_%s", v), {x = 0, y = 30, w = 360, h = 100})
+		hPageSet:AddPage(Window:GetSelf(), Btn:GetSelf())
+		Btn.OnCheck = function(bCheck)
+			if bCheck then
+				hPageSet:ActivePage(k - 1)
+			end
+		end
+	end
+
+	for k, v in pairs(szKey) do
+		local Window = self:Fetch(sformat("Window_%s", v))
+		local Text_Style = LR.AppendUI("Text", Window, "Text_Style", {x = 20, y = 10, text = _L["Style"]})
+		Text_Style:SetFontScheme(8)
+
+		local szStyleOption = {"ColorBlock", "Disable"}
+		local vStyleOption = {1, 0}
+		for k2, v2 in pairs(szStyleOption) do
+			local RadioBox = self:Append("RadioBox", Window, sformat("RadioBox_%s_%s", v, k2), {w = 100, x = 65 + (k2 - 1) * 60, y = 10, text = _L[v2], group = sformat("Style_%s", v)})
+			RadioBox:Check(LR_TeamEdgeIndicator.UsrData[v].style == vStyleOption[k2])
+			RadioBox.OnCheck = function(arg0)
+				if arg0 then
+					LR_TeamEdgeIndicator.UsrData[v].style = vStyleOption[k2]
+					self:Fetch(sformat("Edit_Buff_%s", v)):Enable(LR_TeamEdgeIndicator.UsrData[v].style == 1)
+					self:Fetch(sformat("CheckBox_%s", v)):Enable(LR_TeamEdgeIndicator.UsrData[v].style == 1)
+					LR_TeamBuffSettingPanel.FormatDebuffNameList()
+				end
+			end
+		end
+
+		local Text_Buff = LR.AppendUI("Text", Window, "Text_Buff", {x = 20, y = 40, text = _L["Buff"], font = 8})
+		local Edit_Buff = self:Append("Edit", Window, sformat("Edit_Buff_%s", v), {w= 100, x = 65, y = 40, })
+		Edit_Buff:Enable(LR_TeamEdgeIndicator.UsrData[v].style == 1)
+		if LR_TeamEdgeIndicator.UsrData[v].buff.dwID ~= 0 then
+			Edit_Buff:SetText(LR_TeamEdgeIndicator.UsrData[v].buff.dwID)
+		elseif LR_TeamEdgeIndicator.UsrData[v].buff.szName ~= "" then
+			Edit_Buff:SetText(LR_TeamEdgeIndicator.UsrData[v].buff.szName)
+		else
+			Edit_Buff:SetText("")
+		end
+		local Image_Buff = self:Append("Image", Window, sformat("Image_Buff_%s", v), {x = 170, y = 40, w = 25, h = 25,})
+		Image_Buff:Hide()
+		local Text_BuffName = self:Append("Text", Window, sformat("Text_BuffName_%s", v), {x = 195, y = 40, text = "", font = 0})
+		if LR_TeamEdgeIndicator.UsrData[v].buff.dwID ~= 0 then
+			local szBuffName = Table_GetBuffName(LR_TeamEdgeIndicator.UsrData[v].buff.dwID, 1)
+			Text_BuffName:SetText(szBuffName)
+			Image_Buff:FromIconID(Table_GetBuffIconID(LR_TeamEdgeIndicator.UsrData[v].buff.dwID, 1))
+			Image_Buff:Show()
+		end
+
+		Edit_Buff.OnChange = function(arg0)
+			local szText = sgsub(arg0, " ", "")
+			if szText == "" then
+				return
+			end
+			if type(tonumber(szText)) == "number" then
+				local dwID = tonumber(szText)
+				LR_TeamEdgeIndicator.UsrData[v].buff.szName = ""
+				LR_TeamEdgeIndicator.UsrData[v].buff.dwID = dwID
+				local szBuffName = Table_GetBuffName(dwID, 1)
+				Text_BuffName:SetText(szBuffName)
+				if Table_GetBuffIconID(dwID, 1) > 0 then
+					Image_Buff:FromIconID(Table_GetBuffIconID(dwID, 1))
+					Image_Buff:Show()
+				else
+					Image_Buff:Hide()
+				end
+			else
+				LR_TeamEdgeIndicator.UsrData[v].buff.szName = szText
+				LR_TeamEdgeIndicator.UsrData[v].buff.dwID = 0
+				Text_BuffName:SetText("")
+				Image_Buff:Hide()
+
+				local m = {}
+				m.bShowKillFocus = true
+				m.bDisableSound = true
+				local x, y = Edit_Buff:GetAbsPos()
+				local w, h = Edit_Buff:GetSize()
+				m.nMiniWidth = w
+				m.x = x
+				m.y = y + h
+				local RowCount = g_tTable.Buff:GetRowCount()
+				for i = 2, RowCount do
+					local buff = g_tTable.Buff:GetRow(i)
+					if buff.szName == szText then
+						m[#m + 1] = {szOption = sformat("%s #%d", buff.szName, buff.dwBuffID),
+							fnMouseEnter = function()
+								local x, y = this:GetAbsPos()
+								local w, h = this:GetSize()
+								local szXml = {}
+								szXml[#szXml+1] = GetFormatText(buff.szRemark, 0)
+								OutputTip(tconcat(szXml), 350, {x, y, 0, 0})
+							end,
+							fnAction = function()
+								LR_TeamEdgeIndicator.UsrData[v].buff.dwID = buff.dwBuffID
+								LR_TeamEdgeIndicator.UsrData[v].buff.szName = buff.szName
+								Edit_Buff:SetText(buff.dwBuffID)
+								Text_BuffName:SetText(buff.szName)
+							end
+						}
+					end
+				end
+				PopupMenu(m)
+			end
+			LR_TeamBuffSettingPanel.FormatDebuffNameList()
+		end
+
+		local szBuffOption = {"Only self"}
+		local szBuffOptionKey = {"bSelf"}
+		for k2, v2 in pairs(szBuffOption) do
+			local CheckBox = self:Append("CheckBox", Window, sformat("CheckBox_%s", v), {w = 100, x = 65 + (k2 - 1) * 60, y = 70, text = _L[v2],})
+			CheckBox:Enable(LR_TeamEdgeIndicator.UsrData[v].style == 1)
+			CheckBox:Check(LR_TeamEdgeIndicator.UsrData[v].buff.bOnlySelf)
+			CheckBox.OnClick = function(arg0)
+				LR_TeamEdgeIndicator.UsrData[v].buff.bOnlySelf = arg0
+				LR_TeamBuffSettingPanel.FormatDebuffNameList()
+			end
+		end
+	end
+
+	local img0 = LR.AppendUI("Image", frame, "img01", {w = 280 , h = 10, x = 40, y = 166})
+	img0:FromUITex("ui/image/UICommon/commonpanel.uitex", 42)
+
+	local shadow1 = LR.AppendUI("Shadow", frame, "Shadow1", {w = 18, h = 18, x = 20, y = 180})
+	shadow1:SetColorRGB(255, 255, 0)
+	local text1 = LR.AppendUI("Text", frame, "Text1", {x = 40, y = 178, text = _L["Left time short in"]})
+	local comboBox1 = LR.AppendUI("ComboBox", frame, "combobox1", {w = 60, h = 20, x = 130, y = 180, text = sformat("%d%%", LR_TeamEdgeIndicator.UsrData.yellow * 100)})
+	comboBox1.OnClick = function(m)
+		for i = 10, 90, 10 do
+			m[#m +1] = {
+				szOption = sformat("%d%%", i), bCheck = true, bMCheck = true, bChecked = function() return LR_TeamEdgeIndicator.UsrData.yellow == i * 1.0 / 100 end,
+				fnAction = function()
+					comboBox1:SetText(sformat("%d%%", i))
+					LR_TeamEdgeIndicator.UsrData.yellow = i * 1.0 /100
+				end,
+			}
+		end
+		PopupMenu(m)
+	end
+
+	local shadow3 = LR.AppendUI("Shadow", frame, "Shadow3", {w = 18, h = 18, x = 220, y = 180})
+	shadow3:SetColorRGB(34, 177, 76)
+	local text3 = LR.AppendUI("Text", frame, "Text1", {x = 240, y = 178, text = _L["Normal status"]})
+
+	local shadow2 = LR.AppendUI("Shadow", frame, "Shadow2", {w = 18, h = 18, x = 20, y = 210})
+	shadow2:SetColorRGB(255, 0, 128)
+	local text2 = LR.AppendUI("Text", frame, "Text2", {x = 40, y = 208, text = _L["Left time short in"]})
+	local comboBox2 = LR.AppendUI("ComboBox", frame, "combobox2", {w = 60, h = 20, x = 130, y = 210, text = sformat(_L["%ds"], LR_TeamEdgeIndicator.UsrData.red)})
+	comboBox2.OnClick = function(m)
+		for i = 1, 5, 1 do
+			m[#m +1] = {
+				szOption = sformat(_L["%ds"], i), bCheck = true, bMCheck = true, bChecked = function() return LR_TeamEdgeIndicator.UsrData.red == i end,
+				fnAction = function()
+					comboBox2:SetText(sformat(_L["%ds"], i))
+					LR_TeamEdgeIndicator.UsrData.red = i
+				end,
+			}
+		end
+		PopupMenu(m)
+	end
+
+	----------关于
+	LR.AppendAbout(nil, frame)
+end
+
+
+function LR_EdgeIndicator_Panel.OpenFrame()
+	local frame = Station.Lookup("Normal/LR_EdgeIndicator_Panel")
+	if not frame then
+		--Wnd.OpenWindow(sformat("%s/UI/LR_EdgeIndicatorPanel.ini", AddonPath), "LR_EdgeIndicator_Panel")
+		LR_EdgeIndicator_Panel:Init()
+	else
+		Wnd.CloseWindow("LR_EdgeIndicator_Panel")
+	end
+end
+
+
+
+
 

@@ -322,7 +322,7 @@ function _RoleGrid:Create()
 	----------------------------------------------
 	handle:GetHandle().OnItemMouseLeave=function()
 		if handle:Lookup("Image_Hover") then handle:Lookup("Image_Hover"):Hide() end
-		LR_TeamGrid.cureLock = false
+--[[		LR_TeamGrid.cureLock = false
 		LR_TeamGrid.hoverHandle = nil
 		LR.DelayCall(150,function()
 			if not LR_TeamGrid.cureLock and LR_TeamGrid.UsrData.CommonSettings.bInCureMode then
@@ -338,7 +338,7 @@ function _RoleGrid:Create()
 					end
 				end
 			end
-		end)
+		end)]]
 	end
 
 	----------------------------------------------
@@ -1522,6 +1522,10 @@ function _RoleGrid:GetBuffHandle()
 	return self.UI["Handle_Debuffs"]
 end
 
+function _RoleGrid:GetEdgeIndicatorShadow(...)
+	return self.UI[...]
+end
+
 function _RoleGrid:SetDistanceTextSize()
 	local UIConfig = LR_TeamGrid.UIConfig
 	local fx, fy = LR_TeamGrid.UsrData.CommonSettings.scale.fx, LR_TeamGrid.UsrData.CommonSettings.scale.fy
@@ -1573,6 +1577,47 @@ function _RoleGrid:DrawDistanceText()
 	return self
 end
 
+function _RoleGrid:SetEdgeIndicatoSize()
+	local UIConfig = LR_TeamGrid.UIConfig.edgeIndicato
+	local fx, fy = LR_TeamGrid.UsrData.CommonSettings.scale.fx, LR_TeamGrid.UsrData.CommonSettings.scale.fy
+	local szKey = {"TopLeft", "TopRight", "BottomLeft", "BottomRight"}
+	for k, v in pairs(szKey) do
+		local height = UIConfig[v].height * fy
+		local width = UIConfig[v].width * fx
+		local handle = self.handle
+		handle:Lookup(sformat("Shadow_Edge%s", v)):SetSize(width, height)
+		handle:Lookup(sformat("Shadow_Edge%sBg", v)):SetSize(width + 4, height + 4)
+	end
+	return self
+end
+
+function _RoleGrid:SetEdgeIndicatoRelPos()
+	local UIConfig = LR_TeamGrid.UIConfig.edgeIndicato
+	local fx, fy = LR_TeamGrid.UsrData.CommonSettings.scale.fx, LR_TeamGrid.UsrData.CommonSettings.scale.fy
+	local szKey = {"TopLeft", "TopRight", "BottomLeft", "BottomRight"}
+	local handle = self.handle
+	for k, v in pairs(szKey) do
+		local top = UIConfig[v].top * fy
+		local left = UIConfig[v].left * fx
+		handle:Lookup(sformat("Shadow_Edge%s", v)):SetRelPos(left, top)
+		handle:Lookup(sformat("Shadow_Edge%sBg", v)):SetRelPos(left - 2, top - 2)
+		self:SetEdgeIndicatoColor(v, nil, nil)
+	end
+	handle:FormatAllItemPos()
+	return self
+end
+
+function _RoleGrid:SetEdgeIndicatoColor(szKey, color, bShow)
+	local handle = self.handle
+	local shadow = handle:Lookup(sformat("Shadow_Edge%s", szKey))
+	shadow:SetColorRGB(34, 177, 76)
+	shadow:Hide()
+	local shadowBg = handle:Lookup(sformat("Shadow_Edge%sBg", szKey))
+	shadowBg:SetColorRGB(0, 0, 0)
+	shadowBg:Hide()
+	return self
+end
+
 ---------------------------------------------------------------
 function LR_TeamGrid.OnFrameCreate()
 	local frame = Station.Lookup("Normal/LR_TeamGrid")
@@ -1612,6 +1657,9 @@ function LR_TeamGrid.OnFrameCreate()
 	this:RegisterEvent("SYS_MSG")	--途径2监控BUFF
 	this:RegisterEvent("LR_RAID_BUFF_ADD_FRESH")
 	this:RegisterEvent("LR_RAID_BUFF_DELETE")
+	this:RegisterEvent("LR_RAID_EDGE_ADD_FRESH")
+	this:RegisterEvent("LR_RAID_EDGE_DELETE")
+
 	----自身技能监控
 	this:RegisterEvent("SKILL_MOUNT_KUNG_FU")
 	this:RegisterEvent("SKILL_UPDATE")
@@ -1773,6 +1821,10 @@ function LR_TeamGrid.OnEvent(szEvent)
 		LR_TeamBuffMonitor.LR_RAID_BUFF_ADD_FRESH()
 	elseif szEvent == "LR_RAID_BUFF_DELETE" then
 		LR_TeamBuffMonitor.LR_RAID_BUFF_DELETE()
+	elseif szEvent == "LR_RAID_EDGE_ADD_FRESH" then
+		LR_TeamBuffMonitor.LR_RAID_EDGE_ADD_FRESH()
+	elseif szEvent == "LR_RAID_EDGE_DELETE" then
+		LR_TeamBuffMonitor.LR_RAID_EDGE_DELETE()
 	elseif szEvent == "SYS_MSG" then
 		LR_TeamGrid.SYS_MSG()
 	elseif szEvent == "SKILL_MOUNT_KUNG_FU" then
@@ -1816,6 +1868,10 @@ function LR_TeamGrid.OnFrameBreathe()
 	if not LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bOff then
 		LR_TeamBuffMonitor.RefreshBuff()
 	end
+
+	LR_TeamEdgeIndicator.RefreshEdgeIndicator()
+
+
 	LR_TeamSkillMonitor.RefreshAllSkillBox()
 	LR_TeamBossMonitor.CheckAllOTState()
 	LR_TeamBossMonitor.DrawAllBossTarget()
@@ -1840,6 +1896,27 @@ function LR_TeamGrid.OnMouseEnter()
 			--Station.SetFocusWindow(this)	暂时屏蔽按键选人的功能
 		end
 	end
+end
+
+function LR_TeamGrid.OnMouseLeave()
+		LR_TeamGrid.cureLock = false
+		LR_TeamGrid.hoverHandle = nil
+		--LR.DelayCall(150,function()
+			if not LR_TeamGrid.cureLock and LR_TeamGrid.UsrData.CommonSettings.bInCureMode then
+				local me =  GetClientPlayer()
+				if not me then
+					return
+				end
+				local kungfu=me.GetKungfuMount()
+				local dwSkillID=kungfu.dwSkillID
+				if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+					if LR_TeamGrid.IfTargetCanBSelect(LR_TeamGrid.cureTarget) then
+						LR_TeamGrid.SetTarget(LR_TeamGrid.cureTarget)
+						--Output("----")
+					end
+				end
+			end
+		--end)
 end
 
 function LR_TeamGrid.OnFrameKeyDown()
@@ -1936,8 +2013,7 @@ function LR_TeamGrid.OpenPanel()
 	local frame = Station.Lookup("Normal/LR_TeamGrid")
 	if not frame then
 		local UIPath = sformat("%s\\UI\\%s\\UI.ini", AddonPath, LR_TeamGrid.UsrData.UI_Choose)
-		local RolePath = sformat("%s\\UI\\%s\\Role.ini", AddonPath, LR_TeamGrid.UsrData.UI_Choose)
-		if not (IsFileExist(UIPath) and IsFileExist(RolePath)) then
+		if not (IsFileExist(UIPath)) then
 			UIPath = sformat("%s\\UI\\Classic\\UI.ini", AddonPath)
 			LR_TeamGrid.UsrData.UI_Choose = "Classic"
 		end
@@ -2178,6 +2254,7 @@ function LR_TeamGrid.DrawAllMembers()
 						roleGrid:SetLooterImageSize():SetLooterImageRelPos():DrawLootertImage()
 						roleGrid:SetDistanceTextSize():SetDistanceTextRelPos():DrawDistanceText()
 						roleGrid:SetWorldMarkImageSize():SetWorldMarkImageRelPos()
+						roleGrid:SetEdgeIndicatoSize():SetEdgeIndicatoRelPos()
 						roleGrid:SetLifeTextSize():SetLifeTextRelPos()
 						roleGrid:SetConfirmImageSize():SetConfirmImageRelPos()
 						roleGrid:SetHandleBuffSize():SetHandleBuffRelPos()
@@ -2676,6 +2753,8 @@ function LR_TeamGrid.SetTarget(dwID)
 	local player = GetPlayer(dwID)
 	if player then
 		SetTarget(TARGET.PLAYER, dwID)
+		--SetTarget(TARGET.PLAYER, dwID)
+		--Output("settarget", dwID, GetTickCount())
 	end
 end
 

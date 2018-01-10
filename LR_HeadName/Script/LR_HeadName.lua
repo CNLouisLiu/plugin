@@ -103,6 +103,8 @@ LR_HeadName.default = {
 		bMiniMapAgriculture = true,	--神农小地图显示
 		bMiniMapMine = true,	--矿藏小地图显示
 		bShowQuestDoodad = false,	--显示任务拾取物品
+		bShowTargetDis = true,
+		bShowFightingEnemyDis = false,
 		NPC = {
 			bShow = true,
 			bAlwaysHideSysNpcTop = true,
@@ -208,6 +210,10 @@ LR_HeadName.default = {
 			ColorMode = 2,
 			nOffsetY = -2,
 			BorderColor = {0, 0, 0},
+			bShowLifePercentText = true,
+			nLifePercentTextOffsetX = 32,
+			nLifePercentTextOffsetY = 0,
+			nLifePercentTextScale = 0.8,
 		},
 		ChangGeShadow = {
 			bShow = true, 	-----总开关
@@ -646,6 +652,19 @@ function _HandleRole:DrawLife(t)
 	LifeBar:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX+nWidth, bcY})
 	LifeBar:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX+nWidth, bcY+(nHeight - 4)})
 	LifeBar:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX, bcY+(nHeight - 4)})
+
+	--LifeBar:SetTriangleFan(GEOMETRY_TYPE.TEXT)
+	local hLifePer = Handle_Dummy:Lookup("Shadow_LifePer")
+	local nLifePercentTextOffsetX = LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0
+	local nLifePercentTextOffsetY = LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY or 0
+	local nLifePercentTextScale = LR_HeadName.UsrData.LifeBar.nLifePercentTextScale or 0.8
+
+	hLifePer:SetTriangleFan(GEOMETRY_TYPE.TEXT)
+	hLifePer:ClearTriangleFanPoint()
+	local tt = "%" .. tostring(nLifePercentTextOffsetX) .. "s%d%%"
+	hLifePer:AppendCharacterID(dwID, true, r, g, b, 255, nLifePercentTextOffsetY , 2, sformat(tt, " ",LifePer * 100), 0, nLifePercentTextScale)
+
+	hLifePer:Hide()
 	LifeBar:Hide()
 end
 
@@ -660,9 +679,11 @@ function _HandleRole:HideLifeBar()
 	local BorderOut = Handle_Dummy:Lookup("Shadow_BorderOut")
 	local BorderIn = Handle_Dummy:Lookup("Shadow_BorderIn")
 	local LifeBar = Handle_Dummy:Lookup("Shadow_LifeBar")
+	local hLifePer = Handle_Dummy:Lookup("Shadow_LifePer")
 
 	BorderOut:Hide()
 	BorderIn:Hide()
+	hLifePer:Hide()
 	LifeBar:Hide()
 end
 
@@ -682,6 +703,7 @@ function _HandleRole:ShowLifeBar()
 	local BorderOut = Handle_Dummy:Lookup("Shadow_BorderOut")
 	local BorderIn = Handle_Dummy:Lookup("Shadow_BorderIn")
 	local LifeBar = Handle_Dummy:Lookup("Shadow_LifeBar")
+	local hLifePer = Handle_Dummy:Lookup("Shadow_LifePer")
 
 	local me = GetControlPlayer()
 	if not me then
@@ -703,6 +725,9 @@ function _HandleRole:ShowLifeBar()
 
 	--BorderOut:Show()
 	--BorderIn:Show()
+	if LR_HeadName.UsrData.LifeBar.bShowLifePercentText then
+		hLifePer:Show()
+	end
 	LifeBar:Show()
 end
 
@@ -1495,6 +1520,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 				local CanAcceptQuest = _Role:GetCanAcceptQuest()
 				local CanFinishQuest = _Role:GetCanFinishQuest()
 				local nMoveState = _Role:GetnMoveState()
+				local _tartype, _tarid = me.GetTarget()
 
 				if bForced then
 					bFresh = true
@@ -1510,9 +1536,11 @@ function LR_HeadName.Check(dwID, nType, bForced)
 					_Role:SetTongName(LR_HeadName.GetTongName(obj))
 					szTongName =  LR_HeadName.GetTongName(obj)
 					bFresh = true
-				elseif (obj.bFightState and nShip ==  "Enemy")
+				elseif (obj.bFightState and nShip ==  "Enemy" )
 				or (nShip ==  "Ally" and obj.nCurrentLife<obj.nMaxLife and nType ==  TARGET.NPC)
 				then
+					bFresh = true
+				elseif _tarid == obj.dwID and LR_HeadName.UsrData.bShowTargetDis then
 					bFresh = true
 				elseif IsMissionObj then
 					if LR_HeadName.UsrData.bShowQMode ==  2  and LR_HeadName.UsrData.bShowQuestFlag  then
@@ -1631,14 +1659,18 @@ function LR_HeadName.Check(dwID, nType, bForced)
 								end
 							end
 						end
-						if (obj.bFightState and nShip ==  "Enemy" )
-						or (nShip ==  "Ally" and obj.nCurrentLife<obj.nMaxLife and nType ==  TARGET.NPC)
+						if --(obj.bFightState and nShip ==  "Enemy" ) or
+						 (nShip ==  "Ally" and obj.nCurrentLife<obj.nMaxLife and nType ==  TARGET.NPC)
 						then
 							local LifePer = obj.nCurrentLife/obj.nMaxLife
 							if not LifePer or  LifePer>1 then
 								LifePer = 1
 							end
 							temp = sformat("%s (%0.1f%%)", temp, LifePer*100)
+						end
+						local _, _dwID = me.GetTarget()
+						if _dwID == obj.dwID and LR_HeadName.UsrData.bShowTargetDis or obj.bFightState and nShip == "Enemy" and LR_HeadName.UsrData.bShowFightingEnemyDis then
+							temp = sformat(_L["%s·%0.1f chi"], temp, LR.GetDistance(obj))
 						end
 						if IsMissionObj or CanAcceptQuest or CanFinishQuest then
 							if LR_HeadName.UsrData.bShowQMode ==  2  and LR_HeadName.UsrData.bShowQuestFlag then

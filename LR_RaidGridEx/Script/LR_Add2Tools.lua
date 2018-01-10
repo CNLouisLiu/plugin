@@ -72,7 +72,7 @@ local LR_TeamGrid_UI ={
 			callback = function (m)
 				LR_TeamGrid.LoadUIList()
 				for k, v in pairs (LR_TeamGrid.UIList) do
-					m[#m+1] = {szOption=v.cnName, bCheck = true, bMCheck = true, bChecked = function() return LR_TeamGrid.UsrData.UI_Choose == v.szName end,
+					m[#m+1] = {szOption = v.cnName, bCheck = true, bMCheck = true, bChecked = function() return LR_TeamGrid.UsrData.UI_Choose == v.szName end,
 						fnAction = function()
 							LR_TeamGrid.ClosePanel()
 							LR_TeamGrid.UsrData.UI_Choose = v.szName
@@ -375,6 +375,13 @@ local LR_TeamGrid_UI ={
 			callback = function (enabled)
 				LR_TeamGrid.UsrData.CommonSettings.bShowDistributeWarn = enabled
 				LR_TeamGrid.SaveCommonData()
+			end
+		},{	name = "LR_TeamGrid_UI_EdgeIndicator", type = "Button", x = 0, y = 340, text = _L["Open EdgeIndicator"], w = 120,
+			enable = function ()
+				return LR_TeamGrid.bOn
+			end,
+			callback = function()
+				LR_EdgeIndicator_Panel.OpenFrame()
 			end
 		},{	name="LR_TeamGrid_UI_Reset",type="Button",x=400,y=340,text=_L["Reset settings"],
 			enable = function ()
