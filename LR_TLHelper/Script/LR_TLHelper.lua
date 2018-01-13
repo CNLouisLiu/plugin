@@ -648,12 +648,11 @@ function LR_TLHelper.OpenPanel()
 	if LR.GetXinFa() ~= Table_GetSkillName(10225,1) then
 		return
 	end
-	local scene = me.GetScene()
-	if scene.dwMapID == 296 then
+	if LR.IsTreasureBattleFieldMap() then
 		Wnd.CloseWindow("LR_TLHelper")
 	else
 		Wnd.OpenWindow("Interface\\LR_Plugin\\LR_TLHelper\\UI\\LR_TLHelper.ini", "LR_TLHelper")
-		LR_TLHelper.FrameLastTime=GetLogicFrameCount()
+		LR_TLHelper.FrameLastTime = GetLogicFrameCount()
 	end
 end
 

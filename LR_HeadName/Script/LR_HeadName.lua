@@ -1283,14 +1283,12 @@ function LR_HeadName.OpenFrame()
 	end
 
 	if LR_HeadName.bOn then
-		local me = GetClientPlayer()
-		local scene = me.GetScene()
-		if scene.dwMapID ~= 296 then		--296
-			frame:Show()
-			LR_HeadName.HideSysHead()
-		else
+		if LR.IsTreasureBattleFieldMap() then
 			frame:Hide()
 			LR_HeadName.Convert2SysHead()
+		else
+			frame:Show()
+			LR_HeadName.HideSysHead()
 		end
 	else
 		frame:Hide()

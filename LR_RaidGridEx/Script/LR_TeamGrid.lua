@@ -2038,8 +2038,7 @@ function LR_TeamGrid.SwitchPanel()
 		return
 	end
 	if LR_TeamGrid.bOn then
-		local scene = me.GetScene()
-		if scene.dwMapID == 296 then
+		if LR.IsTreasureBattleFieldMap() then
 			LR_TeamGrid.ClosePanel()
 		elseif me.IsInRaid() then
 			LR_TeamGrid.OpenPanel()
@@ -2800,7 +2799,7 @@ function LR_TeamGrid.SwitchSystemRaidPanel()
 		return
 	end
 	--Output("s", scene.dwMapID == 74, me.IsInRaid(), not frame)
-	if scene.dwMapID == 296 and me.IsInRaid() then
+	if LR.IsTreasureBattleFieldMap() and me.IsInRaid() then
 		OpenRaidPanel()
 		return
 	end
@@ -2827,8 +2826,7 @@ function LR_TeamGrid.SwitchSystemTeamPanel()
 		return
 	end
 
-	local scene = me.GetScene()
-	if scene.dwMapID == 296 and me.IsInParty() and not me.IsInRaid() and not frame:IsVisible()  then
+	if LR.IsTreasureBattleFieldMap() and me.IsInParty() and not me.IsInRaid() and not frame:IsVisible() then
 		frame:Show()
 		return
 	end

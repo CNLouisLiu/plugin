@@ -266,8 +266,7 @@ function LR_PickupDead.BreatheCall()
 	if not LR_PickupDead.UsrData.bOn then
 		return
 	end
-	local scene = me.GetScene()
-	if scene.dwMapID == 296 then
+	if LR.IsTreasureBattleFieldMap() then
 		return
 	end
 

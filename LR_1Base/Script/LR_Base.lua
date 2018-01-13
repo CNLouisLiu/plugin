@@ -152,6 +152,14 @@ function LR.LoadDragonMapData()
 end
 LR.LoadDragonMapData()
 
+function LR.IsTreasureBattleFieldMap()
+	local me = GetClientPlayer()
+	if not me then
+		return true
+	end
+	return Table_IsTreasureBattleFieldMap(me.GetMapID())
+end
+
 --------------------------------------
 function LR.Table_GetBookItemIndex(dwBookID, dwSegmentID)
 	local dwBookItemIndex = 0
