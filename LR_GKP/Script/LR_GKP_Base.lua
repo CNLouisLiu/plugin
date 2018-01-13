@@ -378,10 +378,10 @@ function LR_GKP_Base.BatchDistributeItem(items, player)
 end
 
 function LR_GKP_Base.OneKey2Self(dwDoodadID)
-	if not LR_GKP_Base.CheckBillExist() then
+	if not LR_GKP_Base.CheckIsDistributor(true) then
 		return
 	end
-	if not LR_GKP_Base.CheckIsDistributor(true) then
+	if not LR_GKP_Base.CheckBillExist() then
 		return
 	end
 	if not dwDoodadID then
@@ -400,10 +400,10 @@ function LR_GKP_Base.OneKey2Self(dwDoodadID)
 end
 
 function LR_GKP_Base.OneKey2MaterialBoss(dwDoodadID)
-	if not LR_GKP_Base.CheckBillExist() then
+	if not LR_GKP_Base.CheckIsDistributor(true) then
 		return
 	end
-	if not LR_GKP_Base.CheckIsDistributor(true) then
+	if not LR_GKP_Base.CheckBillExist() then
 		return
 	end
 	if not dwDoodadID then
@@ -436,10 +436,10 @@ function LR_GKP_Base.OneKey2MaterialBoss(dwDoodadID)
 end
 
 function LR_GKP_Base.OneKey2EquipmentBoss(dwDoodadID)
-	if not LR_GKP_Base.CheckBillExist() then
+	if not LR_GKP_Base.CheckIsDistributor(true) then
 		return
 	end
-	if not LR_GKP_Base.CheckIsDistributor(true) then
+	if not LR_GKP_Base.CheckBillExist() then
 		return
 	end
 	if not dwDoodadID then

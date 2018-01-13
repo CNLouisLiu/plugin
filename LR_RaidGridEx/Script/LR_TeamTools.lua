@@ -565,6 +565,14 @@ function LR_EdgeIndicator_Panel:Init()
 			Image_Buff:Show()
 		end
 
+		Edit_Buff.OnKillFocus = function()
+			LR.DelayCall(100, function()
+				if IsPopupMenuOpened() then
+					Wnd.CloseWindow(GetPopupMenu())
+				end
+			end)
+		end
+
 		Edit_Buff.OnChange = function(arg0)
 			local szText = sgsub(arg0, " ", "")
 			if szText == "" then
@@ -628,7 +636,7 @@ function LR_EdgeIndicator_Panel:Init()
 			local CheckBox = self:Append("CheckBox", Window, sformat("CheckBox_%s", v), {w = 100, x = 65 + (k2 - 1) * 60, y = 70, text = _L[v2],})
 			CheckBox:Enable(LR_TeamEdgeIndicator.UsrData[v].style == 1)
 			CheckBox:Check(LR_TeamEdgeIndicator.UsrData[v].buff.bOnlySelf)
-			CheckBox.OnClick = function(arg0)
+			CheckBox.OnCheck = function(arg0)
 				LR_TeamEdgeIndicator.UsrData[v].buff.bOnlySelf = arg0
 				LR_TeamBuffSettingPanel.FormatDebuffNameList()
 			end

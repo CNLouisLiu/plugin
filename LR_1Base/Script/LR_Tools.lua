@@ -98,7 +98,7 @@ function LR_TOOLS:Init()
 
 	local Window_Welcome = self:Append("Window", hPageSet, "Window_Welcome" , {w = 530, h = 380, x = 210, y = 50})
 	local img_Welcome = self:Append("Image", Window_Welcome, "img_Welcome" , {x = 0, y = 0, w = 520, h = 240, image = "interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.UITex", frame = 0})
-	self:Append("Image", Window_Welcome, "img_Welcome" , {x = 0, y = 0, w = 150, h = 150, image = "interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.UITex", frame = 1})
+	--self:Append("Image", Window_Welcome, "img_Welcome" , {x = 0, y = 0, w = 150, h = 150, image = "interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.UITex", frame = 1})
 	local text_Welcome = self:Append("Text", Window_Welcome, "text_Welcome" , {w = 760, x = 0, y = 245, h = 60, text  = sformat(_L["Welcome %s to use LR Plugins"], me.szName)  , font  = 236})
 	Window_Welcome:Show()
 	local ServerInfo = {GetUserServer()}
@@ -538,7 +538,7 @@ function LR.AppendAbout(Addon, frame)
 		local w, h = this:GetSize()
 		local szXml = {}
 		szXml[#szXml+1]  = GetFormatText(sformat("%s\n", _L["If you have any suggestions or comments, please open the Weibo of the author!"]), 10, 255, 128, 0)
-		szXml[#szXml+1] = GetFormatImage("interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.uitex", 1, 150, 150)
+		--szXml[#szXml+1] = GetFormatImage("interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.uitex", 1, 150, 150)
 		OutputTip(tconcat(szXml), 350, {x, y, w, h})
 	end
 	Handle_About.OnLeave = function()
@@ -546,7 +546,8 @@ function LR.AppendAbout(Addon, frame)
 		HideTip()
 	end
 	Handle_About.OnClick = function ()
-		LR.OpenInternetExplorer("http://www.weibo.com/u/1119308690", true)
+		OpenBrowser("http://www.weibo.com/u/1119308690")
+		--LR.OpenInternetExplorer("http://www.weibo.com/u/1119308690", true)
 	end
 
 	--local Handle_About2 = Addon:Append("Handle", frame, "Handle_About2", {w = 200, h = 33, x = 0, y = 0})
@@ -739,7 +740,7 @@ RegisterEvent("FIRST_LOADING_END", function()
 		szClass = "About",
 		tWidget = {
 			{name = "LR_TOOLS_About_image", type = "Image", x = 0, y = 0, w = 520, h = 240, path = "interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.UITex", nFrame = 0,},
-			{name = "LR_TOOLS_erweima", type = "Image", x = 0, y = 0, w = 150, h = 150, path = "interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.UITex", nFrame = 1,},
+			--{name = "LR_TOOLS_erweima", type = "Image", x = 0, y = 0, w = 150, h = 150, path = "interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.UITex", nFrame = 1,},
 			{name = "LR_TOOLS_About_text", type = "Text", x = 0, y = 245, w = 500, h = 60, font  = 236, VAlign = 1, text = sformat(_L["Welcome %s to use LR Plugins"], me.szName)},
 			{name = "LR_TOOLS_About_bu", type = "Button", x = 0, y = 310, text = _L["I want to make suggestions and comments, feedback bugs"], w = 250, h = 40, font = 177,
 			callback = function()

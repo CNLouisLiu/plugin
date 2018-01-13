@@ -125,6 +125,7 @@ data={
 		left=0,
 		width=84,
 		height=21,
+		fontscale=0.9,
 	},
 
 	handleBuffBox={

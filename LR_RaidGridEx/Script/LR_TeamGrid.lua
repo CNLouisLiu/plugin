@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local VERSION = "20170918"
+local VERSION = "20180112"
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
@@ -139,6 +139,8 @@ local DefaultCommonSettings = {
 		LButtonDBClickAlt = 1,	--0：什么都不做，1：交易
 		LButtonDBClickShfit = 0,	--0：什么都不做
 		LButtonDBClickCtrl = 0,		--0：什么都不做
+		MouseEnterAlt = 0,	--什么都不做 1：显示dps
+		MouseEnterShift = 0,	--什么都不做，1：显示重伤记录
 	},
 	--技能盒子
 	bShowSkillBox = true,
@@ -183,7 +185,7 @@ LR_TeamGrid = LR_TeamGrid or {
 	cureLock = false,		---治疗时的锁，当鼠标移动进格子，会锁住，不会选中cureTarget
 	hoverHandle = nil,	---悬停时的handle
 }
-local CustomVersion = "20170111"
+local CustomVersion = "20180111"
 RegisterCustomData("LR_TeamGrid.bOn", CustomVersion)
 RegisterCustomData("LR_TeamGrid.Anchor", CustomVersion)
 
@@ -283,14 +285,14 @@ function _RoleGrid:Create()
 		else
 			local nX, nY = parentHandle:GetAbsPos()
 			local nW, nH = parentHandle:GetSize()
-			if IsAltKeyDown() then
+			if IsAltKeyDown() and LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterAlt == 1 then
 				if not MY_Recount then
 					LR.SysMsg(sformat("%s\n", _L["Tips:Hold Alt when hover,will show HPS/DPS,MY DPS required."]))
 					return
 				end
 				LR_TeamTools.DPS.FIGHT_HINT()
 				LR_TeamTools.DPS.OutputDPSRecord (dwID, {nX, nY, nW+5, nH-40})
-			elseif IsShiftKeyDown() then
+			elseif IsShiftKeyDown() and LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterShift == 1 then
 				LR_TeamTools.DeathRecord.OutputDeathRecord (dwID,{nX, nY, nW+5, nH-40})
 			else
 				LR_TeamGrid.cureLock = true

@@ -746,8 +746,8 @@ function LR_TeamMenu.MouseActionMenu()
 		{bDevide=true,},
 		{szOption=_L["Enable quick choose when in cure kungfu"],fnDisable=function() return true end,},
 		{szOption=_L["*Auto select target"],},}
-	m[#m+1]={szOption=_L["Alt+Hover"],{szOption=_L["*Show target DPS/HPS"]},}
-	m[#m+1]={szOption=_L["Shift+Hover"],{szOption=_L["*Show dead record/debug"]},}
+	--m[#m+1]={szOption=_L["Alt+Hover"],{szOption=_L["*Show target DPS/HPS"]},}
+	--m[#m+1]={szOption=_L["Shift+Hover"],{szOption=_L["*Show dead record/debug"]},}
 	m[#m+1]={szOption=_L["Left Click"],{szOption=_L["*Select this target"]},}
 	m[#m+1]={szOption=_L["Right Click"],{szOption=_L["*Popup menu"]},}
 	m[#m+1]={szOption=_L["Drag"],{szOption=_L["*Change member group"]},}
@@ -774,6 +774,30 @@ function LR_TeamMenu.MouseActionMenu()
 		{szOption=_L["Trade"],bCheck=true,bMCheck=true,bChecked=function() return LR_TeamGrid.UsrData.CommonSettings.mouseAction.LButtonDBClickAlt==1 end,
 			fnAction=function()
 				LR_TeamGrid.UsrData.CommonSettings.mouseAction.LButtonDBClickAlt=1 ;
+				LR_TeamGrid.SaveCommonData()
+			end,},
+	}
+	m[#m+1]={szOption=_L["Alt+Mouse Hover"],
+		{szOption=_L["*No operation"],bCheck=true,bMCheck=true,bChecked=function() return LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterAlt==0 end,
+			fnAction=function()
+				LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterAlt=0 ;
+				LR_TeamGrid.SaveCommonData()
+			end,},
+		{szOption=_L["*Show target DPS/HPS"],bCheck=true,bMCheck=true,bChecked=function() return LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterAlt==1 end,
+			fnAction=function()
+				LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterAlt=1 ;
+				LR_TeamGrid.SaveCommonData()
+			end,},
+	}
+	m[#m+1]={szOption=_L["Shift+Mouse Hover"],
+		{szOption=_L["*No operation"],bCheck=true,bMCheck=true,bChecked=function() return LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterShift==0 end,
+			fnAction=function()
+				LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterShift=0 ;
+				LR_TeamGrid.SaveCommonData()
+			end,},
+		{szOption=_L["*Show target DPS/HPS"],bCheck=true,bMCheck=true,bChecked=function() return LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterShift==1 end,
+			fnAction=function()
+				LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterShift=1 ;
 				LR_TeamGrid.SaveCommonData()
 			end,},
 	}

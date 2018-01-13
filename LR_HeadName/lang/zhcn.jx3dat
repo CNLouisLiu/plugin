@@ -317,4 +317,7 @@ data={
 	["Show target distance"]="显示目标距离",
 	["Show fighting enemy distance"]="显示战斗中敌人的距离",
 
+	["%s (B)"]="%s (背面)",
+	["%s (Z)"]="%s (正面)",
+
 }

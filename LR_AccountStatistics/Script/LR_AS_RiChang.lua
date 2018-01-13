@@ -375,7 +375,7 @@ function LR_AccountStatistics_RiChang.CheckDazhan()
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:869 秘境任务牌子
-	local eCanAccept = me.CanAcceptQuest(14765, 869)		------用【大战！英雄微山书院！】测试大战是否有cd 。代码57：任务完成度已达上限
+	local eCanAccept = me.CanAcceptQuest(17820, 869)		------用【大战！英雄微山书院！】测试大战是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
 		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.DA].finished = true
 	else

@@ -89,12 +89,13 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 
 	local Btn_OneKey = LR.AppendUI("UIButton", frame, "Btn_OneKey" , {x = 35 , y = 4 , w = 26 , h = 26, ani = {"ui\\Image\\UICommon\\YiRong15.UITex", 12, 13, 14}, })
 	Btn_OneKey.OnClick = function()
-		if not LR_GKP_Base.CheckBillExist() then
-			return
-		end
 		if not LR_GKP_Base.CheckIsDistributor(true) then
 			return
 		end
+		if not LR_GKP_Base.CheckBillExist() then
+			return
+		end
+
 		local msg = {
 			szMessage = _L["Are you sure to pick up all into your own bag?"],
 			szName = "one key",
@@ -117,10 +118,10 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 
 	local Btn_OneKeyBoss = LR.AppendUI("UIButton", frame, "Btn_OneKeyBoss" , {x = 172 , y = 4 , w = 26 , h = 26, ani = {"ui\\Image\\UICommon\\YiRong15.UITex", 19, 20, 21}, })
 	Btn_OneKeyBoss.OnClick = function()
-		if not LR_GKP_Base.CheckBillExist() then
+		if not LR_GKP_Base.CheckIsDistributor(true) then
 			return
 		end
-		if not LR_GKP_Base.CheckIsDistributor(true) then
+		if not LR_GKP_Base.CheckBillExist() then
 			return
 		end
 		local menu = {}
@@ -220,6 +221,8 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 	LR_GKP_Loot:LoadItemBox(dwDoodadID, items)
 	LR.AppendAbout(LR_GKP_Loot, frame:Lookup("Wnd_Button"))
 	frame:Lookup("Wnd_Button"):Lookup("Wnd_About"):SetRelPos(95, 8)
+
+	return frame
 end
 
 function LR_GKP_Loot:LoadItemBox(dwDoodadID, items)
@@ -303,10 +306,10 @@ function LR_GKP_Loot:LoadItemBox(dwDoodadID, items)
 				EditBox_AppendLinkItemInfo(1, v.dwTabType, v.dwIndex, v.nBookID)
 				return
 			end
-			if not LR_GKP_Base.CheckBillExist() then
+			if not LR_GKP_Base.CheckIsDistributor() then
 				return
 			end
-			if not LR_GKP_Base.CheckIsDistributor(true) then
+			if not LR_GKP_Base.CheckBillExist() then
 				return
 			end
 			PopupMenu(LR_GKP_Loot.GetLootMenu(v))
@@ -359,6 +362,8 @@ function LR_GKP_Loot.Resize(dwDoodadID)
 	Image_BackBottom:SetRelPos(0, h + 50)
 	Image_BackBottom:GetParent():FormatAllItemPos()
 
+	Handle_LootList:FormatAllItemPos()
+
 	frame:Lookup("Wnd_Button"):SetRelPos(0, 50 + h)
 	frame:SetSize(230, 50 + h + 29)
 end
@@ -370,6 +375,7 @@ function LR_GKP_Loot.Open(dwDoodadID, szDoodadName, items)
 		LR_GKP_Loot:LoadItemBox(dwDoodadID, items)
 	else
 		frame = LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
+		LR.Animate(frame):FadeIn(100):Pos({-20, -20})
 		PlaySound(SOUND.UI_SOUND,g_sound.OpenFrame)
 	end
 end
@@ -940,13 +946,17 @@ function LR_GKP_Loot.OPEN_DOODAD()
 end
 
 local _SYNCED_LOOT_LIST = {}		--假如没拾取过，则，第一次自动弹出
+local _SYNCED_LOOT_NUM = {}
 function LR_GKP_Loot.SYNC_LOOT_LIST()
 	local dwDoodadID = arg0
 	local frame = Station.Lookup(sformat("Normal/LR_GKP_Loot_%d", dwDoodadID))
 	if frame or not _SYNCED_LOOT_LIST[dwDoodadID] then
 		local szDoodadName, items = LR_GKP_Base.GetItemInDoodad(dwDoodadID)
 		if #items > 0 then
-			LR_GKP_Loot.Open(dwDoodadID, szDoodadName, items)
+			if not (_SYNCED_LOOT_NUM[dwDoodadID] and #items == _SYNCED_LOOT_NUM[dwDoodadID]) then
+				LR_GKP_Loot.Open(dwDoodadID, szDoodadName, items)
+				_SYNCED_LOOT_NUM[dwDoodadID] = #items
+			end
 		else
 			LR_GKP_Loot.Close(dwDoodadID)
 		end
@@ -957,6 +967,18 @@ end
 function LR_GKP_Loot.DOODAD_LEAVE_SCENE()
 	local dwDoodadID = arg0
 	LR_GKP_Loot.Close(dwDoodadID)
+end
+
+function LR_GKP_Loot.Test(n)
+	local items = {}
+	local me = GetClientPlayer()
+	for i = 1, n do
+		local item = me.GetItem(2, i)
+			local data = LR_GKP_Base.GetItemData(item)
+			items[#items + 1] = clone(data)
+	end
+
+	LR_GKP_Loot.Open(111, "sdf", items)
 end
 
 

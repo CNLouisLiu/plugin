@@ -180,6 +180,7 @@ function _BuffBox:Hide()
 end
 
 function _BuffBox:Draw()
+	local UIConfig = LR_TeamGrid.UIConfig
 	local now = GetLogicFrameCount()
 	local nEndFrame = self.tBuff.nEndFrame
 	local nStartFrame = self.nStartFrame
@@ -223,19 +224,19 @@ function _BuffBox:Draw()
 	local Text_LeftTime = handle:Lookup("Text_LeftTime")
 	Text_LeftTime:SetFontScheme(7)
 	Text_LeftTime:SetAlpha(180)
-	Text_LeftTime:SetFontScale(0.9)
+	Text_LeftTime:SetFontScale(UIConfig.handleBuff.fontscale or 0.9)
 	Text_LeftTime:SetHAlign(2)
 	Text_LeftTime:SetVAlign(2)
 	Text_LeftTime:SetFontColor(255, 255, 0)
 
-	local Text_BuffStacks = handle:Lookup("Text_BuffStacks")
+--[[	local Text_BuffStacks = handle:Lookup("Text_BuffStacks")
 	Text_BuffStacks:SetSize(w, h)
 	Text_BuffStacks:SetFontScheme(7)
 	Text_BuffStacks:SetAlpha(180)
-	Text_BuffStacks:SetFontScale(0.9)
+	Text_BuffStacks:SetFontScale(UIConfig.handleBuff.fontscale or 0.9)
 	Text_BuffStacks:SetHAlign(2)
 	Text_BuffStacks:SetVAlign(2)
-	Text_BuffStacks:SetFontColor(255, 255, 0)
+	Text_BuffStacks:SetFontColor(255, 255, 0)]]
 
 	local w, h = box:GetSize()
 	if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bShowLeftTime then
@@ -259,7 +260,7 @@ function _BuffBox:Draw()
 	local Text_BuffStacks = handle:Lookup("Text_BuffStacks")
 	Text_BuffStacks:SetFontScheme(7)
 	Text_BuffStacks:SetAlpha(180)
-	Text_BuffStacks:SetFontScale(0.9)
+	Text_BuffStacks:SetFontScale(UIConfig.handleBuff.fontscale or 0.9)
 	Text_BuffStacks:SetHAlign(0)
 	Text_BuffStacks:SetVAlign(0)
 	Text_BuffStacks:SetFontColor(255, 255, 0)
@@ -1550,6 +1551,9 @@ end
 function LR_TeamBuffMonitor.ClearOneCache(dwID)
 	_hMemberBuff[dwID]=nil
 	_MemberBuff[dwID]=nil
+
+	EdgeIndicator_BUFF_CACHE[dwID] = nil
+	EdgeIndicator_HANDLE_CACHE[dwID] = nil
 	local BuffHandle = LR_TeamGrid.GetRoleGridBuffHandle(dwID)
 	if BuffHandle then
 		BuffHandle:Clear()

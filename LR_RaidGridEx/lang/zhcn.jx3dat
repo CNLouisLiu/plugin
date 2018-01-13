@@ -462,6 +462,9 @@ data={
 	--20180107add--
 	["Normal status"]="正常阶段",
 	["Open EdgeIndicator"]="打开边角指示器",
+
+	["Alt+Mouse Hover"]="Alt+鼠标悬停",
+	["Shift+Mouse Hover"]="Shift+鼠标悬停",
 	
 
 }

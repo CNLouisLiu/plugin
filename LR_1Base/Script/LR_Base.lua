@@ -1,6 +1,6 @@
 local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
 local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
-local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_1Base"
@@ -779,6 +779,44 @@ function LR.GetDistance(nX, nY, nZ)
 		return mfloor(((me.nX - nX) ^ 2 + (me.nY - nY) ^ 2) ^ 0.5)/64
 	end
 	return mfloor(((me.nX - NX) ^ 2 + (me.nY - NY) ^ 2 + (me.nZ/8 - NZ/8) ^ 2) ^ 0.5)/64
+end
+
+function LR.IsInBack(obj)
+	if not obj then
+		return false
+	end
+	local me = GetClientPlayer()
+	if not me then
+		return false
+	end
+	local nX, nY = obj.nX, obj.nY
+	local nFaceDirection = obj.nFaceDirection
+	local nAngel = nFaceDirection / 255 * 360 + 90
+	local k
+	if nAngel >= 360 then
+		nAngel = nAngel - 360
+	end
+	if nAngel <= 180 then
+		k = mtan(nAngel / 180 * math.pi)
+	else
+		k = mtan((nAngel - 180) / 180 * math.pi)
+	end
+	--直线方程 y - nY = k * (x - nX)
+	--将自己的坐标带入求_y
+	local _y = k * (me.nX - nX) + nY
+	if nFaceDirection <= 255 / 2  then
+		if _y > me.nY then
+			return true
+		else
+			return false
+		end
+	else
+		if _y < me.nY then
+			return true
+		else
+			return false
+		end
+	end
 end
 
 ---------------------------------------------

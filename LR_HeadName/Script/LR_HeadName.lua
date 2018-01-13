@@ -1672,6 +1672,14 @@ function LR_HeadName.Check(dwID, nType, bForced)
 						if _dwID == obj.dwID and LR_HeadName.UsrData.bShowTargetDis or obj.bFightState and nShip == "Enemy" and LR_HeadName.UsrData.bShowFightingEnemyDis then
 							temp = sformat(_L["%s¡¤%0.1f chi"], temp, LR.GetDistance(obj))
 						end
+						if _dwID == obj.dwID then
+							if LR.IsInBack(obj) then
+								temp = sformat(_L["%s (B)"], temp)
+							else
+								temp = sformat(_L["%s (Z)"], temp)
+							end
+						end
+
 						if IsMissionObj or CanAcceptQuest or CanFinishQuest then
 							if LR_HeadName.UsrData.bShowQMode ==  2  and LR_HeadName.UsrData.bShowQuestFlag then
 								local temp2 = ""
