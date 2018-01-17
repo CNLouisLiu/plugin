@@ -319,5 +319,7 @@ data={
 
 	["%s (B)"]="%s (背面)",
 	["%s (Z)"]="%s (正面)",
+	["Show target face"]="显示自己处于目标的位置",
+	["Distance/Face settings"]="距离/面向设置",
 
 }

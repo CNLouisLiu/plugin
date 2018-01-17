@@ -527,7 +527,7 @@ LR_HeadName_UI = {
 				tTips[#tTips+1] = {szText = _L["Teammark Instructions03\n"], font = 5, r = 255, g = 255, b = 255, }
 				return tTips
 			end,
-		}, {name = "LR_Head_Dis", type = "ComboBox", x = 300, w = 140, y = 240, text = _L["Distance settings"],
+		}, {name = "LR_Head_Dis", type = "ComboBox", x = 300, w = 140, y = 240, text = _L["Distance/Face settings"],
 			enable =  function ()
 				return LR_HeadName.bOn
 			end,
@@ -542,6 +542,14 @@ LR_HeadName_UI = {
 				m[#m + 1] = {szOption = _L["Show fighting enemy distance"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowFightingEnemyDis end,
 					fnAction = function()
 						LR_HeadName.UsrData.bShowFightingEnemyDis = not LR_HeadName.UsrData.bShowFightingEnemyDis
+						LR_HeadName.ReDrawAll()
+						LR_HeadName.SaveCommonSettings()
+					end,
+				}
+				m[#m + 1] = {bDevide = true}
+				m[#m + 1] = {szOption = _L["Show target face"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowTargetFace end,
+					fnAction = function()
+						LR_HeadName.UsrData.bShowTargetFace = not LR_HeadName.UsrData.bShowTargetFace
 						LR_HeadName.ReDrawAll()
 						LR_HeadName.SaveCommonSettings()
 					end,

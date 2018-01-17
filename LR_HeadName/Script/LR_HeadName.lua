@@ -104,6 +104,7 @@ LR_HeadName.default = {
 		bMiniMapMine = true,	--矿藏小地图显示
 		bShowQuestDoodad = false,	--显示任务拾取物品
 		bShowTargetDis = true,
+		bShowTargetFace = false,	--显示目标面向
 		bShowFightingEnemyDis = false,
 		NPC = {
 			bShow = true,
@@ -1667,10 +1668,10 @@ function LR_HeadName.Check(dwID, nType, bForced)
 							temp = sformat("%s (%0.1f%%)", temp, LifePer*100)
 						end
 						local _, _dwID = me.GetTarget()
-						if _dwID == obj.dwID and LR_HeadName.UsrData.bShowTargetDis or obj.bFightState and nShip == "Enemy" and LR_HeadName.UsrData.bShowFightingEnemyDis then
+						if _dwID ~= me.dwID and _dwID == obj.dwID and LR_HeadName.UsrData.bShowTargetDis or obj.bFightState and nShip == "Enemy" and LR_HeadName.UsrData.bShowFightingEnemyDis then
 							temp = sformat(_L["%s·%0.1f chi"], temp, LR.GetDistance(obj))
 						end
-						if _dwID == obj.dwID then
+						if _dwID ~= me.dwID and _dwID == obj.dwID and LR_HeadName.UsrData.bShowTargetFace then
 							if LR.IsInBack(obj) then
 								temp = sformat(_L["%s (B)"], temp)
 							else

@@ -682,6 +682,8 @@ function LR_TeamMenu.BloodDisplayMenu()
 		menu[#menu+1]={szOption=v, bCheck=true, bMCheck=false, bChecked=function() return LR_TeamGrid.UsrData.CommonSettings[key[k]] end,
 			fnAction=function()
 				LR_TeamGrid.UsrData.CommonSettings[key[k]] = not LR_TeamGrid.UsrData.CommonSettings[key[k]]
+				LR_TeamGrid.ReDrawAllMembers()
+				LR_TeamGrid.SaveCommonData()
 			end,
 			{szOption=sformat(szText2[k], LR_TeamGrid.UsrData.CommonSettings[key2[k]] * 100 ), fnDisable=function() return not LR_TeamGrid.UsrData.CommonSettings[key[k]] end,
 				fnAction=function()
@@ -795,7 +797,7 @@ function LR_TeamMenu.MouseActionMenu()
 				LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterShift=0 ;
 				LR_TeamGrid.SaveCommonData()
 			end,},
-		{szOption=_L["*Show target DPS/HPS"],bCheck=true,bMCheck=true,bChecked=function() return LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterShift==1 end,
+		{szOption=_L["*Show dead record/debug"],bCheck=true,bMCheck=true,bChecked=function() return LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterShift==1 end,
 			fnAction=function()
 				LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterShift=1 ;
 				LR_TeamGrid.SaveCommonData()

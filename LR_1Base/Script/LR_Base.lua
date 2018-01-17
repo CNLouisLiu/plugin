@@ -157,6 +157,7 @@ function LR.IsTreasureBattleFieldMap()
 	if not me then
 		return true
 	end
+	--return me.GetMapID() == 296
 	return Table_IsTreasureBattleFieldMap(me.GetMapID())
 end
 
@@ -813,17 +814,9 @@ function LR.IsInBack(obj)
 	--将自己的坐标带入求_y
 	local _y = k * (me.nX - nX) + nY
 	if nFaceDirection <= 255 / 2  then
-		if _y > me.nY then
-			return true
-		else
-			return false
-		end
+		return _y > me.nY
 	else
-		if _y < me.nY then
-			return true
-		else
-			return false
-		end
+		return _y < me.nY
 	end
 end
 
