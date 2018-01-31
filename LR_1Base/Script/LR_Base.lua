@@ -161,6 +161,10 @@ function LR.IsTreasureBattleFieldMap()
 	return Table_IsTreasureBattleFieldMap(me.GetMapID())
 end
 
+function LR.isChiJi()
+	return LR.IsTreasureBattleFieldMap()
+end
+
 --------------------------------------
 function LR.Table_GetBookItemIndex(dwBookID, dwSegmentID)
 	local dwBookItemIndex = 0

@@ -1205,11 +1205,13 @@ function teamnotice.ini(data)
 	local frame = LR.AppendUI("Frame", "teamnotice", {title = _L["LR team notice"], path = sformat("%s\\UI\\LR_TeamNotice.ini", AddonPath)})
 
 	notice_ui = {}
+	notice_ui["num"] = LR.AppendUI("Text", frame, "Text_num", {x = 20, y = 20, w = 265, h = 20, text = sformat(_L["%d / 700"], 0)})
+	notice_ui["num"]:SetFontScheme(0)
+
+
 	notice_ui["edit"] = LR.AppendUI("Edit", frame, "Edit", {x = 15, y = 40, w = 265, h = 140})
-	notice_ui["edit"]:Enable(GetClientPlayer().dwID == GetClientTeam().GetAuthorityInfo(TEAM_AUTHORITY_TYPE.LEADER))
-	notice_ui["edit"]:SetMultiLine(true)
-	notice_ui["edit"]:SetFontScheme(3)
-	notice_ui["edit"]:SetLimit(-1)
+	--notice_ui["edit"]:Enable(GetClientPlayer().dwID == GetClientTeam().GetAuthorityInfo(TEAM_AUTHORITY_TYPE.LEADER))
+	notice_ui["edit"]:SetMultiLine(true):SetFontScheme(3):SetSelectFontScheme(3):SetLimitMultiByte(true):SetLimit(700)
 	teamnotice.UpdateEdit(data or "")
 
 	notice_ui["edit"].OnChange = function(arg0)
@@ -1225,7 +1227,8 @@ function teamnotice.ini(data)
 			return
 		end
 		teamnotice.temp = arg0
-		LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_TeamNotice", arg0)
+		LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_TeamNotice", "SEND", arg0)
+		notice_ui["num"]:SetText(sformat("%d / 700", notice_ui["edit"]:GetTextLength()))
 	end
 
 	----------¹ØÓÚ
@@ -1240,6 +1243,7 @@ function teamnotice.UpdateEdit(data)
 	if notice_ui["edit"] then
 		notice_ui["edit"]:SetText(data)
 		teamnotice.temp = data
+		notice_ui["num"]:SetText(sformat("%d / 700", notice_ui["edit"]:GetTextLength()))
 	end
 end
 
@@ -1251,6 +1255,7 @@ function teamnotice.Open()
 		teamnotice.Close()
 	end
 end
+LR.OpenTeamNoticePanel = teamnotice.Open
 
 function teamnotice.Close()
 	local frame = Station.Lookup("Normal/teamnotice")
@@ -1265,6 +1270,9 @@ function teamnotice.ON_BG_CHANNEL_MSG()
 	local dwTalkerID = arg2
 	local szTalkerName = arg3
 	local data = arg4
+	if LR.isChiJi() then
+		return
+	end
 	if szKey ~= "LR_TeamNotice" then
 		return
 	end
@@ -1275,14 +1283,60 @@ function teamnotice.ON_BG_CHANNEL_MSG()
 	if dwTalkerID == me.dwID then
 		return
 	end
-	local frame = Station.Lookup("Normal/teamnotice")
-	if not frame then
-		teamnotice.Open()
-		teamnotice.UpdateEdit(data[1])
-	else
-		teamnotice.UpdateEdit(data[1])
+	if data[1] == "SEND" then
+		local frame = Station.Lookup("Normal/teamnotice")
+		if not frame then
+			teamnotice.Open()
+			teamnotice.UpdateEdit(data[2])
+		else
+			teamnotice.UpdateEdit(data[2])
+		end
+	elseif data[1] == "ASK" then
+		if teamnotice.temp ~= "" then
+			LR.BgTalk(data[2].szName, "LR_TeamNotice", "SEND", teamnotice.temp)
+		end
 	end
-
 end
-LR.OpenTeamNoticePanel = teamnotice.Open
+
+function teamnotice.Broadcast2Member(dwMemberID)
+	if LR.isChiJi() then
+		return
+	end
+	local team = GetClientTeam()
+	if team then
+		local memberInfo = team.GetMemberInfo(dwMemberID)
+		if memberInfo then
+			if teamnotice.temp ~= "" then
+				LR.BgTalk(memberInfo.szName, "LR_TeamNotice", "SEND", teamnotice.temp)
+			end
+		end
+	end
+end
+
+function teamnotice.PARTY_ADD_MEMBER()
+	local dwTeamID = arg0
+	local dwMemberID = arg1
+	local nGroupIndex =arg2
+	if LR.isChiJi() then
+		return
+	end
+	LR.DelayCall(1000, function() teamnotice.Broadcast2Member(dwMemberID) end)
+end
+
+function teamnotice.LOADING_END()
+	if LR.isChiJi() then
+		return
+	end
+	local me = GetClientPlayer()
+	if not (me.IsInParty() or me.IsInRaid()) then
+		return
+	end
+	local team = GetClientTeam()
+	if me.dwID ~= team.GetAuthorityInfo(TEAM_AUTHORITY_TYPE.LEADER) then
+		LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_TeamNotice", "ASK", {dwID = me.dwID, szName = me.szName, dwForceID = me.dwForceID})
+	end
+end
+
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() teamnotice.ON_BG_CHANNEL_MSG() end)
+LR.RegisterEvent("PARTY_ADD_MEMBER", function() teamnotice.PARTY_ADD_MEMBER() end)
+LR.RegisterEvent("LOADING_END", function() teamnotice.LOADING_END() end)

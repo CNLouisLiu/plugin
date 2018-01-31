@@ -663,6 +663,15 @@ function WndEdit:ctor(__parent, __name, __data)
 	end
 end
 
+function WndEdit:GetTextLength(...)
+	return self.__edit:GetTextLength(...)
+end
+
+function WndEdit:SetLimitMultiByte(...)
+	self.__edit:SetLimitMultiByte(...)
+	return self
+end
+
 function WndEdit:SetSize(__w, __h)
 	self.__this:SetSize(__w + 4, __h)
 	self.__this:Lookup("", ""):SetSize(__w + 4, __h)
