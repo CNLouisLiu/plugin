@@ -1136,3 +1136,57 @@ function LR_GKP_Base.SyncRecord()
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 end
+
+-----------------------------------------
+---事件处理
+-----------------------------------------
+function LR_GKP_Base.LOADING_END()
+	local me = GetClientPlayer()
+	local scene = me.GetScene()
+	if scene.nType ==  MAP_TYPE.DUNGEON then
+		local szDir, nType, nMaxPlayerCount, nLimitTimes, nCampType = GetMapParams(scene.dwMapID)
+		if nMaxPlayerCount == 10 or nMaxPlayerCount == 25 then
+			if me.IsInParty() or me.IsInRaid() then
+				local team = GetClientTeam()
+				if me.dwID == team.GetAuthorityInfo(TEAM_AUTHORITY_TYPE.DISTRIBUTE) then
+					local msg = {
+						szMessage = sformat(_L["[LR GKP]You entered a %d num limit dungeon and you are the distributor. \nCreate a new bill or load an exist one?"], nMaxPlayerCount),
+						szName = "check bill",
+						fnAutoClose = function() return false end,
+						{szOption = _L["New"], fnAction = function() LR_GKP_NewBill_Panel:Open() end, },
+						{szOption = _L["Load"], fnAction = function() LR.DelayCall(500, function() PopupMenu(LR_GKP_Panel:CreateBillMenu()) end) end,},
+					}
+					MessageBox(msg)
+				end
+			end
+		end
+	end
+end
+
+function LR_GKP_Base.TEAM_AUTHORITY_CHANGED()	--团长改变、分配者改变、标记着改变
+	local nAuthorityType = arg0
+	local dwTeamID = arg1
+	local dwOldAuthorityID = arg2
+	local dwNewAuthorityID = arg3
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	if nAuthorityType == TEAM_AUTHORITY_TYPE.DISTRIBUTE then
+		if me.dwID == dwNewAuthorityID then
+			local scene = me.GetScene()
+			if scene.nType ==  MAP_TYPE.DUNGEON then
+				local szDir, nType, nMaxPlayerCount, nLimitTimes, nCampType = GetMapParams(scene.dwMapID)
+				if nMaxPlayerCount == 10 or nMaxPlayerCount == 25 then
+					LR_GKP_Base.CheckBillExist()
+				end
+			end
+		end
+	end
+end
+
+
+LR.RegisterEvent("LOADING_END", function() LR_GKP_Base.LOADING_END() end)
+LR.RegisterEvent("TEAM_AUTHORITY_CHANGED", function() LR_GKP_Base.TEAM_AUTHORITY_CHANGED() end)
+
+

@@ -121,4 +121,6 @@ data={
 	["OneKey to smalliron boss"]="一键分配给小铁老板",
 	["Please set smalliron boss first.\n"]="请先设置小铁老板。\n",
 	["Are you sure to pick up smalliron into bag of smalliron boss?"]="确定要一键分配材料给小铁老板？",
+
+	["[LR GKP]You entered a %d num limit dungeon and you are the distributor. \nCreate a new bill or load an exist one?"]="【懒人金团】你进入了%d人副本区域，并且你为团队的分配者。\n新建还是载入一个账单？",
 }
