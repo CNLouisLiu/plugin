@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local VERSION = "20180112"
+local VERSION = "20180120"
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
@@ -55,6 +55,7 @@ local tMarkerImageList = {66, 67, 73, 74, 75, 76, 77, 78, 81, 82}
 ---------------------------------------------------------------
 local DefaultCommonSettings = {
 	bOn = false,
+	nGridType = 2,		---1：5列模式，2:3+2模式
 	bLockLocation = false,
 	bDisableTeamNum = false,
 	bLockGroup = false,
@@ -194,6 +195,7 @@ local _tExtendGrids = {}	--存放_RoleGrid数据，拖拽时临时增加的格子
 local _Members = {}	--存放人物数据，包括进队以及离队的，缓存
 local _tPartyMark = {}	--存放标记
 local bDraged = false
+local _JCG = {}	--用于存放切了剑的长歌
 ---------------------------------------------------------------
 LR_TeamGrid_Panel = {}
 
@@ -210,6 +212,7 @@ function _RoleGrid:new(dwID)
 	setmetatable(o,self)
 	o.dwID = dwID
 	o.nCol = 0
+	o.nRealCol = 0
 	o.nRow = 0
 	o.szName = ""
 	o.nameColor = {255, 255, 255}
@@ -222,6 +225,7 @@ function _RoleGrid:AppendRoleGrid()
 	local parentHandle = self.parentHandle
 	local dwID = self.dwID
 	local RoleGridConfig = LoadLUAData(sformat("%s\\UI\\%s\\Role", AddonPath, LR_TeamGrid.UsrData.UI_Choose)) or {}
+	self.UI = {}
 	for i = 1, #RoleGridConfig do
 		v = RoleGridConfig[i]
 		local Parent
@@ -254,11 +258,17 @@ function _RoleGrid:AppendRoleGrid()
 	return self.UI[sformat("Handle_RoleGrid_%d", dwID)]
 end
 
-
 function _RoleGrid:Create()
+	self.parentHandle = LR_TeamGrid.Handle_Roles
+	if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 then
+		if self.nRealCol > 2 then
+			self.parentHandle = LR_TeamGrid.Handle_RolesSub
+		end
+	end
 	local parentHandle = self.parentHandle
 	local dwID = self.dwID
 	--local handle = parentHandle:Lookup(sformat("Handle_RoleGrid_%d", dwID))
+
 	local handle = parentHandle:Lookup(sformat("Handle_RoleGrid_%d", dwID))
 	if not handle then
 		handle = self:AppendRoleGrid()
@@ -270,7 +280,6 @@ function _RoleGrid:Create()
 	handle:Show()
 	handle:RegisterEvent(4194303)
 	--handle:RegisterEvent(4096)
-
 	----------------------------------------------
 	--鼠标进入
 	----------------------------------------------
@@ -281,10 +290,12 @@ function _RoleGrid:Create()
 			if dwID < 100 then
 				dwID = 0
 			end
-			LR_TeamGrid.nDragChooseGridEnd = {nCol = self.nCol, nRow = self.nRow, dwID = dwID}
+			LR_TeamGrid.nDragChooseGridEnd = {nCol = self.nRealCol, nRow = self.nRow, dwID = dwID}
 		else
-			local nX, nY = parentHandle:GetAbsPos()
-			local nW, nH = parentHandle:GetSize()
+			--local nX, nY = parentHandle:GetAbsPos()
+			--local nW, nH = parentHandle:GetSize()
+			local nX, nY = LR_TeamGrid.frameSelf:GetAbsPos()
+			local nW, nH = LR_TeamGrid.frameSelf:GetSize()
 			if IsAltKeyDown() and LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterAlt == 1 then
 				if not MY_Recount then
 					LR.SysMsg(sformat("%s\n", _L["Tips:Hold Alt when hover,will show HPS/DPS,MY DPS required."]))
@@ -306,6 +317,11 @@ function _RoleGrid:Create()
 					local dwSkillID=kungfu.dwSkillID
 					if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
 						if LR_TeamGrid.UsrData.CommonSettings.cureMode == 1 then
+							LR_TeamGrid.timeCache = GetLogicFrameCount()
+							LR_TeamGrid.cureTargetInTeam = dwID
+							if _JCG[dwID] then
+								LR_TeamGrid.cureTargetInTeam = _JCG[dwID]
+							end
 							if LR_TeamGrid.IfTargetCanBSelect(dwID) then
 								LR_TeamGrid.SetTarget(dwID)
 							end
@@ -313,7 +329,7 @@ function _RoleGrid:Create()
 					end
 				end
 				if not (LR_TeamGrid.UsrData.CommonSettings.disableTipWhenFight and GetClientPlayer().bFightState) then
-					LR_TeamGrid.OutputTeamMemberTip(dwID, {nX, nY, nW+10, nH-40})
+					LR_TeamGrid.OutputTeamMemberTip(dwID, {nX , nY , nW + 10, nH - 40})
 				end
 			end
 		end
@@ -324,23 +340,6 @@ function _RoleGrid:Create()
 	----------------------------------------------
 	handle:GetHandle().OnItemMouseLeave=function()
 		if handle:Lookup("Image_Hover") then handle:Lookup("Image_Hover"):Hide() end
---[[		LR_TeamGrid.cureLock = false
-		LR_TeamGrid.hoverHandle = nil
-		LR.DelayCall(150,function()
-			if not LR_TeamGrid.cureLock and LR_TeamGrid.UsrData.CommonSettings.bInCureMode then
-				local me =  GetClientPlayer()
-				if not me then
-					return
-				end
-				local kungfu=me.GetKungfuMount()
-				local dwSkillID=kungfu.dwSkillID
-				if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
-					if LR_TeamGrid.IfTargetCanBSelect(LR_TeamGrid.cureTarget) then
-						LR_TeamGrid.SetTarget(LR_TeamGrid.cureTarget)
-					end
-				end
-			end
-		end)]]
 	end
 
 	----------------------------------------------
@@ -363,11 +362,14 @@ function _RoleGrid:Create()
 			menu[#menu+1]={bDevide = true,}
 			InsertTeammateMenu(menu, dwID)
 			menu[#menu+1]={bDevide = true,}
+			if GVoiceBase_IsMemberForbid(dwID) then
+				menu[#menu+1]={szOption=_L["Cancel shielded speech"], fnAction = function() GVoiceBase_ForbidMember(dwID, false) end,}
+			else
+				menu[#menu+1]={szOption=_L["Shielded speech"], fnAction = function() GVoiceBase_ForbidMember(dwID, true) end,}
+			end
 			menu[#menu+1]=LR.GetTradeMenu(dwID)[1]
 			menu[#menu+1]=LR.GetEquipmentMenu(dwID)[1]
-			if dwID ~= GetClientPlayer().dwID and ViewCharInfoToPlayer then
-				menu[#menu+1]={szOption=_L["Check Attribute"],fnAction=function() ViewCharInfoToPlayer(dwID) end,}
-			end
+			menu[#menu+1]={szOption=_L["Check Attribute"],fnAction=function() LR.ViewCharInfoToPlayer(dwID) end,}
 			menu[#menu+1]=LR.GetMoreInfoMenu(dwID)[1]
 			menu[#menu+1]=LR.GetShiTuMenu(dwID)[1]
 			menu[#menu+1]={bDevide = true,}
@@ -390,8 +392,15 @@ function _RoleGrid:Create()
 		if IsCtrlKeyDown() then
 			LR_TeamGrid.EditBox_AppendLinkPlayer(_Members[dwID].szName)
 		else
+			local dwID = dwID
+			if _JCG[dwID] then
+				dwID = _JCG[dwID]
+			end
+
 			if LR_TeamGrid.IfTargetCanBSelect(dwID) then
 				LR_TeamGrid.SetTarget(dwID)
+				LR_TeamGrid.HandClickTarget = dwID
+				LR_TeamGrid.timeCache = GetLogicFrameCount()
 				if LR_TeamGrid.UsrData.CommonSettings.bInCureMode then
 					local me =  GetClientPlayer()
 					if not me then
@@ -479,7 +488,7 @@ function _RoleGrid:Create()
 			local team = GetClientTeam()
 			if team then
 				if LR_TeamGrid.nDragChooseGridEnd then
-					--Output(LR_TeamGrid.nDragChooseGridStart.dwID, LR_TeamGrid.nDragChooseGridEnd.nCol, LR_TeamGrid.nDragChooseGridEnd.dwID)
+					--Output(LR_TeamGrid.nDragChooseGridStart.dwID, LR_TeamGrid.nDragChooseGridEnd.nRealCol, LR_TeamGrid.nDragChooseGridEnd.dwID)
 					team.ChangeMemberGroup(LR_TeamGrid.nDragChooseGridStart.dwID, LR_TeamGrid.nDragChooseGridEnd.nCol, LR_TeamGrid.nDragChooseGridEnd.dwID)
 				end
 			end
@@ -505,6 +514,11 @@ end
 
 function _RoleGrid:SetCol(nCol)
 	self.nCol = nCol
+	return self
+end
+
+function _RoleGrid:SetRealCol(nCol)
+	self.nRealCol = nCol
 	return self
 end
 
@@ -661,7 +675,7 @@ function _RoleGrid:DrawRoleNameText()
 		--r, g, b = 255, 0, 0
 	end
 	if not MemberInfo.bIsOnLine then
-		--r, g, b = 96, 96, 96
+		r, g, b = 96, 96, 96
 	end
 	handle:Lookup("Text_RoleName"):SetText(szName)
 	handle:Lookup("Text_RoleName"):SetFontScheme(LR_TeamGrid.UsrData.CommonSettings.szFontScheme)
@@ -711,6 +725,13 @@ function _RoleGrid:DrawLifeBar()
 	local nLifePercentage = 1.0
 	local r, g, b = unpack(LR_TeamGrid.UsrData.CommonSettings.distanceColor[5])
 	local a = LR_TeamGrid.UsrData.CommonSettings.distanceAlpha[5]
+	if _JCG[dwID] then
+		local npc = GetNpc(_JCG[dwID])
+		if npc then
+			nCurrentLife = npc.nCurrentLife
+			nMaxLife = npc.nMaxLife
+		end
+	end
 	if nMaxLife > 0 then
 		nLifePercentage = nCurrentLife / nMaxLife
 	end
@@ -726,6 +747,10 @@ function _RoleGrid:DrawLifeBar()
 		--距离
 		if LR_TeamGrid.UsrData.CommonSettings.backGroundColorType == 4 or LR_TeamGrid.UsrData.CommonSettings.backGroundAlphaType == 2 then
 			local player = GetPlayer(dwID)
+			if _JCG[dwID] then
+				player = GetNpc(_JCG[dwID])
+			end
+
 			if player then
 				local distance = LR.GetDistance(player)
 				if distance <= LR_TeamGrid.UsrData.CommonSettings.distanceLevel[1] then
@@ -1260,6 +1285,13 @@ function _RoleGrid:DrawLifeText()
 	local MemberInfo = _Members[dwID]
 	local nCurrentLife = MemberInfo.nCurrentLife
 	local nMaxLife = MemberInfo.nMaxLife
+	if _JCG[dwID] then
+		local npc = GetNpc(_JCG[dwID])
+		if npc then
+			nCurrentLife = npc.nCurrentLife
+			nMaxLife = npc.nMaxLife
+		end
+	end
 	local life = 0
 	local textLife = ""
 	local r, g, b = 255, 255, 255
@@ -1524,6 +1556,11 @@ function _RoleGrid:GetBuffHandle()
 	return self.UI["Handle_Debuffs"]
 end
 
+function _RoleGrid:GetSpecialBuffHandle()
+	--local handle = self.handle
+	return self.UI["Handle_SpecialBuff"]
+end
+
 function _RoleGrid:GetEdgeIndicatorShadow(...)
 	return self.UI[...]
 end
@@ -1620,16 +1657,128 @@ function _RoleGrid:SetEdgeIndicatoColor(szKey, color, bShow)
 	return self
 end
 
+function _RoleGrid:SetMicOpenSize()
+	local UIConfig = LR_TeamGrid.UIConfig.micStatus
+	local fx, fy = LR_TeamGrid.UsrData.CommonSettings.scale.fx, LR_TeamGrid.UsrData.CommonSettings.scale.fy
+	local height = UIConfig["MicOpen"].height * fy
+	local width = UIConfig["MicOpen"].width * fx
+	local handle = self.handle
+	handle:Lookup("Animate_MicOpen"):SetSize(width, height)
+	return self
+end
+
+function _RoleGrid:SetMicOpenRelPos()
+	local UIConfig = LR_TeamGrid.UIConfig.micStatus
+	local fx, fy = LR_TeamGrid.UsrData.CommonSettings.scale.fx, LR_TeamGrid.UsrData.CommonSettings.scale.fy
+	local top = UIConfig["MicOpen"].top * fy
+	local left = UIConfig["MicOpen"].left * fx
+	local handle = self.handle
+	handle:Lookup("Animate_MicOpen"):SetRelPos(left, top)
+	handle:FormatAllItemPos()
+	return self
+end
+
+function  _RoleGrid:DrawMicOpen(bShow)
+	local handle = self.handle
+	local Animate_Mic = handle:Lookup("Animate_MicOpen")
+	if bShow then
+		Animate_Mic:Show()
+	else
+		Animate_Mic:Hide()
+	end
+	return self
+end
+
+function _RoleGrid:SetMicDisableSize()
+	local UIConfig = LR_TeamGrid.UIConfig.micStatus
+	local fx, fy = LR_TeamGrid.UsrData.CommonSettings.scale.fx, LR_TeamGrid.UsrData.CommonSettings.scale.fy
+	local height = UIConfig["MicDisable"].height * fy
+	local width = UIConfig["MicDisable"].width * fx
+	local handle = self.handle
+	handle:Lookup("Image_MicDisable"):SetSize(width, height)
+	return self
+end
+
+function _RoleGrid:SetMicDisableRelPos()
+	local UIConfig = LR_TeamGrid.UIConfig.micStatus
+	local fx, fy = LR_TeamGrid.UsrData.CommonSettings.scale.fx, LR_TeamGrid.UsrData.CommonSettings.scale.fy
+	local top = UIConfig["MicDisable"].top * fy
+	local left = UIConfig["MicDisable"].left * fx
+	local handle = self.handle
+	handle:Lookup("Image_MicDisable"):SetRelPos(left, top)
+	handle:FormatAllItemPos()
+	return self
+end
+
+function  _RoleGrid:DrawMicDisable(bShow)
+	local handle = self.handle
+	local Image_MicDisable = handle:Lookup("Image_MicDisable")
+	if bShow then
+		Image_MicDisable:Show()
+		self:DrawMicOpen(false)
+	else
+		Image_MicDisable:Hide()
+	end
+	return self
+end
+
+function _RoleGrid:SetSpecialBuffSize()
+	local UIConfig = LR_TeamGrid.UIConfig.specialBuff
+	local handle = self.handle
+	local fx, fy = LR_TeamGrid.UsrData.CommonSettings.scale.fx, LR_TeamGrid.UsrData.CommonSettings.scale.fy
+	local heightHandle = UIConfig["Handle"].height * fy
+	local widthHandle = UIConfig["Handle"].width * fx
+	handle:Lookup("Handle_SpecialBuff"):SetSize(widthHandle, heightHandle)
+	local heightSpecialBuffBg = UIConfig["Bg"].height * fy
+	local widthSpecialBuffBg = UIConfig["Bg"].width * fx
+	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffBg"):SetSize(widthSpecialBuffBg, heightSpecialBuffBg)
+--[[	local heightSpecialBuffLifeBar = UIConfig["LifeBar"].height * fy
+	local widthSpecialBuffLifeBar = UIConfig["LifeBar"].width * fx
+	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffLifeBar"):SetSize(widthSpecialBuffLifeBar, heightSpecialBuffLifeBar)]]
+	return self
+end
+
+function _RoleGrid:SetSpecialBuffRelPos()
+	local UIConfig = LR_TeamGrid.UIConfig.specialBuff
+	local fx, fy = LR_TeamGrid.UsrData.CommonSettings.scale.fx, LR_TeamGrid.UsrData.CommonSettings.scale.fy
+	local handle = self.handle
+	local topHandle = UIConfig["Handle"].top * fy
+	local leftHandle = UIConfig["Handle"].left * fx
+	handle:Lookup("Handle_SpecialBuff"):SetRelPos(leftHandle, topHandle)
+	local topSpecialBuffBg = UIConfig["Bg"].top * fy
+	local leftSpecialBuffBg = UIConfig["Bg"].left * fx
+	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffBg"):SetRelPos(leftSpecialBuffBg, topSpecialBuffBg)
+	--handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffBg"):SetColorRGB(17, 186, 150)
+	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffBg"):Hide()
+--[[	local topSpecialBuffLifeBar = UIConfig["LifeBar"].top * fy
+	local leftSpecialBuffLifeBar = UIConfig["LifeBar"].left * fx
+	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffLifeBar"):SetRelPos(leftSpecialBuffLifeBar, topSpecialBuffLifeBar)
+	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffLifeBar"):SetColorRGB(255, 186, 150)
+	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffLifeBar"):Show()]]
+	handle:FormatAllItemPos()
+	handle:Lookup("Handle_SpecialBuff"):FormatAllItemPos()
+	return self
+end
+
 ---------------------------------------------------------------
 function LR_TeamGrid.OnFrameCreate()
 	local frame = Station.Lookup("Normal/LR_TeamGrid")
 	LR_TeamGrid.frameSelf = frame
 	LR_TeamGrid.Handle_Title = frame:Lookup("Wnd_Title"):Lookup("","")
-	LR_TeamGrid.Handle_Body = frame:Lookup("Wnd_Body"):Lookup("","")
 	LR_TeamGrid.Handle_Skill_Box = frame:Lookup("Wnd_Skill_Box"):Lookup("","")
 	LR_TeamGrid.Handle_BossOTBar = frame:Lookup("Wnd_Boss_OTBar"):Lookup("","")
+	LR_TeamGrid.Handle_Body = frame:Lookup("Wnd_Body"):Lookup("","")
 	LR_TeamGrid.Handle_Roles = LR_TeamGrid.Handle_Body:Lookup("Handle_Roles")
 	LR_TeamGrid.Handle_TeamNum = LR_TeamGrid.Handle_Body:Lookup("Handle_TeamNum")
+	LR_TeamGrid.Handle_BodySub = frame:Lookup("Wnd_BodySub"):Lookup("","")
+	LR_TeamGrid.Handle_RolesSub = LR_TeamGrid.Handle_BodySub:Lookup("Handle_RolesSub")
+	LR_TeamGrid.Handle_TeamNumSub = LR_TeamGrid.Handle_BodySub:Lookup("Handle_TeamNumSub")
+	frame:Lookup("Wnd_Title"):Lookup("Btn_Mic"):Lookup("",""):Lookup("Handle_HotKey"):Lookup("Text_HotKey"):SetFontScale(0.9)
+	frame:Lookup("Wnd_Title"):Lookup("Btn_Mic"):Lookup("",""):Lookup("Handle_Free_Mic"):Lookup("Text_Free"):SetFontScale(0.9)
+	LR.DelayCall(2000, function()
+		LR_TeamGrid.GVOICE_MIC_STATE_CHANGED()
+		LR_TeamGrid.GVOICE_SPEAKER_STATE_CHANGED()
+	end)
 
 	if LR_TeamGrid.UsrData.CommonSettings.bLockLocation then
 		frame:EnableDrag(false)
@@ -1661,6 +1810,14 @@ function LR_TeamGrid.OnFrameCreate()
 	this:RegisterEvent("LR_RAID_BUFF_DELETE")
 	this:RegisterEvent("LR_RAID_EDGE_ADD_FRESH")
 	this:RegisterEvent("LR_RAID_EDGE_DELETE")
+	this:RegisterEvent("LR_SPECIAL_BUFF_ADD_FRESH")
+	this:RegisterEvent("LR_SPECIAL_BUFF_DELETE")
+
+	---GVoice相关
+	this:RegisterEvent("GVOICE_ON_JOIN_ROOM")
+	this:RegisterEvent("GVOICE_MIC_STATE_CHANGED")
+	this:RegisterEvent("GVOICE_BASE_ON_FORBID_MEMBER")
+	this:RegisterEvent("GVOICE_SPEAKER_STATE_CHANGED")
 
 	----自身技能监控
 	this:RegisterEvent("SKILL_MOUNT_KUNG_FU")
@@ -1669,6 +1826,10 @@ function LR_TeamGrid.OnFrameCreate()
 
 	this:RegisterEvent("FIGHT_HINT")
 	this:RegisterEvent("MONEY_UPDATE")
+
+	--46140这两个事件用于长歌切剑
+	this:RegisterEvent("NPC_ENTER_SCENE")
+	this:RegisterEvent("NPC_LEAVE_SCENE")
 
 	this:RegisterEvent("LOADING_END")	--载入完成
 	this:RegisterEvent(12787)
@@ -1756,20 +1917,6 @@ function LR_TeamGrid.OnFrameCreate()
 			PopupMenu(menu[2])
 		end
 
-		local btnOption = frame:Lookup("Wnd_Title"):Lookup("Btn_Option")
-		btnOption.OnLButtonClick = function()
-			LR_TeamMenu.PopOptions()
-		end
-
-		local btnWorldMark = frame:Lookup("Wnd_Title"):Lookup("Btn_WorldMark")
-		btnWorldMark.OnLButtonClick = function()
-			if LR_TeamGrid.IsLeader( GetClientPlayer().dwID) then
-				Wnd.ToggleWindow("WorldMark")
-			else
-				LR.SysMsg(sformat("%s\n", _L["You are not the leader"]))
-			end
-		end
-
 		LR_TeamGrid.Handle_Body:RegisterEvent(786)
 		LR_TeamGrid.Handle_Body.OnItemMouseEnter = function()
 			--Station.SetCapture(frame)
@@ -1816,9 +1963,9 @@ function LR_TeamGrid.OnEvent(szEvent)
 	elseif szEvent == "TEAM_VOTE_RESPOND" then
 		LR_TeamGrid.TEAM_VOTE_RESPOND()
 	elseif szEvent == "BUFF_UPDATE" then
-		LR_TeamBuffMonitor.BUFF_UPDATE()
+		LR_TeamBuffMonitor.BUFF_UPDATE2()
 	elseif szEvent == "JH_RAID_REC_BUFF" then
-		LR_TeamBuffMonitor.JH_RAID_REC_BUFF()
+		--LR_TeamBuffMonitor.JH_RAID_REC_BUFF()
 	elseif szEvent == "LR_RAID_BUFF_ADD_FRESH" then
 		LR_TeamBuffMonitor.LR_RAID_BUFF_ADD_FRESH()
 	elseif szEvent == "LR_RAID_BUFF_DELETE" then
@@ -1827,6 +1974,10 @@ function LR_TeamGrid.OnEvent(szEvent)
 		LR_TeamBuffMonitor.LR_RAID_EDGE_ADD_FRESH()
 	elseif szEvent == "LR_RAID_EDGE_DELETE" then
 		LR_TeamBuffMonitor.LR_RAID_EDGE_DELETE()
+	elseif szEvent == "LR_SPECIAL_BUFF_ADD_FRESH" then
+		LR_TeamBuffMonitor.LR_SPECIAL_BUFF_ADD_FRESH()
+	elseif szEvent == "LR_SPECIAL_BUFF_DELETE" then
+		LR_TeamBuffMonitor.LR_SPECIAL_BUFF_DELETE()
 	elseif szEvent == "SYS_MSG" then
 		LR_TeamGrid.SYS_MSG()
 	elseif szEvent == "SKILL_MOUNT_KUNG_FU" then
@@ -1841,11 +1992,24 @@ function LR_TeamGrid.OnEvent(szEvent)
 		LR_TeamGrid.MONEY_UPDATE()
 	elseif szEvent == "LOADING_END" then
 		LR_TeamGrid.LOADING_END()
+	elseif szEvent == "GVOICE_ON_JOIN_ROOM" then
+		LR_TeamGrid.GVOICE_ON_JOIN_ROOM()
+	elseif szEvent == "GVOICE_MIC_STATE_CHANGED" then
+		LR_TeamGrid.GVOICE_MIC_STATE_CHANGED()
+	elseif szEvent == "GVOICE_BASE_ON_FORBID_MEMBER" then
+		LR_TeamGrid.GVOICE_BASE_ON_FORBID_MEMBER()
+	elseif szEvent == "GVOICE_SPEAKER_STATE_CHANGED" then
+		LR_TeamGrid.GVOICE_SPEAKER_STATE_CHANGED()
+	elseif szEvent == "NPC_ENTER_SCENE" then
+		LR_TeamGrid.NPC_ENTER_SCENE()
+	elseif szEvent == "NPC_LEAVE_SCENE" then
+		LR_TeamGrid.NPC_LEAVE_SCENE()
 	end
 end
 
 function LR_TeamGrid.OnFrameDestroy()
 	_tRoleGrids ={}
+	LR_TeamBuffMonitor.ClearAllNormalBuffCache()
 	LR_TeamBuffMonitor.ClearAllCache()
 end
 
@@ -1863,6 +2027,14 @@ function LR_TeamGrid.OnFrameBreathe()
 		end
 	end
 
+	--刷新切剑长歌
+	for dwID, v in pairs(_JCG) do
+		local v = _tRoleGrids[dwID]
+		if v then
+			v:DrawLifeBar():DrawLifeText()
+		end
+	end
+
 	if GetLogicFrameCount() % 2 == 0 then
 		LR_TeamGrid.CheckPanelActive()
 	end
@@ -1870,9 +2042,11 @@ function LR_TeamGrid.OnFrameBreathe()
 	if not LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bOff then
 		LR_TeamBuffMonitor.RefreshBuff()
 	end
-
+	LR_TeamBuffMonitor.RefreshSpecialBuff()
+	--边角指示器
 	LR_TeamEdgeIndicator.RefreshEdgeIndicator()
-
+	--检查语音
+	LR_TeamGrid.CheckAllMemberMicStatus()
 
 	LR_TeamSkillMonitor.RefreshAllSkillBox()
 	LR_TeamBossMonitor.CheckAllOTState()
@@ -1885,7 +2059,65 @@ function LR_TeamGrid.OnFrameDragEnd()
 	Anchor.x, Anchor.y = this:GetRelPos()
 end
 
+function LR_TeamGrid.OnLButtonClick()
+	local szName = this:GetName()
+	if szName == "Btn_Option" then
+		LR_TeamMenu.PopOptions()
+	elseif szName == "Btn_WorldMark" then
+		if LR_TeamGrid.IsLeader( GetClientPlayer().dwID) then
+			Wnd.ToggleWindow("WorldMark")
+		else
+			LR.SysMsg(sformat("%s\n", _L["You are not the leader"]))
+		end
+	elseif szName == "Btn_Mic" then
+		LR_TeamGrid.ChangeMicStatus()
+		LR_TeamGrid.OnMouseEnter()
+	elseif szName == "Btn_SpeakerAll" then
+		LR_TeamGrid.ChangeSpeakerStatus()
+		LR_TeamGrid.OnMouseEnter()
+	elseif szName == "Btn_LR_GKP" then
+		if LR_GKP_Base then
+			LR_GKP_Panel:Open()
+		end
+	elseif szName == "Btn_TeamNotice" then
+		LR.OpenTeamNoticePanel()
+	end
+end
+
 function LR_TeamGrid.OnMouseEnter()
+	local szName = this:GetName()
+	if szName == "Btn_Mic" then
+		local tText = {
+			[MIC_STATE.NOT_AVIAL] = g_tStrings.GVOICE_MIC_UNAVIAL_STATE_TIP,
+			[MIC_STATE.CLOSE_NOT_IN_ROOM] = g_tStrings.GVOICE_MIC_JOIN_STATE_TIP,
+			[MIC_STATE.CLOSE_IN_ROOM] = g_tStrings.GVOICE_MIC_KEY_STATE_TIP,
+			[MIC_STATE.KEY] = sformat(g_tStrings.GVOICE_MIC_FREE_STATE_TIP, GetKeyShow(Hotkey.Get("TOGGLE_GVOCIE_SAY"))),
+			[MIC_STATE.FREE] = g_tStrings.GVOICE_MIC_CLOSE_STATE_TIP,
+		}
+		local fx, fy = this:GetAbsPos()
+		local nW, nH = this:GetSize()
+		OutputTip(GetFormatText(tText[GVoiceBase_GetMicState()], 0), 300, {fx, fy, nW, nH})
+	elseif szName == "Btn_SpeakerAll" then
+		local tText = {
+			[SPEAKER_STATE.OPEN] = g_tStrings.GVOICE_SPEAKER_OPEN_TIP,
+			[SPEAKER_STATE.CLOSE] = g_tStrings.GVOICE_SPEAKER_CLOSE_TIP,
+		}
+		local fx, fy = this:GetAbsPos()
+		local nW, nH = this:GetSize()
+		OutputTip(GetFormatText(tText[GVoiceBase_GetSpeakerState()], 0), 300, {fx, fy, nW, nH})
+	elseif szName == "Wnd_Body" or szName == "Wnd_BodySub" then
+		LR_TeamGrid.bInFrame = true
+		LR_TeamGrid.timeCache = GetLogicFrameCount()
+	elseif szName == "Btn_LR_GKP" then
+		local fx, fy = this:GetAbsPos()
+		local nW, nH = this:GetSize()
+		OutputTip(GetFormatText(_L["Open LR GKP"], 0), 300, {fx, fy, nW, nH})
+	elseif szName == "Btn_TeamNotice" then
+		local fx, fy = this:GetAbsPos()
+		local nW, nH = this:GetSize()
+		OutputTip(GetFormatText(_L["Open LR TeamNotice"], 0), 300, {fx, fy, nW, nH})
+	end
+
 	--屏蔽功能
 	if false and LR_TeamGrid.UsrData.CommonSettings.bInCureMode and LR_TeamGrid.UsrData.CommonSettings.cureMode == 2 then
 		local me =  GetClientPlayer()
@@ -1901,24 +2133,34 @@ function LR_TeamGrid.OnMouseEnter()
 end
 
 function LR_TeamGrid.OnMouseLeave()
+	local szName = this:GetName()
+	if szName == "Btn_Mic" then
+		HideTip()
+	elseif szName == "Btn_SpeakerAll" then
+		HideTip()
+	elseif szName == "Wnd_Body" or szName == "Wnd_BodySub" then
 		LR_TeamGrid.cureLock = false
 		LR_TeamGrid.hoverHandle = nil
-		--LR.DelayCall(150,function()
-			if not LR_TeamGrid.cureLock and LR_TeamGrid.UsrData.CommonSettings.bInCureMode then
-				local me =  GetClientPlayer()
-				if not me then
-					return
-				end
-				local kungfu=me.GetKungfuMount()
-				local dwSkillID=kungfu.dwSkillID
-				if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
-					if LR_TeamGrid.IfTargetCanBSelect(LR_TeamGrid.cureTarget) then
-						LR_TeamGrid.SetTarget(LR_TeamGrid.cureTarget)
-						--Output("----")
-					end
+		LR_TeamGrid.bInFrame = false
+		LR_TeamGrid.outTime = GetLogicFrameCount()
+		if not LR_TeamGrid.cureLock and LR_TeamGrid.UsrData.CommonSettings.bInCureMode then
+			local me =  GetClientPlayer()
+			if not me then
+				return
+			end
+			local kungfu=me.GetKungfuMount()
+			local dwSkillID=kungfu.dwSkillID
+			if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+				if LR_TeamGrid.IfTargetCanBSelect(LR_TeamGrid.cureTarget) then
+					LR_TeamGrid.SetTarget(LR_TeamGrid.cureTarget)
 				end
 			end
-		--end)
+		end
+	elseif szName == "Btn_LR_GKP" then
+		HideTip()
+	elseif szName == "Btn_TeamNotice" then
+		HideTip()
+	end
 end
 
 function LR_TeamGrid.OnFrameKeyDown()
@@ -1964,37 +2206,92 @@ function LR_TeamGrid.UpdateRoleBodySize()
 	end
 	local UIConfig = LR_TeamGrid.UIConfig
 	local marginBody = UIConfig.marginBody
-	LR_TeamGrid.Handle_Body:Lookup("Image_BodyBg"):SetSize(0, 0)
-	LR_TeamGrid.Handle_Body:FormatAllItemPos()
-	LR_TeamGrid.Handle_Body:SetSizeByAllItemSize()
-	local width, height = LR_TeamGrid.Handle_Body:GetAllItemSize()
-	LR_TeamGrid.Handle_Body:SetSize(width + marginBody, height + marginBody)
-	LR_TeamGrid.Handle_Body:Lookup("Image_BodyBg"):SetSize(width + marginBody, height + marginBody)
-	LR_TeamGrid.Handle_Body:Lookup("Image_BodyBg"):SetRelPos(0, 0)
-	LR_TeamGrid.Handle_Body:FormatAllItemPos()
-	width, height = LR_TeamGrid.Handle_Body:GetAllItemSize()
-	LR_TeamGrid.frameSelf:Lookup("Wnd_Body"):SetSize(width, height)
+	--主面板设置大小
+	local width, height = 0, 0
+	if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 and LR_TeamGrid.Handle_Roles:GetItemCount() == 0 then
+		LR_TeamGrid.Handle_Body:Lookup("Image_BodyBg"):SetSize(0, 0)
+		LR_TeamGrid.Handle_Body:SetSize(0, 0)
+		LR_TeamGrid.frameSelf:Lookup("Wnd_Body"):SetSize(0, 0)
+	else
+		LR_TeamGrid.Handle_Body:Lookup("Image_BodyBg"):SetSize(0, 0)
+		LR_TeamGrid.Handle_Body:FormatAllItemPos()
+		LR_TeamGrid.Handle_Body:SetSizeByAllItemSize()
+		width, height = LR_TeamGrid.Handle_Body:GetAllItemSize()
+		LR_TeamGrid.Handle_Body:SetSize(width + marginBody, height + marginBody)
+		LR_TeamGrid.Handle_Body:Lookup("Image_BodyBg"):SetSize(width + marginBody, height + marginBody)
+		LR_TeamGrid.Handle_Body:Lookup("Image_BodyBg"):SetRelPos(0, 0)
+		LR_TeamGrid.Handle_Body:FormatAllItemPos()
+		width, height = LR_TeamGrid.Handle_Body:GetAllItemSize()
+		LR_TeamGrid.frameSelf:Lookup("Wnd_Body"):SetSize(width, height)
+	end
+	--副面板设置大小
+	local width2, height2 = 0, 0
+	if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 then
+		if LR_TeamGrid.Handle_RolesSub:GetItemCount() == 0 then
+			LR_TeamGrid.Handle_BodySub:Lookup("Image_BodyBgSub"):SetSize(0, 0)
+			LR_TeamGrid.Handle_BodySub:SetSize(0, 0)
+			LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetSize(0, 0)
+		else
+			LR_TeamGrid.Handle_BodySub:Lookup("Image_BodyBgSub"):SetSize(0, 0)
+			LR_TeamGrid.Handle_BodySub:FormatAllItemPos()
+			LR_TeamGrid.Handle_BodySub:SetSizeByAllItemSize()
+			width2, height2 = LR_TeamGrid.Handle_BodySub:GetAllItemSize()
+			LR_TeamGrid.Handle_BodySub:SetSize(width2 + marginBody, height2 + marginBody)
+			LR_TeamGrid.Handle_BodySub:Lookup("Image_BodyBgSub"):SetSize(width2 + marginBody, height2 + marginBody)
+			LR_TeamGrid.Handle_BodySub:Lookup("Image_BodyBgSub"):SetRelPos(0, 0)
+			LR_TeamGrid.Handle_BodySub:FormatAllItemPos()
+			width2, height2 = LR_TeamGrid.Handle_BodySub:GetAllItemSize()
+			LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetSize(width, height)
+		end
+	else
+		LR_TeamGrid.Handle_BodySub:Lookup("Image_BodyBgSub"):SetSize(0, 0)
+		LR_TeamGrid.Handle_BodySub:SetSize(0, 0)
+		LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetSize(0, 0)
+	end
+
 	local kungfu=me.GetKungfuMount()
 	local dwSkillID=kungfu.dwSkillID
 	if LR_TeamGrid.UsrData.CommonSettings.bShowSkillBox and (dwSkillID==10028 or dwSkillID==10080 or dwSkillID==10176 or dwSkillID==10448) then
 		if LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 1 then
 			LR_TeamGrid.frameSelf:Lookup("Wnd_Body"):SetRelPos(0, 70)
 			LR_TeamGrid.frameSelf:Lookup("Wnd_Skill_Box"):SetRelPos(0, 30)
+			if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 then
+				LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetRelPos(0, 70 + height)
+			else
+
+			end
 		elseif LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 2 then
 			LR_TeamGrid.frameSelf:Lookup("Wnd_Body"):SetRelPos(0, 30)
-			LR_TeamGrid.frameSelf:Lookup("Wnd_Skill_Box"):SetRelPos(0, 30 + height)
+			LR_TeamGrid.frameSelf:Lookup("Wnd_Skill_Box"):SetRelPos(0, 30 + height + height2)
+			if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 then
+				LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetRelPos(0, 30 + height)
+			else
+
+			end
 		elseif LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 3 then
 			LR_TeamGrid.frameSelf:Lookup("Wnd_Body"):SetRelPos(40, 30)
 			LR_TeamGrid.frameSelf:Lookup("Wnd_Skill_Box"):SetRelPos(0, 30)
+			if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 then
+				LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetRelPos(40, 30 + height)
+			else
+
+			end
 		elseif LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 4 then
 			LR_TeamGrid.frameSelf:Lookup("Wnd_Body"):SetRelPos(0, 30)
-			LR_TeamGrid.frameSelf:Lookup("Wnd_Skill_Box"):SetRelPos(width, 30)
+			LR_TeamGrid.frameSelf:Lookup("Wnd_Skill_Box"):SetRelPos(mmax(width, width2), 30)
+			if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 then
+				LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetRelPos(0, 30 + height)
+			else
+
+			end
 		end
 	else
 		LR_TeamGrid.frameSelf:Lookup("Wnd_Body"):SetRelPos(0, 30)
+		LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetRelPos(0, 30 + height)
 	end
+
 	LR_TeamGrid.ResizeTitle()
-	local titleWidth, titleHeight = LR_TeamGrid.Handle_Title:GetParent():GetSize()
+	local titleWidth, titleHeight = LR_TeamGrid.frameSelf:Lookup("Wnd_Title"):GetSize()
 	local skillBoxWidth, skillBoxHeight = LR_TeamGrid.Handle_Skill_Box:GetSize()
 	if LR_TeamGrid.UsrData.CommonSettings.bShowSkillBox and (dwSkillID==10028 or dwSkillID==10080 or dwSkillID==10176 or dwSkillID==10448) then
 		if LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 1 then
@@ -2009,6 +2306,7 @@ function LR_TeamGrid.UpdateRoleBodySize()
 	else
 		LR_TeamGrid.frameSelf:SetSize(mmax(titleWidth, width), height + titleHeight)
 	end
+
 end
 
 function LR_TeamGrid.OpenPanel()
@@ -2055,6 +2353,7 @@ function LR_TeamGrid.SwitchPanel()
 		LR_TeamGrid.SwitchSystemTeamPanel()
 	end)
 end
+
 ----------------------------------------------------------------------------
 function LR_TeamGrid.CheckPanelActive()
 	local me = GetClientPlayer()
@@ -2211,12 +2510,12 @@ function LR_TeamGrid.UpdateTeamMember()
 	local tGroupMembers={}
 	if player.IsInRaid() then
 		for i=0,4,1 do
-			tGroupMembers[i+1]=team.GetGroupInfo(i)
+			tGroupMembers[i+1] = team.GetGroupInfo(i)
 		end
 	elseif player.IsInParty() then
-		tGroupMembers[1]=team.GetGroupInfo(0)
+		tGroupMembers[1] = team.GetGroupInfo(0)
 		for i=2,4 do
-			tGroupMembers[i]={MemberList={}}
+			tGroupMembers[i] = {MemberList={}}
 		end
 	end
 	LR_TeamGrid.tGroupMembers = clone(tGroupMembers)
@@ -2236,14 +2535,14 @@ function LR_TeamGrid.DrawAllMembers()
 	local count = 1
 	local team = GetClientTeam()
 	_tPartyMark = team.GetTeamMark() or {}
-	for i =0, 4, 1 do
-		if tGroupMembers[i+1] then
-			local MemberList = tGroupMembers[i+1].MemberList
+	for i = 1, 5, 1 do
+		if tGroupMembers[i] then
+			local MemberList = tGroupMembers[i].MemberList
 			if next(MemberList) ~= nil then
 				for nRow, dwID in pairs(MemberList) do
 					if not _tRoleGrids[dwID] then
 						local roleGrid=_RoleGrid:new(dwID)
-						roleGrid:Create():SetRoleBodySize():SetRoleBodyRelPos()
+						roleGrid:SetRealCol(i - 1):Create():SetRoleBodySize()
 						roleGrid:SetRoleNameSize():SetRoleNameRelPos()
 						roleGrid:SetLifeBarSize():SetLifeBarRelPos()
 						roleGrid:SetManaBarSize():SetManaBarPos()
@@ -2256,15 +2555,18 @@ function LR_TeamGrid.DrawAllMembers()
 						roleGrid:SetDistanceTextSize():SetDistanceTextRelPos():DrawDistanceText()
 						roleGrid:SetWorldMarkImageSize():SetWorldMarkImageRelPos()
 						roleGrid:SetEdgeIndicatoSize():SetEdgeIndicatoRelPos()
+						roleGrid:SetMicOpenSize():SetMicOpenRelPos():DrawMicOpen(false)
+						roleGrid:SetMicDisableSize():SetMicDisableRelPos():DrawMicDisable(false)
+						roleGrid:SetSpecialBuffSize():SetSpecialBuffRelPos()
 						roleGrid:SetLifeTextSize():SetLifeTextRelPos()
 						roleGrid:SetConfirmImageSize():SetConfirmImageRelPos()
 						roleGrid:SetHandleBuffSize():SetHandleBuffRelPos()
 						--roleGrid:SetBuffBoxSize():SetBuffBoxRelPos()
 
 						roleGrid:Scale()
-						_tRoleGrids[dwID]=roleGrid
+						_tRoleGrids[dwID] = roleGrid
 					end
-					_tRoleGrids[dwID]:SetCol(nCol):SetRow(nRow-1):SetRoleBodyRelPos():DrawWorldMarkImage()
+					_tRoleGrids[dwID]:SetRealCol(i - 1):SetCol(nCol):SetRow(nRow-1):SetRoleBodyRelPos():DrawWorldMarkImage()
 					_tRoleGrids[dwID]:SetRoleName(_Members[dwID].szName):DrawKungFu()
 					_tRoleGrids[dwID]:DrawLifeText():DrawLifeBar():DrawManaBar()
 					_tRoleGrids[dwID]:DrawDistanceText()
@@ -2274,10 +2576,19 @@ function LR_TeamGrid.DrawAllMembers()
 				nCol = nCol +1
 			end
 		end
+		if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 and i == 3 then
+			nCol = 0
+		end
 	end
+	LR_TeamGrid.DrawTeamNum()
+
 	LR_TeamGrid.Handle_Roles:FormatAllItemPos()
 	LR_TeamGrid.Handle_Roles:SetSizeByAllItemSize()
-	LR_TeamGrid.DrawTeamNum()
+
+	if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 then
+		LR_TeamGrid.Handle_RolesSub:FormatAllItemPos()
+		LR_TeamGrid.Handle_RolesSub:SetSizeByAllItemSize()
+	end
 	LR_TeamGrid.UpdateRoleBodySize()
 end
 
@@ -2291,14 +2602,19 @@ function LR_TeamGrid.ReDrawAllMembers(bClear)
 		return
 	end
 	if bClear then
-		LR_TeamBuffMonitor.ClearhMemberBuff()
+		LR_TeamBuffMonitor.ClearhMemberNormalBuff()
+		LR_TeamEdgeIndicator.ClearEdgeIndicatorCache()
+		LR_TeamBuffMonitor.ClearSpecialBuffCache(dwID)
 		LR_TeamGrid.Handle_Roles:Clear()
+		LR_TeamGrid.Handle_RolesSub:Clear()
 		_tRoleGrids={}
 	end
 	LR_TeamGrid.DrawAllMembers()
 	if bClear then
 		for dwPlayerID, v in pairs(_tRoleGrids) do
 			LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
+			LR_TeamBuffMonitor.RedrawEdgeIndicatorBUFF(dwPlayerID)
+			LR_TeamBuffMonitor.RedrawSpecialBuffBox(dwPlayerID)
 		end
 	end
 end
@@ -2310,8 +2626,10 @@ function LR_TeamGrid.DrawExtendGrid()
 	end
 	local nGroupNum = team.nGroupNum
 	local tGroupMembers = LR_TeamGrid.tGroupMembers
-	for nCol = 0, nGroupNum-1, 1 do
-		local MemberList = tGroupMembers[nCol + 1].MemberList
+
+	local nCol = 0
+	for i = 0, nGroupNum - 1, 1 do
+		local MemberList = tGroupMembers[i + 1].MemberList
 		local nEmptyStart = #MemberList
 		for nRow = 1, nEmptyStart, 1 do
 			if _tRoleGrids[MemberList[nRow]] then
@@ -2319,18 +2637,22 @@ function LR_TeamGrid.DrawExtendGrid()
 			end
 		end
 		for nRow = nEmptyStart + 1, 5, 1 do
-			local dwID = nCol * 10 + nRow
+			local dwID = i * 10 + nRow
 			if not _tExtendGrids[dwID] then
 				local roleGrid=_RoleGrid:new(dwID)
-				roleGrid:Create():SetRoleBodySize():SetRoleBodyRelPos()
+				roleGrid:SetRealCol(i):Create():SetRoleBodySize()
 				roleGrid:ShowEmptyGrid()
-
 				roleGrid:Scale()
-				_tExtendGrids[dwID] =roleGrid
+				_tExtendGrids[dwID] = roleGrid
 			end
-			_tExtendGrids[dwID]:SetCol(nCol):SetRow(nRow-1):SetRoleBodyRelPos()
+			_tExtendGrids[dwID]:SetRealCol(i):SetCol(nCol):SetRow(nRow-1):SetRoleBodyRelPos()
+		end
+		nCol = nCol + 1
+		if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 and i == 2 then
+			nCol = 0
 		end
 	end
+
 	LR_TeamGrid.Handle_Roles:FormatAllItemPos()
 	LR_TeamGrid.Handle_Roles:SetSizeByAllItemSize()
 	LR_TeamGrid.DrawTeamNum()
@@ -2353,6 +2675,14 @@ function LR_TeamGrid.DrawTeamNum()
 	Handle_TeamNum:SetSize(0,0)
 	Handle_TeamNum:SetRelPos(0,0)
 
+	local Handle_TeamNumSub = LR_TeamGrid.Handle_TeamNumSub
+	local Handle_BodySub = LR_TeamGrid.Handle_BodySub
+	if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 then
+		Handle_TeamNumSub:Clear()
+		Handle_TeamNumSub:SetSize(0,0)
+		Handle_TeamNumSub:SetRelPos(0,0)
+	end
+
 	if LR_TeamGrid.UsrData.CommonSettings.bDisableTeamNum then
 		Handle_Body:FormatAllItemPos()
 		return
@@ -2364,12 +2694,17 @@ function LR_TeamGrid.DrawTeamNum()
 	local nMaxCol = team.nGroupNum
 	local szIniFile = sformat("%s\\UI\\%s\\UI.ini", AddonPath, LR_TeamGrid.UsrData.UI_Choose)
 	local n = 0
-	for nCol = 0, nMaxCol-1, 1 do
+	for nCol = 0, nMaxCol - 1, 1 do
 		local hTextNum = nil
+		local TeamNum = Handle_TeamNum
+		if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 and nCol > 2 then
+			TeamNum = Handle_TeamNumSub
+		end
+
 		if bDraged then
-			hTextNum = Handle_TeamNum:AppendItemFromIni(szIniFile, "Text_Num", sformat("Text_Num_%d", nCol))
+			hTextNum = TeamNum:AppendItemFromIni(szIniFile, "Text_Num", sformat("Text_Num_%d", nCol))
 		elseif next(tGroupMembers[nCol +1].MemberList) ~= nil then
-			hTextNum = Handle_TeamNum:AppendItemFromIni(szIniFile, "Text_Num", sformat("Text_Num_%d", nCol))
+			hTextNum = TeamNum:AppendItemFromIni(szIniFile, "Text_Num", sformat("Text_Num_%d", nCol))
 		end
 		if hTextNum then
 			local Text_Num = ""
@@ -2409,12 +2744,22 @@ function LR_TeamGrid.DrawTeamNum()
 			hTextNum:SetRelPos(marginBody + n * (width + margin_x) * fx, 0)
 			n = n + 1
 		end
+
+		if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 and nCol == 2 then
+			n = 0
+		end
 	end
 	Handle_TeamNum:FormatAllItemPos()
 	Handle_TeamNum:SetSizeByAllItemSize()
 	local width, height = LR_TeamGrid.Handle_Roles:GetAllItemSize()
 	Handle_TeamNum:SetRelPos(0, height + LR_TeamGrid.UIConfig.wholeRoleGrid.margin_y)
 	Handle_Body:FormatAllItemPos()
+
+	Handle_TeamNumSub:FormatAllItemPos()
+	Handle_TeamNumSub:SetSizeByAllItemSize()
+	local width2, height2 = LR_TeamGrid.Handle_RolesSub:GetAllItemSize()
+	Handle_TeamNumSub:SetRelPos(0, height2 + LR_TeamGrid.UIConfig.wholeRoleGrid.margin_y)
+	Handle_BodySub:FormatAllItemPos()
 end
 
 function LR_TeamGrid.DrawImageLoot(nLootMode)
@@ -2478,6 +2823,14 @@ function LR_TeamGrid.ClearReadyConfirm()
 	end
 end
 
+function LR_TeamGrid.ChangeMicStatus()
+	GVoiceBase_SwitchMicState()
+end
+
+function LR_TeamGrid.ChangeSpeakerStatus()
+	GVoiceBase_SwitchSpeakerState()
+end
+
 function LR_TeamGrid.ResizeTitle()
 	local me = GetClientPlayer()
 	if not me then
@@ -2491,14 +2844,14 @@ function LR_TeamGrid.ResizeTitle()
 	local w1, h1 = Handle_Title:GetSize()
 	local w2, h2 = Wnd_Body:GetSize()
 	local w3, h3 = Wnd_Skill_Box:GetSize()
-	local w = mmax(w1, w2)
+	local w = mmax(w1, w2, 230)
 	local kungfu=me.GetKungfuMount()
 	local dwSkillID=kungfu.dwSkillID
 	if LR_TeamGrid.UsrData.CommonSettings.bShowSkillBox and (dwSkillID==10028 or dwSkillID==10080 or dwSkillID==10176 or dwSkillID==10448) then
 		if LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 1 then  --上下
-			w = mmax(w1, w2, w3)
+			w = mmax(w1, w2, w3, w)
 		elseif LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 3 or LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 4 then
-			w = mmax(w1, (w2 + w3))
+			w = mmax(w1, (w2 + w3), w)
 		end
 	end
 	Wnd_Title:SetSize(w, 30)
@@ -2529,6 +2882,37 @@ function LR_TeamGrid.SetTitleText(szText)
 	LR_TeamGrid.ResizeTitle()
 end
 
+function LR_TeamGrid.CheckAllMemberMicStatus()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local sayingInfo = GVoiceBase_GetSaying()
+	for dwID, v in pairs(_tRoleGrids) do
+		if dwID == GetClientPlayer().dwID then
+			v:DrawMicOpen(false)
+			local frame = LR_TeamGrid.frameSelf
+			local Btn_Mic = frame:Lookup("Wnd_Title"):Lookup("Btn_Mic")
+			local Handle_Status_Mic = Btn_Mic:Lookup("","")
+			local Animate_Input_Mic = Handle_Status_Mic:Lookup("Animate_Input_Mic")
+			if GVoiceBase_IsMemberSaying(dwID, sayingInfo) then
+				Animate_Input_Mic:Show()
+			else
+				Animate_Input_Mic:Hide()
+			end
+		else
+			if GVoiceBase_IsMemberForbid(dwID) then
+				v:DrawMicDisable(true)
+				v:DrawMicOpen(false)
+			else
+				v:DrawMicDisable(false)
+				v:DrawMicOpen(GVoiceBase_IsMemberSaying(dwID, sayingInfo))
+			end
+		end
+	end
+end
+
+
 -----------------------------------------------------------------------
 function LR_TeamGrid.IfICanSelect()
 	local me = GetClientPlayer()
@@ -2537,7 +2921,7 @@ function LR_TeamGrid.IfICanSelect()
 	end
 	local scene = me.GetScene()
 	if scene.nType == MAP_TYPE.NORMAL_MAP or scene.nType == MAP_TYPE.BATTLE_FIELD then
-		if me.nMoveState == MOVE_STATE.ON_JUMP or me.nMoveState == 26 then
+		if me.nMoveState == MOVE_STATE.ON_JUMP or me.nMoveState == 26 or me.nMoveState == MOVE_STATE.ON_RUN then
 			return false
 		end
 	end
@@ -2545,20 +2929,40 @@ function LR_TeamGrid.IfICanSelect()
 end
 
 function LR_TeamGrid.IfTargetCanBSelect(dwID)
-	local player = GetPlayer(dwID)
-	if not player then
-		return false
-	end
 	local me = GetClientPlayer()
 	if not me then
 		return false
 	end
-	local scene = me.GetScene()
-	LR_TeamGrid.UpdateSingleMemberInfo(dwID)
-	local Members = _Members[dwID]
-	if Members and Members.dwMapID == scene.dwMapID and Members.nMapCopyIndex == scene.nCopyIndex and LR.GetDistance(player) <= 56 then
-		return true
+	if IsPlayer(dwID) then
+		local player = GetPlayer(dwID)
+		if not player then
+			return false
+		end
+		if me.IsPlayerInMyParty(dwID) then
+			local scene = me.GetScene()
+			LR_TeamGrid.UpdateSingleMemberInfo(dwID)
+			local Members = _Members[dwID]
+			if Members and Members.dwMapID == scene.dwMapID and Members.nMapCopyIndex == scene.nCopyIndex and LR.GetDistance(player) <= 56 then
+				return true
+			else
+				return false
+			end
+		else
+			local distance = LR.GetDistance(player)
+			if distance <= 56 then
+				return true
+			end
+			return false
+		end
 	else
+		local npc = GetNpc(dwID)
+		if not npc then
+			return false
+		end
+		local distance = LR.GetDistance(npc)
+		if distance <= 56 then
+			return true
+		end
 		return false
 	end
 end
@@ -2748,20 +3152,66 @@ function LR_TeamGrid.SetTarget(dwID)
 		return
 	end
 	local tarType, tarID = me.GetTarget()
-	if tarType == TARGET.PLAYER and tarID == dwID then
+	if tarType == TARGET.PLAYER or tarType == TARGET.NPC then
+		if tarID == dwID then
+			return true
+		end
+	end
+	if IsPlayer(dwID) then
+		local player = GetPlayer(dwID)
+		if player then
+			SetTarget(TARGET.PLAYER, dwID)
+		end
+	else
+		local npc = GetNpc(dwID)
+		if npc then
+			SetTarget(TARGET.NPC, dwID)
+		end
+	end
+end
+
+function LR_TeamGrid.BreatheSetTarget()
+	local me =  GetClientPlayer()
+	if not me then
 		return
 	end
-	local player = GetPlayer(dwID)
-	if player then
-		SetTarget(TARGET.PLAYER, dwID)
-		--SetTarget(TARGET.PLAYER, dwID)
-		--Output("settarget", dwID, GetTickCount())
+	if GetLogicFrameCount() - LR_TeamGrid.timeCache > 8 then
+		return
+	end
+	local kungfu = me.GetKungfuMount()
+	local dwSkillID = kungfu.dwSkillID
+	if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+		if LR_TeamGrid.UsrData.CommonSettings.bInCureMode then
+			if not LR_TeamGrid.IfICanSelect() then
+				return
+			end
+			if LR_TeamGrid.bInFrame then
+				if LR_TeamGrid.IfTargetCanBSelect(LR_TeamGrid.cureTargetInTeam) then
+					LR_TeamGrid.SetTarget(LR_TeamGrid.cureTargetInTeam)
+				end
+			else
+				if LR_TeamGrid.IfTargetCanBSelect(LR_TeamGrid.cureTarget) then
+					LR_TeamGrid.SetTarget(LR_TeamGrid.cureTarget)
+				end
+			end
+		else
+			LR_TeamGrid.SetTarget(LR_TeamGrid.HandClickTarget)
+		end
+	else
+		LR_TeamGrid.SetTarget(LR_TeamGrid.HandClickTarget)
 	end
 end
 
 function LR_TeamGrid.GetRoleGridBuffHandle(dwMemberID)
 	if _tRoleGrids[dwMemberID] then
 		return _tRoleGrids[dwMemberID]:GetBuffHandle()
+	end
+	return nil
+end
+
+function LR_TeamGrid.GetRoleGridSpecialBuffHandle(dwMemberID)
+	if _tRoleGrids[dwMemberID] then
+		return _tRoleGrids[dwMemberID]:GetSpecialBuffHandle()
 	end
 	return nil
 end
@@ -2933,7 +3383,35 @@ function LR_TeamGrid.TEAM_CHANGE_MEMBER_GROUP()	--有人换队伍
 	local dwMemberID = arg0 --被变更的成员ID
 	local nSrcGroupIndex = arg1 --原小队编号
 	local nDstGroupIndex = arg2  --目标小队ID
-	local  dwDstMemberID = arg3	--被交换者的ID
+	local dwDstMemberID = arg3	--被交换者的ID
+
+	if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 then
+		if nSrcGroupIndex <=2 and nDstGroupIndex >2 or nSrcGroupIndex > 2 and nDstGroupIndex<= 2 then
+			LR_TeamBuffMonitor.ClearhMemberNormalBuff(dwMemberID)
+			LR_TeamEdgeIndicator.ClearEdgeIndicatorCache(dwMemberID)
+			LR_TeamBuffMonitor.ClearSpecialBuffCache(dwMemberID)
+			_tRoleGrids[dwMemberID]:Remove()
+			_tRoleGrids[dwMemberID] = nil
+			LR.DelayCall(100, function()
+				LR_TeamBuffMonitor.RedrawBuffBox(dwMemberID)
+				LR_TeamBuffMonitor.RedrawEdgeIndicatorBUFF(dwMemberID)
+				LR_TeamBuffMonitor.RedrawSpecialBuffBox(dwMemberID)
+			end)
+			if dwDstMemberID > 0 then
+				LR_TeamBuffMonitor.ClearhMemberNormalBuff(dwDstMemberID)
+				LR_TeamEdgeIndicator.ClearEdgeIndicatorCache(dwDstMemberID)
+				LR_TeamBuffMonitor.ClearSpecialBuffCache(dwDstMemberID)
+				_tRoleGrids[dwDstMemberID]:Remove()
+				_tRoleGrids[dwDstMemberID] = nil
+				LR.DelayCall(100, function()
+					LR_TeamBuffMonitor.RedrawBuffBox(dwDstMemberID)
+					LR_TeamBuffMonitor.RedrawEdgeIndicatorBUFF(dwDstMemberID)
+					LR_TeamBuffMonitor.RedrawSpecialBuffBox(dwDstMemberID)
+				end)
+			end
+		end
+	end
+
 	LR_TeamGrid.UpdateTeamMember()
 	LR_TeamGrid.DrawAllMembers()
 
@@ -3029,6 +3507,7 @@ end
 
 function LR_TeamGrid.PARTY_DISBAND()
 	LR_TeamGrid.SwitchPanel()
+	LR_TeamBuffMonitor.ClearAllCache()
 end
 
 function LR_TeamGrid.PARTY_LEVEL_UP_RAID()
@@ -3124,6 +3603,95 @@ function LR_TeamGrid.SYS_MSG()
 	end
 end
 
+function LR_TeamGrid.GVOICE_ON_JOIN_ROOM()
+
+
+end
+
+function LR_TeamGrid.GVOICE_MIC_STATE_CHANGED()
+	local nMicState = GVoiceBase_GetMicState()
+	local frame = LR_TeamGrid.frameSelf
+	local Btn_Mic = frame:Lookup("Wnd_Title"):Lookup("Btn_Mic")
+	local Handle_Status_Mic = Btn_Mic:Lookup("","")
+	local Image_Uninsert_Mic = Handle_Status_Mic:Lookup("Image_Uninsert_Mic")
+	local Image_Close_Mic = Handle_Status_Mic:Lookup("Image_Close_Mic")
+	local Handle_HotKey = Handle_Status_Mic:Lookup("Handle_HotKey")
+	local Handle_Free_Mic = Handle_Status_Mic:Lookup("Handle_Free_Mic")
+	if nMicState == MIC_STATE.NOT_AVIAL then
+		Btn_Mic:Enable(false)
+		Image_Uninsert_Mic:Hide()
+		Image_Close_Mic:Hide()
+		Handle_HotKey:Hide()
+		Handle_Free_Mic:Hide()
+	elseif nMicState == MIC_STATE.CLOSE_NOT_IN_ROOM then
+		Btn_Mic:Enable(true)
+		Image_Uninsert_Mic:Hide()
+		Image_Close_Mic:Show()
+		Handle_HotKey:Hide()
+		Handle_Free_Mic:Hide()
+	elseif nMicState == MIC_STATE.CLOSE_IN_ROOM then
+		Btn_Mic:Enable(true)
+		Image_Uninsert_Mic:Hide()
+		Image_Close_Mic:Show()
+		Handle_HotKey:Hide()
+		Handle_Free_Mic:Hide()
+	elseif nMicState == MIC_STATE.KEY then
+		Btn_Mic:Enable(true)
+		Image_Uninsert_Mic:Hide()
+		Image_Close_Mic:Hide()
+		Handle_HotKey:Show()
+		Handle_Free_Mic:Hide()
+	elseif nMicState == MIC_STATE.FREE then
+		Btn_Mic:Enable(true)
+		Image_Uninsert_Mic:Hide()
+		Image_Close_Mic:Hide()
+		Handle_HotKey:Hide()
+		Handle_Free_Mic:Show()
+	end
+end
+
+function LR_TeamGrid.GVOICE_BASE_ON_FORBID_MEMBER()
+	local dwMemberID = arg0
+	local bForbid = arg1
+	_tRoleGrids[dwMemberID]:DrawMicDisable(bForbid)
+end
+
+function LR_TeamGrid.GVOICE_SPEAKER_STATE_CHANGED()
+	local nSpeakerState = GVoiceBase_GetSpeakerState()
+	local frame = LR_TeamGrid.frameSelf
+	local Btn_SpeakerAll = frame:Lookup("Wnd_Title"):Lookup("Btn_SpeakerAll")
+	local Handle_Status_Speaker = Btn_SpeakerAll:Lookup("","")
+	local Image_Close_Speaker = Handle_Status_Speaker:Lookup("Image_Close_Speaker")
+	local Image_Normal = Handle_Status_Speaker:Lookup("Image_Normal")
+	if nSpeakerState == SPEAKER_STATE.OPEN then
+		Image_Close_Speaker:Hide()
+		Image_Normal:Show()
+	elseif nSpeakerState == SPEAKER_STATE.CLOSE then
+		Image_Close_Speaker:Show()
+		Image_Normal:Hide()
+	end
+end
+
+function LR_TeamGrid.NPC_ENTER_SCENE()
+	local dwID = arg0
+	local npc = GetNpc(dwID)
+	if npc then
+		if npc.dwTemplateID == 46140 then
+			if GetClientPlayer().IsPlayerInMyParty(npc.dwEmployer) then
+				_JCG[npc.dwEmployer] = dwID
+			end
+		end
+	end
+end
+
+function LR_TeamGrid.NPC_LEAVE_SCENE()
+	local dwID = arg0
+	for k, v in pairs(_JCG) do
+		if v == dwID then
+			_JCG[k] = nil
+		end
+	end
+end
 -----------------------------------------------------------------------
 -- 关于界面打开和刷新面板的时机
 -- 1) 普通情况下 组队会触发[PARTY_UPDATE_BASE_INFO]打开+刷新
@@ -3141,12 +3709,14 @@ end
 
 
 function LR_TeamGrid.PARTY_UPDATE_BASE_INFO()
+	LR_TeamBuffMonitor.ClearAllCache()
 	if LR_TeamGrid.CheckIsbOpenPanel() then
 		LR_TeamGrid.SwitchPanel()
 	end
 end
 
 function LR_TeamGrid.LOADING_END()
+	LR_TeamBuffMonitor.ClearAllCache()
 	if LR_TeamGrid.CheckIsbOpenPanel() then
 		LR_TeamGrid.SwitchPanel()
 	end
@@ -3160,18 +3730,21 @@ function LR_TeamGrid.LOGIN_GAME()
 	Log("[LR_TeamRrid] : Loaded config.")
 end
 
-function LR_TeamGrid.UPDATE_SELECT_TARGET()
+function LR_TeamGrid.LR_TARGET_CHANGE()
+	local eTargetType, dwTargetID = arg0, arg1
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
+
 	if me.IsInParty() or me.IsInRaid() then
+		--LR_TeamGrid.target 用来存放选中高亮的人物ID
 		if LR_TeamGrid.target and me.IsPlayerInMyParty(LR_TeamGrid.target) then
 			if _tRoleGrids[LR_TeamGrid.target] then
 				_tRoleGrids[LR_TeamGrid.target]:ShowSelectedImage(false)
 			end
 		end
-		local eTargetType, dwTargetID = me.GetTarget()
+		--local eTargetType, dwTargetID = me.GetTarget()
 		if eTargetType == TARGET.PLAYER then
 			if me.IsPlayerInMyParty(dwTargetID) then
 				if _tRoleGrids[dwTargetID] then
@@ -3184,13 +3757,55 @@ function LR_TeamGrid.UPDATE_SELECT_TARGET()
 		else
 			LR_TeamGrid.target = nil
 		end
+		--长歌切剑后
+		if eTargetType == TARGET.NPC then
+			for k, v in pairs(_JCG) do
+				if v == dwTargetID then
+					if me.IsPlayerInMyParty(k) then
+						if _tRoleGrids[k] then
+							_tRoleGrids[k]:ShowSelectedImage(true)
+							LR_TeamGrid.target = k
+						end
+					else
+						LR_TeamGrid.target = nil
+					end
+				end
+			end
+		end
+
+		if eTargetType == TARGET.PLAYER or eTargetType == TARGET.NPC or eTargetType == TARGET.NO_TARGET then
+			if LR_TeamGrid.UsrData.CommonSettings.bInCureMode and not LR_TeamGrid.bInFrame then
+				local me =  GetClientPlayer()
+				if not me then
+					return
+				end
+				if eTargetType == TARGET.NO_TARGET then
+					if me.nMoveState == MOVE_STATE.ON_JUMP or me.nMoveState == 26 or me.nMoveState == MOVE_STATE.ON_RUN then
+						return
+					end
+				end
+
+				local kungfu = me.GetKungfuMount()
+				local dwSkillID = kungfu.dwSkillID
+				if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+					if eTargetType == TARGET.PLAYER then
+						if not (me.IsPlayerInMyParty(dwTargetID) and GetLogicFrameCount() - LR_TeamGrid.outTime < 12) then
+							LR_TeamGrid.cureTarget = dwTargetID
+							--Output("cureTarget", LR_TeamGrid.cureTarget)
+						end
+					else
+						LR_TeamGrid.cureTarget = dwTargetID
+						--Output("cureTarget", LR_TeamGrid.cureTarget)
+					end
+				end
+			end
+		end
 	end
 end
 
+LR.BreatheCall("LR_Team_BreatheSetTarget", function() LR_TeamGrid.BreatheSetTarget() end)
 LR.RegisterEvent("PARTY_UPDATE_BASE_INFO", function() LR_TeamGrid.PARTY_UPDATE_BASE_INFO() end)
 LR.RegisterEvent("PARTY_LEVEL_UP_RAID", function() LR_TeamGrid.PARTY_LEVEL_UP_RAID() end)
 LR.RegisterEvent("LOADING_END", function() LR_TeamGrid.LOADING_END() end)
 LR.RegisterEvent("LOGIN_GAME", function() LR_TeamGrid.LOGIN_GAME() end)
-LR.RegisterEvent("UPDATE_SELECT_TARGET", function() LR_TeamGrid.UPDATE_SELECT_TARGET() end)
-
-
+LR.RegisterEvent("LR_TARGET_CHANGE", function() LR_TeamGrid.LR_TARGET_CHANGE() end)

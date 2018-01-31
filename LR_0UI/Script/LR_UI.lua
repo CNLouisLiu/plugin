@@ -1384,6 +1384,10 @@ function WndScroll:ClearHandle()
 	return self
 end
 
+function WndScroll:GetItemCount()
+	return self.__handle:GetItemCount()
+end
+
 function WndScroll:ScrollPagePrev()
 	self.__scroll:ScrollPagePrev()
 	return self
@@ -1661,6 +1665,12 @@ end
 function ItemHandle:Lookup(...)
 	return self.__this:Lookup(...)
 end
+
+function ItemHandle:ChangeRelation(...)
+	self.__this:ChangeRelation(...)
+	return self
+end
+
 
 function ItemHandle:GetHandle()
 	return self.__this

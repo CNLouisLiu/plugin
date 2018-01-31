@@ -40,7 +40,7 @@ local LR_TeamGrid_UI ={
 				LR_TeamGrid.SwitchSystemRaidPanel()
 				LR_TeamGrid.SaveCommonData()
 			end
-		},{	name="LR_TeamGrid_UI_te02",type="CheckBox",text=_L["Enable When in Team"],x=200,y=0,w=200,
+		},{	name="LR_TeamGrid_UI_te02",type="CheckBox",text=_L["Enable When in Team"],x = 200, y = 0,w = 200,
 			enable = function ()
 				return LR_TeamGrid.bOn
 			end,
@@ -52,8 +52,8 @@ local LR_TeamGrid_UI ={
 				LR_TeamGrid.SwitchPanel()
 				LR_TeamGrid.SaveCommonData()
 			end
-		},{	name="LR_TeamGrid_UI_te03",type="Text",x=205,y=25,w=40,h=28,text="©»",font=22,
-		},{	name="LR_TeamGrid_UI_SysTeamPan",type="CheckBox",text=_L["Enable System Team Panel"],x=225,y=25,w=200,
+		},{	name="LR_TeamGrid_UI_te03", type = "Text", x = 205, y = 25, w = 40, h = 28, text = "©»", font = 22,
+		},{	name="LR_TeamGrid_UI_SysTeamPan", type = "CheckBox", text = _L["Enable System Team Panel"], x = 225, y = 25, w = 200,
 			enable = function ()
 				return LR_TeamGrid.bOn and not LR_TeamGrid.UsrData.CommonSettings.bShowOnlyInRaidMode
 			end,
@@ -65,6 +65,23 @@ local LR_TeamGrid_UI ={
 				LR_TeamGrid.SwitchSystemTeamPanel()
 				LR_TeamGrid.SaveCommonData()
 			end
+		},{	name="LR_TeamGrid_UI_GridType", type = "ComboBox", text = _L["Choose GridType"],x = 360, y = 0, w = 140,
+			enable = function ()
+				return LR_TeamGrid.bOn
+			end,
+			callback = function (m)
+				local szOption = {_L["1Row(5Col)"], _L["2Row(3Col+2Col)"]}
+				for k, v in pairs(szOption) do
+					m[#m + 1] = {szOption = v, bCheck = true, bMCheck = true, bChecked = function() return LR_TeamGrid.UsrData.CommonSettings.nGridType == k end,
+						fnAction = function()
+							LR_TeamGrid.UsrData.CommonSettings.nGridType = k
+							LR_TeamGrid.SaveCommonData()
+							LR_TeamGrid.ReDrawAllMembers(true)
+						end,
+					}
+				end
+				PopupMenu(m)
+			end,
 		},{	name="LR_TeamGrid_UI_ChooseUI",type="ComboBox",text=_L["Choose UI"],x=0,y=60,w=180,
 			enable = function ()
 				return LR_TeamGrid.bOn
@@ -74,6 +91,7 @@ local LR_TeamGrid_UI ={
 				for k, v in pairs (LR_TeamGrid.UIList) do
 					m[#m+1] = {szOption = v.cnName, bCheck = true, bMCheck = true, bChecked = function() return LR_TeamGrid.UsrData.UI_Choose == v.szName end,
 						fnAction = function()
+							LR_TeamBuffMonitor.ClearAllCache()
 							LR_TeamGrid.ClosePanel()
 							LR_TeamGrid.UsrData.UI_Choose = v.szName
 							LR_TeamGrid.SaveCommonData()
@@ -96,7 +114,7 @@ local LR_TeamGrid_UI ={
 				return LR_TeamGrid.bOn
 			end,
 			callback = function()
-				LR.OpenInternetExplorer("http://t.cn/RXityvX",true)
+				OpenBrowser("http://t.cn/RXityvX")
 			end,
 		},{	name="LR_TeamGrid_UI_NameSet",type="ComboBox",x=0,y=90,w=180,text=_L["Team member name settings"],
 			enable = function ()
@@ -382,6 +400,13 @@ local LR_TeamGrid_UI ={
 			end,
 			callback = function()
 				LR_EdgeIndicator_Panel.OpenFrame()
+			end
+		},{	name = "LR_TeamGrid_UI_Buff_tools", type = "Button", x = 140, y = 340, text = _L["Open Buff Tools"], w = 120,
+			enable = function ()
+				return LR_TeamGrid.bOn
+			end,
+			callback = function()
+				LR_TeamBuffTool_Panel:Open()
 			end
 		},{	name="LR_TeamGrid_UI_Reset",type="Button",x=400,y=340,text=_L["Reset settings"],
 			enable = function ()

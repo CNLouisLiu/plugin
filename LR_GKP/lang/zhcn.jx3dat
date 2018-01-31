@@ -109,5 +109,16 @@ data={
 
 	["There is no eligible item.\n"]="没有符合条件的物品。\n",
 
+	--20180129add==
+	["Read"]="（已阅读）",
+	["Have"]="（已拥有）",
+	["Have %d"]="（拥有:%d个）",
+	["Equiped"]="（已装备）",
+	["Last distribute"]="上次分配",
 
+	["Please close last panel.\n"]="请先将上一个分配记录弄完。\n",
+	["Set smalliron boss"]="设置小铁老板",
+	["OneKey to smalliron boss"]="一键分配给小铁老板",
+	["Please set smalliron boss first.\n"]="请先设置小铁老板。\n",
+	["Are you sure to pick up smalliron into bag of smalliron boss?"]="确定要一键分配材料给小铁老板？",
 }

@@ -144,6 +144,24 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 			end,
 		}
 		menu[#menu + 1] = {
+			szOption = _L["OneKey to smalliron boss"],
+			fnAction = function()
+				if LR_GKP_Base.MaterialBoss.dwID == 0 then
+					LR.SysMsg(_L["Please set smalliron boss first.\n"])
+					return
+				else
+					local msg = {
+						szMessage = _L["Are you sure to pick up smalliron into bag of smalliron boss?"],
+						szName = "one key",
+						fnAutoClose = function() return false end,
+						{szOption = _L["Yes"], fnAction = function() LR_GKP_Base.OneKey2SmallIronBoss(dwDoodadID) end, },
+						{szOption = _L["No"], fnAction = function()  end,},
+					}
+					MessageBox(msg)
+				end
+			end,
+		}
+		menu[#menu + 1] = {
 			szOption = _L["OneKey to equipment boss"],
 			fnAction = function()
 				if LR_GKP_Base.EquipmentBoss.dwID == 0 then
@@ -184,6 +202,28 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 				end,
 			}
 		end
+		--小铁老板设置
+		menu[#menu + 1] = {
+			szOption = _L["Set smalliron boss"],
+		}
+		local m = menu[#menu]
+		for k, v in pairs(memberList) do
+			local szIcon, nFrame = GetForceImage(v.dwForceID)
+			m[#m + 1] = {
+				szOption = v.szName,
+				bCheck = true,
+				bMCheck = true,
+				bChecked = function() return LR_GKP_Base.SmallIronBoss.dwID == v.dwID end,
+				rgb = { LR.GetMenPaiColor(v.dwForceID) },
+				szIcon = szIcon,
+				nFrame = nFrame,
+				szLayer = "ICON_RIGHT",
+				fnAction = function()
+					LR_GKP_Base.SmallIronBoss = {dwID = v.dwID, szName = v.szName, dwForceID = v.dwForceID}
+				end,
+			}
+		end
+		--散件老板
 		menu[#menu + 1] = {
 			szOption = _L["Set equipment boss"],
 		}
@@ -267,6 +307,33 @@ function LR_GKP_Loot:LoadItemBox(dwDoodadID, items)
 				if sfind(v.szName, v2) then
 					Text_Item_Name:SetFontColor(LR.GetMenPaiColor(k2))
 				end
+			end
+		end
+
+		local Text_Desc = LR.AppendUI("Text", Handle_Item, "Text_Desc_".. k, {w = 215, h = 56, x = 0, y = 0, eventid = 0, font = 8, text = ""})
+		Text_Desc:SetHAlign(2)
+		Text_Desc:SetVAlign(2)
+		if v.nGenre == ITEM_GENRE.BOOK then
+			local nBookID, nSegID = GlobelRecipeID2BookID(v.nBookID)
+			if GetClientPlayer().IsBookMemorized(nBookID, nSegID) then
+				Text_Desc:SetText(_L["Read"])
+				Text_Desc:Show()
+			end
+		elseif v.nGenre == ITEM_GENRE.EQUIPMENT then
+			local num = LR.GetItemNumInBagAndBank(v.dwTabType, v.dwIndex, v.nBookID)
+			if num > 0 then
+				Text_Desc:SetText(_L["Have"])
+				Text_Desc:Show()
+			end
+			if LR_GKP_Base.CheckIsEquipmentEquiped(sformat("%d_%d", v.dwTabType, v.dwIndex)) then
+				Text_Desc:SetText(_L["Equiped"])
+				Text_Desc:Show()
+			end
+		elseif LR_GKP_Base.smallIron[sformat("%d_%d", v.dwTabType, v.dwIndex)] then
+			local num = LR.GetItemNumInBagAndBank(v.dwTabType, v.dwIndex, v.nBookID)
+			if num > 0 then
+				Text_Desc:SetText(sformat(_L["Have %d"], num))
+				Text_Desc:Show()
 			end
 		end
 
@@ -409,7 +476,7 @@ function LR_GKP_Distribute_Panel:OnCreate()
 	this:RegisterEvent("UI_SCALED")
 
 	LR_GKP_Distribute_Panel.UpdateAnchor(this)
-	RegisterGlobalEsc("LR_GKP_Panel", function () return true end , function() LR_GKP_Distribute_Panel:Open() end)
+	RegisterGlobalEsc("LR_GKP_Panel", function () return true end , function() LR_GKP_Distribute_Panel:Close() end)
 end
 
 function LR_GKP_Distribute_Panel:OnEvents(event)
@@ -546,7 +613,7 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 		fn3()
 	end
 	Edit_ItemName.OnKillFocus = function()
-		LR.DelayCall(100, function()
+		LR.DelayCall(350, function()
 			if IsPopupMenuOpened() then
 				Wnd.CloseWindow(GetPopupMenu())
 			end
@@ -615,7 +682,7 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 		fn4()
 	end
 	Edit_Money.OnKillFocus = function()
-		LR.DelayCall(100, function()
+		LR.DelayCall(350, function()
 			if IsPopupMenuOpened() then
 				Wnd.CloseWindow(GetPopupMenu())
 			end
@@ -653,14 +720,14 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 			data[#data + 1] = {type = "text", text = sformat(_L["for %d Gold dis to"], LR_GKP_Distribute_Panel.data.nGold)}
 			data[#data + 1] = {type = "name", name = LR_GKP_Distribute_Panel.data.szPurchaserName}
 			GetClientPlayer().Talk(PLAYER_TALK_CHANNEL.RAID, "", data)
-			self:Open()
+			self:Close()
 		end
 	end
 
 	local Btn_Close = frame:Lookup("Btn_Close")
 	Btn_Close.OnLButtonClick = function()
 		if item.bManual then
-			self:Open()
+			self:Close()
 		else
 			if next(LR_GKP_Base.GKP_Bill or {}) == nil then
 				LR_GKP_Panel:CheckBill()
@@ -692,7 +759,7 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 				data[#data + 1] = {type = "name", name = LR_GKP_Distribute_Panel.data.szPurchaserName}
 				GetClientPlayer().Talk(PLAYER_TALK_CHANNEL.RAID, "", data)
 
-				self:Open()
+				self:Close()
 			end
 		end
 	end
@@ -701,10 +768,18 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 	LR.AppendAbout(LR_GKP_Panel, frame)
 end
 
-function LR_GKP_Distribute_Panel:Open(item, player, bModify)
+function LR_GKP_Distribute_Panel:Close()
 	local frame = self:Fetch("LR_GKP_Distribute_Panel")
 	if frame then
 		self:Destroy(frame)
+	end
+end
+
+
+function LR_GKP_Distribute_Panel:Open(item, player, bModify)
+	local frame = self:Fetch("LR_GKP_Distribute_Panel")
+	if frame then
+		LR.SysMsg(_L["Please close last panel.\n"])
 	else
 		local me = GetClientPlayer()
 		if not (me.IsInParty() or me.IsInRaid()) then
@@ -742,25 +817,38 @@ function LR_GKP_Distribute_Panel:GetLootMenu(item)
 	else
 		looterList = LR_GKP_Base.GetLooterList(item.nBelongDoodadID)
 	end
+	if LR_GKP_Base.Last_Trade[sformat("%d_%d", item.dwTabType, item.dwIndex)] then
+		tinsert(looterList, 1, "")
+		tinsert(looterList, 1, LR_GKP_Base.Last_Trade[sformat("%d_%d", item.dwTabType, item.dwIndex)])
+		tinsert(looterList, 1, _L["Last distribute"])
+	end
 	for k, v in pairs (looterList) do
-		local szIcon, nFrame = GetForceImage(v.dwForceID)
-		menu[#menu + 1] = {
-			szOption = v.szName,
-			bDisable = not v.bOnlineFlag,
-			rgb = { LR.GetMenPaiColor(v.dwForceID) },
-			szIcon = szIcon,
-			nFrame = nFrame,
-			szLayer = "ICON_RIGHT",
-			fnAction = function()
-				local ComboBox_Purchaser = self:Fetch("ComboBox_Purchaser")
-				if ComboBox_Purchaser then
-					ComboBox_Purchaser:SetText(v.szName)
-				end
-				LR_GKP_Distribute_Panel.data.szPurchaserName = v.szName
-				LR_GKP_Distribute_Panel.data.dwPurchaserForceID = v.dwForceID
-				LR_GKP_Distribute_Panel.data.dwPurchaserID = v.dwID
-			end,
-		}
+		if type(v) == "table" then
+			local szIcon, nFrame = GetForceImage(v.dwForceID)
+			menu[#menu + 1] = {
+				szOption = v.szName,
+				bDisable = not v.bOnlineFlag,
+				rgb = { LR.GetMenPaiColor(v.dwForceID) },
+				szIcon = szIcon,
+				nFrame = nFrame,
+				szLayer = "ICON_RIGHT",
+				fnAction = function()
+					local ComboBox_Purchaser = self:Fetch("ComboBox_Purchaser")
+					if ComboBox_Purchaser then
+						ComboBox_Purchaser:SetText(v.szName)
+					end
+					LR_GKP_Distribute_Panel.data.szPurchaserName = v.szName
+					LR_GKP_Distribute_Panel.data.dwPurchaserForceID = v.dwForceID
+					LR_GKP_Distribute_Panel.data.dwPurchaserID = v.dwID
+				end,
+			}
+		else
+			if v == "" then
+				menu[#menu + 1] = {bDevide = true}
+			else
+				menu[#menu + 1] = {szOption = v, bDisable = true}
+			end
+		end
 	end
 	return menu
 end
@@ -815,68 +903,80 @@ function LR_GKP_Loot.GetLootMenu(item)
 	menu[#menu + 1] = {szOption = item.szName, bDisable = true,}
 	menu[#menu + 1] = {bDevide = true}
 	local looterList = LR_GKP_Base.GetLooterList(item.nBelongDoodadID)
+	if LR_GKP_Base.Last_Trade[sformat("%d_%d", item.dwTabType, item.dwIndex)] then
+		tinsert(looterList, 1, "")
+		tinsert(looterList, 1, LR_GKP_Base.Last_Trade[sformat("%d_%d", item.dwTabType, item.dwIndex)])
+		tinsert(looterList, 1, _L["Last distribute"])
+	end
+
 	for k, v in pairs (looterList) do
-		local szIcon, nFrame = GetForceImage(v.dwForceID)
-		menu[#menu + 1] = {
-			szOption = v.szName,
-			bDisable = not v.bOnlineFlag,
-			rgb = { LR.GetMenPaiColor(v.dwForceID) },
-			szIcon = szIcon,
-			nFrame = nFrame,
-			szLayer = "ICON_RIGHT",
-			fnAction = function()
-				if next(LR_GKP_Base.GKP_Bill or {}) == nil then
-					LR_GKP_Panel:CheckBill()
-				else
-					local Distribute_Frame = Station.Lookup("Normal/LR_GKP_Distribute_Panel")
-					if Distribute_Frame then
-						LR.SysMsg(_L["You should distribute other item first.\n"])
-						return
-					end
-					local doodad = GetDoodad(item.nBelongDoodadID)
-					if doodad then
-						local item2 = doodad.GetLootItem(item.nIndex, GetClientPlayer())
-						if item2 and item2.dwID == item.dwID then
-							if item2.nQuality >= 3 then
-								local msg =
-								{
-									szMessage = FormatLinkString(
-										g_tStrings.PARTY_DISTRIBUTE_ITEM_SURE,
-										"font=162",
-										GetFormatText("["..GetItemNameByItem(item2).."]", "166"..GetItemFontColorByQuality(item2.nQuality, true)),
-										GetFormatText("["..v.szName.."]", 162)
-										),
-									szName = "Distribute_Item_Sure" .. item2.dwID,
-									bRichText = true,
-									{szOption = g_tStrings.STR_HOTKEY_SURE,
-										fnAction = function()
-											local doodad = GetDoodad(item.nBelongDoodadID)
-											if doodad then
-												if LR_GKP_Base.DistributeItem(item, v) then
-													LR_GKP_Distribute_Panel:Open(item, v)
+		if type(v) ~= "table" then
+			if v == "" then
+				menu[#menu + 1] = {bDevide = true}
+			else
+				menu[#menu + 1] = {szOption = v, bDisable = true}
+			end
+		else
+			local szIcon, nFrame = GetForceImage(v.dwForceID)
+			menu[#menu + 1] = {
+				szOption = v.szName,
+				bDisable = not v.bOnlineFlag,
+				rgb = { LR.GetMenPaiColor(v.dwForceID) },
+				szIcon = szIcon,
+				nFrame = nFrame,
+				szLayer = "ICON_RIGHT",
+				fnAction = function()
+					if next(LR_GKP_Base.GKP_Bill or {}) == nil then
+						LR_GKP_Panel:CheckBill()
+					else
+						local Distribute_Frame = Station.Lookup("Normal/LR_GKP_Distribute_Panel")
+						if Distribute_Frame then
+							LR.SysMsg(_L["You should distribute other item first.\n"])
+							return
+						end
+						local doodad = GetDoodad(item.nBelongDoodadID)
+						if doodad then
+							local item2 = doodad.GetLootItem(item.nIndex, GetClientPlayer())
+							if item2 and item2.dwID == item.dwID then
+								if item2.nQuality >= 3 then
+									local msg =
+									{
+										szMessage = FormatLinkString(
+											g_tStrings.PARTY_DISTRIBUTE_ITEM_SURE,
+											"font=162",
+											GetFormatText("["..GetItemNameByItem(item2).."]", "166"..GetItemFontColorByQuality(item2.nQuality, true)),
+											GetFormatText("["..v.szName.."]", 162)
+											),
+										szName = "Distribute_Item_Sure" .. item2.dwID,
+										bRichText = true,
+										{szOption = g_tStrings.STR_HOTKEY_SURE,
+											fnAction = function()
+												local doodad = GetDoodad(item.nBelongDoodadID)
+												if doodad then
+													if LR_GKP_Base.DistributeItem(item, v) then
+														LR_GKP_Distribute_Panel:Open(item, v)
+													end
 												end
-												--LR_GKP_Loot.DistributeItem(v, item)
 											end
-										end
-									},
-									{szOption = g_tStrings.STR_HOTKEY_CANCEL},
-								}
-								MessageBox(msg)
-							else
-								if LR_GKP_Base.DistributeItem(item, v) then
-									LR_GKP_Distribute_Panel:Open(item, v)
+										},
+										{szOption = g_tStrings.STR_HOTKEY_CANCEL},
+									}
+									MessageBox(msg)
+								else
+									if LR_GKP_Base.DistributeItem(item, v) then
+										LR_GKP_Distribute_Panel:Open(item, v)
+									end
 								end
-								--LR_GKP_Loot.DistributeItem(v, item)
+							else
+								LR.SysMsg("Item error, please pick again.\n")
 							end
 						else
-							LR.SysMsg("Item error, please pick again.\n")
+							LR.SysMsg("Doodad error, please check.\n")
 						end
-					else
-						LR.SysMsg("Doodad error, please check.\n")
 					end
-				end
-			end,
-		}
+				end,
+			}
+		end
 	end
 	return menu
 end
@@ -972,8 +1072,8 @@ end
 function LR_GKP_Loot.Test(n)
 	local items = {}
 	local me = GetClientPlayer()
-	for i = 1, n do
-		local item = me.GetItem(2, i)
+	for i = 0, n - 1 do
+		local item = me.GetItem(1, i)
 			local data = LR_GKP_Base.GetItemData(item)
 			items[#items + 1] = clone(data)
 	end

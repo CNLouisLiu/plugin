@@ -190,4 +190,42 @@ data={
 			height = 10,
 		},
 	},
+
+	--”Ô“Ù◊¥Ã¨
+	micStatus = {
+		["MicOpen"] = {
+			top = 22,
+			left = 22,
+			width = 30,
+			height = 24,
+		},
+		["MicDisable"] = {
+			top = 18,
+			left = 17,
+			width = 14,
+			height = 14,
+		},
+	},
+
+	--Ãÿ ‚BUFF
+	specialBuff = {
+		["Handle"] = {
+			top = 0,
+			left = 0,
+			width = 120,
+			height = 80,
+		},
+		["Bg"] = {
+			top = 0,
+			left = 0,
+			width = 120,
+			height = 80,
+		},
+		["BuffBox"] = {
+			top = 43,
+			left = 0,
+			width = 40,
+			height = 40,
+		},
+	},
 }

@@ -17,7 +17,22 @@ local OPERATION_TYPE = {
 	SYNC = 4,
 }
 
-
+local tEquipPos = {
+	{position = EQUIPMENT_INVENTORY.BANGLE, name = "BANGLE", frameid = 60, }, -- 护臂
+	{position = EQUIPMENT_INVENTORY.CHEST, name = "CHEST", frameid = 62, }, -- 上衣
+	{position = EQUIPMENT_INVENTORY.WAIST, name = "WAIST", frameid = 69, }, -- 腰带
+	{position = EQUIPMENT_INVENTORY.HELM, name = "HELM", frameid = 63, }, -- 头部
+	{position = EQUIPMENT_INVENTORY.PANTS, name = "PANTS", frameid = 65, }, -- 裤子
+	{position = EQUIPMENT_INVENTORY.BOOTS, name = "BOOTS", frameid = 67, }, -- 鞋子
+	{position = EQUIPMENT_INVENTORY.AMULET, name = "AMULET", frameid = 66, }, -- 项链
+	{position = EQUIPMENT_INVENTORY.LEFT_RING, name = "LEFT_RING", frameid = 61, }, -- 左手戒指
+	{position = EQUIPMENT_INVENTORY.RIGHT_RING, name = "RIGHT_RING", frameid = 61, }, -- 右手戒指
+	{position = EQUIPMENT_INVENTORY.PENDANT, name = "PENDANT", frameid = 57, }, -- 腰缀
+	{position = EQUIPMENT_INVENTORY.MELEE_WEAPON, name = "MELEE_WEAPON", frameid = 64, }, -- 普通近战武器
+	{position = EQUIPMENT_INVENTORY.RANGE_WEAPON, name = "RANGE_WEAPON", frameid = 58, }, -- 远程武器
+	{position = EQUIPMENT_INVENTORY.ARROW, name = "ARROW", frameid = 59, }, -- 暗器
+	{position = EQUIPMENT_INVENTORY.BIG_SWORD, name = "BIG_SWORD", frameid = 77, }, -- 重剑
+}
 ---------------------------------------------------------------
 LR_GKP_Base = {}
 local DefaultData = {
@@ -28,6 +43,12 @@ LR_GKP_Base.UsrData = clone(DefaultData)
 RegisterCustomData("LR_GKP_Base.UsrData", CustomVersion)
 
 LR_GKP_Base.material = LoadLUAData(sformat("%s\\Script\\material", AddonPath)) or {}
+LR_GKP_Base.smallIron = {
+	["5_6629"] = true,
+	["5_10359"] = true,
+	["5_19283"] = true,
+	["5_25829"] = true,
+}
 
 LR_GKP_Base.GKP_Bill = {}	--GKP记录的账单号信息
 LR_GKP_Base.GKP_TradeList = {}	--GKP的记录内容
@@ -36,6 +57,9 @@ LR_GKP_Base.GKP_Person_Debt = {}		--个人欠账
 LR_GKP_Base.GKP_Person_Cash = {}		--个人交易金钱记录--数据库 + 缓存
 LR_GKP_Base.GKP_Person_Cash_Temp = {}	--个人交易记录缓存
 
+LR_GKP_Base.Last_Trade = {} --记录物品上一次的购买者
+
+LR_GKP_Base.SmallIronBoss = {dwID = 0, szName = "0", dwForceID = 0}
 LR_GKP_Base.MaterialBoss = {dwID = 0, szName = "0", dwForceID = 0}
 LR_GKP_Base.EquipmentBoss = {dwID = 0, szName = "0", dwForceID = 0}
 
@@ -95,7 +119,47 @@ function LR_GKP_Base.CheckBillExist()
 	end
 end
 
+------------------
+--检测是否装备
+function LR_GKP_Base.GetSuitIndex(nLogicIndex)
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local nSuitIndex = me.GetEquipIDArray(nLogicIndex)
+	local dwBox
+	if nLogicIndex == 0 then
+		dwBox = INVENTORY_INDEX.EQUIP
+	else
+		dwBox = INVENTORY_INDEX[sformat("EQUIP_BACKUP%d", nLogicIndex)]
+	end
+	return nSuitIndex, dwBox
+end
 
+function LR_GKP_Base.CheckIsEquipmentEquiped(szKey)
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local EQUIPMENT_SUIT_COUNT = 4
+	for i = 0, EQUIPMENT_SUIT_COUNT - 1 do
+		local nSuitIndex , dwBox = LR_GKP_Base.GetSuitIndex(i)
+		for k = 1, #tEquipPos, 1 do
+			local nType = tEquipPos[k].position
+			local item = GetPlayerItem(me, dwBox, nType)
+			if item then
+				local key = sformat("%d_%d", item.dwTabType, item.dwIndex)
+				if key == szKey then
+					return true
+				end
+			end
+		end
+	end
+	return false
+end
+
+--------------------
+--物品数据
 function LR_GKP_Base.GetItemData(item)
 	local data = {}
 	data.dwID = item.dwID or 0
@@ -307,7 +371,6 @@ function LR_GKP_Base.CheckPlayerStatus(player, dwDoodadID)
 	return true
 end
 
-
 function LR_GKP_Base.DistributeItem(item, player)
 	local me = GetClientPlayer()
 	if not me then
@@ -329,6 +392,13 @@ function LR_GKP_Base.DistributeItem(item, player)
 	if not LR_GKP_Base.CheckPlayerStatus(player, item.nBelongDoodadID) then
 		return false
 	end
+	local frame = LR_GKP_Distribute_Panel:Fetch("LR_GKP_Distribute_Panel")
+	if frame then
+		LR.SysMsg("Please close last panel.\n")
+		return false
+	end
+
+	LR_GKP_Base.Last_Trade[sformat("%d_%d", item.dwTabType, item.dwIndex)] = clone(player)
 	doodad.DistributeItem(item.dwID, player.dwID)
 	return true
 	--LR_GKP_Distribute_Panel:Open(item, player)
@@ -421,6 +491,42 @@ function LR_GKP_Base.OneKey2MaterialBoss(dwDoodadID)
 	for k, item in pairs(data) do
 		local szKey = sformat("%d_%d", item.dwTabType, item.dwIndex)
 		if LR_GKP_Base.material[szKey] then
+			item.szPurchaserName = LR_GKP_Base.MaterialBoss.szName
+			item.dwPurchaserForceID = LR_GKP_Base.MaterialBoss.dwForceID
+			item.dwPurchaserID = LR_GKP_Base.MaterialBoss.dwID
+			data2[#data2 + 1] = LR_GKP_Base.ConvertItem2TradeData(item)
+		end
+	end
+	if #data2 == 0 then
+		LR.SysMsg(_L["There is no eligible item.\n"])
+		return
+	end
+	LR_GKP_Base.BatchDistributeItem(data2, player)
+	--LR.SysMsg(_L["Onekey to material boss done!\n"])
+end
+
+function LR_GKP_Base.OneKey2SmallIronBoss(dwDoodadID)
+	if not LR_GKP_Base.CheckIsDistributor(true) then
+		return
+	end
+	if not LR_GKP_Base.CheckBillExist() then
+		return
+	end
+	if not dwDoodadID then
+		return
+	end
+	if LR_GKP_Base.MaterialBoss.dwID == 0 then
+		return
+	end
+	local player = LR_GKP_Base.SmallIronBoss
+	if not LR_GKP_Base.CheckPlayerStatus(player, dwDoodadID) then
+		return
+	end
+	local _, data = LR_GKP_Base.GetItemInDoodad(dwDoodadID)
+	local data2 = {}
+	for k, item in pairs(data) do
+		local szKey = sformat("%d_%d", item.dwTabType, item.dwIndex)
+		if LR_GKP_Base.smallIron[szKey] then
 			item.szPurchaserName = LR_GKP_Base.MaterialBoss.szName
 			item.dwPurchaserForceID = LR_GKP_Base.MaterialBoss.dwForceID
 			item.dwPurchaserID = LR_GKP_Base.MaterialBoss.dwID

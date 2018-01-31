@@ -322,4 +322,10 @@ data={
 	["Show target face"]="显示自己处于目标的位置",
 	["Distance/Face settings"]="距离/面向设置",
 
+	--20180130add--
+	["Balloon style"]="气泡样式",
+	["System type"]="系统样式",
+	["Style 1"]="样式一",
+	["Style 2"]="样式二",
+
 }

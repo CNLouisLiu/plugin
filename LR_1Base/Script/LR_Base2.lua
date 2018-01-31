@@ -662,6 +662,7 @@ function ColorPanel:Init(fnAction,rgb)
 					tUI[v][s] = sha
 					sha.v=v
 					sha.s=s
+
 					sha.OnItemMouseEnter = function()
 						if IsCtrlKeyDown() then
 							return
@@ -671,18 +672,19 @@ function ColorPanel:Init(fnAction,rgb)
 						eEdit_G:SetText(g)
 						eEdit_B:SetText(b)
 
-						COLOR_S=s
-						COLOR_V=v
+						COLOR_S = s
+						COLOR_V = v
 
 						hCSlider_H:UpdateScrollPos(COLOR_HUE)
 						hCSlider_S:UpdateScrollPos(s)
 						hCSlider_V:UpdateScrollPos(v)
 						hShadow:SetColorRGB(r,g,b)
 					end
+
 					sha.OnItemLButtonClick = function()
-						local r=eEdit_R:GetText() or 0
-						local g=eEdit_G:GetText() or 0
-						local b=eEdit_B:GetText() or 0
+						local r = eEdit_R:GetText() or 0
+						local g = eEdit_G:GetText() or 0
+						local b = eEdit_B:GetText() or 0
 						if fnAction then
 							fnAction(r,g,b)
 						end
@@ -907,5 +909,380 @@ function LR.OpenFontPanel(fnAction, font)
 	_FontPanel:Open(fnAction, font)
 end
 
+------------------------------------------------------------------------------
+----人物属性界面
+------------------------------------------------------------------------------
+local _UI = {}
+local _lock = false
+local _lock_user = 0
+infopanel = {}
+
+function infopanel.UpdateAnchor(frame)
+	frame:CorrectPos()
+	frame:SetPoint("CENTER", 0, 0, "CENTER", 0, 0)
+end
+
+function infopanel.OnFrameCreate()
+	this:RegisterEvent("UI_SCALE")
+	infopanel.UpdateAnchor(this)
+end
+
+function infopanel.OnFrameDestroy()
+	_UI = {}
+	_lock = false
+	_lock_user = 0
+end
 
 
+function infopanel.OnLButtonClick()
+	local szName = this:GetName()
+	if szName == "Btn_Close" then
+		infopanel.Close()
+	end
+end
+
+function infopanel.Open()
+	local frame = Station.Lookup("Normal/infopanel")
+	if not frame then
+		infopanel.ini()
+	end
+end
+
+function infopanel.Close()
+	local frame = Station.Lookup("Normal/infopanel")
+	if frame then
+		Wnd.CloseWindow(frame)
+	end
+end
+
+function infopanel.ON_BG_CHANNEL_MSG()
+	local szKey = arg0
+	local nChannel = arg1
+	local dwTalkerID = arg2
+	local szTalkerName = arg3
+	local data = arg4
+
+	if szKey ~= "LR_Infopanel" then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	if dwTalkerID == me.dwID then
+		return
+	end
+	if data[1] == "ASK" and data[2] == me.dwID then
+		infopanel.ON_ASK(dwTalkerID, szTalkerName)
+	elseif data[1] == "ANSWER" and data[2] == me.dwID then
+		infopanel.Update(data[3], data[4])
+	end
+end
+
+function infopanel.ON_ASK(dwTalkerID, szTalkerName)
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local tFenLei, tContent, tTip = CharInfoMore_GetShowValue()
+	local char_infomore = {}
+	local k, flag = 0, true
+	for i = 1, #tContent, 1 do
+		if i > tFenLei[k + 1][2] then
+			flag = true
+			k = k +1
+		end
+		if flag then
+			char_infomore[#char_infomore + 1] = {bText = true, value = tFenLei[k + 1][1],}
+			char_infomore[#char_infomore + 1] = {bDevide = true,}
+			flag = false
+		end
+		char_infomore[#char_infomore + 1] = {}
+		char_infomore[#char_infomore].label = tContent[i][1]
+		char_infomore[#char_infomore].value = tContent[i][2]
+		if me.IsInParty() or me.IsInRaid() then
+			if me.IsPlayerInMyParty(dwTalkerID) then
+				char_infomore[#char_infomore].tip = tTip[tContent[i][3]]
+			end
+		end
+	end
+	local target = nil
+	if me.IsInParty() or me.IsInRaid() then
+		if me.IsPlayerInMyParty(dwTalkerID) then
+			target = PLAYER_TALK_CHANNEL.RAID
+		else
+			target = szTalkerName
+		end
+	else
+		target = szTalkerName
+	end
+	if target then
+		LR.BgTalk(target, "LR_Infopanel", "ANSWER", dwTalkerID, "BEGIN", {dwID = me.dwID, dwForceID = me.dwForceID, szName = me.szName})
+		for k, v in pairs(char_infomore) do
+			LR.BgTalk(target, "LR_Infopanel", "ANSWER", dwTalkerID, char_infomore[k], {dwID = me.dwID, dwForceID = me.dwForceID, szName = me.szName})
+		end
+		LR.BgTalk(target, "LR_Infopanel", "ANSWER", dwTalkerID, "END", {dwID = me.dwID, dwForceID = me.dwForceID, szName = me.szName})
+	end
+end
+
+
+function infopanel.ini()
+	local frame = LR.AppendUI("Frame", "infopanel", {title = _L["infopanel"], style = "THIN"})
+
+	local Image_Devide2 = LR.AppendUI("Image", frame, "Image_Devide2", {w = 212, h = 431, x = 11, y = 60})
+	Image_Devide2:FromUITex("ui\\image\\minimap\\mapmark.uitex", 50)
+	Image_Devide2:SetImageType(10)
+
+	_UI = {}
+	_UI["hName"] = LR.AppendUI("Handle", frame, "hName", {x = 20, y = 40, w = 200, h = 30})
+
+	_UI["hScroll"] = LR.AppendUI("Scroll", frame, "Scroll", {x = 23, y = 75, w = 200, h = 400})
+	_UI["hScroll"]:UpdateList()
+
+	----------关于
+	LR.AppendAbout(ColorPanel,frame)
+end
+
+function infopanel.Update(data, tTalkerData)
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+
+	local frame = Station.Lookup("Normal/infopanel")
+	if not frame then
+		return
+	end
+	local _hScroll = _UI["hScroll"]
+	if not _hScroll then
+		return
+	end
+
+	if _lock and _lock_user ~= tTalkerData.dwID then
+		return
+	end
+
+	if type(data) == "table" then
+		local v = data
+		local k = 1
+		if v.bDevide then
+			--
+		elseif v.bText then
+			--Output(v)
+			local handle = LR.AppendUI("Handle", _hScroll, sformat("Handle2_%d", k), {w = 210, h = 30})
+			local Image_Divide = LR.AppendUI("Image", handle, sformat("Image2_Divide_%d", k), {x = 0, y = 0, w = 190, h = 30})
+			Image_Divide:SetAlpha(180)
+			Image_Divide:FromUITex("ui\\Image\\uicommon\\commonpanel2.UITex", 14)
+			local Text = LR.AppendUI("Text", handle, sformat("Text2_%d", k), {x = 5, y = 0, w = 210, h = 30, text = v.value})
+			Text:SetVAlign(1)
+			Text:SetFontScheme(27)
+		else
+			--Output(v)
+			local handle = LR.AppendUI("Handle", _hScroll, sformat("Handle2_%d", k), {w = 210, h = 25})
+			local Text_Label = LR.AppendUI("Text", handle, sformat("Text2_Label_%d", k), {x = 5, y = 0, w = 125, h = 25, text = v.label})
+			local Text_Value = LR.AppendUI("Text", handle, sformat("Text2_Value_%d", k), {x = 120 , y = 0, w = 80, h = 25, text = v.value})
+			handle.OnEnter = function()
+				if v.tip then
+					local x, y = this:GetAbsPos()
+					local w, h = this:GetSize()
+					OutputTip(v.tip, 720, {x, y, w, h})
+				end
+			end
+			handle.OnLeave = function()
+				HideTip()
+			end
+		end
+		_hScroll:UpdateList()
+	elseif data == "BEGIN" then
+		if not _lock then
+			_lock = true
+			_lock_user = tTalkerData.dwID
+			_hScroll:ClearHandle()
+			_hScroll:UpdateList()
+			local _hName = _UI["hName"]
+			if not _hName then
+				return
+			end
+			local dwForceID, szName = tTalkerData.dwForceID, tTalkerData.szName
+			if dwForceID and szName then
+				_hName:Clear()
+				local szPath, nFrame = GetForceImage(dwForceID)
+				local image_role = LR.AppendUI("Image", _hName, "Image_Role", {x = 0, y = 0, w = 30, h = 30 , image = szPath , frame =  nFrame })
+				local Text_role = LR.AppendUI("Text", _hName, "Text_Role", {x = 35, y = 0, w = 200, h = 30 , font = 2})
+				Text_role:SetText(szName)
+				Text_role:SetVAlign(1)
+				Text_role:SetHAlign(0)
+				local r, g, b = LR.GetMenPaiColor(dwForceID)
+				Text_role:SetFontColor(r, g, b)
+				_hName:FormatAllItemPos()
+			end
+		end
+	elseif data == "END" then
+		if _lock and _lock_user == tTalkerData.dwID then
+			_lock = false
+			_lock_user = 0
+		end
+	end
+end
+
+function LR.ViewCharInfoToPlayer(dwID)
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local target = nil
+	if me.IsInParty() or me.IsInRaid() then
+		if me.IsPlayerInMyParty(dwID) then
+			local team = GetClientTeam()
+			local memberInfo = team.GetMemberInfo(dwID)
+			target = memberInfo.szName
+		else
+			local player = GetPlayer(dwID)
+			if player then
+				target = player.szName
+			end
+		end
+	else
+		local player = GetPlayer(dwID)
+		if player then
+			target = player.szName
+		end
+	end
+	if target then
+		infopanel.Open()
+		LR.BgTalk(target, "LR_Infopanel", "ASK", dwID)
+	end
+end
+
+Target_AppendAddonMenu({ function(dwID, dwType)
+	if dwType == TARGET.PLAYER and dwID ~= UI_GetClientPlayerID() then
+		return {{szOption = _L["View attribute"], fnAction = function() LR.ViewCharInfoToPlayer(dwID) end,}}
+	else
+		return {}
+	end
+end })
+
+LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() infopanel.ON_BG_CHANNEL_MSG() end)
+
+----------------------------------------------------------
+----团队告示
+----------------------------------------------------------
+local notice_ui = {}
+teamnotice = {}
+teamnotice.temp = ""
+teamnotice.Anchor = {}
+function teamnotice.UpdateAnchor(frame)
+	frame:CorrectPos()
+	if next(teamnotice.Anchor) == nil then
+		frame:SetPoint("CENTER", 0, 0, "CENTER", 0, 0)
+	else
+		frame:SetAbsPos(teamnotice.Anchor.nX, teamnotice.Anchor.nY)
+	end
+end
+
+function teamnotice.OnFrameCreate()
+	this:RegisterEvent("UI_SCALE")
+	teamnotice.UpdateAnchor(this)
+end
+
+function teamnotice.OnFrameDestroy()
+	notice_ui = {}
+end
+
+function teamnotice.OnFrameDragEnd()
+	local nX, nY = this:GetAbsPos()
+	teamnotice.Anchor = {nX = nX, nY = nY}
+end
+
+function teamnotice.OnLButtonClick()
+	local szName = this:GetName()
+	if szName == "Btn_Close" then
+		teamnotice.Close()
+	end
+end
+
+function teamnotice.ini(data)
+	local frame = LR.AppendUI("Frame", "teamnotice", {title = _L["LR team notice"], path = sformat("%s\\UI\\LR_TeamNotice.ini", AddonPath)})
+
+	notice_ui = {}
+	notice_ui["edit"] = LR.AppendUI("Edit", frame, "Edit", {x = 15, y = 40, w = 265, h = 140})
+	notice_ui["edit"]:Enable(GetClientPlayer().dwID == GetClientTeam().GetAuthorityInfo(TEAM_AUTHORITY_TYPE.LEADER))
+	notice_ui["edit"]:SetMultiLine(true)
+	notice_ui["edit"]:SetFontScheme(3)
+	notice_ui["edit"]:SetLimit(-1)
+	teamnotice.UpdateEdit(data or "")
+
+	notice_ui["edit"].OnChange = function(arg0)
+		local me = GetClientPlayer()
+		if not me then
+			return
+		end
+		if not (me.IsInParty() or me.IsInRaid()) then
+			return
+		end
+		local team = GetClientTeam()
+		if me.dwID ~= team.GetAuthorityInfo(TEAM_AUTHORITY_TYPE.LEADER) then
+			return
+		end
+		teamnotice.temp = arg0
+		LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_TeamNotice", arg0)
+	end
+
+	----------关于
+	LR.AppendAbout(ColorPanel,frame)
+end
+
+function teamnotice.UpdateEdit(data)
+	local frame = Station.Lookup("Normal/teamnotice")
+	if not frame then
+		return
+	end
+	if notice_ui["edit"] then
+		notice_ui["edit"]:SetText(data)
+		teamnotice.temp = data
+	end
+end
+
+function teamnotice.Open()
+	local frame = Station.Lookup("Normal/teamnotice")
+	if not frame then
+		teamnotice.ini(teamnotice.temp)
+	else
+		teamnotice.Close()
+	end
+end
+
+function teamnotice.Close()
+	local frame = Station.Lookup("Normal/teamnotice")
+	if frame then
+		Wnd.CloseWindow(frame)
+	end
+end
+
+function teamnotice.ON_BG_CHANNEL_MSG()
+	local szKey = arg0
+	local nChannel = arg1
+	local dwTalkerID = arg2
+	local szTalkerName = arg3
+	local data = arg4
+	if szKey ~= "LR_TeamNotice" then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	if dwTalkerID == me.dwID then
+		return
+	end
+	local frame = Station.Lookup("Normal/teamnotice")
+	if not frame then
+		teamnotice.Open()
+		teamnotice.UpdateEdit(data[1])
+	else
+		teamnotice.UpdateEdit(data[1])
+	end
+
+end
+LR.OpenTeamNoticePanel = teamnotice.Open
+LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() teamnotice.ON_BG_CHANNEL_MSG() end)

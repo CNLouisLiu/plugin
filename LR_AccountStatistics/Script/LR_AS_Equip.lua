@@ -33,7 +33,7 @@ LR_AccountStatistics_Equip.tEquipPos = {
 	{position = EQUIPMENT_INVENTORY.BIG_SWORD, name = "BIG_SWORD", frameid = 77, }, -- ÖØ½£
 }
 
-function LR_AccountStatistics_Equip.GetSuitIndex (nLogicIndex)
+function LR_AccountStatistics_Equip.GetSuitIndex(nLogicIndex)
 	local player = GetClientPlayer()
 	if not player then
 		return
@@ -60,7 +60,7 @@ function LR_AccountStatistics_Equip.GetAllEquipBox() -- update boxes
 	local SelfData = LR_AccountStatistics_Equip.SelfData
 	local EQUIPMENT_SUIT_COUNT = 4
 	for i = 0, EQUIPMENT_SUIT_COUNT - 1 do
-		local nSuitIndex , dwBox = LR_AccountStatistics_Equip.GetSuitIndex (i)
+		local nSuitIndex , dwBox = LR_AccountStatistics_Equip.GetSuitIndex(i)
 		SelfData[tostring(nSuitIndex)] = SelfData[tostring(nSuitIndex)] or {}
 		local Suits = {}
 		for k = 1, #LR_AccountStatistics_Equip.tEquipPos, 1 do
@@ -112,16 +112,16 @@ function LR_AccountStatistics_Equip.GetEquipScore()
 
 	local tFenLei, tContent, tTip = CharInfoMore_GetShowValue()
 	local char_infomore = {}
-	local k, flag = 1, true
+	local k, flag = 0, true
 	for i = 1, #tContent, 1 do
-		if flag then
-			char_infomore[#char_infomore + 1] = {bText = true, value = tFenLei[k][1],}
-			char_infomore[#char_infomore + 1] = {bDevide = true,}
-			flag = false
-		end
-		if i > tFenLei[k][2] then
+		if i > tFenLei[k + 1][2] then
 			flag = true
 			k = k +1
+		end
+		if flag then
+			char_infomore[#char_infomore + 1] = {bText = true, value = tFenLei[k + 1][1],}
+			char_infomore[#char_infomore + 1] = {bDevide = true,}
+			flag = false
 		end
 		char_infomore[#char_infomore + 1] = {}
 		char_infomore[#char_infomore].label = tContent[i][1]
@@ -516,13 +516,21 @@ function LR_AS_Equip_Panel:LoadCharscore(nIndex)
 	if next(char_infomore) ~= nil then
 		for k, v in pairs(char_infomore or {}) do
 			if v.bDevide then
-				local handle = LR.AppendUI("Handle", hScroll, sformat("Handle2_%d", k), {w = 210, h = 8})
+--[[				local handle = LR.AppendUI("Handle", hScroll, sformat("Handle2_%d", k), {w = 210, h = 8})
 				local Image_Divide = LR.AppendUI("Image", handle, sformat("Image2_Divide_%d", k), {x = 0, y = 0, w = 210, h = 8})
-				Image_Divide:FromUITex("ui\\Image\\uicommon\\commonpanel.UITex", 45)
+				Image_Divide:FromUITex("ui\\Image\\uicommon\\commonpanel.UITex", 45)]]
 			elseif v.bText then
+				local handle = LR.AppendUI("Handle", hScroll, sformat("Handle2_%d", k), {w = 210, h = 30})
+				local Image_Divide = LR.AppendUI("Image", handle, sformat("Image2_Divide_%d", k), {x = 0, y = 0, w = 190, h = 30})
+				Image_Divide:SetAlpha(180)
+				Image_Divide:FromUITex("ui\\Image\\uicommon\\commonpanel2.UITex", 14)
+				local Text = LR.AppendUI("Text", handle, sformat("Text2_%d", k), {x = 5, y = 0, w = 210, h = 30, text = v.value})
+				Text:SetVAlign(1)
+				Text:SetFontScheme(27)
+--[[
 				local handle = LR.AppendUI("Handle", hScroll, sformat("Handle2_%d", k), {w = 210, h = 20})
 				local Text = LR.AppendUI("Text", handle, sformat("Text2_%d", k), {x = 0, y = 0, w = 210, h = 20, text = v.value})
-				Text:SetFontScheme(27)
+				Text:SetFontScheme(27)]]
 			else
 				local handle = LR.AppendUI("Handle", hScroll, sformat("Handle2_%d", k), {w = 210, h = 25})
 				local Text_Label = LR.AppendUI("Text", handle, sformat("Text2_Label_%d", k), {x = 0, y = 0, w = 125, h = 25, text = v.label})

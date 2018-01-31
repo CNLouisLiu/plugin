@@ -317,4 +317,9 @@ data={
 	["Show target distance"]="顯示目標距離",
 	["Show fighting enemy distance"]="顯示戰鬥中敵人的距離",
 
+	["%s (B)"]="%s (背面)",
+	["%s (Z)"]="%s (正面)",
+	["Show target face"]="顯示自己處於目標的位置",
+	["Distance/Face settings"]="距離/面向設置",
+
 }

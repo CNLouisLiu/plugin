@@ -3,17 +3,17 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local AddonPath="Interface\\LR_Plugin\\LR_1Base"
-local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_1Base"
+local AddonPath = "Interface\\LR_Plugin\\LR_1Base"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_1Base"
 ---------------------------------------------------------------
 LR = LR or {
-	tDelayCall={},
-	tEvent={},
-	tBreatheCall={},
+	tDelayCall = {},
+	tEvent = {},
+	tBreatheCall = {},
 }
-LR.UsrData={
-	Debug_enable=true,
-	Debug_Level=1,
+LR.UsrData = {
+	Debug_enable = true,
+	Debug_Level = 1,
 }
 local CustomVersion = "20170111"
 RegisterCustomData("LR.UsrData", CustomVersion)
@@ -38,14 +38,14 @@ function LR.LoadLangPack(szLangFolder)
 	for k, v in pairs(t1) do
 		t0[k] = v
 	end]]
-	if type(szLangFolder)=="string" then
-		--szLangFolder = sgsub(szLangFolder,"[/\\]+$","")
+	if type(szLangFolder) == "string" then
+		--szLangFolder = sgsub(szLangFolder, "[/\\]+$", "")
 		local t2 = LoadLUAData(sformat("%s\\lang\\default", szLangFolder)) or {}
 		for k, v in pairs(t2) do
 			t0[k] = v
 		end
 		--local t3 = LoadLUAData(szLangFolder.."\\lang\\" .. "zhtw") or {}
-		local t3 = LoadLUAData(sformat("%s\\lang\\%s",  szLangFolder, szLang)) or {}
+		local t3 = LoadLUAData(sformat("%s\\lang\\%s", szLangFolder, szLang)) or {}
 		for k, v in pairs(t3) do
 			t0[k] = v
 		end
@@ -346,7 +346,7 @@ end
 ------------------------------------------------------------------
 ---狭义
 function LR.GetSelfXiaYi()
-	local player=GetClientPlayer()
+	local player = GetClientPlayer()
 	if not player then
 		return 0
 	end
@@ -355,7 +355,7 @@ end
 
 ---帮贡
 function LR.GetSelfJiangGong()
-	local player=GetClientPlayer()
+	local player = GetClientPlayer()
 	if not player then
 		return 0
 	end
@@ -365,7 +365,7 @@ end
 
 ----监本
 function LR.GetSelfJianBen()
-	local player=GetClientPlayer()
+	local player = GetClientPlayer()
 	if not player then
 		return 0
 	end
@@ -374,7 +374,7 @@ end
 
 ---威望
 function LR.GetSelfWeiWang()
-	local player=GetClientPlayer()
+	local player = GetClientPlayer()
 	if not player then
 		return 0
 	end
@@ -383,7 +383,7 @@ end
 
 ----战阶积分
 function LR.GetSelfZhanJieJiFen()
-	local player=GetClientPlayer()
+	local player = GetClientPlayer()
 	if not player then
 		return 0
 	end
@@ -392,7 +392,7 @@ end
 
 ----战阶等级
 function LR.GetSelfZhanJieDengJi()
-	local player=GetClientPlayer()
+	local player = GetClientPlayer()
 	if not player then
 		return 0
 	end
@@ -401,7 +401,7 @@ end
 
 ----名剑币
 function LR.GetSelfMingJianBi()
-	local player=GetClientPlayer()
+	local player = GetClientPlayer()
 	if not player then
 		return 0
 	end
@@ -413,16 +413,16 @@ end
 ---------------------------------------------------
 --[[10002 洗髓经 10003 易筋经 10014 紫霞功 10015 太虚剑意 10021 花间游 10026 傲血战意 10028 离经易道 10062 铁牢律 10080 云裳心经 10081 冰心诀 10144 问水决 10145 山居剑意]]
 function LR.GetXinFa(dwSkillID)
-	local me=GetClientPlayer()
+	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 	if dwSkillID then
-		return Table_GetSkillName(dwSkillID,1)
+		return Table_GetSkillName(dwSkillID, 1)
 	else
-		local kungfu=me.GetKungfuMount()
-		local dwSkillID=kungfu.dwSkillID
-		return Table_GetSkillName(dwSkillID,1)
+		local kungfu = me.GetKungfuMount()
+		local dwSkillID = kungfu.dwSkillID
+		return Table_GetSkillName(dwSkillID, 1)
 	end
 end
 
@@ -431,7 +431,7 @@ end
 -------------------------------------------------
 function LR.OpenInternetExplorer(szAddr, bDisableSound)
 	if Login then
-		local _,_,_,szVersionEx = GetVersion()
+		local _, _, _, szVersionEx = GetVersion()
 		if szVersionEx == "snda" then
 			if Login.m_StateLeaveFunction == Login.LeavePassword then
 				Login.ShowSdoaWindows(false)
@@ -474,7 +474,7 @@ function LR.OpenInternetExplorer(szAddr, bDisableSound)
 	end
 	Station.SetFocusWindow(webPage)
 	if not bDisableSound then
-		PlaySound(SOUND.UI_SOUND,g_sound.OpenFrame)
+		PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
 	end
 	return webPage
 end
@@ -514,13 +514,13 @@ end
 ---金钱操作
 --------------------------------------------------------
 function LR.MoneyToGoldSilverAndCopper (nMoney)
-	local nGoldBrick,nGold, nSilver, nCopper = 0, 0, 0, 0
+	local nGoldBrick, nGold, nSilver, nCopper = 0, 0, 0, 0
 	if nMoney >= 0 then
 		nGoldBrick = mfloor(nMoney / 100000000)
 		nGold = mfloor((nMoney- nGoldBrick*100000000 ) / 10000)
 		nSilver = mfloor((nMoney-nGoldBrick*100000000 - nGold*10000)/100)
 		nCopper = mfloor((nMoney - nGoldBrick*100000000 - nGold*10000-nSilver*100)/1)
-		return nGoldBrick,nGold, nSilver, nCopper
+		return nGoldBrick, nGold, nSilver, nCopper
 	else
 		nMoney = - nMoney
 		nGoldBrick = mfloor(nMoney / 100000000)
@@ -563,36 +563,36 @@ end
 --------------------------------------------------------
 ---颜色表
 --------------------------------------------------------
-local DefaltColor= {
-	Version="1.1",
-	Color={
-		KungFuColor={
-			[0]  = {255, 255, 255},		----大侠
-			[1]  = {255, 178, 95},			----少林
-			[2]  = {196, 152, 255},		----万花
-			[3]  = {255, 111, 83},			----天策
-			[4]  = {22, 216, 216},		----纯阳
-			[5]  = {255, 129, 176},		----七秀
-			[6]  = {55, 147, 255},			----五毒
-			[7]  = {121, 183, 54},			----唐门
-			[8]  = {214, 249, 93},			----藏剑
-			[9]  = {205,133,63},			----丐帮
-			[10] = {240, 70, 96},			----明教
-			[21] = {180, 60, 0},		--苍云
-			[22] = {100, 250, 180},	--长歌门
-			[23] = {106 , 108, 189},			----霸刀
+local DefaltColor = {
+	Version = "1.1",
+	Color = {
+		KungFuColor = {
+			[0]  = {255, 255, 255}, 		----大侠
+			[1]  = {255, 178, 95}, 			----少林
+			[2]  = {196, 152, 255}, 		----万花
+			[3]  = {255, 111, 83}, 			----天策
+			[4]  = {22, 216, 216}, 		----纯阳
+			[5]  = {255, 129, 176}, 		----七秀
+			[6]  = {55, 147, 255}, 			----五毒
+			[7]  = {121, 183, 54}, 			----唐门
+			[8]  = {214, 249, 93}, 			----藏剑
+			[9]  = {205, 133, 63}, 			----丐帮
+			[10] = {240, 70, 96}, 			----明教
+			[21] = {180, 60, 0}, 		--苍云
+			[22] = {100, 250, 180}, 	--长歌门
+			[23] = {106 , 108, 189}, 			----霸刀
 		},
-		CampColor={
-			[0] = {128, 255, 128},	--中立
-			[1] = {64, 64, 255},	--浩气
-			[2] = {255, 64, 64},	--恶人
+		CampColor = {
+			[0] = {128, 255, 128}, 	--中立
+			[1] = {64, 64, 255}, 	--浩气
+			[2] = {255, 64, 64}, 	--恶人
 		},
-		RelationColor={
-			["Enemy"] = {},	--敌对
-			["Ally"] = {},	--友好
-			["Neutrality"] = {},	--中立
-			["Party"] = {},	--团队
-			["Self"] = {},	--自己
+		RelationColor = {
+			["Enemy"] = {}, 	--敌对
+			["Ally"] = {}, 	--友好
+			["Neutrality"] = {}, 	--中立
+			["Party"] = {}, 	--团队
+			["Self"] = {}, 	--自己
 		},
 	},
 }
@@ -603,31 +603,31 @@ LR.RelationColor = clone(DefaltColor.Color.RelationColor)
 function LR.GetMenPaiByKungfuID(dwKungfuID)
 	if not dwKungfuID then  ----大侠
 		return 0
-	elseif dwKungfuID==10002 or dwKungfuID==10002 then	----少林
+	elseif dwKungfuID == 10002 or dwKungfuID == 10002 then	----少林
 		return 1
-	elseif dwKungfuID==10021 or dwKungfuID==10028 then	----万花
+	elseif dwKungfuID == 10021 or dwKungfuID == 10028 then	----万花
 		return 2
-	elseif dwKungfuID==10026 or dwKungfuID==10062 then	----天策
+	elseif dwKungfuID == 10026 or dwKungfuID == 10062 then	----天策
 		return 3
-	elseif dwKungfuID==10014 or dwKungfuID==10015 then	----纯阳
+	elseif dwKungfuID == 10014 or dwKungfuID == 10015 then	----纯阳
 		return 4
-	elseif dwKungfuID==10080 or dwKungfuID==10081 then	----七秀
+	elseif dwKungfuID == 10080 or dwKungfuID == 10081 then	----七秀
 		return 5
-	elseif dwKungfuID==10175 or dwKungfuID==10176 then	----五毒
+	elseif dwKungfuID == 10175 or dwKungfuID == 10176 then	----五毒
 		return 6
-	elseif dwKungfuID==10224 or dwKungfuID==10225 then	----唐门
+	elseif dwKungfuID == 10224 or dwKungfuID == 10225 then	----唐门
 		return 7
-	elseif dwKungfuID==10144 or dwKungfuID==10144 then	----藏剑
+	elseif dwKungfuID == 10144 or dwKungfuID == 10144 then	----藏剑
 		return 8
-	elseif dwKungfuID==10268 then	----丐帮
+	elseif dwKungfuID == 10268 then	----丐帮
 		return 9
-	elseif dwKungfuID==10242 or dwKungfuID==10243 then	----明教
+	elseif dwKungfuID == 10242 or dwKungfuID == 10243 then	----明教
 		return 10
-	elseif dwKungfuID==10389 or dwKungfuID==10390 then	----苍云
+	elseif dwKungfuID == 10389 or dwKungfuID == 10390 then	----苍云
 		return 21
-	elseif dwKungfuID==10447 or dwKungfuID==10448 then	----长歌门
+	elseif dwKungfuID == 10447 or dwKungfuID == 10448 then	----长歌门
 		return 22
-	elseif dwKungfuID==10464  then	----霸刀
+	elseif dwKungfuID == 10464  then	----霸刀
 		return 23
 	else
 		return 0
@@ -645,8 +645,8 @@ function LR.ResetMenPaiColor()
 end
 
 function LR.LoadMenPaiColor()
-	local path=sformat("%s\\MenPaiColor.dat",SaveDataPath)
-	local data=LoadLUAData(path) or {}
+	local path = sformat("%s\\MenPaiColor.dat", SaveDataPath)
+	local data = LoadLUAData(path) or {}
 	if data.Version and data.Version == DefaltColor.Version then
 		LR.MenPaiColor = clone(data.Color.KungFuColor)
 	else
@@ -655,38 +655,38 @@ function LR.LoadMenPaiColor()
 end
 
 function LR.SaveMenPaiColor()
-	local path=sformat("%s\\Color.dat",SaveDataPath)
-	local data={}
+	local path = sformat("%s\\Color.dat", SaveDataPath)
+	local data = {}
 	data.Version = DefaltColor.Version
-	data.Color={}
+	data.Color = {}
 	data.Color.KungFuColor = clone (LR.MenPaiColor)
 	data.Color.CampColor = clone (LR.CampColor)
 	data.Color.RelationColor = clone(LR.RelationColor)
-	SaveLUAData(path,data)
+	SaveLUAData(path, data)
 end
 --------------------------------------------------------
 ---bufflist
 --------------------------------------------------------
 function LR.GetBuffList(obj)
 	local aBuffTable = {}
-	if not obj or obj==nil then
+	if not obj or obj == nil then
 		return {}
 	end
-	if obj.dwID==nil then
+	if obj.dwID == nil then
 		return {}
 	end
 	local nCount = obj.GetBuffCount()
-	for i=1,nCount,1 do
+	for i = 1, nCount, 1 do
 		local dwID, nLevel, bCanCancel, nEndFrame, nIndex, nStackNum, dwSkillSrcID, bValid , bIsStackable , nLeftFrame = obj.GetBuff(i - 1)
 		if dwID then
-			tinsert(aBuffTable,{dwID = dwID, nLevel = nLevel, bCanCancel = bCanCancel, nEndFrame = nEndFrame, nIndex = nIndex, nStackNum = nStackNum, dwSkillSrcID = dwSkillSrcID, bValid = bValid , bIsStackable= bIsStackable, nLeftFrame = nLeftFrame})
+			tinsert(aBuffTable, {dwID = dwID, nLevel = nLevel, bCanCancel = bCanCancel, nEndFrame = nEndFrame, nIndex = nIndex, nStackNum = nStackNum, dwSkillSrcID = dwSkillSrcID, bValid = bValid , bIsStackable = bIsStackable, nLeftFrame = nLeftFrame})
 		end
 	end
 	return aBuffTable
 end
 
-function LR.HasBuff (tBuffList,dwBuffID_szName)
-	for i=1,#tBuffList,1 do
+function LR.HasBuff (tBuffList, dwBuffID_szName)
+	for i = 1, #tBuffList, 1 do
 		if tBuffList[i].dwID == dwBuffID_szName or Table_GetBuffName( tBuffList[i].dwID, tBuffList[i].nLevel) == dwBuffID_szName  then
 			return true
 		end
@@ -694,8 +694,8 @@ function LR.HasBuff (tBuffList,dwBuffID_szName)
 	return false
 end
 
-function LR.GetBuffOrderinBuffList(tBuffList,dwBuffID_szName)
-	for i=1,#tBuffList,1 do
+function LR.GetBuffOrderinBuffList(tBuffList, dwBuffID_szName)
+	for i = 1, #tBuffList, 1 do
 		if tBuffList[i].dwID == dwBuffID_szName or Table_GetBuffName( tBuffList[i].dwID, tBuffList[i].nLevel) == dwBuffID_szName  then
 			return i
 		end
@@ -711,6 +711,59 @@ function LR.GetBuffByID(obj, dwID)
 		end
 	end
 	return nil
+end
+
+function LR.OutputBuffTip(dwID, nLevel, Rect, nTime)
+	local t = {}
+
+	t[#t + 1] = GetFormatText(Table_GetBuffName(dwID, nLevel) .. "\t", 65)
+	local buffInfo = GetBuffInfo(dwID, nLevel, {})
+	if buffInfo and buffInfo.nDetachType and g_tStrings.tBuffDetachType[buffInfo.nDetachType] then
+		t[#t + 1] = GetFormatText(g_tStrings.tBuffDetachType[buffInfo.nDetachType] .. '\n', 106)
+	else
+		t[#t + 1] = GetFormatText('\n')
+	end
+
+	local szDesc = GetBuffDesc(dwID, nLevel, "desc")
+	if szDesc then
+		t[#t + 1] = GetFormatText(szDesc .. g_tStrings.STR_FULL_STOP, 106)
+	end
+
+	if nTime then
+		if nTime == 0 then
+			t[#t + 1] = GetFormatText('\n')
+			t[#t + 1] = GetFormatText(g_tStrings.STR_BUFF_H_TIME_ZERO, 102)
+		else
+			local H, M, S = "", "", ""
+			local h = math.floor(nTime / 3600)
+			local m = math.floor(nTime / 60) % 60
+			local s = math.floor(nTime % 60)
+			if h > 0 then
+				H = h .. g_tStrings.STR_BUFF_H_TIME_H .. " "
+			end
+			if h > 0 or m > 0 then
+				M = m .. g_tStrings.STR_BUFF_H_TIME_M_SHORT .. " "
+			end
+			S = s..g_tStrings.STR_BUFF_H_TIME_S
+			if h < 720 then
+				t[#t + 1] = GetFormatText('\n')
+				t[#t + 1] = GetFormatText(FormatString(g_tStrings.STR_BUFF_H_LEFT_TIME_MSG, H, M, S), 102)
+			end
+		end
+	end
+
+	-- For test
+	if IsCtrlKeyDown() then
+		t[#t + 1] = GetFormatText('\n')
+		t[#t + 1] = GetFormatText(g_tStrings.DEBUG_INFO_ITEM_TIP, 102)
+		t[#t + 1] = GetFormatText('\n')
+		t[#t + 1] = GetFormatText("ID:     " .. dwID, 102)
+		t[#t + 1] = GetFormatText('\n')
+		t[#t + 1] = GetFormatText("Level:  " .. nLevel, 102)
+		t[#t + 1] = GetFormatText('\n')
+		t[#t + 1] = GetFormatText("IconID: " .. tostring(Table_GetBuffIconID(dwID, nLevel)), 102)
+	end
+	OutputTip(tconcat(t), 300, Rect)
 end
 
 
@@ -775,7 +828,7 @@ end
 -- nY		-- 世界坐标系下的目标点 Y 值
 -- nZ		-- *可选* 世界坐标系下的目标点 Z 值
 function LR.GetDistance(nX, nY, nZ)
-	local NX,XY,NZ
+	local NX, XY, NZ
 	local me = GetClientPlayer()
 	if not nX then
 		return 0
@@ -826,14 +879,14 @@ end
 --------发布系统消息
 function LR.SysMsg (szText, nType, bRich, nFont, tColor)
 	local nType = nType or "MSG_SYS"
-	OutputMessage(nType,szText, bRich, nFont, tColor)
+	OutputMessage(nType, szText, bRich, nFont, tColor)
 end
 
 function LR.Debug(szText , szHeader , nLevel )
 	if not (LR.UsrData and LR.UsrData.Debug_enable) then
 		return
 	end
-	local szText=szText or ""
+	local szText = szText or ""
 	local nLevel = nLevel or 1
 	local szHeader = szHeader or "-LR-> "
 	if not (nLevel >= LR.UsrData.Debug_Level) then
@@ -845,10 +898,10 @@ function LR.Debug(szText , szHeader , nLevel )
 		LR.SysMsg(sformat("%s%s\n", szHeader, tostring(szText)))
 	elseif type(szText) == "table" then
 		LR.SysMsg(sformat("%s{\n", szHeader))
-		if next(szText)~=nil then
-			for k,v in pairs(szText) do
-				LR.SysMsg(sformat("%s\[%d\]=", szHeader, k))
-				if type(v) == "string" or type(v)=="number" then
+		if next(szText)~= nil then
+			for k, v in pairs(szText) do
+				LR.SysMsg(sformat("%s\[%d\] = ", szHeader, k))
+				if type(v) == "string" or type(v) == "number" then
 					LR.Debug(v , "" , nLevel)
 				elseif type(v) == "table" then
 					LR.Debug(v , szHeader.."    " , nLevel)
@@ -920,7 +973,7 @@ function LR.ParseFaceIcon (t)
 		LR.tFaceIcon = {}
 		for i = 1, g_tTable.FaceIcon:GetRowCount() do
 			local tLine = g_tTable.FaceIcon:GetRow(i)
-			LR.tFaceIcon[tLine.szCommand] = {bTrue=true,dwID=tLine.dwID}
+			LR.tFaceIcon[tLine.szCommand] = {bTrue = true, dwID = tLine.dwID}
 		end
 	end
 	local t2 = {}
@@ -956,7 +1009,7 @@ function LR.ParseFaceIcon (t)
 					nOff = nPos + 1
 				end
 				if szFace then
-					tinsert(t2, { type = "emotion", text = szFace , id= LR.tFaceIcon[szFace].dwID })
+					tinsert(t2, { type = "emotion", text = szFace , id = LR.tFaceIcon[szFace].dwID })
 					nOff = nOff + slen(szFace)
 				end
 			end
@@ -1041,7 +1094,7 @@ function LR.Talk(nChannel, szText, szUUID, bNoEmotion, bSaveDeny, bNotLimit)
 		if wslen(szText) > 150 and not bNotLimit then
 			szText = wssub(szText, 1, 150)
 		end
-		tSay = {{ type = "text", text = sformat("%s\n", szText),}}
+		tSay = {{ type = "text", text = sformat("%s\n", szText), }}
 	end
 	if not bNoEmotion then
 		tSay = LR.ParseFaceIcon(tSay)
@@ -1058,7 +1111,7 @@ function LR.Talk(nChannel, szText, szUUID, bNoEmotion, bSaveDeny, bNotLimit)
 --[[			linkinfo = LR.JsonEncode({
 				via = "LR",
 				uuid = szUUID and tostring(szUUID),
-			}),]]
+			}), ]]
 		})
 	end
 	if bSaveDeny and not LR.CanTalk(nChannel) then
@@ -1151,7 +1204,7 @@ function LR.InitEmotion ()
 			}
 			t[t1.dwID] = t1
 			t[t1.szCmd] = t1
-			t[t1.szImageFile..','..t1.nFrame..','..t1.szType] = t1
+			t[t1.szImageFile..', '..t1.nFrame..', '..t1.szType] = t1
 			LR.nMaxEmotionLen = mmax(LR.nMaxEmotionLen, wslen(t1.szCmd))
 		end
 		LR.tEmotion = t
@@ -1172,7 +1225,7 @@ function LR.GetEmotion (arg0, arg1, arg2)
 		t = LR.tEmotion[arg0]
 	elseif arg2 then
 		arg0 = sgsub(arg0, '\\\\', '\\')
-		t = LR.tEmotion[arg0..','..arg1..','..arg2]
+		t = LR.tEmotion[arg0..', '..arg1..', '..arg2]
 	end
 	return clone(t)
 end
@@ -1187,17 +1240,17 @@ function LR.FormatContent(szMsg)
 
 	local t2 = {}
 	for k, v in pairs(t) do
-		if not sfind(v, "name=") then
-			if sfind(v, "frame=") then
-				local n = smatch(v, "frame=(%d+)")
-				local p = smatch(v, 'path="(.-)"')
+		if not sfind(v, "name = ") then
+			if sfind(v, "frame = ") then
+				local n = smatch(v, "frame = (%d+)")
+				local p = smatch(v, 'path = "(.-)"')
 				local emo = LR.GetEmotion(p, n, 'image')
 				if emo then
 					tinsert(t2, {type = "emotion", text = emo.szCmd, innerText = emo.szCmd, id = emo.dwID})
 				end
-			elseif sfind(v, "group=") then
-				local n = smatch(v, "group=(%d+)")
-				local p = smatch(v, 'path="(.-)"')
+			elseif sfind(v, "group = ") then
+				local n = smatch(v, "group = (%d+)")
+				local p = smatch(v, 'path = "(.-)"')
 				local emo = LR.GetEmotion(p, n, 'animate')
 				if emo then
 					tinsert(t2, {type = "emotion", text = emo.szCmd, innerText = emo.szCmd, id = emo.dwID})
@@ -1205,63 +1258,63 @@ function LR.FormatContent(szMsg)
 			else
 				--普通文字
 				local s = smatch(v, "\"(.*)\"")
-				tinsert(t2, {type= "text", text = s, innerText = s})
+				tinsert(t2, {type = "text", text = s, innerText = s})
 			end
 		else
 			--物品链接
-			if sfind(v, "name=\"itemlink\"") then
-				local name, userdata = smatch(v,"%[(.-)%].-userdata=(%d+)")
+			if sfind(v, "name = \"itemlink\"") then
+				local name, userdata = smatch(v, "%[(.-)%].-userdata = (%d+)")
 				tinsert(t2, {type = "item", text = "["..name.."]", innerText = name, item = userdata})
 			--物品信息
-			elseif sfind(v, "name=\"iteminfolink\"") then
-				local name, version, tab, index = smatch(v,"%[(.-)%].-script=\"this.nVersion=(%d+)\\%s*this.dwTabType=(%d+)\\%s*this.dwIndex=(%d+)")
+			elseif sfind(v, "name = \"iteminfolink\"") then
+				local name, version, tab, index = smatch(v, "%[(.-)%].-script = \"this.nVersion = (%d+)\\%s*this.dwTabType = (%d+)\\%s*this.dwIndex = (%d+)")
 				tinsert(t2, {type = "iteminfo", text = "["..name.."]", innerText = name, version = version, tabtype = tab, index = index})
 			--姓名
-			elseif sfind(v, "name=\"namelink_%d+\"") then
-				local name = smatch(v,"%[(.-)%]")
+			elseif sfind(v, "name = \"namelink_%d+\"") then
+				local name = smatch(v, "%[(.-)%]")
 				tinsert(t2, {type = "name", text = "["..name.."]", innerText = "["..name.."]", name = name})
 			--任务
-			elseif sfind(v, "name=\"questlink\"") then
-				local name, userdata = smatch(v,"%[(.-)%].-userdata=(%d+)")
+			elseif sfind(v, "name = \"questlink\"") then
+				local name, userdata = smatch(v, "%[(.-)%].-userdata = (%d+)")
 				tinsert(t2, {type = "quest", text = "["..name.."]", innerText = name, questid = userdata})
 			--生活技艺
-			elseif sfind(v, "name=\"recipelink\"") then
-				local name, craft, recipe = smatch(v,"%[(.-)%].-script=\"this.dwCraftID=(%d+)\\%s*this.dwRecipeID=(%d+)")
+			elseif sfind(v, "name = \"recipelink\"") then
+				local name, craft, recipe = smatch(v, "%[(.-)%].-script = \"this.dwCraftID = (%d+)\\%s*this.dwRecipeID = (%d+)")
 				tinsert(t2, {type = "recipe", text = "["..name.."]", innerText = name, craftid = craft, recipeid = recipe})
 			--技能
-			elseif sfind(v, "name=\"skilllink\"") then
-				local name, skillinfo = smatch(v,"%[(.-)%].-script=\"this.skillKey=%{(.-)%}")
+			elseif sfind(v, "name = \"skilllink\"") then
+				local name, skillinfo = smatch(v, "%[(.-)%].-script = \"this.skillKey = %{(.-)%}")
 				local skillKey = {}
-				for w in sgfind(skillinfo, "(.-)%,") do
-					local k, v  = smatch(w, "(.-)=(%w+)")
+				for w in sgfind(skillinfo, "(.-)%, ") do
+					local k, v  = smatch(w, "(.-) = (%w+)")
 					skillKey[k] = v
 				end
 				skillKey.text = "["..name.."]"
 				skillKey.innerText = "["..name.."]"
 				tinsert(t2, skillKey)
 			--称号
-			elseif sfind(v, "name=\"designationlink\"") then
-				local name, id, fix = smatch(v,"%[(.-)%].-script=\"this.dwID=(%d+)\\%s*this.bPrefix=(.-)")
+			elseif sfind(v, "name = \"designationlink\"") then
+				local name, id, fix = smatch(v, "%[(.-)%].-script = \"this.dwID = (%d+)\\%s*this.bPrefix = (.-)")
 				tinsert(t2, {type = "designation", text = "["..name.."]", innerText = name, id = id, prefix = fix})
 			--技能秘籍
-			elseif sfind(v, "name=\"skillrecipelink\"") then
-				local name, id, level = smatch(v,"%[(.-)%].-script=\"this.dwID=(%d+)\\%s*this.dwLevel=(%d+)")
+			elseif sfind(v, "name = \"skillrecipelink\"") then
+				local name, id, level = smatch(v, "%[(.-)%].-script = \"this.dwID = (%d+)\\%s*this.dwLevel = (%d+)")
 				tinsert(t2, {type = "skillrecipe", text = "["..name.."]", innerText = name, id = id, level = level})
 			--书籍
-			elseif sfind(v, "name=\"booklink\"") then
-				local name, version, tab, index, id = smatch(v,"%[(.-)%].-script=\"this.nVersion=(%d+)\\%s*this.dwTabType=(%d+)\\%s*this.dwIndex=(%d+)\\%s*this.nBookRecipeID=(%d+)")
+			elseif sfind(v, "name = \"booklink\"") then
+				local name, version, tab, index, id = smatch(v, "%[(.-)%].-script = \"this.nVersion = (%d+)\\%s*this.dwTabType = (%d+)\\%s*this.dwIndex = (%d+)\\%s*this.nBookRecipeID = (%d+)")
 				tinsert(t2, {type = "book", text = "["..name.."]", innerText = name, version = version, tabtype = tab, index = index, bookinfo = id})
 			--成就
-			elseif sfind(v, "name=\"achievementlink\"") then
-				local name, id = smatch(v,"%[(.-)%].-script=\"this.dwID=(%d+)")
+			elseif sfind(v, "name = \"achievementlink\"") then
+				local name, id = smatch(v, "%[(.-)%].-script = \"this.dwID = (%d+)")
 				tinsert(t2, {type = "achievement", text = "["..name.."]", innerText = name, id = id})
 			--强化
-			elseif sfind(v, "name=\"enchantlink\"") then
-				local name, pro, craft, recipe = smatch(v,"%[(.-)%].-script=\"this.dwProID=(%d+)\\%s*this.dwCraftID=(%d+)\\%s*this.dwRecipeID=(%d+)")
+			elseif sfind(v, "name = \"enchantlink\"") then
+				local name, pro, craft, recipe = smatch(v, "%[(.-)%].-script = \"this.dwProID = (%d+)\\%s*this.dwCraftID = (%d+)\\%s*this.dwRecipeID = (%d+)")
 				tinsert(t2, {type = "enchant", text = "["..name.."]", innerText = name, proid = pro, craftid = craft, recipeid = recipe})
 			--事件
-			elseif sfind(v, "name=\"eventlink\"") then
-				local name, na, info = smatch(v,'text="(.-)".-script="this.szName=\\"(.-)\\"\\%s*this.szLinkInfo=\\"(.-)\\"')
+			elseif sfind(v, "name = \"eventlink\"") then
+				local name, na, info = smatch(v, 'text = "(.-)".-script = "this.szName = \\"(.-)\\"\\%s*this.szLinkInfo = \\"(.-)\\"')
 				tinsert(t2, {type = "eventlink", text = name, innerText = name, name = na, linkinfo = info or ""})
 			end
 		end
@@ -1282,7 +1335,7 @@ function LR.GetTemplateName(tar, bEmployer)
 		if tar.dwEmployer and tar.dwEmployer ~= 0 and szName == Table_GetNpcTemplateName(tar.dwTemplateID) and bEmployer then
 			local emp = GetPlayer(tar.dwEmployer)
 			if not emp then
-				szName =  g_tStrings.STR_SOME_BODY .. g_tStrings.STR_PET_SKILL_LOG .. tar.szName
+				szName = g_tStrings.STR_SOME_BODY .. g_tStrings.STR_PET_SKILL_LOG .. tar.szName
 			else
 				szName = emp.szName .. g_tStrings.STR_PET_SKILL_LOG .. tar.szName
 			end
@@ -1296,7 +1349,7 @@ end
 
 function LR.GetTongName(dwTongID)
 	if dwTongID and type(dwTongID) == "number" and dwTongID>0 then
-		local Tong=GetTongClient()
+		local Tong = GetTongClient()
 		return LR.Trim(Tong.ApplyGetTongName(dwTongID))
 	else
 		return ""
@@ -1306,12 +1359,12 @@ end
 ----------------任务相关
 -------------------------------------------------------------------------------
 
-LR.tAllSceneQuest={}  ---------------存放所有任务
---------LR.tAllSceneQuest[地图ID][任务ID]=
---[[	Quest =
+LR.tAllSceneQuest = {}  ---------------存放所有任务
+--------LR.tAllSceneQuest[地图ID][任务ID] =
+--[[	Quest  =
 	{
 		Path = "\\UI\\Scheme\\Case\\quest.txt",
-		Title =
+		Title  =
 		{
 			{f = "i", t = "dwQuestID"},
 			{f = "s", t = "szAccept"},
@@ -1333,14 +1386,14 @@ LR.tAllSceneQuest={}  ---------------存放所有任务
 			{f = "s", t = "szNeedItem3"},
 			{f = "s", t = "szNeedItem4"},
 		},
-	},]]
+	}, ]]
 
 function LR.Table_GetQuestPosInfo(dwQuestID, szType, nIndex)
 	local tQuestPosInfo = g_tTable.Quest:Search(dwQuestID)
 	if not tQuestPosInfo then
 		return
 	end
--- 	if tonumber(dwQuestID)==11201 then
+-- 	if tonumber(dwQuestID) == 11201 then
 -- 		Output(tQuestPosInfo)
 -- 	end
 	local szQuestPos = nil
@@ -1359,7 +1412,7 @@ function LR.Table_GetQuestPosInfo(dwQuestID, szType, nIndex)
 	if szQuestPos == "" then
 		szQuestPos = nil
 	end
--- 	if tonumber(dwQuestID)==11201 then
+-- 	if tonumber(dwQuestID) == 11201 then
 -- 		Output(szQuestPos)
 -- 	end
 
@@ -1374,11 +1427,11 @@ function LR.Table_GetQuestPoint(dwQuestID, szType, nIndex)
 	return LR.GetQuestPoint(szPosInfo)
 end
 
-function LR.ParseNumberList(szNumberList)	-- 23,544;234,345,342,334;
+function LR.ParseNumberList(szNumberList)	-- 23, 544;234, 345, 342, 334;
 	local tNumberList = {}
-	for szData in sgmatch(szNumberList, "([%d,]+);?") do
+	for szData in sgmatch(szNumberList, "([%d, ]+);?") do
 		local tNumber = {}
-		for szNumber in sgmatch(szData, "(%d+),?") do
+		for szNumber in sgmatch(szData, "(%d+), ?") do
 			tinsert(tNumber, tonumber(szNumber))
 		end
 		tinsert(tNumberList, tNumber)
@@ -1388,8 +1441,8 @@ end
 
 function LR.GetQuestPoint(szPointList)
 	local tPointList = {}
-	for szType, szData in sgmatch(szPointList, "<(%a) ([%d,;|]+)>") do
-		local szFrame, szSource = smatch(szData, "([%d]+)|([%d,;]+)")
+	for szType, szData in sgmatch(szPointList, "<(%a) ([%d, ;|]+)>") do
+		local szFrame, szSource = smatch(szData, "([%d]+)|([%d, ;]+)")
 		local nFrame
 		if szFrame and szFrame ~= "" and szSource and szSource ~= "" then
 			szData = szSource
@@ -1468,8 +1521,8 @@ function LR.Table_LoadSceneQuest()
 -- 			local bQuestNameShield = LR.IsQuestNameShield(tQuestStringInfo.szName)
 -- 			if not bQuestNameShield and not tShield then
 				local szPosInfo = tQuestPosInfo.szAccept
-				for szType, szData in sgmatch(szPosInfo, "<(%a) ([%d,;|]+)>") do
-					local szFrame, szSource = smatch(szData, "([%d]+)|([%d,;]+)")
+				for szType, szData in sgmatch(szPosInfo, "<(%a) ([%d, ;|]+)>") do
+					local szFrame, szSource = smatch(szData, "([%d]+)|([%d, ;]+)")
 					local nFrame
 					if szFrame and szFrame ~= "" and szSource and szSource ~= "" then
 						szData = szSource
@@ -1495,20 +1548,20 @@ function LR.Table_LoadSceneQuest()
 	end
 end
 
-RegisterEvent("FIRST_LOADING_END",LR.Table_LoadSceneQuest)
+RegisterEvent("FIRST_LOADING_END", LR.Table_LoadSceneQuest)
 ---------------------------DOODAD
 function LR.TABLE_GetDoodadTemplateName(dwTemplateID)
-	if dwTemplateID==5402 then
+	if dwTemplateID == 5402 then
 		return "亮银枪头"
 	end
-	local RowCount= g_tTable.DoodadTemplate:GetRowCount()
-	local i=1
-	while i<=RowCount do
-		local t=g_tTable.DoodadTemplate:GetRow(i)
-		if dwTemplateID==t.nID then
+	local RowCount = g_tTable.DoodadTemplate:GetRowCount()
+	local i = 1
+	while i<= RowCount do
+		local t = g_tTable.DoodadTemplate:GetRow(i)
+		if dwTemplateID == t.nID then
 			return t.szName
 		end
-		i=i+1
+		i = i+1
 	end
 	return ""
 end
@@ -1550,7 +1603,7 @@ end
 function LR.EventHandler (szEvent)
 	local tEvent = LR.tEvent[szEvent]
 	if next(tEvent) ~= nil then
-		for k,v in pairs (tEvent) do
+		for k, v in pairs (tEvent) do
 			local res, err = pcall(v)
 			if not res then
 				--LR.Debug("EVENT#" .. szEvent .. "." .. k .." ERROR: " .. err)
@@ -1563,7 +1616,7 @@ end
 -- szEvent		-- 事件，可在后面加一个点并紧跟一个标识字符串用于防止重复或取消绑定，如 LOADING_END.xxx
 -- fnAction		-- 事件处理函数，arg0 ~ arg9，传入 nil 相当于取消该事件
 --特别注意：当 fnAction 为 nil 并且 szKey 也为 nil 时会取消所有通过本函数注册的事件处理器
---注册时结构：LR.RegisterEvent("event",function() 需要执行的函数 end)，一定要这么写
+--注册时结构：LR.RegisterEvent("event", function() 需要执行的函数 end)，一定要这么写
 function LR.RegisterEvent (szEvent, fnAction)
 	local szKey = nil
 	local nPos = StringFindW(szEvent, ".")
@@ -1611,7 +1664,7 @@ function LR.UnRegisterEvent (szEvent, fnAction)
 		end
 	else
 		if not szKey then
-			tremove(LR.tEvent,szEvent)
+			tremove(LR.tEvent, szEvent)
 		else
 			tEvent[szKey] = nil
 		end
@@ -1642,36 +1695,36 @@ end
 -----各种菜单获取
 ----------------------------------------------
 function LR.GetShiTuMenu(dwID)
-	local t={}
-	local menu={}
-	InsertTargetMenu(menu,dwID)
-	for k,v in pairs (menu) do
-		if v.szOption==g_tStrings.CHANNEL_MENTOR then
-			t[1]=v
+	local t = {}
+	local menu = {}
+	InsertTargetMenu(menu, dwID)
+	for k, v in pairs (menu) do
+		if v.szOption == g_tStrings.CHANNEL_MENTOR then
+			t[1] = v
 			return t
 		end
 	end
 end
 
 function LR.GetTradeMenu(dwID)
-	local t={}
-	local menu={}
-	InsertTargetMenu(menu,dwID)
-	for k,v in pairs (menu) do
-		if v.szOption==g_tStrings.STR_MAKE_TRADDING then
-			t[1]=v
+	local t = {}
+	local menu = {}
+	InsertTargetMenu(menu, dwID)
+	for k, v in pairs (menu) do
+		if v.szOption == g_tStrings.STR_MAKE_TRADDING then
+			t[1] = v
 			return t
 		end
 	end
 end
 
 function LR.GetMakeFriendMenu(dwID)
-	local t={}
-	local menu={}
-	InsertTargetMenu(menu,dwID)
-	for k,v in pairs (menu) do
-		if v.szOption==g_tStrings.STR_MAKE_FRIEND then
-			t[1]=v
+	local t = {}
+	local menu = {}
+	InsertTargetMenu(menu, dwID)
+	for k, v in pairs (menu) do
+		if v.szOption == g_tStrings.STR_MAKE_FRIEND then
+			t[1] = v
 			return t
 		end
 	end
@@ -1679,84 +1732,84 @@ function LR.GetMakeFriendMenu(dwID)
 end
 
 function LR.GetEquipmentMenu(dwID)
-	local t={}
-	local menu={}
-	InsertTargetMenu(menu,dwID)
-	for k,v in pairs (menu) do
-		if v.szOption==g_tStrings.STR_LOOKUP then
-			t[1]=v
+	local t = {}
+	local menu = {}
+	InsertTargetMenu(menu, dwID)
+	for k, v in pairs (menu) do
+		if v.szOption == g_tStrings.STR_LOOKUP then
+			t[1] = v
 			return t
 		end
 	end
 end
 
 function LR.GetMoreInfoMenu(dwID)
-	local t={}
-	local menu={}
-	InsertTargetMenu(menu,dwID)
-	for k,v in pairs (menu) do
-		if v.szOption==g_tStrings.LOOKUP_INFO then
-			t[1]=v
+	local t = {}
+	local menu = {}
+	InsertTargetMenu(menu, dwID)
+	for k, v in pairs (menu) do
+		if v.szOption == g_tStrings.LOOKUP_INFO then
+			t[1] = v
 			return t
 		end
 	end
 end
 
 function LR.GetRevengeMenu(dwID)
-	local t={}
-	local menu={}
-	InsertTargetMenu(menu,dwID)
-	for k,v in pairs (menu) do
-		if v.szOption==g_tStrings.STR_ADD_EMENY then
-			t[1]=v
+	local t = {}
+	local menu = {}
+	InsertTargetMenu(menu, dwID)
+	for k, v in pairs (menu) do
+		if v.szOption == g_tStrings.STR_ADD_EMENY then
+			t[1] = v
 			return t
 		end
 	end
 end
 
 function LR.GetWantedMenu(dwID)
-	local t={}
-	local menu={}
-	InsertTargetMenu(menu,dwID)
-	for k,v in pairs (menu) do
-		if v.szOption==g_tStrings.STR_ADD_SHANG then
-			t[1]=v
+	local t = {}
+	local menu = {}
+	InsertTargetMenu(menu, dwID)
+	for k, v in pairs (menu) do
+		if v.szOption == g_tStrings.STR_ADD_SHANG then
+			t[1] = v
 			return t
 		end
 	end
 end
 
 function LR.GetInviteJJCTeamMenu(dwID)
-	local t={}
-	local menu={}
-	InsertTargetMenu(menu,dwID)
-	for k,v in pairs (menu) do
-		if v.szOption==g_tStrings.STR_ARENA_INVITE_TARGET then
-			t[1]=v
+	local t = {}
+	local menu = {}
+	InsertTargetMenu(menu, dwID)
+	for k, v in pairs (menu) do
+		if v.szOption == g_tStrings.STR_ARENA_INVITE_TARGET then
+			t[1] = v
 			return t
 		end
 	end
 end
 
 function LR.GetInviteToneMenu(dwID)
-	local t={}
-	local menu={}
-	InsertTargetMenu(menu,dwID)
-	for k,v in pairs (menu) do
-		if v.szOption==g_tStrings.INVITE_ADD_GUILD then
-			t[1]=v
+	local t = {}
+	local menu = {}
+	InsertTargetMenu(menu, dwID)
+	for k, v in pairs (menu) do
+		if v.szOption == g_tStrings.INVITE_ADD_GUILD then
+			t[1] = v
 			return t
 		end
 	end
 end
 
 function LR.GetFollowMenu(dwID)
-	local t={}
-	local menu={}
-	InsertTargetMenu(menu,dwID)
-	for k,v in pairs (menu) do
-		if v.szOption==g_tStrings.STR_FOLLOW then
-			t[1]=v
+	local t = {}
+	local menu = {}
+	InsertTargetMenu(menu, dwID)
+	for k, v in pairs (menu) do
+		if v.szOption == g_tStrings.STR_FOLLOW then
+			t[1] = v
 			return t
 		end
 	end
@@ -1810,14 +1863,14 @@ function LR.DelayCall(nDelayTime, fnAction, szKey)
 	local nTime = nDelayTime + _time
 	if szKey then
 		local szKey = tostring(szKey)
-		LR.tDelayCall[szKey] = {nTime = nTime, fnAction = fnAction, szKey = szKey,}
+		LR.tDelayCall[szKey] = {nTime = nTime, fnAction = fnAction, szKey = szKey, }
 	else
 		tinsert(LR.tDelayCall, {nTime = nTime, fnAction = fnAction})
 	end
 end
 
 function LR.UnDelayCall(szKey)
-	LR.tDelayCall[szKey] = {nTime = GetTime() + 1, fnAction = function()  end, szKey = szKey,}
+	LR.tDelayCall[szKey] = {nTime = GetTime() + 1, fnAction = function()  end, szKey = szKey, }
 end
 
 
@@ -1842,15 +1895,15 @@ Wnd.OpenWindow("Interface\\LR_Plugin\\LR_1Base\\UI\\LR_1Base_None.ini", "LR")
 ------------------------------------------------------------------------------------
 -------
 ------------------------------------------------------------------------------------
-function LR.GetFullSizeNumber(szNum) -- 输入数值为半角数字,长度为数串长度
+function LR.GetFullSizeNumber(szNum) -- 输入数值为半角数字, 长度为数串长度
 	szNum = tostring(szNum)
-	local tFullSizeNumber = {"０","１","２","３","４","５","６","７","８","９"}
+	local tFullSizeNumber = {"０", "１", "２", "３", "４", "５", "６", "７", "８", "９"}
 	for i = 0, 9, 1 do
 		while sfind(szNum, tostring(i)) do
 			szNum = szNum:gsub(tostring(i), tFullSizeNumber[i+1])
 		end
 	end
-	if #szNum == 2 then -- 输出值为全角数字,长度为数串长度的二倍
+	if #szNum == 2 then -- 输出值为全角数字, 长度为数串长度的二倍
 		szNum = sformat("　%s", szNum)
 	end
 	return szNum
@@ -1863,9 +1916,9 @@ function LR.GB_Long()
 	if not me then
 		return
 	end
-	local bufflist=LR.GetBuffList(me)
-	for k,v in pairs(bufflist) do
-		local dwID=v.dwID
+	local bufflist = LR.GetBuffList(me)
+	for k, v in pairs(bufflist) do
+		local dwID = v.dwID
 		if dwID == 9920 then
 			me.CancelBuff(v.nIndex)
 			return
@@ -1878,9 +1931,9 @@ function LR.CJ_TigerRun()
 	if not me then
 		return
 	end
-	local bufflist=LR.GetBuffList(me)
-	for k,v in pairs(bufflist) do
-		local dwID=v.dwID
+	local bufflist = LR.GetBuffList(me)
+	for k, v in pairs(bufflist) do
+		local dwID = v.dwID
 		if dwID == 1686 then
 			me.CancelBuff(v.nIndex)
 			return
@@ -1889,18 +1942,18 @@ function LR.CJ_TigerRun()
 end
 
 ------------------------------------------------------------------------------------
-LR.BlackFBList={}
-LR.BlackACK=0
+LR.BlackFBList = {}
+LR.BlackACK = 0
 function LR.Black_LOADING_END()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
-	local scene=me.GetScene()
-	local dwMapID=scene.dwMapID
-	local nCopyIndex=scene.nCopyIndex
-	local nTime=GetCurrentTime()
-	local szName=me.szName
+	local scene = me.GetScene()
+	local dwMapID = scene.dwMapID
+	local nCopyIndex = scene.nCopyIndex
+	local nTime = GetCurrentTime()
+	local szName = me.szName
 
 	if scene.nType ~= MAP_TYPE.DUNGEON then
 		return
@@ -1909,44 +1962,44 @@ function LR.Black_LOADING_END()
 	LR.BlackFBList[dwMapID] = LR.BlackFBList[dwMapID] or {}
 	LR.BlackFBList[dwMapID][nCopyIndex] = LR.BlackFBList[dwMapID][nCopyIndex] or {}
 	if next(LR.BlackFBList[dwMapID][nCopyIndex]) == nil then
-		local data={szName=szName,nTime=nTime}
-		LR.BlackFBList[dwMapID][nCopyIndex]=clone(data)
+		local data = {szName = szName, nTime = nTime}
+		LR.BlackFBList[dwMapID][nCopyIndex] = clone(data)
 		if me.IsInParty() or me.IsInRaid() then
-			local msg={dwMapID=dwMapID,nCopyIndex=nCopyIndex,szName=szName,nTime=nTime}
-			LR.BgTalk(PLAYER_TALK_CHANNEL.RAID,"LR_BlackFB","Send",msg)
+			local msg = {dwMapID = dwMapID, nCopyIndex = nCopyIndex, szName = szName, nTime = nTime}
+			LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_BlackFB", "Send", msg)
 		end
 	else
 		if LR.BlackFBList[dwMapID][nCopyIndex].nTime > nTime then
-			local data={szName=szName,nTime=nTime}
-			LR.BlackFBList[dwMapID][nCopyIndex]=clone(data)
+			local data = {szName = szName, nTime = nTime}
+			LR.BlackFBList[dwMapID][nCopyIndex] = clone(data)
 			if me.IsInParty() then
-				local msg={dwMapID=dwMapID,nCopyIndex=nCopyIndex,szName=szName,nTime=nTime}
-				LR.BgTalk(PLAYER_TALK_CHANNEL.RAID,"LR_BlackFB","Send",msg)
+				local msg = {dwMapID = dwMapID, nCopyIndex = nCopyIndex, szName = szName, nTime = nTime}
+				LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_BlackFB", "Send", msg)
 			end
 		end
 	end
 end
 
 function LR.Black_FIRST_LOADING_END()
-	local me=GetClientPlayer()
+	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 	if me.IsInParty() then
-		if LR.BlackACK==0 then
-			LR.BgTalk(PLAYER_TALK_CHANNEL.RAID,"LR_BlackFB","Get",msg)
+		if LR.BlackACK == 0 then
+			LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_BlackFB", "Get", msg)
 			LR.DelayCall(5000, function() LR.Black_FIRST_LOADING_END() end)
 		end
 	end
 end
 
 function LR.Black_ON_BG_CHANNEL_MSG()
-	local szKey=arg0
-	local nChannel=arg1
-	local dwTalkerID=arg2
-	local szTalkerName=arg3
-	local data=arg4
-	if szKey~="LR_BlackFB" then
+	local szKey = arg0
+	local nChannel = arg1
+	local dwTalkerID = arg2
+	local szTalkerName = arg3
+	local data = arg4
+	if szKey~= "LR_BlackFB" then
 		return
 	end
 
@@ -1955,42 +2008,42 @@ function LR.Black_ON_BG_CHANNEL_MSG()
 		return
 	end
 
-	if data[1]=="Send" then
-		local dwMapID=data[2].dwMapID
-		local nCopyIndex=data[2].nCopyIndex
-		local szName=data[2].szName
-		local nTime=data[2].nTime
+	if data[1] == "Send" then
+		local dwMapID = data[2].dwMapID
+		local nCopyIndex = data[2].nCopyIndex
+		local szName = data[2].szName
+		local nTime = data[2].nTime
 
 		if LR.BlackFBList[dwMapID] and LR.BlackFBList[dwMapID][nCopyIndex] then
 			if LR.BlackFBList[dwMapID][nCopyIndex].nTime>nTime then
-				local data={szName=szName,nTime=nTime}
-				LR.BlackFBList[dwMapID][nCopyIndex]=clone(data)
+				local data = {szName = szName, nTime = nTime}
+				LR.BlackFBList[dwMapID][nCopyIndex] = clone(data)
 			elseif LR.BlackFBList[dwMapID][nCopyIndex].nTime<nTime then
-				local szName=	LR.BlackFBList[dwMapID][nCopyIndex].szName
-				local nTime=	LR.BlackFBList[dwMapID][nCopyIndex].nTime
-				local msg={dwMapID=dwMapID,nCopyIndex=nCopyIndex,szName=szName,nTime=nTime}
-				LR.BgTalk(PLAYER_TALK_CHANNEL.RAID,"LR_BlackFB","Send",msg)
+				local szName = 	LR.BlackFBList[dwMapID][nCopyIndex].szName
+				local nTime = LR.BlackFBList[dwMapID][nCopyIndex].nTime
+				local msg = {dwMapID = dwMapID, nCopyIndex = nCopyIndex, szName = szName, nTime = nTime}
+				LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_BlackFB", "Send", msg)
 			end
 		else
-			LR.BlackFBList[dwMapID]=LR.BlackFBList[dwMapID] or {}
-			LR.BlackFBList[dwMapID][nCopyIndex]=LR.BlackFBList[dwMapID][nCopyIndex] or {}
-			local data={szName=szName,nTime=nTime}
-			LR.BlackFBList[dwMapID][nCopyIndex]=clone(data)
+			LR.BlackFBList[dwMapID] = LR.BlackFBList[dwMapID] or {}
+			LR.BlackFBList[dwMapID][nCopyIndex] = LR.BlackFBList[dwMapID][nCopyIndex] or {}
+			local data = {szName = szName, nTime = nTime}
+			LR.BlackFBList[dwMapID][nCopyIndex] = clone(data)
 		end
-	elseif data[1]=="Get" then
+	elseif data[1] == "Get" then
 		if me.IsPartyLeader() then
-			local msg={dwID=dwTalkerID}
-			LR.BgTalk(PLAYER_TALK_CHANNEL.RAID,"LR_BlackFB","ACK",msg)
+			local msg = {dwID = dwTalkerID}
+			LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_BlackFB", "ACK", msg)
 			for dwMapID , v in pairs(LR.BlackFBList) do
 				for nCopyIndex , v2 in pairs(v) do
-					local msg={dwMapID=dwMapID,nCopyIndex=nCopyIndex,szName=v2.szName,nTime=v2.nTime}
-					LR.BgTalk(PLAYER_TALK_CHANNEL.RAID,"LR_BlackFB","Send",msg)
+					local msg = {dwMapID = dwMapID, nCopyIndex = nCopyIndex, szName = v2.szName, nTime = v2.nTime}
+					LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_BlackFB", "Send", msg)
 				end
 			end
 		end
-	elseif data[1]=="ACK" then
-		if data[2].dwID==me.dwID then
-			LR.BlackACK=1
+	elseif data[1] == "ACK" then
+		if data[2].dwID == me.dwID then
+			LR.BlackACK = 1
 		end
 	end
 end
@@ -2004,8 +2057,8 @@ function LR.Black_PARTY_ADD_MEMBER()
 		LR.DelayCall(1000, function()
 			for dwMapID , v in pairs(LR.BlackFBList) do
 				for nCopyIndex , v2 in pairs(v) do
-					local msg={dwMapID=dwMapID,nCopyIndex=nCopyIndex,szName=v2.szName,nTime=v2.nTime}
-					LR.BgTalk(PLAYER_TALK_CHANNEL.RAID,"LR_BlackFB","Send",msg)
+					local msg = {dwMapID = dwMapID, nCopyIndex = nCopyIndex, szName = v2.szName, nTime = v2.nTime}
+					LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_BlackFB", "Send", msg)
 				end
 			end
 		end)
@@ -2021,34 +2074,34 @@ function LR.Black_BreatheCheck()
 		return
 	end
 	if me.IsPartyLeader() then
-		local teamClient=GetClientTeam()
-		local memberList=teamClient.GetTeamMemberList()
-		for k,dwMemberID in pairs (memberList) do
-			local memberInfo=teamClient.GetMemberInfo(dwMemberID)
+		local teamClient = GetClientTeam()
+		local memberList = teamClient.GetTeamMemberList()
+		for k, dwMemberID in pairs (memberList) do
+			local memberInfo = teamClient.GetMemberInfo(dwMemberID)
 			if memberInfo then
-				local dwMapID=memberInfo.dwMapID
-				local nCopyIndex=memberInfo.nMapCopyIndex
-				local szName=memberInfo.szName
-				local tMapInfo={GetMapParams(dwMapID)}
-				local nType=tMapInfo[2]
-				local nTime=GetCurrentTime()
+				local dwMapID = memberInfo.dwMapID
+				local nCopyIndex = memberInfo.nMapCopyIndex
+				local szName = memberInfo.szName
+				local tMapInfo = {GetMapParams(dwMapID)}
+				local nType = tMapInfo[2]
+				local nTime = GetCurrentTime()
 				if nType == MAP_TYPE.DUNGEON then
 					LR.BlackFBList[dwMapID] = LR.BlackFBList[dwMapID] or {}
 					LR.BlackFBList[dwMapID][nCopyIndex] = LR.BlackFBList[dwMapID][nCopyIndex] or {}
 					if next(LR.BlackFBList[dwMapID][nCopyIndex]) == nil then
-						local data={szName=szName,nTime=nTime}
-						LR.BlackFBList[dwMapID][nCopyIndex]=clone(data)
+						local data = {szName = szName, nTime = nTime}
+						LR.BlackFBList[dwMapID][nCopyIndex] = clone(data)
 						if me.IsPartyLeader() then
-							local msg={dwMapID=dwMapID,nCopyIndex=nCopyIndex,szName=szName,nTime=nTime}
-							LR.BgTalk(PLAYER_TALK_CHANNEL.RAID,"LR_BlackFB","Send",msg)
+							local msg = {dwMapID = dwMapID, nCopyIndex = nCopyIndex, szName = szName, nTime = nTime}
+							LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_BlackFB", "Send", msg)
 						end
 					else
 						if LR.BlackFBList[dwMapID][nCopyIndex].nTime > nTime then
-							local data={szName=szName,nTime=nTime}
-							LR.BlackFBList[dwMapID][nCopyIndex]=clone(data)
+							local data = {szName = szName, nTime = nTime}
+							LR.BlackFBList[dwMapID][nCopyIndex] = clone(data)
 							if me.IsPartyLeader() then
-								local msg={dwMapID=dwMapID,nCopyIndex=nCopyIndex,szName=szName,nTime=nTime}
-								LR.BgTalk(PLAYER_TALK_CHANNEL.RAID,"LR_BlackFB","Send",msg)
+								local msg = {dwMapID = dwMapID, nCopyIndex = nCopyIndex, szName = szName, nTime = nTime}
+								LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_BlackFB", "Send", msg)
 							end
 						end
 					end
@@ -2070,13 +2123,28 @@ function LR.SYS_MSG()
 	end
 end
 
-LR.BreatheCall("Black_BreatheCheck",function() LR.Black_BreatheCheck() end)
-LR.RegisterEvent("LOADING_END",function() LR.Black_LOADING_END() end)
-LR.RegisterEvent("FIRST_LOADING_END",function()
+local _nType, _ID = TARGET.NO_TARGET, 0
+function LR.CheckTargetChange()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local _1, _2 = me.GetTarget()
+	if _2 ~= _ID then
+		_nType, _ID = _1, _2
+		FireEvent("LR_TARGET_CHANGE", _nType, _ID)
+	end
+end
+
+
+LR.BreatheCall("Black_BreatheCheck", function() LR.Black_BreatheCheck() end)
+LR.BreatheCall("CheckTargetChange", function() LR.CheckTargetChange() end)
+LR.RegisterEvent("LOADING_END", function() LR.Black_LOADING_END() end)
+LR.RegisterEvent("FIRST_LOADING_END", function()
 	LR.Black_FIRST_LOADING_END()
 	LR.LoadMenPaiColor()
 end)
-LR.RegisterEvent("ON_BG_CHANNEL_MSG",function() LR.Black_ON_BG_CHANNEL_MSG() end)
-LR.RegisterEvent("PARTY_ADD_MEMBER",function() LR.Black_PARTY_ADD_MEMBER() end)
+LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() LR.Black_ON_BG_CHANNEL_MSG() end)
+LR.RegisterEvent("PARTY_ADD_MEMBER", function() LR.Black_PARTY_ADD_MEMBER() end)
 LR.RegisterEvent("LOGIN_GAME", function() LR.LOGIN_GAME() end)
 LR.RegisterEvent("SYS_MSG", function() LR.SYS_MSG() end)

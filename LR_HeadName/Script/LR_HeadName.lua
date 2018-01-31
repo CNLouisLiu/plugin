@@ -95,10 +95,11 @@ LR_HeadName.default = {
 		bSeeLimit = false, 	--是否限制个数
 		bShowDoodadKind = false, 	--是否显示Doodad的类型
 		bShowTeamMark = true, 	--是否显示队伍标记
-		nShowTeamMarkType = 2, 	----1:显示文字，2：显示图标
+		nShowTeamMarkType = 3, 	----1:显示文字，2：显示图标
 		nOffset = 0, 	--头顶相对高度
 		nLifeBarOffset = 0, 		--血条高度偏移量
 		bShowBalloon = false, 		--是否显示泡泡
+		nBallonType = 3,	---气泡样式
 		bEnhanceGuDing = true,		--增强蛊鼎显示
 		bMiniMapAgriculture = true,	--神农小地图显示
 		bMiniMapMine = true,	--矿藏小地图显示
@@ -508,7 +509,7 @@ function _HandleRole:DrawName()
 			hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30- del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
 		end
 	end
-	self.nTopOffset =  25 + nOffset +(nHight+3) * (#tText) * LR_HeadName.UsrData.nFontScale
+	self.nTopOffset =  25 + nOffset +(nHight + 5) * (#tText) * LR_HeadName.UsrData.nFontScale
 end
 
 function _HandleRole:DrawDoodad(tText)
@@ -1539,6 +1540,8 @@ function LR_HeadName.Check(dwID, nType, bForced)
 				or (nShip ==  "Ally" and obj.nCurrentLife<obj.nMaxLife and nType ==  TARGET.NPC)
 				then
 					bFresh = true
+				elseif _tarid == obj.dwID and LR_HeadName.UsrData.bShowTargetFace then
+					bFresh = true
 				elseif _tarid == obj.dwID and LR_HeadName.UsrData.bShowTargetDis then
 					bFresh = true
 				elseif IsMissionObj then
@@ -2216,6 +2219,10 @@ function LR_HeadName.PLAYER_ENTER_SCENE()
 	if not LR_HeadName.bOn then
 		return
 	end
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
 	if _tPartyMark[arg0] then
 		LR.DelayCall(400, function() LR_HeadName.PARTY_SET_MARK() end)
 	end
@@ -2240,6 +2247,10 @@ function LR_HeadName.NPC_ENTER_SCENE()
 	end
 	local dwID = arg0
 	LR.DelayCall(100, LR_HeadName.GetQuest(dwID))	------获取npc身上的任务列表
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
 	LR.DelayCall(200, LR_HeadName.Check(dwID, TARGET.NPC, true))	------刷新强制刷新npc，一刷handle
 	LR.DelayCall(300, LR_HeadName.Check(dwID, TARGET.NPC, true))	------刷新强制刷新npc，二刷名字
 	LR.DelayCall(400, LR_HeadName.OnEventCheckMission(dwID))	------三设置npc的任务状态

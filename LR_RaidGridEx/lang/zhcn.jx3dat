@@ -466,5 +466,35 @@ data={
 	["Alt+Mouse Hover"]="Alt+鼠标悬停",
 	["Shift+Mouse Hover"]="Shift+鼠标悬停",
 	
+	--20180122add--
+	["Choose GridType"]="行列样式",
+	["1Row(5Col)"]="一行五列",
+	["2Row(3Col+2Col)"]="两行(3列+2列)",
+
+	--20180124add--
+	["Enable"]="启用",
+	["Not by level"]="不区分等级",
+	["By stacknum"]="监控层数",
+	["Striking display"]="醒目显示",
+	["Self"]="自",
+	["Stack:%d"]="层：%d",
+	["Special"]="醒",
+
+	--20180126add--
+	["Import/Export data"]="数据导入导出",
+	["Export data"]="导出数据",
+	["Import data"]="导入数据",
+	["Clear data"]="清空记录",
+	["Sure to clear data?"]="确定要清空数据？",
+	["Begin buff collect"]="开始收集BUFF",
+	["Choose file"]="选择文件",
+	["LR Buff Tools"]="团队面板BUFF设置",
+
+	["Open Buff Tools"]="BUFF设置面板",
+	["Still show when under stacknum"]="监控层数以下也显示",
+	["Cancel shielded speech"]="取消屏蔽语音",
+	["Shielded speech"]="屏蔽语音",
+	["Open LR GKP"]="打开懒人金团面板",
+	["Open LR TeamNotice"]="打开懒人团队告示",
 
 }

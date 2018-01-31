@@ -175,6 +175,16 @@ function _Balloon:DrawContent()
 	handle:SetSize(w,h)
 	local image = handle:Lookup("Image_Bg1")
 	image:SetSize(w, h)
+	if not LR_HeadName.UsrData.nBallonType or LR_HeadName.UsrData.nBallonType  == 3 then
+		image:FromUITex("ui\\Image\\TeachingPanel\\TeachingPanel4.UITex", 11)
+	elseif LR_HeadName.UsrData.nBallonType  == 2 then
+		image:FromUITex("ui\\Image\\LootPanel\\LootPanel.UITex", 80)
+	elseif LR_HeadName.UsrData.nBallonType  == 1 then
+		image:FromUITex("ui\\Image\\UICommon\\CommonPanel.UITex", 21)
+--[[	elseif LR_HeadName.UsrData.nBallonType  == 4 then
+		image:FromUITex("ui\\Image\\UICommon\\YiRong3.UITex", 41)]]
+	end
+
 	local imagehover = handle:Lookup("Image_Hover")
 	imagehover:SetSize(w, h)
 	imagehover:Hide()

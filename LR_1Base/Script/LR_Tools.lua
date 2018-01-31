@@ -913,7 +913,17 @@ end
 -------------------------------------
 LR.AddHotKey(_L["Setting Panel"], function() LR_TOOLS:OpenPanel() end)
 
+---------
+--base
+---------
+local teamnoticepanel_menu = {
+	szOption = _L["LR team notice"],
+	fnAction = function()
+		LR.OpenTeamNoticePanel()
+	end,
+}
 
+tinsert(LR_TOOLS.menu, teamnoticepanel_menu)
 
 
 

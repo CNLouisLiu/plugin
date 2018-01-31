@@ -148,7 +148,17 @@ LR_HeadName_UI = {
 				fnAction = function()
 					LR_Balloon.UsrData.bBlock = not LR_Balloon.UsrData.bBlock
 				end, }
-
+				m[#m+1] = {bDevide = true}
+				m[#m+1] = {szOption = _L["Balloon style"], bDisable = true}
+				local szOption = {_L["System type"], _L["Style 1"], _L["Style 2"]}
+				for k, v in pairs(szOption) do
+					m[#m + 1] = {szOption = v, bCheck = true, bMCheck = true, bChecked = function() return LR_HeadName.UsrData.nBallonType == k end,
+						fnAction = function()
+							LR_HeadName.UsrData.nBallonType = k
+							LR_HeadName.SaveCommonSettings()
+						end,
+					}
+				end
 				PopupMenu(m)
 			end
 		}, {

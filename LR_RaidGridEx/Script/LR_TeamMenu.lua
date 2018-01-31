@@ -547,7 +547,7 @@ function LR_TeamMenu.BuffMonitorMenu()
 			LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bOff = not LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bOff
 			LR_TeamGrid.SaveCommonData()
 			if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bOff then
-				LR_TeamBuffMonitor.ClearAllCache()
+				LR_TeamBuffMonitor.ClearAllNormalBuffCache()
 			end
 		end,
 	}
@@ -627,7 +627,7 @@ function LR_TeamMenu.BuffMonitorMenu()
 
 	menu[#menu+1]={bDevide=true,}
 	menu[#menu+1]={szOption=_L["Load default file"],fnAction=function() LR_TeamBuffSettingPanel.LoadDefaultData() end,}
-	menu[#menu+1]={szOption=_L["Open Buff Set Panel"],fnAction=function() LR_TeamBuffSettingPanel.OpenPanel() end,}
+	menu[#menu+1]={szOption=_L["Open Buff Set Panel"],fnAction=function() LR_TeamBuffTool_Panel:Open() end,}
 	return menu
 end
 
@@ -832,7 +832,8 @@ function LR_TeamMenu.PopOptions()
 	menu[#menu+1]={szOption = _L["Add/Remove Settings"],bCheck=true,bChecked=false,
 		fnAction=function()
 			GetPopupMenu():Hide()
-			LR_TeamBuffSettingPanel.OpenPanel()
+			LR_TeamBuffTool_Panel:Open()
+			--LR_TeamBuffSettingPanel.OpenPanel()
 		end,
 	}
 	menu[#menu+1]={szOption = _L["Load default file"],bCheck=true,bChecked=false,
@@ -878,7 +879,7 @@ function LR_TeamMenu.PopOptions()
 	}
 
 	tOptions[#tOptions+1]= {szOption = _L["Clear Panel"], fnAction = function()
-		LR_TeamBuffMonitor.ClearAllCache()
+		LR_TeamBuffMonitor.ClearAllNormalBuffCache()
 		LR_TeamGrid.ReDrawAllMembers(true)
 	end}
 	if LR_TeamGrid.IsLeader(GetClientPlayer().dwID) then
