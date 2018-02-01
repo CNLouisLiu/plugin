@@ -1081,7 +1081,6 @@ function LR_GKP_Loot.Test(n)
 	LR_GKP_Loot.Open(111, "sdf", items)
 end
 
-
 LR.RegisterEvent("OPEN_DOODAD", function() LR_GKP_Loot.OPEN_DOODAD() end)
 LR.RegisterEvent("SYNC_LOOT_LIST", function() LR_GKP_Loot.SYNC_LOOT_LIST() end)
 LR.RegisterEvent("DOODAD_LEAVE_SCENE", function() LR_GKP_Loot.DOODAD_LEAVE_SCENE() end)

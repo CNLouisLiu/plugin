@@ -1,0 +1,8 @@
+data = {
+	["Team request"]="组队请求/邀请",
+	["Check Attribute"]="查看属性",
+	["Refuse all?"]="拒绝所有的请求？",
+	["Yes"]="是的",
+	["Cancel"]="取消",
+
+}

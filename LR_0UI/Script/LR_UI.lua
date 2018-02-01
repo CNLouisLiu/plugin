@@ -1307,8 +1307,12 @@ function WndContainer:ClearHandle()
 	return self.__WndContainer
 end
 
-function WndContainer:GetItemCount()
-	return self.__WndContainer:GetItemCount()
+function WndContainer:GetAllContentCount()
+	return self.__WndContainer:GetAllContentCount()
+end
+
+function WndContainer:GetAllContentSize()
+	return self.__WndContainer:GetAllContentSize()
 end
 
 function WndContainer:FormatAllContentPos()

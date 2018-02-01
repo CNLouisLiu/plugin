@@ -933,7 +933,6 @@ function infopanel.OnFrameDestroy()
 	_lock_user = 0
 end
 
-
 function infopanel.OnLButtonClick()
 	local szName = this:GetName()
 	if szName == "Btn_Close" then
@@ -1285,11 +1284,17 @@ function teamnotice.ON_BG_CHANNEL_MSG()
 	end
 	if data[1] == "SEND" then
 		local frame = Station.Lookup("Normal/teamnotice")
-		if not frame then
-			teamnotice.Open()
-			teamnotice.UpdateEdit(data[2])
+		if me.IsInParty() or me.IsInRaid() then
+			if not frame then
+				teamnotice.Open()
+				teamnotice.UpdateEdit(data[2])
+			else
+				teamnotice.UpdateEdit(data[2])
+			end
 		else
-			teamnotice.UpdateEdit(data[2])
+			if frame then
+				teamnotice.Close()
+			end
 		end
 	elseif data[1] == "ASK" then
 		if teamnotice.temp ~= "" then

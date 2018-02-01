@@ -925,9 +925,7 @@ function LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
 		self:ClearHandle(hBuffList)
 		-----±³¾°Ìõ
 		local Image_Line = LR.AppendUI("Image", hBuffList, "Image_BuffListLine" .. szKey, {x = 0, y = 0, w = 160, h = 100})
-		Image_Line:FromUITex("ui\\Image\\UICommon\\CommonPanel.UITex", 48)
-		Image_Line:SetImageType(10)
-		Image_Line:SetAlpha(200)
+		Image_Line:FromUITex("ui\\Image\\UICommon\\CommonPanel.UITex", 48):SetImageType(10):SetAlpha(200)
 
 		local Shadow_Special = LR.AppendUI("Shadow", hBuffList, "Shadow_Special" .. szKey, {x = 5, y = 5, w = 150, h = 90})
 		if buff.bSpecialBuff and next(buff.col) ~= nil then
@@ -938,8 +936,7 @@ function LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
 		end
 		--ÐÑÄ¿
 		local TextBuffSpecial = LR.AppendUI("Text", hBuffList, "TextBuffName".. szKey , {w = 40, h = 25, x  = 5, y = 25, text = _L["Special"], font = 15})
-		TextBuffSpecial:SetHAlign(0)
-		TextBuffSpecial:SetVAlign(1)
+		TextBuffSpecial:SetHAlign(0):SetVAlign(1)
 		if buff.bSpecialBuff then
 			TextBuffSpecial:Show()
 		else
@@ -948,8 +945,7 @@ function LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
 
 		--²ã
 		local TextBuffStack = LR.AppendUI("Text", hBuffList, "TextBuffStack".. szKey, {w = 40, h = 25, x  = 5, y = 50, text = sformat(_L["Stack:%d"], buff.nMonitorStack), font = 15})
-		TextBuffStack:SetHAlign(0)
-		TextBuffStack:SetVAlign(1)
+		TextBuffStack:SetHAlign(0):SetVAlign(1)
 		if buff.nMonitorStack > 1 then
 			TextBuffStack:Show()
 		else
@@ -959,36 +955,28 @@ function LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
 
 		--ÐüÍ£¿ò
 		local Image_Hover = self:Append("Image", hBuffList, sformat("Image_BuffListHover_%s", szKey), {x = 0, y = 0, w = 160, h = 100})
-		Image_Hover:FromUITex("ui\\Image\\Common\\TempBox.UITex",5)
-		Image_Hover:SetImageType(10)
-		Image_Hover:SetAlpha(200)
-		Image_Hover:Hide()
+		Image_Hover:FromUITex("ui\\Image\\Common\\TempBox.UITex",5):SetImageType(10):SetAlpha(200):Hide()
 
 		--Ñ¡Ôñ¿ò
 		local Image_Select = self:Append("Image", hBuffList, sformat("Image_BuffListSelect_%s", szKey), {x = 2, y = 0, w = 160, h = 100})
-		Image_Select:FromUITex("ui\\Image\\Common\\TempBox.UITex",6)
-		Image_Select:SetImageType(10)
-		Image_Select:SetAlpha(200)
-		Image_Select:Hide()
+		Image_Select:FromUITex("ui\\Image\\Common\\TempBox.UITex",6):SetImageType(10):SetAlpha(200):Hide()
 
 		--Buff¿ò
 		local Image_BuffBox = LR.AppendUI("Image", hBuffList, "Image_BuffListBox" .. szKey, {x = 50, y = 8, w = 60, h = 60})
-		Image_BuffBox:FromUITex("ui\\Image\\Common\\TempBox.UITex",34)
-		Image_BuffBox:SetImageType(10)
-		Image_BuffBox:SetAlpha(255)
-		Image_BuffBox:Show()
+		Image_BuffBox:FromUITex("ui\\Image\\Common\\TempBox.UITex",34):SetImageType(10):SetAlpha(255):Show()
 
 		--Buff¿ò
 		local Image_BuffIcon = LR.AppendUI("Image", hBuffList, "Image_BuffListIcon" .. szKey, {x = 50, y = 8, w = 60, h = 60})
-		Image_BuffIcon:FromIconID(Table_GetBuffIconID(buff.dwID, buff.nLevel) or 13)
-		Image_BuffIcon:SetImageType(10)
-		Image_BuffIcon:SetAlpha(255)
-		Image_BuffIcon:Show()
+		if buff.nIconID > 0 then
+			Image_BuffIcon:FromIconID(buff.nIconID)
+		else
+			Image_BuffIcon:FromIconID(Table_GetBuffIconID(buff.dwID, buff.nLevel))
+		end
+		Image_BuffIcon:SetImageType(10):SetAlpha(255):Show()
 
 		--BUFFÃû×Ö
 		local TextBuffName = LR.AppendUI("Text", hBuffList, "TextBuffName".. szKey .."_2", {w = 160, h = 30, x  = 0, y = 70, text = Table_GetBuffName(buff.dwID, buff.nLevel), font = 18})
-		TextBuffName:SetHAlign(1)
-		TextBuffName:SetVAlign(1)
+		TextBuffName:SetHAlign(1):SetVAlign(1)
 
 		--BUFFÃû×Ö
 		local TextBuffName = LR.AppendUI("Text", hBuffList, "TextBuffName".. szKey .."_2", {w = 40, h = 30, x  = 5, y = 0, text = _L["Self"], font = 15})
@@ -1168,7 +1156,23 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 		HideTip()
 	end
 	Image_Buff_Icon.OnClick = function()
-
+		GetUserInput(_L["Enter icon id"], function(szText)
+			local szText =  string.gsub(szText, "^%s*%[?(.-)%]?%s*$", "%1")
+			if szText ~=  "" then
+				if type(tonumber(szText)) == "number" then
+					buff.nIconID = tonumber(szText)
+					if _UI[szKey]["Image_Buff_Icon"] then
+						if buff.nIconID > 0 then
+							_UI[szKey]["Image_Buff_Icon"]:FromIconID(buff.nIconID)
+						else
+							_UI[szKey]["Image_Buff_Icon"]:FromIconID(Table_GetBuffIconID(buff.dwID, buff.nLevel))
+						end
+					end
+					LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
+					LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
+				end
+			end
+		end)
 
 		LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
 		LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
