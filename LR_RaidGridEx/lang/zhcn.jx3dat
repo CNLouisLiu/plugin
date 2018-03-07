@@ -307,7 +307,7 @@ data={
 	["Set each level by distance"]="设置各级别距离",
 	["Set color of each level"]="设置各级别颜色",
 	["Set alpha of each level"]="设置各级别透明度",
-	["▊ Click to change color"]="▊ 点击设置颜色",
+	["Click to change color"]="▊ 点击设置颜色",
 
 	--20161209add--
 	["BuffMonitor Settings"]="BUFF监控设置",
@@ -369,48 +369,48 @@ data={
 
 	--20170111add--
 	["UI choose Instructions:\n"]="皮肤样式选择说明：\n",
-	["◆UI choose Instructions01\n"]="◆可选择基本皮肤、RaidGridEx皮肤、CTM风格皮肤以及系统样式皮肤\n",
-	["◆UI choose Instructions02\n"]="◆对RaidGridEx样式异常执着的老玩家请选择【RaidGridEx老风格】皮肤\n",
+	["UI choose Instructions01\n"]="◆可选择基本皮肤、RaidGridEx皮肤、CTM风格皮肤以及系统样式皮肤\n",
+	["UI choose Instructions02\n"]="◆对RaidGridEx样式异常执着的老玩家请选择【RaidGridEx老风格】皮肤\n",
 
 	["Team member name Instructions:\n"]="队友名字设置说明：\n",
-	["◆Team member name Instructions01\n"]="◆改选项设置队友名字的字体大小、颜色、字数限制以及字间距\n",
+	["Team member name Instructions01\n"]="◆改选项设置队友名字的字体大小、颜色、字数限制以及字间距\n",
 
 	["Kungfu Instructions:\n"]="心法设置说明\n",
-	["◆Kungfu Instructions01\n"]="◆可以设置显示为文字或者图标。\n",
+	["Kungfu Instructions01\n"]="◆可以设置显示为文字或者图标。\n",
 
 	["Blood Instructions:\n"]="血量文字设置说明：\n",
-	["◆Blood Instructions01\n"]="◆可以设置血量显示方式，以及濒危血线\n",
-	["◆Blood Instructions02\n"]="◆默认DPS状态下显示数值，奶妈状态下自动切换至百分比，奶妈状态下若要显示数值，请去掉【奶妈状态下显示百分比】并选择【显示数值】\n",
-	["◆Blood Instructions03\n"]="◆显示具体数值时默认显示为以万为单位，小数点保留2位的数值\n",
+	["Blood Instructions01\n"]="◆可以设置血量显示方式，以及濒危血线\n",
+	["Blood Instructions02\n"]="◆默认DPS状态下显示数值，奶妈状态下自动切换至百分比，奶妈状态下若要显示数值，请去掉【奶妈状态下显示百分比】并选择【显示数值】\n",
+	["Blood Instructions03\n"]="◆显示具体数值时默认显示为以万为单位，小数点保留2位的数值\n",
 
 	["BuffMonitor Instructions:\n"]="BUFF显示设置说明：\n",
-	["◆BuffMonitor Instructions01\n"]="◆默认开启BUFF显示\n",
-	["◆BuffMonitor Instructions02\n"]="◆默认可以显示4个BUFF\n",
-	["◆BuffMonitor Instructions03\n"]="◆显示的BUFF来源于：\n①DBM传过来的数据\n②面板自身的BUFF监控功能\n",
-	["◆BuffMonitor Instructions04\n"]="◆面板自身的BUFF监控请在BUFF设置面板中进行设置\n",
-	["◆BuffMonitor Instructions05\n"]="◆BUFF设置自带3组BUFF数据，【奶妈常用BUFF】【常用减伤BUFF】【常见无气劲BUFF】\n",
-	["◆BuffMonitor Instructions06\n"]="◆设置中显示“笑脸”表示监控，显示“哭脸”表示不监控，点击“笑脸”或者“哭脸”图标可以切换状态\n",
-	["◆BuffMonitor Instructions07\n"]="◆可以设置BUFF名称或者BUFF ID\n※仅显示自身的BUFF请在BUFF后加[自]\n※增加BUFF颜色请在BUFF后加(颜色)，目前支持红绿蓝黄紫青橙黑白几种颜色\n",
+	["BuffMonitor Instructions01\n"]="◆默认开启BUFF显示\n",
+	["BuffMonitor Instructions02\n"]="◆默认可以显示4个BUFF\n",
+	["BuffMonitor Instructions03\n"]="◆显示的BUFF来源于：\n①DBM传过来的数据\n②面板自身的BUFF监控功能\n",
+	["BuffMonitor Instructions04\n"]="◆面板自身的BUFF监控请在BUFF设置面板中进行设置\n",
+	["BuffMonitor Instructions05\n"]="◆BUFF设置自带3组BUFF数据，【奶妈常用BUFF】【常用减伤BUFF】【常见无气劲BUFF】\n",
+	["BuffMonitor Instructions06\n"]="◆设置中显示“笑脸”表示监控，显示“哭脸”表示不监控，点击“笑脸”或者“哭脸”图标可以切换状态\n",
+	["BuffMonitor Instructions07\n"]="◆可以设置BUFF名称或者BUFF ID\n※仅显示自身的BUFF请在BUFF后加[自]\n※增加BUFF颜色请在BUFF后加(颜色)，目前支持红绿蓝黄紫青橙黑白几种颜色\n",
 
 	["Mouse Instructions:\n"]="鼠标手势说明：\n",
-	["◆Mouse Instructions01\n"]="◆默认状态下，鼠标单击可以选中队友\n",
-	["◆Mouse Instructions02\n"]="◆悬停于角色格子上方时，显示队友TIP\n",
-	["◆Mouse Instructions03\n"]="◆按住SHIFT且悬停于角色格子上方时，显示目标的重伤记录\n",
-	["◆Mouse Instructions04\n"]="◆按住ALT且悬停于角色格子上方时，显示目标的DPS或者HPS记录（需要加载茗伊的伤害统计）\n",
-	["◆Mouse Instructions05\n"]="◆默认按住ALT，双击角色格子时，会请求与目标交易\n",
-	["◆Mouse Instructions06\n"]="◆可选双击时跟随目标（请手动设置）\n",
+	["Mouse Instructions01\n"]="◆默认状态下，鼠标单击可以选中队友\n",
+	["Mouse Instructions02\n"]="◆悬停于角色格子上方时，显示队友TIP\n",
+	["Mouse Instructions03\n"]="◆按住SHIFT且悬停于角色格子上方时，显示目标的重伤记录\n",
+	["Mouse Instructions04\n"]="◆按住ALT且悬停于角色格子上方时，显示目标的DPS或者HPS记录（需要加载茗伊的伤害统计）\n",
+	["Mouse Instructions05\n"]="◆默认按住ALT，双击角色格子时，会请求与目标交易\n",
+	["Mouse Instructions06\n"]="◆可选双击时跟随目标（请手动设置）\n",
 
 	["Distance Instructions:\n"]="血条颜色设置说明：\n",
-	["◆Distance Instructions01\n"]="◆默认显示为按距离着色:\n※绿色：目标在20尺内\n※黄色，目标在20~24尺内\n※红色：目标超过24尺且在同步范围内（一般为56尺左右）\n※白色：目标超出范围或者不在同一个地图\n",
-	["◆Distance Instructions02\n"]="◆可选择按门派着色，此时距离显示只能用透明度表示\n",
-	["◆Distance Instructions03\n"]="◆区分距离只能使用颜色或者透明度，且两种方式互斥\n",
+	["Distance Instructions01\n"]="◆默认显示为按距离着色:\n※绿色：目标在20尺内\n※黄色，目标在20~24尺内\n※红色：目标超过24尺且在同步范围内（一般为56尺左右）\n※白色：目标超出范围或者不在同一个地图\n",
+	["Distance Instructions02\n"]="◆可选择按门派着色，此时距离显示只能用透明度表示\n",
+	["Distance Instructions03\n"]="◆区分距离只能使用颜色或者透明度，且两种方式互斥\n",
 
 	["Cure Instructions:\n"]="治疗相关说明：\n",
-	["◆Cure Instructions01\n"]="◆默认切换到治疗心法后，显示自身的技能CD监控\n",
-	["◆Cure Instructions02\n"]="◆默认切换到治疗心法后，自动显示为血量百分比，如需显示数值，请将【血量自动转化为百分比】的勾去掉\n",
-	["◆Cure Instructions03\n"]="◆默认切换到治疗心法后，开启自动选队友方式①，即悬停时选中\n※处于自动选队友方式时，当鼠标移出面板，会自动返回最后一次手动点击的队友。\n",
-	["◆Cure Instructions04\n"]="◆默认开启BOSS的读条监控，毕竟奶妈大部分情况下不会选中Boss\n",
-	["◆Cure Instructions05\n"]="◆大BOSS目标在面板中显示为头盔+红框，精英怪目标显示为红框\n",
+	["Cure Instructions01\n"]="◆默认切换到治疗心法后，显示自身的技能CD监控\n",
+	["Cure Instructions02\n"]="◆默认切换到治疗心法后，自动显示为血量百分比，如需显示数值，请将【血量自动转化为百分比】的勾去掉\n",
+	["Cure Instructions03\n"]="◆默认切换到治疗心法后，开启自动选队友方式①，即悬停时选中\n※处于自动选队友方式时，当鼠标移出面板，会自动返回最后一次手动点击的队友。\n",
+	["Cure Instructions04\n"]="◆默认开启BOSS的读条监控，毕竟奶妈大部分情况下不会选中Boss\n",
+	["Cure Instructions05\n"]="◆大BOSS目标在面板中显示为头盔+红框，精英怪目标显示为红框\n",
 
 
 	--20170418add--
@@ -484,7 +484,7 @@ data={
 	["Import/Export data"]="数据导入导出",
 	["Export data"]="导出数据",
 	["Import data"]="导入数据",
-	["Clear data"]="清空记录",
+	["Clear data"]="清空数据",
 	["Sure to clear data?"]="确定要清空数据？",
 	["Begin buff collect"]="开始收集BUFF",
 	["Choose file"]="选择文件",
@@ -496,5 +496,38 @@ data={
 	["Shielded speech"]="屏蔽语音",
 	["Open LR GKP"]="打开懒人金团面板",
 	["Open LR TeamNotice"]="打开懒人团队告示",
+
+	--20180203add--
+	["Collect hide buff"]="搜集隐藏BUFF",
+	["Only from npc"]="只搜集来自NPC的BUFF",
+	["Load default data"]="载入默认数据",
+	["Sure to load default data?"]="确定要载入默认数据？",
+	["File location: %s.jx3dat\n"]="文件位于：%s.jx3dat\n",
+	["Connect to system raid panel"]="联动到系统面板",
+
+	["TeamBuffTool_Panel_Tip01\n"]="※BUFF优先级：醒目BUFF>边角BUFF>普通BUFF。若设置了普通BUFF而不显示，特别是奶妈，请检查是否设置了边角BUFF\n",
+	["TeamBuffTool_Panel_Tip02\n"]="※关联系统面板注意：系统面板只能设置监控的BUFF的ID，故 仅来自于自己 / 醒目 / 背景色 / 层数控制 / 等级控制 等的设置均无效。",
+
+	["Group name"]="分组名称",
+	["Buff list"]="BUFF列表",
+	["Add group"]="添加分组",
+	["Search+History"]="搜索+历史列表",
+	["Enter name or id"]="输入名字或者ID",
+	["Delete"]="删除",
+
+	["Enable monitor group: %s\n"]="开启对分组[%s]的监控。\n",
+	["Disable monitor group: %s\n"]="关闭对分组[%s]的监控。\n",
+
+	["Clear color"]="清除颜色",
+	["Enable boss focus"]="开启BOSS点名监控",
+	["Set boss focus alpha %d"]="设置点名透明度：%d",
+	["Enter file name"]="输入文件名",
+	["Set special buff bg alpha:%d"]="设置醒目BUFF背景透明度%d",
+
+	--20180306add--
+	["Group [%s] is enabled.\n"]="分组[%s]在监控中。\n",
+	["Group [%s] is disabled.\n"]="分组[%s]的监控已禁止。\n",
+	["LClick image to change status.\n"]="点击前面的图片(勾/感叹号)切换允许/禁止状态。\n",
+	["RClick to delete group.\n"]="右击删除分组\n",
 
 }

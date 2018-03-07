@@ -188,6 +188,80 @@ end
 -------------------------------
 --BOSS¶ÁÌõ¼à¿Ø
 -------------------------------
+function LR_TeamBossMonitor.CheckOTState2()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local _nType, _dwID = me.GetTarget()
+	local OTBar = _OTBarHandle[1]
+	if not (_nType == TARGET.NPC or _nType == TARGET.PLAYER) then
+		if OTBar then
+			OTBar:Remove()
+			_OTBarHandle[1] = nil
+			OTBar = nil
+			LR_TeamBossMonitor.ReLoadOTBarPosition()
+		end
+		return
+	end
+	local path = ""
+	if _nType == TARGET.NPC then
+		path = "Normal/Target"
+	else
+		local player = GetPlayer(_dwID)
+		if player then
+			_nType, _dwID = player.GetTarget()
+			if _nType == TARGET.NPC then
+				path = "Normal/TargetTarget"
+			else
+				if OTBar then
+					OTBar:Remove()
+					_OTBarHandle[1] = nil
+					OTBar = nil
+					LR_TeamBossMonitor.ReLoadOTBarPosition()
+				end
+				return
+			end
+		end
+	end
+	local frame = Station.Lookup(path)
+	if not frame then
+		return
+	end
+	local Handle_Target = frame:Lookup("","")
+	local Handle_Bar = Handle_Target:Lookup("Handle_Bar")
+	if not Handle_Bar:IsVisible() then
+		if OTBar then
+			OTBar:Remove()
+			_OTBarHandle[1] = nil
+			OTBar = nil
+			LR_TeamBossMonitor.ReLoadOTBarPosition()
+		end
+		return
+	end
+	local Image_Progress = Handle_Bar:Lookup("Image_Progress")
+	local Image_FlashF = Handle_Bar:Lookup("Image_FlashF")
+	local Image_FlashS = Handle_Bar:Lookup("Image_FlashS")
+	local Text_Name = Handle_Bar:Lookup("Text_Name")
+	local fp = Image_Progress:GetPercentage()
+	if not OTBar then
+		local h = _BossOTBar:new(1)
+		h:Create():SetAlpha(255):SetPercentage(0):SetSkillName(Text_Name:GetText()):SetText():SetCasterName(Handle_Target:Lookup("Text_Target"):GetText())
+		_OTBarHandle[1] = h
+		OTBar = h
+	end
+	if Image_FlashF:IsVisible() then
+		OTBar:OTFail()
+	elseif Image_FlashS:IsVisible() then
+		OTBar:OTSucess()
+	else
+		OTBar:SetPercentage(fp)
+	end
+	OTBar:SetAlpha(Handle_Bar:GetAlpha())
+	LR_TeamBossMonitor.ReLoadOTBarPosition()
+end
+
+
 function LR_TeamBossMonitor.CheckOTState(dwID)
 	local dwID = dwID
 	if not _OTMonitorList[dwID] then
@@ -211,10 +285,14 @@ function LR_TeamBossMonitor.CheckOTState(dwID)
 	if not (IsEnemy(obj.dwID, me.dwID) and obj.bFightState) then
 		--return
 	end
-	local bPrePare,dwSkillID,dwSkillLevel,fP = obj.GetSkillPrepareState()
+	--local nType, dwSkillID, dwSkillLevel, fP = obj.GetSkillOTActionState()
+	local nType, dwSkillID, dwSkillLevel, fP = obj.GetSkillPrepareState()
 	local OTBar = _OTBarHandle[dwID]
 
-	if bPrePare and v.nActionState ~= ACTION_STATE.PREPARE then
+
+	--Output(obj.szName, nType, dwSkillID, dwSkillLevel, fP)
+
+	if nType  and v.nActionState ~= ACTION_STATE.PREPARE then
 		if not OTBar then
 			local h = _BossOTBar:new(dwID)
 			h:Create():SetAlpha(255):SetPercentage(0):SetSkillName(LR.Trim(Table_GetSkillName(dwSkillID, dwSkillLevel))):SetCasterName(LR.Trim(obj.szName)):SetText()
@@ -223,7 +301,7 @@ function LR_TeamBossMonitor.CheckOTState(dwID)
 		OTBar = _OTBarHandle[dwID]
 		v.nActionState = ACTION_STATE.PREPARE
 		LR_TeamBossMonitor.ReLoadOTBarPosition()
-	elseif not bPrePare and v.nActionState == ACTION_STATE.PREPARE then
+	elseif not nType and v.nActionState == ACTION_STATE.PREPARE then
 		v.nActionState = ACTION_STATE.DONE
 		if OTBar then
 			OTBar:Remove()
@@ -280,6 +358,7 @@ end
 function LR_TeamBossMonitor.CheckAllOTState()
 	--10028ÄÌ»¨ 10080ÄÌÐã 10176ÄÌ¶¾ 10448ÄÌÇÙ
 	------Boss¶ÁÌõ¼à¿Ø
+	LR_TeamBossMonitor.CheckOTState2()
 	if not GetClientPlayer() then
 		return
 	end

@@ -1,0 +1,12 @@
+data = {
+	["Team request"]="組隊請求/邀請",
+	["Check Attribute"]="查看屬性",
+	["Refuse all?"]="拒絕所有的請求？",
+	["Yes"]="是的",
+	["Cancel"]="取消",
+
+	["Helpers"]="小助手",
+	["LR TeamHelper"]="懶人組隊助手",
+	["Enable LR TeamHelper"]="開啟懶人組隊助手",
+
+}

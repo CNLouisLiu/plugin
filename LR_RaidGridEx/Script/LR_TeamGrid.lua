@@ -152,6 +152,11 @@ local DefaultCommonSettings = {
 	--Boss目标
 	bShowBossTarget = true,
 	bShowSmallBossTarget = true,
+	--Boss点名
+	bShowBossFocus = true,
+	nBossFocusAlpha = 120,
+	--醒目BUFF
+	nSpecialBuffAlpha = 120,
 	--Debuff监控
 	debuffMonitor = {
 		bOff = false,	---关闭debuff监控
@@ -196,6 +201,7 @@ local _Members = {}	--存放人物数据，包括进队以及离队的，缓存
 local _tPartyMark = {}	--存放标记
 local bDraged = false
 local _JCG = {}	--用于存放切了剑的长歌
+local _tBossFocusList = {}
 ---------------------------------------------------------------
 LR_TeamGrid_Panel = {}
 
@@ -402,13 +408,8 @@ function _RoleGrid:Create()
 				LR_TeamGrid.HandClickTarget = dwID
 				LR_TeamGrid.timeCache = GetLogicFrameCount()
 				if LR_TeamGrid.UsrData.CommonSettings.bInCureMode then
-					local me =  GetClientPlayer()
-					if not me then
-						return
-					end
-					local kungfu=me.GetKungfuMount()
-					local dwSkillID=kungfu.dwSkillID
-					if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+					local dwKungfuID = UI_GetPlayerMountKungfuID()
+					if dwKungfuID == 10028 or dwKungfuID == 10080 or dwKungfuID == 10176 or dwKungfuID == 10448 then
 						LR_TeamGrid.cureTarget = dwID
 					else
 						LR_TeamGrid.cureTarget = nil
@@ -559,6 +560,8 @@ function _RoleGrid:SetRoleBodySize()
 	handle:Lookup("Image_BG_EmptyGrid"):SetRelPos(-1, -1)
 	handle:Lookup("Image_Hover"):SetSize(width+2,height+2)
 	handle:Lookup("Image_Hover"):SetRelPos(-1, -1)
+	handle:Lookup("Image_BossFocus"):SetSize(width+2,height+2)
+	handle:Lookup("Image_BossFocus"):SetRelPos(-1, -1)
 	handle:Lookup("Image_ReadyCheck"):SetSize(width, height)
 	handle:Lookup("Image_ReadyCheck"):SetRelPos(0, 0)
 	handle:FormatAllItemPos()
@@ -1285,6 +1288,11 @@ function _RoleGrid:DrawLifeText()
 	local MemberInfo = _Members[dwID]
 	local nCurrentLife = MemberInfo.nCurrentLife
 	local nMaxLife = MemberInfo.nMaxLife
+	local player = GetPlayer()
+	if player then
+		nCurrentLife = player.nCurrentLife
+		nMaxLife = player.nMaxLife
+	end
 	if _JCG[dwID] then
 		local npc = GetNpc(_JCG[dwID])
 		if npc then
@@ -1732,9 +1740,8 @@ function _RoleGrid:SetSpecialBuffSize()
 	local heightSpecialBuffBg = UIConfig["Bg"].height * fy
 	local widthSpecialBuffBg = UIConfig["Bg"].width * fx
 	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffBg"):SetSize(widthSpecialBuffBg, heightSpecialBuffBg)
---[[	local heightSpecialBuffLifeBar = UIConfig["LifeBar"].height * fy
-	local widthSpecialBuffLifeBar = UIConfig["LifeBar"].width * fx
-	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffLifeBar"):SetSize(widthSpecialBuffLifeBar, heightSpecialBuffLifeBar)]]
+	handle:Lookup("Handle_SpecialBuff"):Lookup("Image_SpecialMe"):SetSize(widthSpecialBuffBg, heightSpecialBuffBg)
+
 	return self
 end
 
@@ -1748,15 +1755,25 @@ function _RoleGrid:SetSpecialBuffRelPos()
 	local topSpecialBuffBg = UIConfig["Bg"].top * fy
 	local leftSpecialBuffBg = UIConfig["Bg"].left * fx
 	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffBg"):SetRelPos(leftSpecialBuffBg, topSpecialBuffBg)
-	--handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffBg"):SetColorRGB(17, 186, 150)
 	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffBg"):Hide()
---[[	local topSpecialBuffLifeBar = UIConfig["LifeBar"].top * fy
-	local leftSpecialBuffLifeBar = UIConfig["LifeBar"].left * fx
-	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffLifeBar"):SetRelPos(leftSpecialBuffLifeBar, topSpecialBuffLifeBar)
-	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffLifeBar"):SetColorRGB(255, 186, 150)
-	handle:Lookup("Handle_SpecialBuff"):Lookup("Shadow_SpecialBuffLifeBar"):Show()]]
+	handle:Lookup("Handle_SpecialBuff"):Lookup("Image_SpecialMe"):SetRelPos(leftSpecialBuffBg, topSpecialBuffBg)
+	handle:Lookup("Handle_SpecialBuff"):Lookup("Image_SpecialMe"):Hide()
 	handle:FormatAllItemPos()
 	handle:Lookup("Handle_SpecialBuff"):FormatAllItemPos()
+	return self
+end
+
+function _RoleGrid:BossFocus(bShow)
+	local handle = self.handle
+	local Image_BossFocus = handle:Lookup("Image_BossFocus")
+	if Image_BossFocus then
+		Image_BossFocus:SetAlpha(LR_TeamGrid.UsrData.CommonSettings.nBossFocusAlpha or 120)
+		if bShow then
+			Image_BossFocus:Show()
+		else
+			Image_BossFocus:Hide()
+		end
+	end
 	return self
 end
 
@@ -1830,6 +1847,9 @@ function LR_TeamGrid.OnFrameCreate()
 	--46140这两个事件用于长歌切剑
 	this:RegisterEvent("NPC_ENTER_SCENE")
 	this:RegisterEvent("NPC_LEAVE_SCENE")
+
+	--BOSS点名
+	this:RegisterEvent("ON_BOSS_FOCUS")
 
 	this:RegisterEvent("LOADING_END")	--载入完成
 	this:RegisterEvent(12787)
@@ -2004,11 +2024,14 @@ function LR_TeamGrid.OnEvent(szEvent)
 		LR_TeamGrid.NPC_ENTER_SCENE()
 	elseif szEvent == "NPC_LEAVE_SCENE" then
 		LR_TeamGrid.NPC_LEAVE_SCENE()
+	elseif szEvent == "ON_BOSS_FOCUS" then
+		LR_TeamGrid.ON_BOSS_FOCUS()
 	end
 end
 
 function LR_TeamGrid.OnFrameDestroy()
 	_tRoleGrids ={}
+	_JCG = {}
 	LR_TeamBuffMonitor.ClearAllNormalBuffCache()
 	LR_TeamBuffMonitor.ClearAllCache()
 end
@@ -2034,6 +2057,24 @@ function LR_TeamGrid.OnFrameBreathe()
 			v:DrawLifeBar():DrawLifeText()
 		end
 	end
+
+	--Boss点名
+	for dwID, v in pairs(_tRoleGrids) do
+		if v then
+			if _tBossFocusList[dwID] then
+				v:BossFocus(_tBossFocusList[dwID])
+			else
+				v:BossFocus(false)
+			end
+		end
+	end
+
+--[[	for dwID, bShow in pairs(_tBossFocusList) do
+		local v =  _tRoleGrids[dwID]
+		if v then
+			v:BossFocus(bShow)
+		end
+	end]]
 
 	if GetLogicFrameCount() % 2 == 0 then
 		LR_TeamGrid.CheckPanelActive()
@@ -2107,7 +2148,12 @@ function LR_TeamGrid.OnMouseEnter()
 		OutputTip(GetFormatText(tText[GVoiceBase_GetSpeakerState()], 0), 300, {fx, fy, nW, nH})
 	elseif szName == "Wnd_Body" or szName == "Wnd_BodySub" then
 		LR_TeamGrid.bInFrame = true
-		LR_TeamGrid.timeCache = GetLogicFrameCount()
+		if LR_TeamGrid.UsrData.CommonSettings.bInCureMode then
+			local dwKungfuID = UI_GetPlayerMountKungfuID()
+			if dwKungfuID == 10028 or dwKungfuID == 10080 or dwKungfuID == 10176 or dwKungfuID == 10448 then
+				LR_TeamGrid.timeCache = GetLogicFrameCount()
+			end
+		end
 	elseif szName == "Btn_LR_GKP" then
 		local fx, fy = this:GetAbsPos()
 		local nW, nH = this:GetSize()
@@ -2116,19 +2162,6 @@ function LR_TeamGrid.OnMouseEnter()
 		local fx, fy = this:GetAbsPos()
 		local nW, nH = this:GetSize()
 		OutputTip(GetFormatText(_L["Open LR TeamNotice"], 0), 300, {fx, fy, nW, nH})
-	end
-
-	--屏蔽功能
-	if false and LR_TeamGrid.UsrData.CommonSettings.bInCureMode and LR_TeamGrid.UsrData.CommonSettings.cureMode == 2 then
-		local me =  GetClientPlayer()
-		if not me then
-			return
-		end
-		local kungfu=me.GetKungfuMount()
-		local dwSkillID=kungfu.dwSkillID
-		if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
-			--Station.SetFocusWindow(this)	暂时屏蔽按键选人的功能
-		end
 	end
 end
 
@@ -2144,13 +2177,8 @@ function LR_TeamGrid.OnMouseLeave()
 		LR_TeamGrid.bInFrame = false
 		LR_TeamGrid.outTime = GetLogicFrameCount()
 		if not LR_TeamGrid.cureLock and LR_TeamGrid.UsrData.CommonSettings.bInCureMode then
-			local me =  GetClientPlayer()
-			if not me then
-				return
-			end
-			local kungfu=me.GetKungfuMount()
-			local dwSkillID=kungfu.dwSkillID
-			if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+			local dwKungfuID = UI_GetPlayerMountKungfuID()
+			if dwKungfuID == 10028 or dwKungfuID == 10080 or dwKungfuID == 10176 or dwKungfuID == 10448 then
 				if LR_TeamGrid.IfTargetCanBSelect(LR_TeamGrid.cureTarget) then
 					LR_TeamGrid.SetTarget(LR_TeamGrid.cureTarget)
 				end
@@ -2228,6 +2256,8 @@ function LR_TeamGrid.UpdateRoleBodySize()
 	local width2, height2 = 0, 0
 	if LR_TeamGrid.UsrData.CommonSettings.nGridType == 2 then
 		if LR_TeamGrid.Handle_RolesSub:GetItemCount() == 0 then
+			LR_TeamGrid.Handle_TeamNumSub:Clear()
+			LR_TeamGrid.Handle_TeamNumSub:SetSize(0, 0)
 			LR_TeamGrid.Handle_BodySub:Lookup("Image_BodyBgSub"):SetSize(0, 0)
 			LR_TeamGrid.Handle_BodySub:SetSize(0, 0)
 			LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetSize(0, 0)
@@ -2481,7 +2511,8 @@ function LR_TeamGrid.SaveCommonData()
 end
 
 function LR_TeamGrid.LoadUIList()
-	local src = sformat("%s\\UI\\UIList.dat", AddonPath)
+	local _, _, szLang = GetVersion()
+	local src = sformat("%s\\UI\\UIList.%s", AddonPath, szLang)
 	local data = LoadLUAData(src) or {}
 	LR_TeamGrid.UIList = clone(data)
 end
@@ -2605,8 +2636,14 @@ function LR_TeamGrid.ReDrawAllMembers(bClear)
 		LR_TeamBuffMonitor.ClearhMemberNormalBuff()
 		LR_TeamEdgeIndicator.ClearEdgeIndicatorCache()
 		LR_TeamBuffMonitor.ClearSpecialBuffCache(dwID)
+
+		_JCG = {}
+		_tBossFocusList = {}
+
 		LR_TeamGrid.Handle_Roles:Clear()
 		LR_TeamGrid.Handle_RolesSub:Clear()
+		LR_TeamGrid.Handle_TeamNum:Clear()
+		LR_TeamGrid.Handle_TeamNumSub:Clear()
 		_tRoleGrids={}
 	end
 	LR_TeamGrid.DrawAllMembers()
@@ -2865,6 +2902,7 @@ function LR_TeamGrid.SetTitleText(szText)
 	local Wnd_Title = hFrame:Lookup("Wnd_Title")
 	local Handle_Title = LR_TeamGrid.Handle_Title
 	local Handle_TitleText = Handle_Title:Lookup("Handle_TitleText")
+	Handle_TitleText:SetRelPos(230, 0)
 	local hText = Handle_TitleText:Lookup("Text_TitleText")
 	hText:SetSize(1000,30)
 	hText:SetText(szText)
@@ -3692,6 +3730,13 @@ function LR_TeamGrid.NPC_LEAVE_SCENE()
 		end
 	end
 end
+
+function LR_TeamGrid.ON_BOSS_FOCUS()
+	local dwPlayerID = arg0
+	local bFlash = arg1
+	_tBossFocusList[dwPlayerID] = bFlash
+end
+
 -----------------------------------------------------------------------
 -- 关于界面打开和刷新面板的时机
 -- 1) 普通情况下 组队会触发[PARTY_UPDATE_BASE_INFO]打开+刷新

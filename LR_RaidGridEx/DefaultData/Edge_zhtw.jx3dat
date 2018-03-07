@@ -1,0 +1,82 @@
+data = {
+	[2] = {	--萬花
+		["TopLeft"] = {
+			style = 0,
+			buff = {dwID = 0, szName = "", bOnlySelf = true,},
+		},
+		["TopRight"] = {
+			style = 1,
+			buff = {dwID = 631, szName = "", bOnlySelf = true,},
+		},
+		["BottomLeft"] = {
+			style = 0,
+			buff = {dwID = 0, szName = "", bOnlySelf = false,},
+		},
+		["BottomRight"] = {
+			style = 0,
+			buff = {dwID = 0, szName = "", bOnlySelf = false,},
+		},
+		["yellow"] = 0.5,
+		["red"] = 3,
+	},
+	[5] = {	--七秀
+		["TopLeft"] = {
+			style = 1,
+			buff = {dwID = 681, szName = "", bOnlySelf = true,},
+		},
+		["TopRight"] = {
+			style = 1,
+			buff = {dwID = 680, szName = "", bOnlySelf = true,},
+		},
+		["BottomLeft"] = {
+			style = 0,
+			buff = {dwID = 0, szName = "", bOnlySelf = false,},
+		},
+		["BottomRight"] = {
+			style = 0,
+			buff = {dwID = 0, szName = "", bOnlySelf = false,},
+		},
+		["yellow"] = 0.5,
+		["red"] = 3,
+	},
+	[6] = {	--五毒
+		["TopLeft"] = {
+			style = 0,
+			buff = {dwID = 0, szName = "", bOnlySelf = true,},
+		},
+		["TopRight"] = {
+			style = 0,
+			buff = {dwID = 0, szName = "", bOnlySelf = true,},
+		},
+		["BottomLeft"] = {
+			style = 0,
+			buff = {dwID = 0, szName = "", bOnlySelf = false,},
+		},
+		["BottomRight"] = {
+			style = 0,
+			buff = {dwID = 0, szName = "", bOnlySelf = false,},
+		},
+		["yellow"] = 0.5,
+		["red"] = 3,
+	},
+	[22] = {	--長歌
+		["TopLeft"] = {
+			style = 1,
+			buff = {dwID = 0, szName = "角", bOnlySelf = true,},
+		},
+		["TopRight"] = {
+			style = 1,
+			buff = {dwID = 0, szName = "商", bOnlySelf = true,},
+		},
+		["BottomLeft"] = {
+			style = 0,
+			buff = {dwID = 0, szName = "", bOnlySelf = false,},
+		},
+		["BottomRight"] = {
+			style = 0,
+			buff = {dwID = 0, szName = "", bOnlySelf = false,},
+		},
+		["yellow"] = 0.5,
+		["red"] = 3,
+	},
+}

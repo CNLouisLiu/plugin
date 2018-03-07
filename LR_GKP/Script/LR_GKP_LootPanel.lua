@@ -370,7 +370,7 @@ function LR_GKP_Loot:LoadItemBox(dwDoodadID, items)
 
 		local OnClick = function()
 			if IsCtrlKeyDown() then
-				EditBox_AppendLinkItemInfo(1, v.dwTabType, v.dwIndex, v.nBookID)
+				LR.EditBox_AppendLinkItem(v)
 				return
 			end
 			if not LR_GKP_Base.CheckIsDistributor() then
@@ -1042,6 +1042,8 @@ function LR_GKP_Loot.OPEN_DOODAD()
 	local szDoodadName, items = LR_GKP_Base.GetItemInDoodad(dwDoodadID)
 	if #items > 0 then
 		LR_GKP_Loot.Open(dwDoodadID, szDoodadName, items)
+		_SYNCED_LOOT_NUM[dwDoodadID] = #items
+		_SYNCED_LOOT_LIST[dwDoodadID] = true
 	end
 end
 
@@ -1050,7 +1052,7 @@ local _SYNCED_LOOT_NUM = {}
 function LR_GKP_Loot.SYNC_LOOT_LIST()
 	local dwDoodadID = arg0
 	local frame = Station.Lookup(sformat("Normal/LR_GKP_Loot_%d", dwDoodadID))
-	if frame or not _SYNCED_LOOT_LIST[dwDoodadID] then
+	if frame  then
 		local szDoodadName, items = LR_GKP_Base.GetItemInDoodad(dwDoodadID)
 		if #items > 0 then
 			if not (_SYNCED_LOOT_NUM[dwDoodadID] and #items == _SYNCED_LOOT_NUM[dwDoodadID]) then

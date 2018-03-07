@@ -327,7 +327,7 @@ local LR_AS_Normal_Settings = {
 			callback = function(m)
 				LR_AccountStatistics_RiChang.LoadCustomQuestList()
 				local szOption = {_L["PVE"],  _L["PVP"], _L["PVX"]}
-				local List = {{"DA", "GONG"}, {"JU", "JING"}, {"CHA", "QIN", "CAI", "TU", "XUN", "MI", "HUIGUANG", "HUASHAN"}}
+				local List = {{"DA", "GONG"}, {"JU", "JING", "LONGMENJUEJING", "LUOYANGSHENBING"}, {"CHA", "QIN", "CAI", "TU", "XUN", "MI", "HUIGUANG", "HUASHAN"}}
 				for k, v in pairs (szOption) do
 					m[#m+1] = {szOption = v}
 					local t = m[#m]

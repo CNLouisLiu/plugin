@@ -5,4 +5,8 @@ data = {
 	["Yes"]="是的",
 	["Cancel"]="取消",
 
+	["Helpers"]="小助手",
+	["LR TeamHelper"]="懒人组队助手",
+	["Enable LR TeamHelper"]="开启懒人组队助手",
+
 }

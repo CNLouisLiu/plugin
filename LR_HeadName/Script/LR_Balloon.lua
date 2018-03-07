@@ -181,8 +181,10 @@ function _Balloon:DrawContent()
 		image:FromUITex("ui\\Image\\LootPanel\\LootPanel.UITex", 80)
 	elseif LR_HeadName.UsrData.nBallonType  == 1 then
 		image:FromUITex("ui\\Image\\UICommon\\CommonPanel.UITex", 21)
---[[	elseif LR_HeadName.UsrData.nBallonType  == 4 then
-		image:FromUITex("ui\\Image\\UICommon\\YiRong3.UITex", 41)]]
+	elseif LR_HeadName.UsrData.nBallonType  == 4 then
+		image:FromUITex("ui\\Image\\UICommon\\RaidTotal.UITex", 17)
+	elseif LR_HeadName.UsrData.nBallonType  == 5 then
+		image:FromUITex("ui\\Image\\UICommon\\RaidTotal.UITex", 15)
 	end
 
 	local imagehover = handle:Lookup("Image_Hover")

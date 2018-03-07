@@ -624,4 +624,36 @@ data={
 	["PENG_TIAO_FA"]="烹调法",
 	["DIALOG_PENG_TIAO_FA_01"]="还望施主嘴下留情",
 
+	["ER_NV_SHI"]="儿女事",
+	["DIALOG_ER_NV_SHI_01"]="我也没多少鱼饵啦",
+
+	["Not Found\n"]="没找到\n",
+
+	["LONGMENJUEJING"]="龙门绝境",
+	["LUOYANGSHENBING"]="洛阳神兵",
+
+	--20180307add--
+	["BAI_XUE_YI"]="白雪忆",
+	["DIALOG_BAI_XUE_YI_01"]="不宜读得过快",
+
+	["DUAN_JIAN_NV"]="锻剑女",
+	["DIALOG_DUAN_JIAN_NV_01"]="不如先休息一下",
+
+	["YAN_HUA_XI_CHUN"]="烟花戏·春",
+	["DIALOG_YAN_HUA_XI_CHUN_01"]="看来还是配方不对",
+
+	["YAN_HUA_XI_QIU"]="烟花戏·秋",
+	["DIALOG_YAN_HUA_XI_QIU_01"]="今天已经上了三次药了",
+
+	["YAN_HUA_XI_FENG"]="烟花戏·风",
+	["DIALOG_YAN_HUA_XI_FENG_01"]="今天你和她打了三次招呼都没有理你",
+
+	["YAN_HUA_XI_YUE"]="烟花戏·月",
+	["DIALOG_YAN_HUA_XI_YUE_01"]="看来是没什么用了",
+
+	["YI_NIAN_JIAN"]="一念间",
+	["DIALOG_YI_NIAN_JIAN_01"]="今天挖的水草已经够多啦",
+
+	["RONG_MA_BIAN"]="戎马边",
+	["DIALOG_RONG_MA_BIAN_01"]="再画也不会有什么进展了",
 }

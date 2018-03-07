@@ -117,7 +117,7 @@ data={
 	["LR Plugins"]="懶人插件集",
 	["Enable Bottom-Right Button"]="開啟右下角入口按鈕",
 	["Welcome %s to use LR Plugins"]="歡迎 %s 使用懶人插件集！",
-	["Author:HuaQi@DianLiu"]="作者：華契@電六",
+	["Author:HuaQi@DianLiu"]="作者：華契@電一國色",
 	["If you have any suggestions or comments, please open the Weibo of the author!"]="如果你有任何的意見和建議，請點擊打開作者微博！",
 	["Click to open the Setting_Interface of LR Plugins"]="點擊打開懶人插件設置界面",
 	["I want to make suggestions and comments, feedback bugs"]="我要提建議和意見，反饋bug",
@@ -173,4 +173,11 @@ data={
 	["Font%d"]="字體%d",
 	["LR Font Table"]="懶人字體面板",
 	["Auto close"]="自動關閉",
+
+	--201180130add--
+	["Do not operate frequently, please.\n"]="請不要頻繁操作。\n",
+	["infopanel"]="人物屬性",
+	["View attribute"]="查看屬性（懶人）",
+	["LR team notice"]="團隊告示",
+	["Not show when loading end"]="過圖時不顯示",
 }

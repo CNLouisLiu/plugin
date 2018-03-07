@@ -22,10 +22,10 @@ def S2T(line):
     return line
 
 def file_c2t(path, filename):
-    file = open(path + "\\" +filename, 'rt', encoding="ansi")
+    file = open(path + '\\' + filename, 'rt', encoding="ansi")
     line = file.read()
     line2 = S2T(line)
-    file2 = open(path + '\\zhtw.jx3dat', 'wt', encoding="utf-8")
+    file2 = open(path + '\\' + filename.replace('zhcn', 'zhtw'), 'wt', encoding="utf-8")
     file2.write(line2)
     file.close()
     file2.close()
@@ -34,7 +34,8 @@ rootdir = r'C:\JX3HD\bin\zhcn_hd\interface\LR_Plugin'
 
 for parent, dirnames, filenames in os.walk(rootdir):
     for filename in filenames:
-        if filename == "zhcn.jx3dat":
+        if filename.find("zhcn") > -1 and filename.find("jx3dat") > -1:
+            print(parent, filename)
             file_c2t(parent, filename)
 
 

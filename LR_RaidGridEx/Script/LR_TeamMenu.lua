@@ -46,6 +46,21 @@ function LR_TeamMenu.CureModeMenu()
 			LR_TeamGrid.SaveCommonData()
 		end,}
 	menu[#menu+1]={bDevide=true}
+	menu[#menu+1]={szOption = _L["Enable boss focus"], bCheck = true, bChecked = function() return LR_TeamGrid.UsrData.CommonSettings.bShowBossFocus end,
+		fnAction = function()
+			LR_TeamGrid.UsrData.CommonSettings.bShowBossFocus = not LR_TeamGrid.UsrData.CommonSettings.bShowBossFocus
+			LR_TeamGrid.SaveCommonData()
+		end,}
+	menu[#menu+1]={szOption = sformat(_L["Set boss focus alpha %d"], LR_TeamGrid.UsrData.CommonSettings.nBossFocusAlpha or 120),
+		fnAction = function()
+			local fx, fy = this:GetAbsPos()
+			GetUserInputNumber(LR_TeamGrid.UsrData.CommonSettings.nBossFocusAlpha or 120, 255, {fx, fy, 0, 0},
+				function(value)
+					LR_TeamGrid.UsrData.CommonSettings.nBossFocusAlpha = tonumber(value)
+					LR_TeamGrid.SaveCommonData()
+				end, nil, nil)
+		end,}
+	menu[#menu+1]={bDevide=true}
 	menu[#menu+1]={szOption=_L["The following functions will be auto enabled in cure kungfu"],fnDisable=function() return true end,}
 	menu[#menu+1]={bDevide=true}
 	menu[#menu+1]={szOption= _L["Quick select team member(without click)."],bMCheck=false,bCheck=true,bChecked= LR_TeamGrid.UsrData.CommonSettings.bInCureMode ,
@@ -612,7 +627,16 @@ function LR_TeamMenu.BuffMonitorMenu()
 			}
 		}
 	end
-
+	menu[#menu+1]={szOption = sformat(_L["Set special buff bg alpha:%d"], LR_TeamGrid.UsrData.CommonSettings.nSpecialBuffAlpha or 120),
+		fnAction = function()
+			local fx, fy = this:GetAbsPos()
+			GetUserInputNumber(LR_TeamGrid.UsrData.CommonSettings.nSpecialBuffAlpha or 120, 255, {fx, fy, 0, 0},
+				function(value)
+					LR_TeamGrid.UsrData.CommonSettings.nSpecialBuffAlpha = tonumber(value)
+					LR_TeamGrid.SaveCommonData()
+				end, nil, nil)
+		end,
+	}
 	menu[#menu+1]={bDevide=true,}
 	szText = {_L["Show buff stack"], _L["Show buff remain time"]}
 	local key = {"bShowStack", "bShowLeftTime"}
@@ -626,7 +650,7 @@ function LR_TeamMenu.BuffMonitorMenu()
 	end
 
 	menu[#menu+1]={bDevide=true,}
-	menu[#menu+1]={szOption=_L["Load default file"],fnAction=function() LR_TeamBuffSettingPanel.LoadDefaultData() end,}
+	--menu[#menu+1]={szOption=_L["Load default file"],fnAction=function() LR_TeamBuffSettingPanel.LoadDefaultData() end,}
 	menu[#menu+1]={szOption=_L["Open Buff Set Panel"],fnAction=function() LR_TeamBuffTool_Panel:Open() end,}
 	return menu
 end
@@ -673,7 +697,7 @@ function LR_TeamMenu.BloodDisplayMenu()
 	end
 
 	menu[#menu+1]={bDevide = true}
-	menu[#menu+1]={szOption = _L["Life/Mana danger set"], fnDisable=function() return true end, }
+	menu[#menu+1]={szOption = _L["Life/Mana!danger set"], fnDisable=function() return true end, }
 	local szText={_L["Show Life Danger"], _L["Show Mana Danger"]}
 	local szText2={_L["Life Danger Line:%d%%, Click to change"], _L["Mana Danger Line:%d%%, Click to change"]}
 	local key={"bShowLifeDanger", "bShowManaDanger"}
@@ -827,8 +851,8 @@ end
 function LR_TeamMenu.PopOptions()
 	local tOptions={}
 	local menu
-	tOptions[#tOptions+1]={szOption = _L["Config Debuff monitor settings"],}
-	menu=tOptions[#tOptions]
+	tOptions[#tOptions+1]={szOption = _L["Config Debuff monitor settings"], fnAction = function() LR_TeamBuffTool_Panel:Open() end}
+--[[	menu=tOptions[#tOptions]
 	menu[#menu+1]={szOption = _L["Add/Remove Settings"],bCheck=true,bChecked=false,
 		fnAction=function()
 			GetPopupMenu():Hide()
@@ -876,10 +900,11 @@ function LR_TeamMenu.PopOptions()
 			}
 			MessageBox(msg)
 		end,
-	}
+	}]]
 
 	tOptions[#tOptions+1]= {szOption = _L["Clear Panel"], fnAction = function()
 		LR_TeamBuffMonitor.ClearAllNormalBuffCache()
+		LR_TeamBuffMonitor.ClearAllCache()
 		LR_TeamGrid.ReDrawAllMembers(true)
 	end}
 	if LR_TeamGrid.IsLeader(GetClientPlayer().dwID) then

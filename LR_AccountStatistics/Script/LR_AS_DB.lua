@@ -101,7 +101,7 @@ local schema_exam_data = {
 
 local schema_richang_data = {
 	name = "richang_data",
-	version = "20170919",
+	version = "20180204a",
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--Ö÷¼ü
 		{name = "DA", 	sql = "DA TEXT"},
@@ -117,6 +117,8 @@ local schema_richang_data = {
 		{name = "MI", 	sql = "MI TEXT"},
 		{name = "HUIGUANG", 	sql = "HUIGUANG TEXT"},
 		{name = "HUASHAN", 	sql = "HUASHAN TEXT"},
+		{name = "LONGMENJUEJING", 	sql = "LONGMENJUEJING TEXT"},
+		{name = "LUOYANGSHENBING", 	sql = "LUOYANGSHENBING TEXT"},
 		{name = "CUSTOM_QUEST", 	sql = "CUSTOM_QUEST TEXT"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
@@ -381,7 +383,7 @@ function LR_AS_DB.MainDBVacuum(skip)
 		DB:Execute("VACUUM")
 		DB:Release()
 		LR.SysMsg(sformat("%s\n", _L["VACUUM Success!"]))
-		LR.GreenAlert(sformat("%s\n", _L["VACUUM Success!"]))
+		--LR.GreenAlert(sformat("%s\n", _L["VACUUM Success!"]))
 	end
 
 	if skip then

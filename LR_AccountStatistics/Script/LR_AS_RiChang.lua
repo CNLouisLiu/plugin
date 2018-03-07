@@ -22,6 +22,8 @@ local RI_CHANG = {
 	MI = 11, 	--觅宝会/黑市
 	HUIGUANG = 12, 	--回光(7周年)
 	HUASHAN = 13, 	--扇子(7周年)
+	LONGMENJUEJING = 14,	--吃鸡
+	LUOYANGSHENBING = 15,	--洛阳神兵
 }
 
 local RI_CHANG_NAME = {
@@ -38,6 +40,8 @@ local RI_CHANG_NAME = {
 	[RI_CHANG.MI] = _L["MI"], 	--觅宝会/黑市
 	[RI_CHANG.HUIGUANG] = _L["HUIGUANG"], 	--回光(7周年)
 	[RI_CHANG.HUASHAN] = _L["HUASHAN"], 	--扇子(7周年)
+	[RI_CHANG.LONGMENJUEJING] = _L["LONGMENJUEJING"], 	--吃鸡
+	[RI_CHANG.LUOYANGSHENBING] = _L["LUOYANGSHENBING"], 	--洛阳神兵
 }
 
 local RESET_TYPE = {
@@ -66,6 +70,8 @@ LR_AccountStatistics_RiChang.SelfData = {
 	[RI_CHANG.MI] = {eQuestPhase = 0, need = 2, have = 0, finished = false,	},
 	[RI_CHANG.HUIGUANG] = {eQuestPhase = 0, need = 1, have = 0, finished = false,	},
 	[RI_CHANG.HUASHAN] = {eQuestPhase = 0, need = 100, have = 0, finished = false,	},
+	[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = 0, need = 2, have = 0, finished = false,	},
+	[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = 0, need = 1000, have = 0, finished = false,	},
 }
 
 LR_AccountStatistics_RiChang.Default = {
@@ -82,6 +88,8 @@ LR_AccountStatistics_RiChang.Default = {
 		[RI_CHANG.MI] = false,
 		[RI_CHANG.HUIGUANG] = false,
 		[RI_CHANG.HUASHAN] = false,
+		[RI_CHANG.LONGMENJUEJING] = false,
+		[RI_CHANG.LUOYANGSHENBING] = false,
 	},
 	bUseCommonData = true,
 	Version = "20170626",
@@ -315,7 +323,9 @@ LR_AccountStatistics_RiChang.List = {
 	[9] = {szName = _L["XUN"], nType = "RC", order = RI_CHANG.XUN, },
 	[10] = {szName = _L["MI"], nType = "RC", order = RI_CHANG.MI, },
 	[11] = {szName = _L["HUIGUANG"], nType = "RC", order = RI_CHANG.HUIGUANG, },
-	[12] = {szName = _L["HUASHAN"], nType = "ONCE", order = RI_CHANG.HUASHAN, }
+	[12] = {szName = _L["HUASHAN"], nType = "ONCE", order = RI_CHANG.HUASHAN, },
+	[13] = {szName = _L["LONGMENJUEJING"], nType = "ZC", order = RI_CHANG.LONGMENJUEJING, },
+	[14] = {szName = _L["LUOYANGSHENBING"], nType = "RC", order = RI_CHANG.LUOYANGSHENBING, },
 }
 
 ----大战副本数据
@@ -915,6 +925,96 @@ function LR_AccountStatistics_RiChang.CheckHuaShan()
 	end
 end
 
+-----检查龙门绝境
+local LONGMENJUEJING_QUEST = {
+	[17895] = true,
+}
+ADD2MONITED_QUEST_LIST(LONGMENJUEJING_QUEST)
+function LR_AccountStatistics_RiChang.CheckLongMenJueJing()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+
+	-----[寻龙勘脉窥天机] 任务ID：13600
+	local dwQuestID = 17895
+	local eQuestPhase = me.GetQuestPhase(dwQuestID)
+	if eQuestPhase ==  0 or eQuestPhase ==  -1 then
+		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = eQuestPhase, need = 2, have = 0, }
+	elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
+		local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
+		local quest_state = QuestTraceInfo.quest_state
+		local need = quest_state[1].need
+		local have = quest_state[1].have
+		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = eQuestPhase, need = 2, have = have, }
+	elseif eQuestPhase ==  3 then
+		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = eQuestPhase, need = 2, have = 2, }
+	end
+
+	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:16747 活动任务牌子
+	local eCanAccept = me.CanAcceptQuest(dwQuestID, 59149)		------测试龙门绝境是否有cd 。代码57：任务完成度已达上限
+	if eCanAccept ==  57 then
+		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LONGMENJUEJING].finished = true
+	else
+		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LONGMENJUEJING].finished = false
+	end
+end
+
+-----检查洛阳神兵
+local LUOYANGSHENBING_QUEST = {
+	[17507] = true,		--浩气
+	[17508] = true,		--恶人
+	[17509] = true,		--浩气尊敬
+	[17510] = true,		--恶人尊敬
+}
+ADD2MONITED_QUEST_LIST(LUOYANGSHENBING_QUEST)
+function LR_AccountStatistics_RiChang.CheckLuoYangShenBing()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local dwQuestID = 0
+	local dwTemplateID = 0
+	if me.nCamp ==  1 then		-----浩气盟
+		dwQuestID = 17509
+		dwTemplateID = 58135
+		local eCanAccept = me.CanAcceptQuest(dwQuestID, dwTemplateID)
+		if eCanAccept == 48 then
+			dwQuestID = 17507
+		end
+	elseif me.nCamp ==  2 then		----恶人谷
+		dwQuestID = 17510
+		dwTemplateID = 58136
+		local eCanAccept = me.CanAcceptQuest(dwQuestID, dwTemplateID)
+		if eCanAccept == 48 then
+			dwQuestID = 17508
+		end
+	end
+
+	if dwQuestID ~=  0 then
+		local eQuestPhase = me.GetQuestPhase(dwQuestID)	----任务状态
+		local eCanAccept = me.CanAcceptQuest(dwQuestID, dwTemplateID)		----任务CD
+		if eQuestPhase ==  0 or eQuestPhase ==  -1 then
+			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = eQuestPhase, need = "1K", have = 0, }
+		elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
+			local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
+			local quest_state = QuestTraceInfo.quest_state
+			local need = quest_state[1].need
+			local have = quest_state[1].have
+			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = eQuestPhase, need = "1K", have = have, }
+		elseif eQuestPhase ==  3 then
+			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = eQuestPhase, need = "1K", have = 1000, }
+		end
+		if eCanAccept ==  57 then
+			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING].finished = true
+		else
+			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING].finished = false
+		end
+	else
+		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = 0, need = "1K", have = 0, finished = false, }
+	end
+end
+
 ------------------------------------------------
 ---考试
 ------------------------------------------------
@@ -1149,7 +1249,7 @@ function LR_AccountStatistics_RiChang.ClearZC(DB)
 	local t_Table =  LR_AccountStatistics_RiChang.List
 	for szKey, v in pairs(LR_AccountStatistics_RiChang.AllUsrData) do
 		for k2, v2 in pairs(t_Table) do
-			if v2.nType ==  "ZC" then		------用于过滤不是日常的任务
+			if v2.nType ==  "ZC" then		------用于过滤不是周长的任务
 				if v[v2.order] then
 					if v[v2.order].finished then
 						LR_AccountStatistics_RiChang.AllUsrData[szKey][v2.order].finished = false
@@ -1240,6 +1340,10 @@ function LR_AccountStatistics_RiChang.CheckAll()
 	LR_AccountStatistics_RiChang.CheckMaoYi()
 	----检查晶矿争夺
 	LR_AccountStatistics_RiChang.CheckJingKuang()
+	----检查龙门绝境
+	LR_AccountStatistics_RiChang.CheckLongMenJueJing()
+	---检查洛阳神兵
+	LR_AccountStatistics_RiChang.CheckLuoYangShenBing()
 
 	----考试
 	LR_AS_Exam.CheckExam()
@@ -1694,6 +1798,10 @@ function LR_QuestTools:LoadItemBox(hWin)
 				---Output("Table_GetQuestStringInfo", LR.Table_GetQuestStringInfo(dwQuestID))
 				--LR_HeadName.OutputSingleMissionNeed(dwQuestID)
 				--LR_HeadName.Get_quest_state(dwQuestID, true)
+			else
+				Output("QuestTraceInfo", me.GetQuestTraceInfo(dwQuestID))
+				Output("Table_GetQuestStringInfo", LR.Table_GetQuestStringInfo(dwQuestID))
+				LR.SysMsg(_L["Not Found\n"])
 			end
 		end
 	end

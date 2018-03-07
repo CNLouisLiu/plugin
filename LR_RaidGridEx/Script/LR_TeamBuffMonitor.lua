@@ -56,6 +56,7 @@ function _BuffBox:Remove()
 	end
 	if self.tBuff.bSpecialBuff then
 		parentHandle:Lookup("Shadow_SpecialBuffBg"):Hide()
+		parentHandle:Lookup("Image_SpecialMe"):Hide()
 	end
 	return self
 end
@@ -292,10 +293,39 @@ function _BuffBox:Draw()
 		local parentHandle = self.parentHandle
 		parentHandle:Lookup("Shadow_SpecialBuffBg"):SetColorRGB(unpack(color))
 		parentHandle:Lookup("Shadow_SpecialBuffBg"):Show()
+		parentHandle:Lookup("Shadow_SpecialBuffBg"):SetAlpha(LR_TeamGrid.UsrData.CommonSettings.nSpecialBuffAlpha or 120)
+		if self.tBuff.dwPlayerID == GetClientPlayer().dwID then
+			parentHandle:Lookup("Image_SpecialMe"):Show()
+		end
 	end
 
 	return self
 end
+
+----------------------------------------------------------------
+----BOSS注视
+----------------------------------------------------------------
+_BossFocus = {}
+BossFocusBuff =
+	{
+		Path = "\\UI\\Scheme\\Case\\BossFocusBuff.txt",
+		Title =
+		{
+			{f = "i", t = "dwID"},
+			{f = "i", t = "nBuffID"},
+			{f = "i", t = "nBuffLevel"},
+			{f = "i", t = "nBuffStack"},
+		}
+	}
+
+local x3=KG_Table.Load(BossFocusBuff.Path, BossFocusBuff.Title)
+local RowCount = x3:GetRowCount()
+for i = 1, RowCount, 1 do
+	local x = x3:GetRow(i)
+	_BossFocus[x.nBuffID] = {dwID = x.nBuffID, nLevel = x.nBuffLevel, nStackNum = x.nBuffStack}
+end
+--_BossFocus[631] = {dwID = 631, nLevel = 29, nStackNum = 1}
+
 
 ----------------------------------------------------------------
 ----边角指示器buff
@@ -303,7 +333,7 @@ end
 local _EDGEINDICATOR_BUFF_CACHE = {}
 local _EDGEINDICATOR_BUFF_HANDLE_CACHE = {}
 local _EDGEINDICATOR_BUFF_SHOW = {}
-
+local EDGE_VERSION = "20180205"
 LR_TeamEdgeIndicator = {}
 local EdgeIndicatorDefaultData = {
 	["TopLeft"] = {
@@ -324,9 +354,31 @@ local EdgeIndicatorDefaultData = {
 	},
 	["yellow"] = 0.5,
 	["red"] = 3,
+	["VERSION"] = VERSION,
 }
 LR_TeamEdgeIndicator.UsrData = clone(EdgeIndicatorDefaultData)
 RegisterCustomData("LR_TeamEdgeIndicator.UsrData", VERSION)
+
+function LR_TeamEdgeIndicator.LoadDefaultData()
+	if LR_TeamEdgeIndicator.UsrData.VERSION and LR_TeamEdgeIndicator.UsrData.VERSION == EDGE_VERSION then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local dwForceID = me.dwForceID
+	local _, _, szLang = GetVersion()
+	local path = sformat("%s\\DefaultData\\Edge_%s", AddonPath, szLang)
+	local data = LoadLUAData(path) or {}
+	if data[dwForceID] then
+		LR_TeamEdgeIndicator.UsrData = clone(data[dwForceID])
+		LR_TeamEdgeIndicator.UsrData.VERSION = EDGE_VERSION
+	else
+		LR_TeamEdgeIndicator.UsrData = clone(EdgeIndicatorDefaultData)
+		LR_TeamEdgeIndicator.UsrData.VERSION = EDGE_VERSION
+	end
+end
 
 function LR_TeamEdgeIndicator.add2bufflist()
 	local MonitorList = LR_TeamBuffSettingPanel.BuffList
@@ -396,129 +448,20 @@ function LR_TeamEdgeIndicator.ClearOneEdgeIndicatorCache(dwID)
 	_EDGEINDICATOR_BUFF_HANDLE_CACHE[dwID] = {}
 end
 
-LR.RegisterEvent("FIRST_LOADING_END", function() LR_TeamEdgeIndicator.add2bufflist() end)
+function LR_TeamEdgeIndicator.FIRST_LOADING_END()
+	LR_TeamEdgeIndicator.LoadDefaultData()
+	LR_TeamEdgeIndicator.add2bufflist()
+end
+
+
+
+LR.RegisterEvent("FIRST_LOADING_END", function() LR_TeamEdgeIndicator.FIRST_LOADING_END() end)
 
 ----------------------------------------------------------------
 ----Debuff设置
 ----------------------------------------------------------------
 LR_TeamBuffSettingPanel = {}
-LR_TeamBuffSettingPanel.frameSelf = nil
-LR_TeamBuffSettingPanel.handleList = nil
-LR_TeamBuffSettingPanel.handleListSelected = nil
-
--- 存档的BUFF/DEBUFF列表内容, 主表是个 Array
--- 子表格式为 {szName = "组名", szDesc = "我是描述，我是TIP。", szContent = "普渡八音(红),火里栽莲,王手截脉(蓝)", bEnable = true}
-LR_TeamBuffSettingPanel.tDebuffListContent = {}
-LR_TeamBuffSettingPanel.TeamMember = {}  --存放队友数据
-
-local nEnableIcon = 6933
-local nDisableIcon = 6942
-local szIniFile = sformat("%s\\UI\\LR_TeamBuffSettingPanel.ini", AddonPath)
-
-LR_TeamBuffSettingPanel.tColorCover = {
-	[_L["red"]] = {255, 0, 0},
-	[_L["green"]] = {0, 255, 0},
-	[_L["blue"]] = {0, 0, 255},
-	[_L["yellow"]] = {255, 255, 0},
-	[_L["purple"]] = {255, 0, 255},
-	[_L["grass"]] = {0, 255, 255},
-	[_L["orange"]] = {255, 128, 0},
-	[_L["black"]] = {0, 0, 0},
-	[_L["white"]] = {255, 255, 255},
-}
-
 LR_TeamBuffSettingPanel.BuffList = {}
-
-
--- 格式化Debuff表的数据, 成为直接可用的内容
-function LR_TeamBuffSettingPanel.FormatDebuffNameList2()
-	local tSplitTextTable = {}
-	for nIndex, tInfo in pairs(LR_TeamBuffSettingPanel.tDebuffListContent) do
-		local szContent = tInfo.szContent
-		if tInfo.bEnable and szContent and type(szContent) == "string" and szContent ~= "" then
-			szContent = sgsub(szContent, "%s", "")
-			szContent = sgsub(szContent, " ", "")
-			szContent = sgsub(szContent, "；", ";")
-			szContent = sgsub(szContent, "，", ",")
-			szContent = sgsub(szContent, "（", "(")
-			szContent = sgsub(szContent, "）", ")")
-			szContent = sgsub(szContent, "c", "C")
-			szContent = sgsub(szContent, "s", "S")
-			szContent = sgsub(szContent, "l", "L")
-			szContent = sformat("%s;", szContent)
-			local t={}
-			for s in sgfind(szContent, "(.-);") do
-				if s ~= "" then
-					t[#t + 1] = s
-				end
-			end
-
-			for i = 1, #t, 1 do
-				local buff = {dwID = 0, szName = "", col = {}, bOnlySelf = false, nIconID = 0, nMonitorLevel = 0, nMonitorStack = 0, bSpecialBuff = false,}
-				local text = t[i]
-
-				local _s, _e, bSelf = sfind(text, "%[(.-)%]")
-				if bSelf and bSelf == _L["self"] then
-					buff.bOnlySelf = true
-				end
-				text = sgsub(text, "%[(.-)%]", "")
-
-				local _s, _e, bSpecialBuff = sfind(text, "%(S(.-)%)")
-				if bSpecialBuff then
-					buff.bSpecialBuff = true
-				end
-				text = sgsub(text, "%(S(.-)%)", "")
-
-				local _s, _e, nMonitorStack = sfind(text, "%(C(.-)%)")
-				if nMonitorStack then
-					local _s, _e, s = sfind(nMonitorStack, "(%d+)")
-					buff.nMonitorStack = tonumber(s)
-				end
-				text = sgsub(text, "%(C(.-)%)", "")
-
-				local _s, _e, nMonitorLevel = sfind(text, "%(L(.-)%)")
-				if nMonitorLevel then
-					local _s, _e, s = sfind(nMonitorLevel, "(%d+)")
-					buff.nMonitorLevel = tonumber(s)
-				end
-				text = sgsub(text, "%(L(.-)%)", "")
-
-				local _s, _e, _color = sfind(text,"%((.-)%)")
-				if _color then
-					local _s, _e, r, g, b = sfind(text, "(%d+),(%d+),(%d+)")
-					if _s then
-						buff.col = {r, g, b}
-					else
-						buff.col = LR_TeamBuffSettingPanel.tColorCover[_color] or {}
-					end
-				end
-				text = sgsub(text, "%((.-)%)", "")
-
-				local _s, _e, _nIconID = sfind(text, "#(%d+)")
-				if _s then
-					buff.nIconID = tonumber(_nIconID)
-				end
-				text = sgsub(text, "#(%d+)", "")
-				buff.bEdgeIndicator = false
-
-				if type(tonumber(text)) == "number" then
-					buff.dwID = tonumber(text)
-					if not tSplitTextTable[buff.szName] then
-						tSplitTextTable[buff.dwID] = buff
-					end
-				else
-					buff.szName = text
-					if not tSplitTextTable[buff.szName] then
-						tSplitTextTable[buff.szName] = buff
-					end
-				end
-			end
-		end
-	end
-
-	LR_TeamBuffSettingPanel.BuffList = clone(tSplitTextTable)
-	LR_TeamEdgeIndicator.add2bufflist()
-end
 
 function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 	local tBuff = {}
@@ -541,419 +484,17 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 	end
 	LR_TeamBuffSettingPanel.BuffList = clone(tBuff)
 	LR_TeamEdgeIndicator.add2bufflist()
-end
 
-function LR_TeamBuffSettingPanel.OnFrameCreate()
-	this:RegisterEvent("UI_SCALED")
-	LR_TeamBuffSettingPanel.OnEvent("UI_SCALED")
-	LR_TeamBuffSettingPanel.frameSelf = nil
-	LR_TeamBuffSettingPanel.handleList = nil
-	LR_TeamBuffSettingPanel.handleListSelected = nil
-	LR_TeamBuffSettingPanel.LoadCommonData()
-	LR_TeamBuffSettingPanel.frameSelf = this
-	LR_TeamBuffSettingPanel.handleList = this:Lookup("", "Handle_List")
-	LR_TeamBuffSettingPanel.UpdateList()
-end
-
-function LR_TeamBuffSettingPanel.OnFrameDestroy()
-	LR_TeamBuffSettingPanel.frameSelf = nil
-	LR_TeamBuffSettingPanel.handleList = nil
-	LR_TeamBuffSettingPanel.handleListSelected = nil
-end
-
-function LR_TeamBuffSettingPanel.OnFrameBreathe()
-	------
-end
-
-function LR_TeamBuffSettingPanel.OnEvent(event)
-	if event == "UI_SCALED" then
-		this:SetPoint("CENTER", 0, 0, "CENTER", 0, 0)
-	end
-end
-
-function LR_TeamBuffSettingPanel.UpdateList()
-	local handleList = LR_TeamBuffSettingPanel.handleList
-	if handleList then
-		handleList:Clear()
-	end
-	for nIndex, tContent in pairs(LR_TeamBuffSettingPanel.tDebuffListContent) do
-		LR_TeamBuffSettingPanel.NewListDebuffGroup(nIndex)
-	end
-end
-
-function LR_TeamBuffSettingPanel.NewListDebuffGroup(nIndex, bSelectNewHandle)
-	local tInfo = LR_TeamBuffSettingPanel.tDebuffListContent[(nIndex or -1)]
-	if not tInfo then
-		nIndex = #LR_TeamBuffSettingPanel.tDebuffListContent + 1
-		tInfo = {szName = sformat("%s[%d]", _L["NewGroup"], nIndex), szDesc = "", szContent = "", bEnable = true}
-		tinsert(LR_TeamBuffSettingPanel.tDebuffListContent, tInfo)
-	end
-
-	local handleList = LR_TeamBuffSettingPanel.handleList
-	if not handleList then
-		return
-	end
-	local handleDebuffGroup = handleList:AppendItemFromIni(szIniFile, "HI")
-	handleDebuffGroup:Lookup("Name"):SetText(tInfo.szName)
-	handleDebuffGroup.nIndex = nIndex
-
-	local box = handleDebuffGroup:Lookup("Box_Skill")
-	local nIconID = nDisableIcon
-	if tInfo.bEnable then
-		nIconID = nEnableIcon
-	end
-
-	box:Show()
-	box:SetObject(1,0)
-	box:ClearObjectIcon()
-	box:SetObjectIcon(nIconID)
-	box.nIndex = nIndex
-
-	if bSelectNewHandle then
-		LR_TeamBuffSettingPanel.SelectListHandle(handleDebuffGroup)
-	end
-	LR_TeamBuffSettingPanel.UpdateScrollInfo()
-	return handleDebuffGroup
-end
-
-function LR_TeamBuffSettingPanel.DelListDebuffGroup(handle)
-	local nIndex = handle.nIndex
-	local tInfo = LR_TeamBuffSettingPanel.tDebuffListContent[nIndex]
-	if tInfo then
-		tremove(LR_TeamBuffSettingPanel.tDebuffListContent, nIndex)
-		LR_TeamBuffSettingPanel.UpdateList()
-		LR_TeamBuffSettingPanel.UpdateScrollInfo()
-		LR_TeamBuffSettingPanel.handleListSelected = nil
-	end
-end
-
-function LR_TeamBuffSettingPanel.UpdateScrollInfo()
-	local handleList = LR_TeamBuffSettingPanel.handleList
-	handleList:FormatAllItemPos()
-	local w, h = handleList:GetSize()
-	local wAll, hAll = handleList:GetAllItemSize()
-
-	local nStep = mceil((hAll - h) / 10)
-	local scroll = handleList:GetRoot():Lookup("Scroll_List")
-	if nStep > 0 then
-		scroll:Show()
-		scroll:GetParent():Lookup("Btn_Up"):Show()
-		scroll:GetParent():Lookup("Btn_Down"):Show()
-	else
-		scroll:Hide()
-		scroll:GetParent():Lookup("Btn_Up"):Hide()
-		scroll:GetParent():Lookup("Btn_Down"):Hide()
-	end
-	scroll:SetStepCount(nStep)
-end
-
-function LR_TeamBuffSettingPanel.SelectListHandle(handle)
-	if LR_TeamBuffSettingPanel.handleListSelected then
-		local imageLastSelectedImage = LR_TeamBuffSettingPanel.handleListSelected:Lookup("Sel")
-		if imageLastSelectedImage then
-			imageLastSelectedImage:Hide()
+	if LR_TeamBuffTool_Panel.bConnectSysRaidPanel then
+		local _sysBuff = {}
+		for dwID, v in pairs(LR_TeamBuffSettingPanel.BuffList) do
+			tinsert(_sysBuff, v.dwID)
 		end
-	end
-	LR_TeamBuffSettingPanel.handleListSelected = handle
-
-	local imageCover = handle:Lookup("Sel")
-	if imageCover then
-		imageCover:Show()
-	end
-
-	local tInfo = LR_TeamBuffSettingPanel.tDebuffListContent[handle.nIndex]
-	if tInfo then
-		LR_TeamBuffSettingPanel.frameSelf:Lookup("Edit_Name"):SetText(tInfo.szName or "")
-		LR_TeamBuffSettingPanel.frameSelf:Lookup("Edit_Desc"):SetText(tInfo.szDesc or "")
-		LR_TeamBuffSettingPanel.frameSelf:Lookup("Edit_Content"):SetText(tInfo.szContent or "")
-	else
-		LR_TeamBuffSettingPanel.frameSelf:Lookup("Edit_Name"):SetText("")
-		LR_TeamBuffSettingPanel.frameSelf:Lookup("Edit_Desc"):SetText("")
-		LR_TeamBuffSettingPanel.frameSelf:Lookup("Edit_Content"):SetText("")
-	end
-end
--------------------------------------------------------------------------------------------------------------
-function LR_TeamBuffSettingPanel.OnItemMouseEnter()
-	local szName = this:GetName()
-	if szName:match("HI") then
-		local imageCover = this:Lookup("Sel")
-		if imageCover then
-			imageCover:Show()
-		end
-	elseif szName:match("Box_Skill") then
-		this:SetObjectMouseOver(true)
-		local tInfo = LR_TeamBuffSettingPanel.tDebuffListContent[this.nIndex]
-		if tInfo then
-			local szTip = tInfo.szDesc or ""
-			local nMouseX, nMouseY = Cursor.GetPos()
-			local szEnableTip = {}
-			if tInfo.bEnable then
-				szEnableTip[#szEnableTip+1] = sformat("<Text>text=%s\n font=105 </text>", EncodeComponentsString(_L["This monitoring module is working now.(Smile Icon)"]))
-			else
-				szEnableTip[#szEnableTip+1] = sformat("<Text>text=%s\n font=102 </text>", EncodeComponentsString(_L["This monitoring module has been closed.(Crying Icon)"]))
-			end
-			szEnableTip[#szEnableTip+1] = sformat("<Text>text=%s font=100 </text>", EncodeComponentsString(szTip))
-			OutputTip(tconcat(szEnableTip), 1000, {nMouseX, nMouseY, 0, 0})
-		end
+		Raid_MonitorBuffs(_sysBuff)
 	end
 end
 
-function LR_TeamBuffSettingPanel.OnItemMouseLeave()
-	local szName = this:GetName()
-	if szName:match("HI") then
-		local imageCover = this:Lookup("Sel")
-		local nSelectedIndex = -1
-		if LR_TeamBuffSettingPanel.handleListSelected and LR_TeamBuffSettingPanel.handleListSelected.nIndex then
-			nSelectedIndex = LR_TeamBuffSettingPanel.handleListSelected.nIndex
-		end
-		if imageCover and this.nIndex ~= nSelectedIndex then
-			imageCover:Hide()
-		end
-	elseif szName:match("Box_Skill") then
-		this:SetObjectMouseOver(false)
-		HideTip()
-	end
-end
 
-function LR_TeamBuffSettingPanel.OnItemLButtonClick()
-	local szName = this:GetName()
-	if szName:match("Box_Skill") then
-		local nIndex = this.nIndex
-		local tInfo = LR_TeamBuffSettingPanel.tDebuffListContent[nIndex]
-		if tInfo then
-			local box = this
-			local nIconID = nDisableIcon
-			if tInfo.bEnable then
-				tInfo.bEnable = false
-			else
-				tInfo.bEnable = true
-				nIconID = nEnableIcon
-			end
-			box:SetObjectIcon(nIconID)
-			LR_TeamBuffSettingPanel.FormatDebuffNameList()
-			--LR_TeamBuffSettingPanel.OnItemMouseEnter()
-		end
-	elseif szName:match("HI") then
-		LR_TeamBuffSettingPanel.SelectListHandle(this)
-	end
-end
-
-function LR_TeamBuffSettingPanel.OnEditChanged()
-	local szName = this:GetName()
-	local handleSelected = LR_TeamBuffSettingPanel.handleListSelected
-	if handleSelected then
-		local nIndex = LR_TeamBuffSettingPanel.handleListSelected.nIndex
-		local tInfo = LR_TeamBuffSettingPanel.tDebuffListContent[nIndex]
-		if tInfo then
-			if szName:match("Edit_Name") then
-				tInfo.szName = this:GetText()
-				handleSelected:Lookup("Name"):SetText(tInfo.szName)
-			elseif szName:match("Edit_Desc") then
-				tInfo.szDesc = this:GetText()
-			elseif szName:match("Edit_Content") then
-				tInfo.szContent = this:GetText()
-			end
-		end
-
-		LR_TeamBuffSettingPanel.FormatDebuffNameList()
-	end
-end
-
-function LR_TeamBuffSettingPanel.OnScrollBarPosChanged()
-	local nCurrentValue = this:GetScrollPos()
-	local szName = this:GetName()
-	if szName == "Scroll_List" then
-		local nCurrentValue = this:GetScrollPos()
-		local frame = this:GetParent()
-		if nCurrentValue == 0 then
-			frame:Lookup("Btn_Up"):Enable(false)
-		else
-			frame:Lookup("Btn_Up"):Enable(true)
-		end
-		if nCurrentValue == this:GetStepCount() then
-			frame:Lookup("Btn_Down"):Enable(false)
-		else
-			frame:Lookup("Btn_Down"):Enable(true)
-		end
-
-	    local handle = frame:Lookup("", "Handle_List")
-	    handle:SetItemStartRelPos(0, - nCurrentValue * 10)
-    end
-end
-
-function LR_TeamBuffSettingPanel.OnLButtonHold()
-    local szName = this:GetName()
-	if szName == "Btn_Up" then
-		this:GetParent():Lookup("Scroll_List"):ScrollPrev(1)
-	elseif szName == "Btn_Down" then
-		this:GetParent():Lookup("Scroll_List"):ScrollNext(1)
-    end
-end
-
-function LR_TeamBuffSettingPanel.OnItemMouseWheel()
-	local nDistance = Station.GetMessageWheelDelta()
-	this:GetParent():Lookup("Scroll_List"):ScrollNext(nDistance)
-	return 1
-end
-
-function LR_TeamBuffSettingPanel.OnLButtonDown()
-	LR_TeamBuffSettingPanel.OnLButtonHold()
-end
-
--------------------------------------------------------------------------------------------------------------
-
-function LR_TeamBuffSettingPanel.OnLButtonClick()
-	local szName = this:GetName()
-	if szName == "Btn_Cancel" then
-		LR_TeamBuffSettingPanel.ClosePanel()
-		LR_TeamBuffSettingPanel.FormatDebuffNameList()
-	elseif szName == "Btn_New" then
-		LR_TeamBuffSettingPanel.NewListDebuffGroup(nil, true)
-		PlaySound(SOUND.UI_SOUND,g_sound.Button)
-	elseif szName == "Btn_Close" then
-		LR_TeamBuffSettingPanel.ClosePanel()
-		LR_TeamBuffSettingPanel.FormatDebuffNameList()
-	elseif szName == "Btn_Delete" then
-		if not LR_TeamBuffSettingPanel.handleListSelected then
-			return
-		end
-		local DelHandle = function()
-			local handleSelected = LR_TeamBuffSettingPanel.handleListSelected
-			if not handleSelected then
-				return
-			end
-			local nIndex = LR_TeamBuffSettingPanel.handleListSelected.nIndex
-			local tInfo = LR_TeamBuffSettingPanel.tDebuffListContent[nIndex]
-			if not tInfo then
-				return
-			end
-			LR_TeamBuffSettingPanel.DelListDebuffGroup(handleSelected)
-		end
-		if IsShiftKeyDown() then
-			DelHandle()
-		else
-			local msg = {
-				szMessage = _L["Are you sure to delete?(press SHIFT to skip)"],
-				szName = "del_debufflist_sure",
-				fnAutoClose = function() return false end,
-				{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() DelHandle() end, },
-				{szOption = g_tStrings.STR_HOTKEY_CANCEL, },
-			}
-			MessageBox(msg)
-		end
-		LR_TeamBuffSettingPanel.FormatDebuffNameList()
-	end
-end
-
-function LR_TeamBuffSettingPanel.OpenPanel()
-	local frame = Station.Lookup("Topmost/LR_TeamBuffSettingPanel")
-	if not frame then
-		frame = Wnd.OpenWindow(szIniFile, "LR_TeamBuffSettingPanel")
-	end
-	frame:Show()
-end
-
-function LR_TeamBuffSettingPanel.ClosePanel()
-	local frame = Station.Lookup("Topmost/LR_TeamBuffSettingPanel")
-	if frame then
-		Wnd.CloseWindow(frame)
-	end
-	LR_TeamBuffSettingPanel.SaveCommonData()
-end
-
--- ---------------------------------------------------------------
--- 配置文件处理
--- ---------------------------------------------------------------
-function LR_TeamBuffSettingPanel.SaveSettings()
-	local Recall = function(szText)
-		if not szText or szText == "" then
-			return
-		end
-		LR_TeamBuffSettingPanel.OutputSettingsFile(szText)
-	end
-	GetUserInput(_L["Enter Save File Name"], Recall, nil, function() end, nil, GetClientPlayer().szName, 31)
-end
-
-function LR_TeamBuffSettingPanel.OutputSettingsFile(szName)
-	local player = GetClientPlayer()
-	if not player then
-		return
-	end
-	local szName = szName or player.szName
-	local szMsg = LR_TeamBuffSettingPanel.tDebuffListContent
-	local path = sformat("%s\\UsrData\\Data_%s.dat", SaveDataPath, szName)
-	SaveLUAData(path,szMsg)
-	LR.SysMsg(_L["Export Successful!"])
-end
-
-function LR_TeamBuffSettingPanel.LoadSettings()
-	local Recall = function(szText)
-		if not szText or szText == "" then
-			return
-		end
-		LR_TeamBuffSettingPanel.LoadSettingsFile(szText)
-	end
-	GetUserInput(_L["Enter Load File Name"], Recall, nil, function() end, nil, GetClientPlayer().szName, 31)
-end
-
-function LR_TeamBuffSettingPanel.LoadSettingsFile(szText)
-	local player = GetClientPlayer()
-	if not player then
-		return
-	end
-	local szName = szText or player.szName
-	local szMsg = LR_TeamBuffSettingPanel.tDebuffListContent
-	local path = sformat("%s\\UsrData\\Data_%s.dat", SaveDataPath, szName)
-	if IsFileExist(sformat("%s.jx3dat", path)) then
-		local t = LoadLUAData(path) or {}
-		LR.SysMsg(_L["Import Successful!"])
-		LR_TeamBuffSettingPanel.tDebuffListContent = t
-		LR_TeamBuffSettingPanel.UpdateList()
-	else
-		LR.SysMsg(_L["No such file.\n"])
-	end
-end
-
-----------------------------------------------------------------------------------
----公共文件
-----------------------------------------------------------------------------------
-function LR_TeamBuffSettingPanel.SaveCommonData()
-	local path = sformat("%s\\UsrData\\CommonBuffMonitorData.dat", SaveDataPath)
-	local data = {}
-	data.VERSION =VERSION
-	data.data = clone(LR_TeamBuffSettingPanel.tDebuffListContent)
-	SaveLUAData(path,data)
-end
-
-function LR_TeamBuffSettingPanel.LoadCommonData()
-	local path = sformat("%s\\UsrData\\CommonBuffMonitorData.dat", SaveDataPath)
-	local data = LoadLUAData(path) or {}
-	if data.VERSION and data.VERSION == VERSION then
-		LR_TeamBuffSettingPanel.tDebuffListContent = clone(data.data)
-		LR_TeamBuffSettingPanel.FormatDebuffNameList()
-	else
-		local path2 = sformat("%s\\Script\\DefaultBuffMonitorData.dat", AddonPath)
-		data2 = LoadLUAData(path2) or {}
-		LR_TeamBuffSettingPanel.tDebuffListContent = clone(data2.data)
-		LR_TeamBuffSettingPanel.FormatDebuffNameList()
-		LR_TeamBuffSettingPanel.SaveCommonData()
-	end
-end
-
-function LR_TeamBuffSettingPanel.LoadDefaultData()
-	local path = sformat("%s\\Script\\DefaultBuffMonitorData.dat", AddonPath)
-	local data = LoadLUAData(path) or {}
-	LR_TeamBuffSettingPanel.tDebuffListContent = clone(data.data)
-	LR_TeamBuffSettingPanel.SaveCommonData()
-	LR_TeamBuffSettingPanel.FormatDebuffNameList()
-end
-
-function LR_TeamBuffSettingPanel.LOGIN_GAME()
-	LR_TeamBuffSettingPanel.LoadCommonData()
-	Log("[LR_TeamBuffSettingPanel] : LoadCommonBuffMonitorData")
-end
-
-LR.RegisterEvent("LOGIN_GAME",function() LR_TeamBuffSettingPanel.LOGIN_GAME() end)
 
 local JH_DBM_BUFF_LIST = {}	---用于存放DBM过来的BUFF数据
 ----------------------------------------------------------------
@@ -1208,25 +749,6 @@ function LR_TeamBuffMonitor.UI_OME_BUFF_LOG(dwTarget, bCanCancel, dwID, bAddOrDe
 		return
 	end
 
---[[	if not MonitorList[dwID] then
-		--local szBuffName = LR_TeamBuffMonitor.GetBuffName(dwID, nLevel)
-		if not MonitorList[szBuffName] then
-			return
-		end
-		if not Table_BuffIsVisible(dwID, nLevel) then
-			return
-		end
-		MonitorList[dwID] = clone(MonitorList[szBuffName])
-		MonitorList[szBuffName] = nil
-	else
-		if MonitorList[dwID] and MonitorList[szBuffName] then
-			if MonitorList[szBuffName].bEdgeIndicator then
-				MonitorList[dwID].bEdgeIndicator = MonitorList[szBuffName].bEdgeIndicator
-				MonitorList[dwID].edge = MonitorList[szBuffName].edge
-			end
-			MonitorList[szBuffName] = nil
-		end
-	end]]
 	--去除不在队伍里的
 	if not (LR_TeamBuffSettingPanel.TeamMember[dwTarget] or me.IsPlayerInMyParty(dwTarget)) then
 		return
@@ -1294,10 +816,30 @@ function LR_TeamBuffMonitor.BUFF_UPDATE2()
 		return
 	end
 
-	local dwPlayerID, bDelete, nIndex, bCanCancel, dwID, nStackNum, nEndFrame, bInit, nLevel, dwCaster, IsValid, nLeftFrame = arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11
+	local dwPlayerID, bDelete, nIndex, bCanCancel, dwID, nStackNum, nEndFrame, bInit, nLevel, dwCaster, IsValid, nLeftFrame = arg0, arg1, arg2, arg3, arg4, arg5 or 1, arg6, arg7, arg8 or 0, arg9, arg10, arg11
 	--去除不在监控buff里的
+	if dwID == 0 then
+		return
+	end
+
 	local MonitorList = LR_TeamBuffSettingPanel.BuffList
 	local szBuffName = LR_TeamBuffMonitor.GetBuffName(dwID, nLevel)
+
+	if _BossFocus[dwID] and LR_TeamGrid.UsrData.CommonSettings.bShowBossFocus then
+		if _BossFocus[dwID].nLevel == nLevel then
+			if bDelete then
+				FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
+				return
+			end
+			if  nStackNum >= _BossFocus[dwID].nStackNum then
+				FireEvent("ON_BOSS_FOCUS", dwPlayerID, true)
+			else
+				FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
+			end
+		else
+			FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
+		end
+	end
 
 	local MonitorBuff = nil
 	if MonitorList[szBuffName] then
@@ -1310,29 +852,6 @@ function LR_TeamBuffMonitor.BUFF_UPDATE2()
 	if not MonitorBuff then
 		return
 	end
-
---[[	if not MonitorList[dwID] then
-		--local szBuffName = LR_TeamBuffMonitor.GetBuffName(dwID, nLevel)
-		if not MonitorList[szBuffName] then
-			return
-		end
-		if not Table_BuffIsVisible(dwID, nLevel) then
-			return
-		end
-		MonitorList[dwID] = clone(MonitorList[szBuffName])
-		MonitorList[szBuffName] = nil
-	else
-		if MonitorList[dwID] and MonitorList[szBuffName] then
-			if MonitorList[szBuffName].bEdgeIndicator then
-				MonitorList[dwID].bEdgeIndicator = MonitorList[szBuffName].bEdgeIndicator
-				MonitorList[dwID].edge = MonitorList[szBuffName].edge
-			end
-			if MonitorList[szBuffName].bSpecialBuff then
-				MonitorList[dwID].bSpecialBuff = MonitorList[szBuffName].bSpecialBuff
-			end
-			MonitorList[szBuffName] = nil
-		end
-	end]]
 
 	--去除buff刷新对象不在队里的
 	if not (LR_TeamBuffSettingPanel.TeamMember[dwPlayerID] or me.IsPlayerInMyParty(dwPlayerID)) then

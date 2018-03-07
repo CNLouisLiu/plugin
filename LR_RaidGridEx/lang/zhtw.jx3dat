@@ -307,7 +307,7 @@ data={
 	["Set each level by distance"]="設置各級別距離",
 	["Set color of each level"]="設置各級別顏色",
 	["Set alpha of each level"]="設置各級別透明度",
-	["▊ Click to change color"]="▊ 點擊設置顏色",
+	["Click to change color"]="▊ 點擊設置顏色",
 
 	--20161209add--
 	["BuffMonitor Settings"]="BUFF監控設置",
@@ -369,48 +369,48 @@ data={
 
 	--20170111add--
 	["UI choose Instructions:\n"]="皮膚樣式選擇說明：\n",
-	["◆UI choose Instructions01\n"]="◆可選擇基本皮膚、RaidGridEx皮膚、CTM風格皮膚以及系統樣式皮膚\n",
-	["◆UI choose Instructions02\n"]="◆對RaidGridEx樣式異常執著的老玩家請選擇【RaidGridEx老風格】皮膚\n",
+	["UI choose Instructions01\n"]="◆可選擇基本皮膚、RaidGridEx皮膚、CTM風格皮膚以及系統樣式皮膚\n",
+	["UI choose Instructions02\n"]="◆對RaidGridEx樣式異常執著的老玩家請選擇【RaidGridEx老風格】皮膚\n",
 
 	["Team member name Instructions:\n"]="隊友名字設置說明：\n",
-	["◆Team member name Instructions01\n"]="◆改選項設置隊友名字的字體大小、顏色、字數限制以及字間距\n",
+	["Team member name Instructions01\n"]="◆改選項設置隊友名字的字體大小、顏色、字數限制以及字間距\n",
 
 	["Kungfu Instructions:\n"]="心法設置說明\n",
-	["◆Kungfu Instructions01\n"]="◆可以設置顯示為文字或者圖標。\n",
+	["Kungfu Instructions01\n"]="◆可以設置顯示為文字或者圖標。\n",
 
 	["Blood Instructions:\n"]="血量文字設置說明：\n",
-	["◆Blood Instructions01\n"]="◆可以設置血量顯示方式，以及瀕危血線\n",
-	["◆Blood Instructions02\n"]="◆默認DPS狀態下顯示數值，奶媽狀態下自動切換至百分比，奶媽狀態下若要顯示數值，請去掉【奶媽狀態下顯示百分比】並選擇【顯示數值】\n",
-	["◆Blood Instructions03\n"]="◆顯示具體數值時默認顯示為以萬為單位，小數點保留2位的數值\n",
+	["Blood Instructions01\n"]="◆可以設置血量顯示方式，以及瀕危血線\n",
+	["Blood Instructions02\n"]="◆默認DPS狀態下顯示數值，奶媽狀態下自動切換至百分比，奶媽狀態下若要顯示數值，請去掉【奶媽狀態下顯示百分比】並選擇【顯示數值】\n",
+	["Blood Instructions03\n"]="◆顯示具體數值時默認顯示為以萬為單位，小數點保留2位的數值\n",
 
 	["BuffMonitor Instructions:\n"]="BUFF顯示設置說明：\n",
-	["◆BuffMonitor Instructions01\n"]="◆默認開啟BUFF顯示\n",
-	["◆BuffMonitor Instructions02\n"]="◆默認可以顯示4個BUFF\n",
-	["◆BuffMonitor Instructions03\n"]="◆顯示的BUFF來源於：\n①DBM傳過來的數據\n②面板自身的BUFF監控功能\n",
-	["◆BuffMonitor Instructions04\n"]="◆面板自身的BUFF監控請在BUFF設置面板中進行設置\n",
-	["◆BuffMonitor Instructions05\n"]="◆BUFF設置自帶3組BUFF數據，【奶媽常用BUFF】【常用減傷BUFF】【常見無氣勁BUFF】\n",
-	["◆BuffMonitor Instructions06\n"]="◆設置中顯示“笑臉”表示監控，顯示“哭臉”表示不監控，點擊“笑臉”或者“哭臉”圖標可以切換狀態\n",
-	["◆BuffMonitor Instructions07\n"]="◆可以設置BUFF名稱或者BUFF ID\n※僅顯示自身的BUFF請在BUFF後加[自]\n※增加BUFF顏色請在BUFF後加(顏色)，目前支持紅綠藍黃紫青橙黑白幾種顏色\n",
+	["BuffMonitor Instructions01\n"]="◆默認開啟BUFF顯示\n",
+	["BuffMonitor Instructions02\n"]="◆默認可以顯示4個BUFF\n",
+	["BuffMonitor Instructions03\n"]="◆顯示的BUFF來源於：\n①DBM傳過來的數據\n②面板自身的BUFF監控功能\n",
+	["BuffMonitor Instructions04\n"]="◆面板自身的BUFF監控請在BUFF設置面板中進行設置\n",
+	["BuffMonitor Instructions05\n"]="◆BUFF設置自帶3組BUFF數據，【奶媽常用BUFF】【常用減傷BUFF】【常見無氣勁BUFF】\n",
+	["BuffMonitor Instructions06\n"]="◆設置中顯示“笑臉”表示監控，顯示“哭臉”表示不監控，點擊“笑臉”或者“哭臉”圖標可以切換狀態\n",
+	["BuffMonitor Instructions07\n"]="◆可以設置BUFF名稱或者BUFF ID\n※僅顯示自身的BUFF請在BUFF後加[自]\n※增加BUFF顏色請在BUFF後加(顏色)，目前支持紅綠藍黃紫青橙黑白幾種顏色\n",
 
 	["Mouse Instructions:\n"]="鼠標手勢說明：\n",
-	["◆Mouse Instructions01\n"]="◆默認狀態下，鼠標單擊可以選中隊友\n",
-	["◆Mouse Instructions02\n"]="◆懸停於角色格子上方時，顯示隊友TIP\n",
-	["◆Mouse Instructions03\n"]="◆按住SHIFT且懸停於角色格子上方時，顯示目標的重傷記錄\n",
-	["◆Mouse Instructions04\n"]="◆按住ALT且懸停於角色格子上方時，顯示目標的DPS或者HPS記錄（需要加載茗伊的傷害統計）\n",
-	["◆Mouse Instructions05\n"]="◆默認按住ALT，雙擊角色格子時，會請求與目標交易\n",
-	["◆Mouse Instructions06\n"]="◆可選雙擊時跟隨目標（請手動設置）\n",
+	["Mouse Instructions01\n"]="◆默認狀態下，鼠標單擊可以選中隊友\n",
+	["Mouse Instructions02\n"]="◆懸停於角色格子上方時，顯示隊友TIP\n",
+	["Mouse Instructions03\n"]="◆按住SHIFT且懸停於角色格子上方時，顯示目標的重傷記錄\n",
+	["Mouse Instructions04\n"]="◆按住ALT且懸停於角色格子上方時，顯示目標的DPS或者HPS記錄（需要加載茗伊的傷害統計）\n",
+	["Mouse Instructions05\n"]="◆默認按住ALT，雙擊角色格子時，會請求與目標交易\n",
+	["Mouse Instructions06\n"]="◆可選雙擊時跟隨目標（請手動設置）\n",
 
 	["Distance Instructions:\n"]="血條顏色設置說明：\n",
-	["◆Distance Instructions01\n"]="◆默認顯示為按距離著色:\n※綠色：目標在20尺內\n※黃色，目標在20~24尺內\n※紅色：目標超過24尺且在同步範圍內（一般為56尺左右）\n※白色：目標超出範圍或者不在同一個地圖\n",
-	["◆Distance Instructions02\n"]="◆可選擇按門派著色，此時距離顯示只能用透明度表示\n",
-	["◆Distance Instructions03\n"]="◆區分距離只能使用顏色或者透明度，且兩種方式互斥\n",
+	["Distance Instructions01\n"]="◆默認顯示為按距離著色:\n※綠色：目標在20尺內\n※黃色，目標在20~24尺內\n※紅色：目標超過24尺且在同步範圍內（一般為56尺左右）\n※白色：目標超出範圍或者不在同一個地圖\n",
+	["Distance Instructions02\n"]="◆可選擇按門派著色，此時距離顯示只能用透明度表示\n",
+	["Distance Instructions03\n"]="◆區分距離只能使用顏色或者透明度，且兩種方式互斥\n",
 
 	["Cure Instructions:\n"]="治療相關說明：\n",
-	["◆Cure Instructions01\n"]="◆默認切換到治療心法後，顯示自身的技能CD監控\n",
-	["◆Cure Instructions02\n"]="◆默認切換到治療心法後，自動顯示為血量百分比，如需顯示數值，請將【血量自動轉化為百分比】的勾去掉\n",
-	["◆Cure Instructions03\n"]="◆默認切換到治療心法後，開啟自動選隊友方式①，即懸停時選中\n※處於自動選隊友方式時，當鼠標移出面板，會自動返回最後一次手動點擊的隊友。\n",
-	["◆Cure Instructions04\n"]="◆默認開啟BOSS的讀條監控，畢竟奶媽大部分情況下不會選中Boss\n",
-	["◆Cure Instructions05\n"]="◆大BOSS目標在面板中顯示為頭盔+紅框，精英怪目標顯示為紅框\n",
+	["Cure Instructions01\n"]="◆默認切換到治療心法後，顯示自身的技能CD監控\n",
+	["Cure Instructions02\n"]="◆默認切換到治療心法後，自動顯示為血量百分比，如需顯示數值，請將【血量自動轉化為百分比】的勾去掉\n",
+	["Cure Instructions03\n"]="◆默認切換到治療心法後，開啟自動選隊友方式①，即懸停時選中\n※處於自動選隊友方式時，當鼠標移出面板，會自動返回最後一次手動點擊的隊友。\n",
+	["Cure Instructions04\n"]="◆默認開啟BOSS的讀條監控，畢竟奶媽大部分情況下不會選中Boss\n",
+	["Cure Instructions05\n"]="◆大BOSS目標在面板中顯示為頭盔+紅框，精英怪目標顯示為紅框\n",
 
 
 	--20170418add--
@@ -466,5 +466,68 @@ data={
 	["Alt+Mouse Hover"]="Alt+鼠標懸停",
 	["Shift+Mouse Hover"]="Shift+鼠標懸停",
 	
+	--20180122add--
+	["Choose GridType"]="行列樣式",
+	["1Row(5Col)"]="一行五列",
+	["2Row(3Col+2Col)"]="兩行(3列+2列)",
+
+	--20180124add--
+	["Enable"]="啟用",
+	["Not by level"]="不區分等級",
+	["By stacknum"]="監控層數",
+	["Striking display"]="醒目顯示",
+	["Self"]="自",
+	["Stack:%d"]="層：%d",
+	["Special"]="醒",
+
+	--20180126add--
+	["Import/Export data"]="數據導入導出",
+	["Export data"]="導出數據",
+	["Import data"]="導入數據",
+	["Clear data"]="清空數據",
+	["Sure to clear data?"]="確定要清空數據？",
+	["Begin buff collect"]="開始收集BUFF",
+	["Choose file"]="選擇文件",
+	["LR Buff Tools"]="團隊面板BUFF設置",
+
+	["Open Buff Tools"]="BUFF設置面板",
+	["Still show when under stacknum"]="監控層數以下也顯示",
+	["Cancel shielded speech"]="取消屏蔽語音",
+	["Shielded speech"]="屏蔽語音",
+	["Open LR GKP"]="打開懶人金團面板",
+	["Open LR TeamNotice"]="打開懶人團隊告示",
+
+	--20180203add--
+	["Collect hide buff"]="搜集隱藏BUFF",
+	["Only from npc"]="只搜集來自NPC的BUFF",
+	["Load default data"]="載入默認數據",
+	["Sure to load default data?"]="確定要載入默認數據？",
+	["File location: %s.jx3dat\n"]="文件位於：%s.jx3dat\n",
+	["Connect to system raid panel"]="聯動到系統面板",
+
+	["TeamBuffTool_Panel_Tip01\n"]="※BUFF優先級：醒目BUFF>邊角BUFF>普通BUFF。若設置了普通BUFF而不顯示，特別是奶媽，請檢查是否設置了邊角BUFF\n",
+	["TeamBuffTool_Panel_Tip02\n"]="※關聯繫統面板註意：系統面板只能設置監控的BUFF的ID，故 僅來自於自己 / 醒目 / 背景色 / 層數控制 / 等級控制 等的設置均無效。",
+
+	["Group name"]="分組名稱",
+	["Buff list"]="BUFF列表",
+	["Add group"]="添加分組",
+	["Search+History"]="搜索+歷史列表",
+	["Enter name or id"]="輸入名字或者ID",
+	["Delete"]="刪除",
+
+	["Enable monitor group: %s\n"]="開啟對分組[%s]的監控。\n",
+	["Disable monitor group: %s\n"]="關閉對分組[%s]的監控。\n",
+
+	["Clear color"]="清除顏色",
+	["Enable boss focus"]="開啟BOSS點名監控",
+	["Set boss focus alpha %d"]="設置點名透明度：%d",
+	["Enter file name"]="輸入文件名",
+	["Set special buff bg alpha:%d"]="設置醒目BUFF背景透明度%d",
+
+	--20180306add--
+	["Group [%s] is enabled.\n"]="分組[%s]在監控中。\n",
+	["Group [%s] is disabled.\n"]="分組[%s]的監控已禁止。\n",
+	["LClick image to change status.\n"]="點擊前面的圖片(勾/感嘆號)切換允許/禁止狀態。\n",
+	["RClick to delete group.\n"]="右擊刪除分組\n",
 
 }

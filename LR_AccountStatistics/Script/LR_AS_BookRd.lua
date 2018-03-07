@@ -862,7 +862,7 @@ function LR_BookRd_Panel:GetSource(hWin)
 		Text_break2:SetVAlign(1)
 
 		hIconViewContent.OnClick = function()
-			LR.OpenInternetExplorer("http://jx3.bbs.xoyo.com/forum.php?mod = viewthread&tid = 33236551")
+			OpenBrowser("http://jx3.bbs.xoyo.com/forum.php?mod = viewthread&tid = 33236551")
 		end
 		--Output(LR.Trim(szBookName))
 	end

@@ -99,7 +99,7 @@ LR_HeadName.default = {
 		nOffset = 0, 	--头顶相对高度
 		nLifeBarOffset = 0, 		--血条高度偏移量
 		bShowBalloon = false, 		--是否显示泡泡
-		nBallonType = 3,	---气泡样式
+		nBallonType = 5,	---气泡样式
 		bEnhanceGuDing = true,		--增强蛊鼎显示
 		bMiniMapAgriculture = true,	--神农小地图显示
 		bMiniMapMine = true,	--矿藏小地图显示
@@ -664,7 +664,7 @@ function _HandleRole:DrawLife(t)
 	hLifePer:SetTriangleFan(GEOMETRY_TYPE.TEXT)
 	hLifePer:ClearTriangleFanPoint()
 	local tt = "%" .. tostring(nLifePercentTextOffsetX) .. "s%d%%"
-	hLifePer:AppendCharacterID(dwID, true, r, g, b, 255, nLifePercentTextOffsetY , 2, sformat(tt, " ",LifePer * 100), 0, nLifePercentTextScale)
+	hLifePer:AppendCharacterID(dwID, true, r, g, b, 255, nLifePercentTextOffsetY , LR_HeadName.UsrData.font, sformat(tt, " ",LifePer * 100), 0, nLifePercentTextScale)
 
 	hLifePer:Hide()
 	LifeBar:Hide()
@@ -1672,7 +1672,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 						end
 						local _, _dwID = me.GetTarget()
 						if _dwID ~= me.dwID and _dwID == obj.dwID and LR_HeadName.UsrData.bShowTargetDis or obj.bFightState and nShip == "Enemy" and LR_HeadName.UsrData.bShowFightingEnemyDis then
-							temp = sformat(_L["%s·%0.1f chi"], temp, LR.GetDistance(obj))
+							temp = sformat(_L["%s.%0.1f chi"], temp, LR.GetDistance(obj))
 						end
 						if _dwID ~= me.dwID and _dwID == obj.dwID and LR_HeadName.UsrData.bShowTargetFace then
 							if LR.IsInBack(obj) then
@@ -1687,13 +1687,13 @@ function LR_HeadName.Check(dwID, nType, bForced)
 								local temp2 = ""
 								local rgb2 = LR_HeadName.RandomRGB
 								if CanAcceptQuest then
-									temp2 = sformat("%s▊", temp2)
+									temp2 = sformat("%s%s", temp2, _L["<SYMBOL_ACCEPT>"])
 								end
 								if CanFinishQuest then
-									temp2 = sformat("%s●", temp2)
+									temp2 = sformat("%s%s", temp2, _L["<SYMBOL_FINISH>"])
 								end
 								if IsMissionObj then
-									temp2 = sformat("%s%s", temp2, LR_HeadName.UsrData.CustomText or "▼")
+									temp2 = sformat("%s%s", temp2, LR_HeadName.UsrData.CustomText or _L["<SYMBOL_MISSIONOBJ1>"])
 								end
 								tinsert(szText, {szText = temp, rgb = rgb , font = font2, fScale = 1, })
 								tinsert(szText, {szText = temp2, rgb = rgb2 , font = font, })
@@ -1701,13 +1701,13 @@ function LR_HeadName.Check(dwID, nType, bForced)
 								local cymbolText = ""
 								if CanFinishQuest then
 									--cymbolText = "●"
-									temp = sformat("● %s   ", temp)
+									temp = sformat("%s %s   ", _L["<SYMBOL_FINISH>"], temp)
 								elseif IsMissionObj then
 									--cymbolText = "★"
-									temp = sformat("★ %s   ", temp)
+									temp = sformat("%s %s   ", _L["<SYMBOL_MISSIONOBJ2>"], temp)
 								elseif CanAcceptQuest then
 									--cymbolText = "▊"
-									temp = sformat("▊ %s   ", temp)
+									temp = sformat("%s %s   ", _L["<SYMBOL_ACCEPT>"], temp)
 								end
 								tinsert(szText, {szText = temp, rgb = rgb , font = font2, fScale = 1, })
 								--tinsert(szText, {szText = cymbolText, rgb = rgb , font = font2, fScale = 1, nType = "symbol", lenth = mceil(slen(temp)/2)})
@@ -1882,9 +1882,9 @@ function LR_HeadName.Check(dwID, nType, bForced)
 					if obj.dwTemplateID == _GuDing.dwTemplateID then
 						bShow = true
 						bFresh = true
-						szName = sformat("%s·%d", szName, mfloor((_GuDing.tDoodadList[obj.dwID].nEndFrame - GetLogicFrameCount()) / 16))
+						szName = sformat(_L["%s.%s"], szName, mfloor((_GuDing.tDoodadList[obj.dwID].nEndFrame - GetLogicFrameCount()) / 16))
 						if _GuDing.tDoodadList[obj.dwID].szName ~= "" then
-							szName = sformat("%s·%s", _GuDing.tDoodadList[obj.dwID].szName, szName)
+							szName = sformat(_L["%s.%s"], _GuDing.tDoodadList[obj.dwID].szName, szName)
 						else
 							local flag = true
 							for k, v in pairs(_GuDing.tCastList) do
@@ -1951,11 +1951,11 @@ function LR_HeadName.Check(dwID, nType, bForced)
 						if IsMissionObj then
 							if LR_HeadName.UsrData.bShowQMode ==  2 and LR_HeadName.UsrData.bShowQuestFlag then
 								local rgb2 = LR_HeadName.RandomRGB
-								local temp2 = LR_HeadName.UsrData.CustomText or "▼"
+								local temp2 = LR_HeadName.UsrData.CustomText or _L["<SYMBOL_MISSIONOBJ1>"]
 								tinsert(szText, {szText = temp, rgb = rgb , font = font, })
 								tinsert(szText, {szText = temp2, rgb = rgb2 , font = font, })
 							elseif LR_HeadName.UsrData.bShowQMode ==  1 and LR_HeadName.UsrData.bShowQuestFlag then
-								temp = sformat("★ %s   ", temp)
+								temp = sformat("%s %s   ", _L["<SYMBOL_MISSIONOBJ2>"], temp)
 								tinsert(szText, {szText = temp, rgb = rgb , font = font, })
 							else
 								tinsert(szText, {szText = temp, rgb = rgb , font = font, })
@@ -2002,10 +2002,10 @@ function LR_HeadName.Check(dwID, nType, bForced)
 				szName = LR.Trim(Table_GetNpcTemplateName(obj.dwTemplateID))
 			end
 			if obj.dwTemplateID ==  46297 then
-				szName = _L["「Shadow」"]
+				szName = _L["[Shadow]"]
 			end
 			if obj.dwTemplateID ==  46140 then
-				szName = _L["「TrueBody」"]
+				szName = _L["[TrueBody]"]
 			end
 		end
 		if nType == TARGET.DOODAD then

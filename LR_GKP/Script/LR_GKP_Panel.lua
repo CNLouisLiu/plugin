@@ -252,7 +252,7 @@ function LR_GKP_Panel:Init()
 			LR.SysMsg(_L["You must be in a team, and be distributor.\n"])
 			return
 		else
-			LR_GKP_Distribute_Panel:Open({szName = _L["Treasure Box"], bManual = true}, GetClientPlayer())
+			LR_GKP_Distribute_Panel:Open({szName = _L["Treasure Box"], dwIndex = 0, dwTabType = 0, bManual = true}, GetClientPlayer())
 		end
 	end
 

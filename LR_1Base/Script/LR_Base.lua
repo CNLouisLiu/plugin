@@ -514,6 +514,17 @@ function LR.IE_GetNewIEFramePos()
 	return 40, 40
 end
 
+function LR.GetCampImage(nCamp)
+	local path = "ui/Image/UICommon/CommonPanel2.UITex"
+	if nCamp == CAMP.GOOD then
+		return path, 7
+	elseif nCamp == CAMP.EVIL then
+		return path, 5
+	else
+		return path, nil
+	end
+end
+
 --------------------------------------------------------
 ---½ðÇ®²Ù×÷
 --------------------------------------------------------
@@ -1324,6 +1335,27 @@ function LR.FormatContent(szMsg)
 		end
 	end
 	return t2
+end
+
+function LR.EditBox_AppendLinkItem(item)
+	local frame = Station.Lookup("Lowest2/EditBox")
+	if not frame or not frame:IsVisible() then
+		return false
+	end
+
+	local edit = Station.Lookup("Lowest2/EditBox/Edit_Input")
+	local itemInfo = GetItemInfo(item.dwTabType, item.dwIndex)
+	if not itemInfo then
+		return
+	end
+	local szName = LR.GetItemNameByItem(item)
+	if itemInfo.nGenre == ITEM_GENRE.BOOK then
+		edit:InsertObj(sformat("[%s]", szName) , {type = "book", tabtype = item.dwTabType, index = item.dwIndex, bookinfo = item.nBookID})
+	else
+		edit:InsertObj(sformat("[%s]", szName) , {type = "iteminfo", tabtype = item.dwTabType, index = item.dwIndex})
+	end
+	Station.SetFocusWindow(edit)
+	return true
 end
 
 -----------------------------------------------------------

@@ -1001,7 +1001,7 @@ function infopanel.ON_ASK(dwTalkerID, szTalkerName)
 		char_infomore[#char_infomore].value = tContent[i][2]
 		if me.IsInParty() or me.IsInRaid() then
 			if me.IsPlayerInMyParty(dwTalkerID) then
-				char_infomore[#char_infomore].tip = tTip[tContent[i][3]]
+				--char_infomore[#char_infomore].tip = tTip[tContent[i][3]]
 			end
 		end
 	end
@@ -1154,7 +1154,7 @@ function LR.ViewCharInfoToPlayer(dwID)
 end
 
 Target_AppendAddonMenu({ function(dwID, dwType)
-	if dwType == TARGET.PLAYER and dwID ~= UI_GetClientPlayerID() then
+	if dwType == TARGET.PLAYER and dwID ~= UI_GetClientPlayerID() and not LR.isChiJi() then
 		return {{szOption = _L["View attribute"], fnAction = function() LR.ViewCharInfoToPlayer(dwID) end,}}
 	else
 		return {}
@@ -1168,7 +1168,18 @@ LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() infopanel.ON_BG_CHANNEL_MSG() e
 ----------------------------------------------------------
 local notice_ui = {}
 teamnotice = {}
+teamnotice.UsrData = {
+	notShowWhenLoadingEnd = false,
+}
+local notice_VERSION = "20180208"
+RegisterCustomData("teamnotice.UsrData", notice_VERSION)
+
 teamnotice.temp = ""
+local ASK_TYPE = {
+	LOADING_END = 1,
+	NORMAL = 2,
+}
+teamnotice.ASK_TYPE = ASK_TYPE.NORMAL
 teamnotice.Anchor = {}
 function teamnotice.UpdateAnchor(frame)
 	frame:CorrectPos()
@@ -1285,6 +1296,14 @@ function teamnotice.ON_BG_CHANNEL_MSG()
 	if data[1] == "SEND" then
 		local frame = Station.Lookup("Normal/teamnotice")
 		if me.IsInParty() or me.IsInRaid() then
+			teamnotice.temp = data[2]
+			if teamnotice.ASK_TYPE == ASK_TYPE.LOADING_END then
+				teamnotice.ASK_TYPE = ASK_TYPE.NORMAL
+				if teamnotice.UsrData.notShowWhenLoadingEnd then
+					return
+				end
+			end
+
 			if not frame then
 				teamnotice.Open()
 				teamnotice.UpdateEdit(data[2])
@@ -1297,7 +1316,7 @@ function teamnotice.ON_BG_CHANNEL_MSG()
 			end
 		end
 	elseif data[1] == "ASK" then
-		if teamnotice.temp ~= "" then
+		if LR.Trim(teamnotice.temp) ~= "" then
 			LR.BgTalk(data[2].szName, "LR_TeamNotice", "SEND", teamnotice.temp)
 		end
 	end
@@ -1311,7 +1330,7 @@ function teamnotice.Broadcast2Member(dwMemberID)
 	if team then
 		local memberInfo = team.GetMemberInfo(dwMemberID)
 		if memberInfo then
-			if teamnotice.temp ~= "" then
+			if LR.Trim(teamnotice.temp) ~= "" then
 				LR.BgTalk(memberInfo.szName, "LR_TeamNotice", "SEND", teamnotice.temp)
 			end
 		end
@@ -1319,6 +1338,7 @@ function teamnotice.Broadcast2Member(dwMemberID)
 end
 
 function teamnotice.PARTY_ADD_MEMBER()
+	--Output("PARTY_DELETE_MEMBER")
 	local dwTeamID = arg0
 	local dwMemberID = arg1
 	local nGroupIndex =arg2
@@ -1328,20 +1348,70 @@ function teamnotice.PARTY_ADD_MEMBER()
 	LR.DelayCall(1000, function() teamnotice.Broadcast2Member(dwMemberID) end)
 end
 
+function teamnotice.PARTY_DELETE_MEMBER()
+	--Output("PARTY_DISBAND")
+	local dwTeamID = arg0
+	local dwMemberID = arg1
+	local szName = arg2
+	local nGroupIndex = arg3
+	if dwMemberID == GetClientPlayer().dwID then
+		teamnotice.temp = ""
+		teamnotice.Close()
+	end
+end
+
 function teamnotice.LOADING_END()
 	if LR.isChiJi() then
 		return
 	end
+
 	local me = GetClientPlayer()
 	if not (me.IsInParty() or me.IsInRaid()) then
 		return
 	end
 	local team = GetClientTeam()
 	if me.dwID ~= team.GetAuthorityInfo(TEAM_AUTHORITY_TYPE.LEADER) then
+		teamnotice.ASK_TYPE = ASK_TYPE.LOADING_END
 		LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_TeamNotice", "ASK", {dwID = me.dwID, szName = me.szName, dwForceID = me.dwForceID})
 	end
 end
 
+function teamnotice.PARTY_UPDATE_BASE_INFO()
+	--Output("PARTY_UPDATE_BASE_INFO")
+	teamnotice.temp = ""
+end
+
+function teamnotice.PARTY_DISBAND()
+	--Output("PARTY_DISBAND")
+	teamnotice.temp = ""
+	teamnotice.Close()
+end
+
+-------------
+function teamnotice.LR_TeamRequest()
+	local szKey = arg0
+	local nChannel = arg1
+	local dwTalkerID = arg2
+	local szTalkerName = arg3
+	local data = arg4
+
+	if szKey ~= "LR_TeamRequest" then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	if data[1] == "ASK" then
+		local t = {szName = me.szName, dwID = me.dwID, dwKungfuID = UI_GetPlayerMountKungfuID(), bGongZhan = LR.HasBuff(LR.GetBuffList(me), 3219)}
+		LR.BgTalk(szTalkerName, "LR_TeamRequest", "ANSWER", t)
+	end
+end
+
+
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() teamnotice.ON_BG_CHANNEL_MSG() end)
+LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() teamnotice.LR_TeamRequest() end)
 LR.RegisterEvent("PARTY_ADD_MEMBER", function() teamnotice.PARTY_ADD_MEMBER() end)
 LR.RegisterEvent("LOADING_END", function() teamnotice.LOADING_END() end)
+LR.RegisterEvent("PARTY_UPDATE_BASE_INFO", function() teamnotice.PARTY_UPDATE_BASE_INFO() end)
+LR.RegisterEvent("PARTY_DISBAND", function() teamnotice.PARTY_DISBAND() end)

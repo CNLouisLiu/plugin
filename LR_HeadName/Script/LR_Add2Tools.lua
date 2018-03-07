@@ -37,11 +37,11 @@ LR_HeadName_UI = {
 			Tip = function()
 				local tTips = {}
 				tTips[#tTips+1] = {szText = _L["Instructions:\n"], font = 17, r = 255, g = 127, b = 39, }
-				tTips[#tTips+1] = {szText = _L["°ÙInstructions01\n"], font = 5, r = 255, g = 255, b = 255, }
-				tTips[#tTips+1] = {szText = _L["°ÙRecommended to enable Balloon at the same time.\n"], font = 5, r = 255, g = 255, b = 255, }
-				tTips[#tTips+1] = {szText = _L["°ÙInstructions03\n"], font = 5, r = 255, g = 255, b = 255, }
-				tTips[#tTips+1] = {szText = _L["°ÙInstructions04\n"], font = 5, r = 255, g = 255, b = 255, }
-				tTips[#tTips+1] = {szText = _L["°ÙInstructions05\n"], font = 5, r = 255, g = 255, b = 255, }
+				tTips[#tTips+1] = {szText = _L["Instructions01\n"], font = 5, r = 255, g = 255, b = 255, }
+				tTips[#tTips+1] = {szText = _L["Recommended to enable Balloon at the same time.\n"], font = 5, r = 255, g = 255, b = 255, }
+				tTips[#tTips+1] = {szText = _L["Instructions03\n"], font = 5, r = 255, g = 255, b = 255, }
+				tTips[#tTips+1] = {szText = _L["Instructions04\n"], font = 5, r = 255, g = 255, b = 255, }
+				tTips[#tTips+1] = {szText = _L["Instructions05\n"], font = 5, r = 255, g = 255, b = 255, }
 				return tTips
 			end,
 		}, {	name = "LR_Head_FontSize", type = "ComboBox", x = 150, y = 0, w = 120, text = _L["FontSize"],
@@ -150,7 +150,7 @@ LR_HeadName_UI = {
 				end, }
 				m[#m+1] = {bDevide = true}
 				m[#m+1] = {szOption = _L["Balloon style"], bDisable = true}
-				local szOption = {_L["System type"], _L["Style 1"], _L["Style 2"]}
+				local szOption = {_L["System type"], _L["Style 1"], _L["Style 2"], _L["Style 3"], _L["Style 4"]}
 				for k, v in pairs(szOption) do
 					m[#m + 1] = {szOption = v, bCheck = true, bMCheck = true, bChecked = function() return LR_HeadName.UsrData.nBallonType == k end,
 						fnAction = function()
@@ -189,10 +189,10 @@ LR_HeadName_UI = {
 				tTips[#tTips+1] = {szText = _L["Quest Flag Instructions:\n"], font = 17, r = 255, g = 127, b = 39, }
 				tTips[#tTips+1] = {szText = _L["Quest Flag Instructions01\n"], font = 5, r = 255, g = 255, b = 255, }
 				tTips[#tTips+1] = {szText = _L["Quest Flag Instructions02\n"], font = 5, r = 255, g = 255, b = 255, }
-				tTips[#tTips+1] = {szText = _L["°˘DES°˘"], font = 5, r = 255, g = 255, b = 255, }
-				tTips[#tTips+1] = {szText = _L["Quest Can Accept :®Ç"], font = 5, r = 255, g = 255, b = 255, }
-				tTips[#tTips+1] = {szText = _L["Quest Can Pay:°Ò"], font = 5, r = 255, g = 255, b = 255, }
-				tTips[#tTips+1] = {szText = _L["Quest Target:°Ô|®ã"], font = 5, r = 255, g = 255, b = 255, }
+				tTips[#tTips+1] = {szText = _L["DES"], font = 5, r = 255, g = 255, b = 255, }
+				tTips[#tTips+1] = {szText = _L["Quest Can Accept:"], font = 5, r = 255, g = 255, b = 255, }
+				tTips[#tTips+1] = {szText = _L["Quest Can Pay:"], font = 5, r = 255, g = 255, b = 255, }
+				tTips[#tTips+1] = {szText = _L["Quest Target:"], font = 5, r = 255, g = 255, b = 255, }
 				return tTips
 			end,
 		}, {name = "LR_Head_CustomQmode", type = "ComboBox", x = 150, y = 60, w = 120, text = _L["Quest Flag Settings"],
@@ -698,7 +698,7 @@ LR_HeadName_UI = {
 			end,
 			callback = function(m)
 				local CustomDoodad = LR_HeadName.CustomDoodad
-				tinsert(m, {szOption = _L["°ÔADD°Ô"],
+				tinsert(m, {szOption = _L["ADD"],
 				fnAction = function()
 					GetUserInput(_L["Object Name"], function(szText)
 						local szText =  sgsub(szText, "^%s*%[?(.-)%]?%s*$", "%1")
@@ -732,7 +732,7 @@ LR_HeadName_UI = {
 						LR_HeadName.ReDrawAll()
 					end, }
 				local bordercolor = {szOption = _L["Border color"], fnDisable = function() return not LifeBar.ShowBorder end,
-					{	szOption = _L["®Ç Click to change color"],
+					{	szOption = _L["Click to change color"],
 						rgb = LR_HeadName.UsrData.LifeBar.BorderColor,
 						fnAutoClose = true,
 						fnAction = function()

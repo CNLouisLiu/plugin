@@ -458,9 +458,6 @@ function LR_TOOLS:AppendAddonInfo(hWin, tWidget)
 				local hImage = self:Append("Image", hWin, v.name , {x = v.x , y = v.y , w = v.w , h = v.h})
 				hImage:FromUITex(v.path, v.nFrame)
 			elseif v.type == "FAQ" then
-				local hFAQ_Back = self:Append("Image", hWin, v.name .. "_back" , {x = v.x - 2 , y = v.y -2 , w = 24 , h = 24, })
-				hFAQ_Back:FromUITex("ui\\Image\\Common\\MainPanel_1.UITex", 3)
-				hFAQ_Back:SetAlpha(150)
 				local hFAQ = self:Append("UIButton", hWin, v.name , {x = v.x , y = v.y , w = 20 , h = 20, ani = {"ui\\Image\\UICommon\\CommonPanel2.UITex", 48, 50, 54}, })
 				hFAQ.OnEnter = function()
 					local x, y = hFAQ:GetAbsPos()
@@ -537,7 +534,7 @@ function LR.AppendAbout(Addon, frame)
 		local x, y = this:GetAbsPos()
 		local w, h = this:GetSize()
 		local szXml = {}
-		szXml[#szXml+1]  = GetFormatText(sformat("%s\n", _L["If you have any suggestions or comments, please open the Weibo of the author!"]), 10, 255, 128, 0)
+		szXml[#szXml+1]  = GetFormatText(sformat("%s\n", _L["If you have any suggestions or comments, please open the Weibo of the author!"]), 2, 255, 128, 0)
 		--szXml[#szXml+1] = GetFormatImage("interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.uitex", 1, 150, 150)
 		OutputTip(tconcat(szXml), 350, {x, y, w, h})
 	end
@@ -744,7 +741,7 @@ RegisterEvent("FIRST_LOADING_END", function()
 			{name = "LR_TOOLS_About_text", type = "Text", x = 0, y = 245, w = 500, h = 60, font  = 236, VAlign = 1, text = sformat(_L["Welcome %s to use LR Plugins"], me.szName)},
 			{name = "LR_TOOLS_About_bu", type = "Button", x = 0, y = 310, text = _L["I want to make suggestions and comments, feedback bugs"], w = 250, h = 40, font = 177,
 			callback = function()
-				LR.OpenInternetExplorer("http://www.weibo.com/u/1119308690", true)
+				OpenBrowser("http://www.weibo.com/u/1119308690")
 			end,
 			},
 			{name = "LR_TOOLS_Tong_S", type = "CheckBox", text = "没帮会时不再显示帮会推荐", x = 0, y = 350, w = 200,
@@ -921,6 +918,11 @@ local teamnoticepanel_menu = {
 	fnAction = function()
 		LR.OpenTeamNoticePanel()
 	end,
+	{szOption = _L["Not show when loading end"], bCheck = true, bChecked = function() return teamnotice.UsrData.notShowWhenLoadingEnd end,
+		fnAction = function()
+			teamnotice.UsrData.notShowWhenLoadingEnd = not teamnotice.UsrData.notShowWhenLoadingEnd
+		end,
+	}
 }
 
 tinsert(LR_TOOLS.menu, teamnoticepanel_menu)

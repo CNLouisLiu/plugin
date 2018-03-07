@@ -71,11 +71,30 @@ function LR_TeamBuffTool.LoadData()
 end
 
 function LR_TeamBuffTool.ResetData()
-	local path = sformat("%s\\Script\\DefaultBuffMonitorData.dat")
+	local _, _, szLang = GetVersion()
+	local path = sformat("%s\\DefaultData\\%s", AddonPath, szLang)
 	local data = LoadLUAData(path) or {}
 	data.VERSION = VERSION
 	LR_TeamBuffTool.tBuffList = clone(data)
 	LR_TeamBuffTool.SaveData()
+end
+
+function LR_TeamBuffTool.LoadDefaultData()
+	local msg =
+	{	szMessage = GetFormatText(_L["Sure to load default data?"]),
+		bRichText = true,
+		szName = "Load default data",
+		{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction =
+			function()
+				LR_TeamBuffTool.ResetData()
+				LR_TeamBuffTool_Panel.szChooseGroupName = ""
+				LR_TeamBuffTool_Panel:LoadGroupBox()
+				LR_TeamBuffTool_Panel:LoadBuffListBox()
+			end
+		},
+		{szOption = g_tStrings.STR_HOTKEY_CANCEL},
+	}
+	MessageBox(msg)
 end
 
 --------------------------------------------------------------------
@@ -83,17 +102,17 @@ end
 --------------------------------------------------------------------
 function LR_TeamBuffTool.Export()
 	local fExport = function(szName)
-		Output(szName)
-		local path = sformat("%s\\Export\\%s.dat", SaveDataPath, szName)
+		local path = sformat("%s\\Export\\%s", SaveDataPath, szName)
 		local data = clone(LR_TeamBuffTool.tBuffList)
 		data.VERSION = nil
 		data.nType = "LR_TeamBuffTool.DataExport"
 		SaveLUAData(path, data)
+		LR.SysMsg(sformat(_L["File location: %s.jx3dat\n"], path))
 	end
 
 	local fx, fy = this:GetAbsPos()
 	local nW, nH = this:GetSize()
-	GetUserInput("输入文件名", fExport, nil, nil, {fx, fy, nW, nH}, GetClientPlayer().szName)
+	GetUserInput(_L["Enter file name"], fExport, nil, nil, {fx, fy, nW, nH}, GetClientPlayer().szName)
 end
 
 function LR_TeamBuffTool.Import()
@@ -146,6 +165,9 @@ LR_TeamBuffTool_Panel.UsrData = {
 	Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0},
 }
 LR_TeamBuffTool_Panel.bOnCollect = false
+LR_TeamBuffTool_Panel.bCollectHideBuff = false
+LR_TeamBuffTool_Panel.bCollectOnlyFromNpc = false
+LR_TeamBuffTool_Panel.bConnectSysRaidPanel = false
 
 LR_TeamBuffTool_Panel.szChoose = "SelfBuff"
 LR_TeamBuffTool_Panel.szChooseGroupName = ""
@@ -230,19 +252,64 @@ function LR_TeamBuffTool_Panel:Init()
     imgTab:SetImage("ui\\Image\\UICommon\\ActivePopularize2.UITex",46)
 	imgTab:SetImageType(11)
 
+	local Btn_FAQ = self:Append("UIButton", frame, "Btn_FAQ" , {x = 900 , y = 15 , w = 20 , h = 20, ani = {"ui\\Image\\UICommon\\CommonPanel2.UITex", 48, 50, 54}, })
+	Btn_FAQ.OnEnter = function()
+		local tTip = {}
+		tTip[#tTip + 1] = GetFormatText(_L["TeamBuffTool_Panel_Tip01\n"], 2)
+		tTip[#tTip + 1] = GetFormatText(_L["TeamBuffTool_Panel_Tip02\n"], 2)
+
+		local fx, fy = this:GetAbsPos()
+		local nW, nH = this:GetSize()
+		OutputTip(tconcat(tTip), 320, {fx, fy, nW, nH})
+	end
+	Btn_FAQ.OnLeave = function()
+		HideTip()
+	end
+
+
 	local ComboBox_Import = LR.AppendUI("ComboBox", frame, "ComboBox_Import", {w = 150, h = 30, x = 20, y = 51, text = _L["Import/Export data"]})
 	ComboBox_Import.OnClick = function(m)
 		m[#m + 1] = {szOption = _L["Export data"], fnAction = function() LR_TeamBuffTool.Export() end}
 		m[#m + 1] = {szOption = _L["Import data"], fnAction = function() LR_TeamBuffTool.Import() end}
 		m[#m + 1] = {bDevide = true}
 		m[#m + 1] = {szOption = _L["Clear data"], fnAction = function() LR_TeamBuffTool.Clear() end}
+		m[#m + 1] = {szOption = _L["Load default data"], fnAction = function() LR_TeamBuffTool.LoadDefaultData() end}
+		m[#m + 1] = {bDevide = true}
+		m[#m + 1] = {szOption = _L["Connect to system raid panel"], bCheck = true, bChecked = function() return LR_TeamBuffTool_Panel.bConnectSysRaidPanel end,
+			fnAction = function()
+				LR_TeamBuffTool_Panel.bConnectSysRaidPanel = not LR_TeamBuffTool_Panel.bConnectSysRaidPanel
+				LR_TeamBuffSettingPanel.FormatDebuffNameList()
+				if not LR_TeamBuffTool_Panel.bConnectSysRaidPanel then
+					Raid_MonitorBuffs({})
+				end
+			end}
 		PopupMenu(m)
 	end
 
-	local CheckBox_EnableCollect = LR.AppendUI("CheckBox", frame, "ComboBox_Import", {w = 150, h = 30, x = 800, y = 51, text = _L["Begin buff collect"]})
+	local CheckBox_EnableCollect = LR.AppendUI("CheckBox", frame, "ComboBox_Import", {w = 150, h = 30, x = 740, y = 51, text = _L["Begin buff collect"]})
 	CheckBox_EnableCollect:Check(LR_TeamBuffTool_Panel.bOnCollect)
 	CheckBox_EnableCollect.OnCheck = function(arg0)
 		LR_TeamBuffTool_Panel.bOnCollect = arg0
+	end
+
+	local Btn_HideBuff = self:Append("UIButton", frame, "Btn_HideBuff" , {x = 870 , y = 55 , w = 14 , h = 20, ani = {"ui\\Image\\UICommon\\CommonPanel2.UITex", 80, 81, 82, 83}, })
+	Btn_HideBuff.OnClick = function()
+		local menu = {}
+		menu[#menu + 1] = {szOption = _L["Collect hide buff"], bCheck = true, bChecked = function() return LR_TeamBuffTool_Panel.bCollectHideBuff end,
+			fnAction = function()
+				LR_TeamBuffTool_Panel.bCollectHideBuff = not LR_TeamBuffTool_Panel.bCollectHideBuff
+			end
+		}
+		menu[#menu + 1] = {szOption = _L["Only from npc"], bCheck = true, bChecked = function() return LR_TeamBuffTool_Panel.bCollectOnlyFromNpc end,
+			fnAction = function()
+				LR_TeamBuffTool_Panel.bCollectOnlyFromNpc = not LR_TeamBuffTool_Panel.bCollectOnlyFromNpc
+			end,
+		}
+
+
+		local fx, fy = this:GetAbsPos()
+		local nW, nH = this:GetSize()
+		PopupMenu(menu, {fx, fy, nW, nH})
 	end
 
 	local hPageSet = self:Append("PageSet", frame, "PageSet", {x = 20, y = 120, w = 1000, h = 470})
@@ -279,7 +346,7 @@ function LR_TeamBuffTool_Panel:Init()
 	Image_Group_Line1_0:SetImageType(11)
 	Image_Group_Line1_0:SetAlpha(115)
 
-	local Text_Group_break2 = self:Append("Text", hHandle_Group, "Text_Group_break2", {w = 200, h = 30, x  = 0, y = 2, text = "分组名称", font = 18})
+	local Text_Group_break2 = self:Append("Text", hHandle_Group, "Text_Group_break2", {w = 200, h = 30, x  = 0, y = 2, text = _L["Group name"], font = 18})
 	Text_Group_break2:SetHAlign(1)
 	Text_Group_break2:SetVAlign(1)
 
@@ -301,7 +368,7 @@ function LR_TeamBuffTool_Panel:Init()
 	Image_BuffList_Line1_0:SetImageType(11)
 	Image_BuffList_Line1_0:SetAlpha(115)
 
-	local Text_BuffList_break2 = self:Append("Text", hHandle_BuffList, "Text_BuffList_break2", {w = 500, h = 30, x  = 0, y = 2, text = "BUff列表", font = 18})
+	local Text_BuffList_break2 = self:Append("Text", hHandle_BuffList, "Text_BuffList_break2", {w = 500, h = 30, x  = 0, y = 2, text = _L["Buff list"], font = 18})
 	Text_BuffList_break2:SetHAlign(1)
 	Text_BuffList_break2:SetVAlign(1)
 
@@ -322,7 +389,7 @@ function LR_TeamBuffTool_Panel:Init()
 	Image_Search_Line1_0:SetImageType(11)
 	Image_Search_Line1_0:SetAlpha(115)
 
-	local Text_Search_break2 = self:Append("Text", hHandle_Search, "Text_Search_break2", {w = 200, h = 30, x  = 0, y = 2, text = "搜索+历史列表", font = 18})
+	local Text_Search_break2 = self:Append("Text", hHandle_Search, "Text_Search_break2", {w = 200, h = 30, x  = 0, y = 2, text = _L["Search+History"], font = 18})
 	Text_Search_break2:SetHAlign(1)
 	Text_Search_break2:SetVAlign(1)
 
@@ -332,7 +399,7 @@ function LR_TeamBuffTool_Panel:Init()
 	hEditBox_Search.OnMouseEnter = function()
 		local x, y = this:GetAbsPos()
 		local w, h = this:GetSize()
-		local szXml  = GetFormatText("输入名字或者ID",0,255,128,0)
+		local szXml  = GetFormatText(_L["Enter name or id"],0,255,128,0)
 		OutputTip(szXml,350,{x,y,w,h})
 	end
 	hEditBox_Search.OnMouseLeave = function()
@@ -349,29 +416,21 @@ function LR_TeamBuffTool_Panel:Init()
 	self:LoadSearchResultBox()
 
 	----------添加分组
-	local hButton_add_Group = self:Append("Button", frame, "hButton_add_Group" , {w = 196, x = 17, y = 562, text = "添加分组"})
+	local hButton_add_Group = self:Append("Button", frame, "hButton_add_Group" , {w = 196, x = 17, y = 562, text = _L["Add group"]})
 	hButton_add_Group:Enable(true)
 	hButton_add_Group.OnClick = function ()
 		self:addGroup()
 	end
 
+	----------打开边角管理器
+	local hButton_EdgeOpen = self:Append("Button", frame, "hButton_EdgeOpen" , {w = 196, x = 740, y = 562, text = _L["Open EdgeIndicator"]})
+	hButton_EdgeOpen:Enable(true)
+	hButton_EdgeOpen.OnClick = function ()
+		LR_EdgeIndicator_Panel.OpenFrame()
+	end
+
 	----------关于
-	local about_handle = self:Append("Handle", frame, "t_about", {w = 100,h = 33,x = 780,y = 580})
-	local about_text = self:Append("Text", about_handle, "t_about", {w = 381,h = 33,text  = "作者：华契@电六", font  = 169})
-	about_handle.OnEnter = function()
-		about_text:SetFontScheme(168)
-		local x, y = this:GetAbsPos()
-		local w, h = this:GetSize()
-		local szXml  = GetFormatText("点击打开作者微博\n",0,255,128,0)
-		OutputTip(szXml,350,{x,y,120,40})
-	end
-	about_handle.OnLeave = function()
-		about_text:SetFontScheme(169)
-		HideTip()
-	end
-	about_handle.OnClick = function ()
-		LR.OpenInternetExplorer("http://www.weibo.com/u/1119308690",true)
-	end
+	LR.AppendAbout(nil, frame)
 end
 
 function LR_TeamBuffTool_Panel:Open()
@@ -398,7 +457,7 @@ function LR_TeamBuffTool_Panel:addGroup()
 	if not me then
 		return
 	end
-	GetUserInput(_L["Group Name"], function(szText)
+	GetUserInput(_L["Group name"], function(szText)
 		local szText =  LR.Trim(string.gsub(szText, "^%s*%[?(.-)%]?%s*$", "%1"))
 		if szText ~=  "" then
 			if LR_TeamBuffTool_Panel:checkGroup(szText) then
@@ -565,18 +624,24 @@ function LR_TeamBuffTool_Panel:LoadOneGroupBox(GroupData, m)
 		local Image_Enable = self:Append("Image", hIconViewContent, sformat("Image_GroupEnable_%s", szKey), {x = 5, y = 2, w = 36, h = 36, eventid = 272})
 		Image_Enable:SetImageType(10)
 		if v.enable then
-			Image_Enable:FromIconID(6933)
+			--Image_Enable:FromIconID(6933)
+			Image_Enable:FromUITex("ui/Image/GMPanel/gm2.UITex", 7)
 		else
-			Image_Enable:FromIconID(6942)
+			--Image_Enable:FromIconID(6942)
+			Image_Enable:FromUITex("ui/Image/GMPanel/gm2.UITex", 6)
 		end
 		Image_Enable.OnClick = function()
 			v.enable = not v.enable
 			local Image_GroupEnable = self:Fetch(sformat("Image_GroupEnable_%s", szKey))
 			if Image_GroupEnable then
 				if v.enable then
-					Image_Enable:FromIconID(6933)
+					--Image_Enable:FromIconID(6933)
+					Image_Enable:FromUITex("ui/Image/GMPanel/gm2.UITex", 7)
+					LR.SysMsg(sformat(_L["Enable monitor group: %s\n"], v.szGroupName))
 				else
-					Image_Enable:FromIconID(6942)
+					Image_Enable:FromUITex("ui/Image/GMPanel/gm2.UITex", 6)
+					--Image_Enable:FromIconID(6942)
+					LR.SysMsg(sformat(_L["Disable monitor group: %s\n"], v.szGroupName))
 				end
 			end
 			LR_TeamBuffTool_Panel:modifyGroup(v.szGroupName, v)
@@ -639,6 +704,19 @@ function LR_TeamBuffTool_Panel:LoadOneGroupBox(GroupData, m)
 			if Image_Hover then
 				Image_Hover:Show()
 			end
+
+			local tTip = {}
+			if v.enable then
+				tTip[#tTip + 1] = GetFormatText(sformat(_L["Group [%s] is enabled.\n"], v.szGroupName), 2, 34, 177, 76)
+			else
+				tTip[#tTip + 1] = GetFormatText(sformat(_L["Group [%s] is disabled.\n"], v.szGroupName), 2, 255, 0, 128)
+			end
+			tTip[#tTip + 1] = GetFormatText(_L["LClick image to change status.\n"], 2)
+			tTip[#tTip + 1] = GetFormatText(_L["RClick to delete group.\n"], 2)
+
+			local fx, fy = this:GetAbsPos()
+			local nW, nH = this:GetSize()
+			OutputTip(tconcat(tTip), 320, {fx, fy, nW, nH})
 		end
 
 		hIconViewContent.OnLeave = function()
@@ -679,7 +757,7 @@ function LR_TeamBuffTool_Panel:LoadSearchResultBox()
 			if BUFF_CACHE[i] then
 				local szKey = sformat("%s_%d_%d", "h", BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
 				if BUFF_CACHE[i] and not _ResulUI[szKey] then
-					LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(nil, BUFF_CACHE[i], m, "h")
+					LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[i], m, "h")
 					m = m+1
 				end
 			end
@@ -695,7 +773,7 @@ function LR_TeamBuffTool_Panel:LoadSearchResultBox()
 				if tonumber(szSearchText) == BUFF_CACHE[i].dwID then
 					local szKey = sformat("%s_%d_%d", "h", BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
 					if not _ResulUI[szKey] then
-						LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(hWin, BUFF_CACHE[i], m, "h")
+						LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[i], m, "h")
 						m = m+1
 					end
 				end
@@ -705,7 +783,7 @@ function LR_TeamBuffTool_Panel:LoadSearchResultBox()
 				if _s then
 					local szKey = sformat("%s_%d_%d", "h", BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
 					if not _ResulUI[szKey] then
-						LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(hWin, BUFF_CACHE[i], m, "h")
+						LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[i], m, "h")
 						m = m+1
 					end
 				end
@@ -742,7 +820,7 @@ function LR_TeamBuffTool_Panel:LoadSearchResultBox()
 
 		if bShow then
 			local buff = {dwID = dwBuffID, nLevel = nLevel or 1}
-			LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(hWin, buff, m, "b")
+			LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(nil, buff, m, "b")
 			_cache[dwBuffID] = true
 			m = m+1
 		end
@@ -760,10 +838,19 @@ function LR_TeamBuffTool_Panel:ResultBoxBreakLine(hWin)
 	Image_Line:SetAlpha(200)
 end
 
-function LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(hWin, buff, m, head)
+function LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(flag, buff, m, head)
 	local hWin = self:Fetch("ScrollSearchBuffBox")
 	if not hWin then
 		return
+	end
+
+	local szSearchText = LR_TeamBuffTool_Panel.szSearchText or ""
+	if szSearchText ~= "" then
+		local szBuffName = Table_GetBuffName(buff.dwID, buff.nLevel)
+		local _s, _e = sfind(szBuffName, szSearchText)
+		if not _s then
+			return
+		end
 	end
 
 	local szKey = sformat("%s_%d_%d", head, buff.dwID, buff.nLevel)
@@ -870,7 +957,9 @@ function LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(hWin, buff, m, head)
 		end
 		_ResulUI[szKey] = true
 	end
-	hBuffSearch:SetIndex(0)
+	if flag then
+		hBuffSearch:SetIndex(0)
+	end
 	hWin:UpdateList()
 end
 
@@ -1066,22 +1155,18 @@ function LR_TeamBuffTool.BUFF_UPDATE()
 	if not Table_BuffIsVisible(dwID, nLevel) or dwID == 0 then --dwID == 0 then  --
 		return
 	end
---[[	for i = #BUFF_CACHE, 1, -1 do
-		if BUFF_CACHE[i].dwID == dwID and BUFF_CACHE[i].nLevel then
-			tremove(BUFF_CACHE, i)
-		end
-	end]]
+	if IsPlayer(dwCaster) and LR_TeamBuffTool_Panel.bCollectOnlyFromNpc then
+		return
+	end
+
 	tinsert(BUFF_CACHE, 1, {
 		dwID = dwID,
 		nLevel = nLevel,
 		nStackNum = nStackNum,
 		dwCaster = dwCaster,
 	})
---[[	for i = #BUFF_CACHE, 300, -1 do
-		tremove(BUFF_CACHE, i)
-	end]]
 
-	LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(nil, BUFF_CACHE[1], 1, "h")
+	LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[1], 1, "h")
 	--LR_TeamBuffTool_Panel:LoadSearchResultBox()
 end
 
@@ -1262,6 +1347,7 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 		LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
 		LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
 	end
+	_UI[szKey]["Shadow_Striking_Display"] = Shadow_Striking_Display
 
 	local CheckBox_UnderStack = LR.AppendUI("CheckBox", frame, "CheckBox_UnderStack", {x = 170, y = 180, text = _L["Still show when under stacknum"]})
 	CheckBox_UnderStack:Enable(buff.enable and buff.bSpecialBuff)
@@ -1273,6 +1359,22 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 		LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
 	end
 	_UI[szKey]["CheckBox_UnderStack"] = CheckBox_UnderStack
+
+	local Btn_ClearColor = LR.AppendUI("Button", frame, "Btn_ClearColor", {x = 140, y = 210, text = _L["Clear color"], w = 100})
+	Btn_ClearColor:Enable(buff.enable)
+	Btn_ClearColor.OnClick = function(arg0)
+		buff.col = {}
+		if _UI[szKey]["Shadow_Striking_Display"] then
+			if next(buff.col) ~= nil then
+				_UI[szKey]["Shadow_Striking_Display"]:SetColor(unpack(buff.col))
+			else
+				_UI[szKey]["Shadow_Striking_Display"]:SetColor(255, 255, 255)
+			end
+		end
+
+		LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
+		LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
+	end
 end
 
 function LR_Team_Buff_Setting_Panel:Open(szGroupName, buff)

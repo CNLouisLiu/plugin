@@ -1,0 +1,9 @@
+diff a/backup.py b/backup.py	(rejected hunks)
+@@ -3,7 +3,6 @@
+ import shutil
+ import time
+ 
+-ignor = shutil.ignore_patterns("*.py", "*.pyc", "*.key", "*.dat", "*.bak", "@DATA", ".idea", "__pycache__", "*副本*", "*OTBar*", "Usrdata", ".git", ".gitignore")
+ source_dir = r"C:\JX3HD\bin\zhcn_hd\interface\LR_Plugin"
+ target_dir = r"i:\剑网3插件制作\提交提交提交提交" + "\\" + time.strftime("%Y%m%d") + "\\LR_Plugin"
+ ignor = shutil.ignore_patterns("*.py", "*.pyc", "*.key", "*.dat", "*.bak", "@DATA2", "@DATA", ".idea", "__pycache__", "*副本*", "Usrdata", ".git", ".gitignore")

@@ -105,8 +105,8 @@ local LR_TeamGrid_UI ={
 			Tip = function()
 				local tTips = {}
 				tTips[#tTips+1] = {szText = _L["UI choose Instructions:\n"], font = 17, r = 255, g = 127, b = 39,}
-				tTips[#tTips+1] = {szText = _L["＃UI choose Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃UI choose Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["UI choose Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["UI choose Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
 				return tTips
 			end,
 		},{name="LR_TeamGrid_UI_Rehelp",type="Button",x=190,y=60,text=_L["TeamGrid UI Help"],w=280,
@@ -159,7 +159,7 @@ local LR_TeamGrid_UI ={
 			Tip = function()
 				local tTips = {}
 				tTips[#tTips+1] = {szText = _L["Team member name Instructions:\n"], font = 17, r = 255, g = 127, b = 39,}
-				tTips[#tTips+1] = {szText = _L["＃Team member name Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Team member name Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
 				return tTips
 			end,
 		},{	name="LR_TeamGrid_UI_te05",type="Text",x=190,y=92,w=40,h=28,text=_L["Scale1"],font=5,
@@ -189,7 +189,7 @@ local LR_TeamGrid_UI ={
 			Tip = function()
 				local tTips = {}
 				tTips[#tTips+1] = {szText = _L["Kungfu Instructions:\n"], font = 17, r = 255, g = 127, b = 39,}
-				tTips[#tTips+1] = {szText = _L["＃Kungfu Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Kungfu Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
 				return tTips
 			end,
 		},{	name="LR_TeamGrid_UI_te04",type="Text",x=190,y=122,w=40,h=28,text=_L["Scale2"],font=5,
@@ -219,9 +219,9 @@ local LR_TeamGrid_UI ={
 			Tip = function()
 				local tTips = {}
 				tTips[#tTips+1] = {szText = _L["Blood Instructions:\n"], font = 17, r = 255, g = 127, b = 39,}
-				tTips[#tTips+1] = {szText = _L["＃Blood Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Blood Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Blood Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Blood Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Blood Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Blood Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
 				return tTips
 			end,
 		},{	name="LR_TeamGrid_UI_te06",type="Text",x=190,y=152,w=40,h=28,text=_L["Scale3"],font=5,
@@ -251,13 +251,13 @@ local LR_TeamGrid_UI ={
 			Tip = function()
 				local tTips = {}
 				tTips[#tTips+1] = {szText = _L["BuffMonitor Instructions:\n"], font = 17, r = 255, g = 127, b = 39,}
-				tTips[#tTips+1] = {szText = _L["＃BuffMonitor Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃BuffMonitor Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃BuffMonitor Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃BuffMonitor Instructions04\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃BuffMonitor Instructions05\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃BuffMonitor Instructions06\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃BuffMonitor Instructions07\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["BuffMonitor Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["BuffMonitor Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["BuffMonitor Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["BuffMonitor Instructions04\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["BuffMonitor Instructions05\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["BuffMonitor Instructions06\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["BuffMonitor Instructions07\n"], font = 5, r = 255, g = 255, b = 255,}
 				return tTips
 			end,
 		},{	name="LR_TeamGrid_UI_fxsc_1",type="Text",x=190,y=182,w=40,h=28,text=_L["fx Scale"],font=5,
@@ -300,9 +300,9 @@ local LR_TeamGrid_UI ={
 			Tip = function()
 				local tTips = {}
 				tTips[#tTips+1] = {szText = _L["Distance Instructions:\n"], font = 17, r = 255, g = 127, b = 39,}
-				tTips[#tTips+1] = {szText = _L["＃Distance Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Distance Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Distance Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Distance Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Distance Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Distance Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
 				return tTips
 			end,
 		},{	name="LR_TeamGrid_UI_MouseAction",type="ComboBox",x=0,y=240,w=180,text=_L["Mouse operation instructions and settings"],
@@ -319,12 +319,12 @@ local LR_TeamGrid_UI ={
 			Tip = function()
 				local tTips = {}
 				tTips[#tTips+1] = {szText = _L["Mouse Instructions:\n"], font = 17, r = 255, g = 127, b = 39,}
-				tTips[#tTips+1] = {szText = _L["＃Mouse Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Mouse Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Mouse Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Mouse Instructions04\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Mouse Instructions05\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Mouse Instructions06\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Mouse Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Mouse Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Mouse Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Mouse Instructions04\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Mouse Instructions05\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Mouse Instructions06\n"], font = 5, r = 255, g = 255, b = 255,}
 				return tTips
 			end,
 		},{	name="LR_TeamGrid_UI_SysMemberTip",type="CheckBox",text=_L["Enable new type of tip"], x=190,y=240,w=200,
@@ -364,11 +364,11 @@ local LR_TeamGrid_UI ={
 			Tip = function()
 				local tTips = {}
 				tTips[#tTips+1] = {szText = _L["Cure Instructions:\n"], font = 17, r = 255, g = 127, b = 39,}
-				tTips[#tTips+1] = {szText = _L["＃Cure Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Cure Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Cure Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Cure Instructions04\n"], font = 5, r = 255, g = 255, b = 255,}
-				tTips[#tTips+1] = {szText = _L["＃Cure Instructions05\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Cure Instructions01\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Cure Instructions02\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Cure Instructions03\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Cure Instructions04\n"], font = 5, r = 255, g = 255, b = 255,}
+				tTips[#tTips+1] = {szText = _L["Cure Instructions05\n"], font = 5, r = 255, g = 255, b = 255,}
 				return tTips
 			end,
 		},{	name="LR_TeamGrid_UI_EnableTeamNum",type="CheckBox",text=_L["Enable group num display"], x=190,y=270,w=200,

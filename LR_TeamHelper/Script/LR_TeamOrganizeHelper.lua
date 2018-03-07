@@ -18,8 +18,12 @@ LR_TeamRequest = {}
 LR_TeamRequest.UsrData = {
 	bOn = false,
 }
+RegisterCustomData("LR_TeamRequest.UsrData", VERSION)
 
 function LR_TeamRequest.CloseBox(data)
+	if not LR_TeamRequest.UsrData.bOn then
+		return
+	end
 	local frame
 	if data.nType == "INVITE" then
 		frame = Station.Lookup("Topmost/MB_IMTP_" .. data.szName)
@@ -29,10 +33,17 @@ function LR_TeamRequest.CloseBox(data)
 	if not frame then
 		return
 	end
+
+	if not REQUEST_LIST[data.szName] then
+		REQUEST_LIST[data.szName] = clone(data)
+	end
+	LR.BgTalk(data.szName, "LR_TeamRequest", "ASK")
+
 	frame.fnAutoClose = nil
 	frame.fnCancelAction = nil
 	frame.szCloseSound = nil
 	Wnd.CloseWindow(frame)
+	LR_TeamRequestPanel.OpenPanel()
 end
 
 function LR_TeamRequest.Request(szName, action)
@@ -188,7 +199,7 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 		Image_GongZhan:FromIconID(Table_GetBuffIconID(3219, 1)):Hide()
 
 		local Image_Camp = LR.AppendUI("Image", WndWindow, "Image_Camp", { x = 265, y = 5, w = 30, h = 30})
-		Image_Camp:FromUITex("ui/Image/UICommon/CommonPanel2.UITex", GetCampImageFrame(data.nCamp))
+		Image_Camp:FromUITex(LR.GetCampImage(data.nCamp))
 
 		local Btn_Apply = LR.AppendUI("Button", WndWindow, "Btn_Apply", {x = 305, y = 5, w = 70, h = 30, text = g_tStrings.STR_ACCEPT})
 
@@ -276,12 +287,9 @@ function LR_TeamRequest.PARTY_INVITE_REQUEST()	-----别人邀请你组进他的队伍
 	local nCamp = arg1
 	local dwForceID = arg2
 	local nLevel = arg3
-	if not REQUEST_LIST[szName] then
-		REQUEST_LIST[szName] = {szName = szName, nCamp = nCamp, dwForceID = dwForceID, nLevel = nLevel, nTime = GetTickCount(), nType = "INVITE"}
-	end
-	LR_TeamRequest.CloseBox(REQUEST_LIST[szName])
-	LR.BgTalk(szName, "LR_TeamRequest", "ASK")
-	LR_TeamRequestPanel.OpenPanel()
+
+	local data = {szName = szName, nCamp = nCamp, dwForceID = dwForceID, nLevel = nLevel, nTime = GetTickCount(), nType = "INVITE"}
+	LR_TeamRequest.CloseBox(data)
 end
 
 function LR_TeamRequest.PARTY_APPLY_REQUEST()
@@ -289,12 +297,9 @@ function LR_TeamRequest.PARTY_APPLY_REQUEST()
 	local nCamp = arg1
 	local dwForceID = arg2
 	local nLevel = arg3
-	if not REQUEST_LIST[szName] then
-		REQUEST_LIST[szName] = {szName = szName, nCamp = nCamp, dwForceID = dwForceID, nLevel = nLevel, nTime = GetTickCount(), nType = "APPLY"}
-	end
-	LR_TeamRequest.CloseBox(REQUEST_LIST[szName])
-	LR.BgTalk(szName, "LR_TeamRequest", "ASK")
-	LR_TeamRequestPanel.OpenPanel()
+
+	local data = {szName = szName, nCamp = nCamp, dwForceID = dwForceID, nLevel = nLevel, nTime = GetTickCount(), nType = "APPLY"}
+	LR_TeamRequest.CloseBox(data)
 end
 
 function LR_TeamRequest.ON_BG_CHANNEL_MSG()
@@ -311,10 +316,12 @@ function LR_TeamRequest.ON_BG_CHANNEL_MSG()
 	if not me then
 		return
 	end
+	--[[
 	if data[1] == "ASK" then
 		local t = {szName = me.szName, dwID = me.dwID, dwKungfuID = UI_GetPlayerMountKungfuID(), bGongZhan = LR.HasBuff(LR.GetBuffList(me), 3219)}
 		LR.BgTalk(szTalkerName, "LR_TeamRequest", "ANSWER", t)
-	elseif data[1] == "ANSWER" then
+	else ]]
+	if data[1] == "ANSWER" then
 		local v = data[2]
 		if REQUEST_LIST[v.szName] then
 			REQUEST_LIST[v.szName].dwID = v.dwID

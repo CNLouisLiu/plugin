@@ -125,7 +125,7 @@ LR_Accelerate.QiXueLv955 = {
 	--[6]={szName=_L["YuePo(MingJiao)"],delta=52},	--月破（明教）
 	[7]={szName=_L["TaiJiWuJi(ChunYang)"],delta=60},	--太极无极（纯阳）
 	[8]={szName=_L["QinXin/NingJue(ChangGeMen)"],delta=51},	--沁心/凝绝（长歌门）
-	[9]={szName=_L["RuFeng(CangJian)"],delta=51},	--如风（藏剑）
+	[9]={szName=_L["RuFeng(CangJian)"],delta=82},	--如风（藏剑）
 	[10]={szName=_L["SuiBing(NaiXiu)"],delta=51},		--碎冰（奶秀）
 	--[11]={szName=_L["FaJing(MingJiaoT)"],delta=105},	--法境（明教T）
 	--[12]={szName=_L["YiFeng(BaDao)"],delta=51},
@@ -480,7 +480,7 @@ function LR_Accelerate_Panel:LoadItemBox(hWin)
 
 	for i = 0, Dangshu do
 		local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", i), {x = 0, y = 0, w = 340, h = 30})
-		local Jiasulvzhi = mceil (Zhenshu_Yuan / (Zhenshu_Yuan- i + 1) * 1024 - 1024 )
+		local Jiasulvzhi = mceil (Zhenshu_Yuan / (Zhenshu_Yuan - i + 1) * 1024 - 1024 )
 		if Zhenshu_Yuan / (Zhenshu_Yuan- i + 1) * 1024 - 1024 == Jiasulvzhi then
 			Jiasulvzhi = Jiasulvzhi + 1
 		end

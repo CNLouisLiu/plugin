@@ -1450,7 +1450,7 @@ function LR_AccountStatistics_Bag_Panel:LoadOneItem2(parent, item_data)
 
 	local OnClick = function()
 		if IsCtrlKeyDown() then
-			EditBox_AppendLinkItemInfo(1, item_data.dwTabType, item_data.dwIndex, item_data.nBookID)
+			LR.EditBox_AppendLinkItem(item_data)
 			return
 		end
 		if not LR.bCanDebug2() then
