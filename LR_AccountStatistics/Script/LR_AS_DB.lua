@@ -1,33 +1,25 @@
-local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch
+local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
 local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
-local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
 ---------------------------------------------------------------
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
-local BackupPath = "Interface\\LR_Plugin@Backup\\LR_AccountStatistics\\"
-local _L = LR.LoadLangPack(AddonPath)
-local DB_name = "maindb.db"
----------------------------------------------------------------
+local db_name = "maindb.db"
+local _L = LR.LoadLangPack(LanguagePath)
+local VERSION = "20180408"
+-------------------------------------------------------------
 LR_AS_DB = LR_AS_DB or {}
 LR_AS_DEBUG = false
 ---------------------------------------------------------------
 ------数据库表项定义
 ---------------------------------------------------------------
 ---主数据库
-local schema_table_info = {
-	name = "table_info",
-	version = "20170919",
-	data = {
-		{name = "table_name", sql = "table_name VARCHAR(60)"},
-		{name = "version", sql = "version VARCHAR(20)"}
-	},
-	primary_key = {sql = "PRIMARY KEY ( table_name )"},
-}
-
 local schema_group_list = {
 	name = "group_list",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "groupID", 	sql = "groupID INTEGER"},		--主键
 		{name = "szName", sql = "szName VARCHAR(30) DEFAULT('DEFAULT GROUP')"},
@@ -40,15 +32,38 @@ local schema_group_list = {
 	primary_key = {sql = "PRIMARY KEY ( groupID )"},
 }
 
-local schema_player_info = {
-	name = "player_info",
-	version = "20170919",
+local schema_player_group = {
+	name = "player_group",
+	version = VERSION,
+	data = {
+		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
+		{name = "groupID", sql = "groupID INTEGER DEFAULT(0)"},
+	},
+	primary_key = {sql = "PRIMARY KEY ( szKey )"},
+}
+
+local schema_player_list = {
+	name = "player_list",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "dwID", 	sql = "dwID INTEGER DEFAULT(0)"},
-		{name = "szName", sql = "szName VARCHAR(20) DEFAULT('xx')"},
+		{name = "szName", sql = "szName VARCHAR(20) DEFAULT('user_name')"},
 		{name = "nLevel", sql = "nLevel INTEGER DEFAULT(0)"},
 		{name = "dwForceID", sql = "dwForceID INTEGER DEFAULT(0)"},
+		{name = "loginArea", sql = "loginArea VARCHAR(20) DEFAULT('')"},
+		{name = "loginServer", sql = "loginServer VARCHAR(20) DEFAULT('')"},
+		{name = "realArea", sql = "realArea VARCHAR(20) DEFAULT('')"},
+		{name = "realServer", sql = "realServer VARCHAR(20) DEFAULT('')"},
+	},
+	primary_key = {sql = "PRIMARY KEY ( szKey )"},
+}
+
+local schema_player_info = {
+	name = "player_info",
+	version = VERSION,
+	data = {
+		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "nGold", 	sql = "nGold INTEGER DEFAULT(0)"},
 		{name = "nSilver", 	sql = "nSilver INTEGER DEFAULT(0)"},
 		{name = "nCopper", 	sql = "nCopper INTEGER DEFAULT(0)"},
@@ -59,37 +74,23 @@ local schema_player_info = {
 		{name = "ZhanJieJiFen", 	sql = "ZhanJieJiFen INTEGER DEFAULT(0)"},
 		{name = "ZhanJieDengJi", 	sql = "ZhanJieDengJi INTEGER DEFAULT(0)"},
 		{name = "MingJianBi", 	sql = "MingJianBi INTEGER DEFAULT(0)"},
-		{name = "szTitle", sql = "szTitle VARCHAR(20)"},
+		{name = "szTitle", sql = "szTitle VARCHAR(20) DEFAULT('')"},
 		{name = "nCurrentStamina", 	sql = "nCurrentStamina INTEGER DEFAULT(0)"},
 		{name = "nMaxStamina", 	sql = "nMaxStamina INTEGER DEFAULT(0)"},
 		{name = "nCurrentThew", 	sql = "nCurrentThew INTEGER DEFAULT(0)"},
 		{name = "nMaxThew", 	sql = "nMaxThew INTEGER DEFAULT(0)"},
 		{name = "nCurrentTrainValue", 	sql = "nCurrentTrainValue INTEGER DEFAULT(0)"},
 		{name = "nCamp", 	sql = "nCamp INTEGER DEFAULT(0)"},
-		{name = "szTongName", sql = "szTongName VARCHAR(20)"},
+		{name = "szTongName", sql = "szTongName VARCHAR(20) DEFAULT('')"},
 		{name = "remainJianBen", 	sql = "remainJianBen INTEGER DEFAULT(0)"},
-		{name = "loginArea", sql = "loginArea VARCHAR(20)"},
-		{name = "loginServer", sql = "loginServer VARCHAR(20)"},
-		{name = "realArea", sql = "realArea VARCHAR(20)"},
-		{name = "realServer", sql = "realServer VARCHAR(20)"},
 		{name = "SaveTime", sql = "SaveTime INTEGER DEFAULT(0)"},
-	},
-	primary_key = {sql = "PRIMARY KEY ( szKey )"},
-}
-
-local schema_player_group = {
-	name = "player_group",
-	version = "20170919",
-	data = {
-		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
-		{name = "groupID", sql = "groupID INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
 }
 
 local schema_exam_data = {
 	name = "exam_data",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "ShengShi", 	sql = "ShengShi INTEGER DEFAULT(0)"},
@@ -101,25 +102,25 @@ local schema_exam_data = {
 
 local schema_richang_data = {
 	name = "richang_data",
-	version = "20180204a",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
-		{name = "DA", 	sql = "DA TEXT"},
-		{name = "GONG", 	sql = "GONG TEXT"},
-		{name = "CHA", 	sql = "CHA TEXT"},
-		{name = "QIN", 	sql = "QIN TEXT"},
-		{name = "JU", 	sql = "JU TEXT"},
-		{name = "JING", 	sql = "JING TEXT"},
-		{name = "MEI", 	sql = "MEI TEXT"},
-		{name = "CAI", 	sql = "CAI TEXT"},
-		{name = "XUN", 	sql = "XUN TEXT"},
-		{name = "TU", 	sql = "TU TEXT"},
-		{name = "MI", 	sql = "MI TEXT"},
-		{name = "HUIGUANG", 	sql = "HUIGUANG TEXT"},
-		{name = "HUASHAN", 	sql = "HUASHAN TEXT"},
-		{name = "LONGMENJUEJING", 	sql = "LONGMENJUEJING TEXT"},
-		{name = "LUOYANGSHENBING", 	sql = "LUOYANGSHENBING TEXT"},
-		{name = "CUSTOM_QUEST", 	sql = "CUSTOM_QUEST TEXT"},
+		{name = "DA", 	sql = "DA TEXT DEFAULT('{}')" },
+		{name = "GONG", 	sql = "GONG TEXT DEFAULT('{}')"},
+		{name = "CHA", 	sql = "CHA TEXT DEFAULT('{}')"},
+		{name = "QIN", 	sql = "QIN TEXT DEFAULT('{}')"},
+		{name = "JU", 	sql = "JU TEXT DEFAULT('{}')"},
+		{name = "JING", 	sql = "JING TEXT DEFAULT('{}')"},
+		{name = "MEI", 	sql = "MEI TEXT DEFAULT('{}')"},
+		{name = "CAI", 	sql = "CAI TEXT DEFAULT('{}')"},
+		{name = "XUN", 	sql = "XUN TEXT DEFAULT('{}')"},
+		{name = "TU", 	sql = "TU TEXT DEFAULT('{}')"},
+		{name = "MI", 	sql = "MI TEXT DEFAULT('{}')"},
+		{name = "HUIGUANG", 	sql = "HUIGUANG TEXT DEFAULT('{}')"},
+		{name = "HUASHAN", 	sql = "HUASHAN TEXT DEFAULT('{}')"},
+		{name = "LONGMENJUEJING", 	sql = "LONGMENJUEJING TEXT DEFAULT('{}')"},
+		{name = "LUOYANGSHENBING", 	sql = "LUOYANGSHENBING TEXT DEFAULT('{}')"},
+		{name = "CUSTOM_QUEST", 	sql = "CUSTOM_QUEST TEXT DEFAULT('[]')"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
@@ -127,7 +128,7 @@ local schema_richang_data = {
 
 local schema_richang_clear_time = {
 	name = "richang_clear_time",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szName", 	sql = "szName VARCHAR(60)"},		--主键
 		{name = "nTime", 	sql = "nTime INTEGER DEFAULT(0)"},
@@ -137,10 +138,10 @@ local schema_richang_clear_time = {
 
 local schema_fb_data = {
 	name = "fb_data",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
-		{name = "fb_data", sql = "fb_data TEXT"},
+		{name = "fb_data", sql = "fb_data TEXT DEFAULT('[]')"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
@@ -148,11 +149,11 @@ local schema_fb_data = {
 
 local schema_qiyu_data = {
 	name = "qiyu_data",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
-		{name = "qiyu_data", sql = "qiyu_data TEXT"},
-		{name = "qiyu_achievement", sql = "qiyu_achievement TEXT"},
+		{name = "qiyu_data", sql = "qiyu_data TEXT DEFAULT('[]')"},
+		{name = "qiyu_achievement", sql = "qiyu_achievement TEXT DEFAULT('[]')"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
@@ -160,10 +161,10 @@ local schema_qiyu_data = {
 
 local schema_bookrd_data = {
 	name = "bookrd_data",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
-		{name = "bookrd_data", sql = "bookrd_data TEXT"},
+		{name = "bookrd_data", sql = "bookrd_data TEXT DEFAULT('[]')"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
@@ -171,10 +172,10 @@ local schema_bookrd_data = {
 
 local schema_bag_item_data = {
 	name = "bag_item_data",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
-		{name = "szName", 	sql = "szName VARCHAR(60)"},
+		{name = "szName", 	sql = "szName VARCHAR(60) DEFAULT('[]')"},
 		{name = "belong", 	sql = "belong VARCHAR(60)"},		--主键
 		{name = "dwTabType", 	sql = "dwTabType INTEGER DEFAULT(0)"},
 		{name = "dwIndex", 	sql = "dwIndex INTEGER DEFAULT(0)"},
@@ -185,18 +186,16 @@ local schema_bag_item_data = {
 		{name = "nDetail", 	sql = "nDetail INTEGER DEFAULT(0)"},
 		{name = "nQuality", 	sql = "nQuality INTEGER DEFAULT(0)"},
 		{name = "nStackNum", 	sql = "nStackNum INTEGER DEFAULT(0)"},
-		{name = "bBind", 	sql = "bBind INTEGER DEFAULT(0)"},
-		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey, belong )"},
 }
 
 local schema_bank_item_data = {
 	name = "bank_item_data",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
-		{name = "szName", 	sql = "szName VARCHAR(60)"},
+		{name = "szName", 	sql = "szName VARCHAR(60) DEFAULT('[]')"},
 		{name = "belong", 	sql = "belong VARCHAR(60)"},		--主键
 		{name = "dwTabType", 	sql = "dwTabType INTEGER DEFAULT(0)"},
 		{name = "dwIndex", 	sql = "dwIndex INTEGER DEFAULT(0)"},
@@ -207,15 +206,13 @@ local schema_bank_item_data = {
 		{name = "nDetail", 	sql = "nDetail INTEGER DEFAULT(0)"},
 		{name = "nQuality", 	sql = "nQuality INTEGER DEFAULT(0)"},
 		{name = "nStackNum", 	sql = "nStackNum INTEGER DEFAULT(0)"},
-		{name = "bBind", 	sql = "bBind INTEGER DEFAULT(0)"},
-		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey, belong )"},
 }
 
 local schema_mail_item_data = {
 	name = "mail_item_data",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "szName", 	sql = "szName VARCHAR(60)"},
@@ -229,7 +226,6 @@ local schema_mail_item_data = {
 		{name = "nDetail", 	sql = "nDetail INTEGER DEFAULT(0)"},
 		{name = "nQuality", 	sql = "nQuality INTEGER DEFAULT(0)"},
 		{name = "nStackNum", 	sql = "nStackNum INTEGER DEFAULT(0)"},
-		{name = "bBind", 	sql = "bBind INTEGER DEFAULT(0)"},
 		{name = "nBelongMailID",	sql = "nBelongMailID TEXT"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
@@ -238,7 +234,7 @@ local schema_mail_item_data = {
 
 local schema_mail_data = {
 	name = "mail_data",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "nMailID", 	sql = "nMailID INTEGER"},	--主键
 		{name = "belong", 	sql = "belong VARCHAR(60)"},		--主键
@@ -247,7 +243,7 @@ local schema_mail_data = {
 		{name = "szContent", 	sql = "szContent TEXT"},
 		{name = "nType", 	sql = "nType INTEGER DEFAULT(0)"},
 		{name = "nEndTime", 	sql = "nEndTime INTEGER DEFAULT(0)"},
-		{name = "item_record", 	sql = "item_record TEXT"},
+		{name = "item_record", 	sql = "item_record TEXT DEFAULT('[]')"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( nMailID, belong )"},
@@ -255,7 +251,7 @@ local schema_mail_data = {
 
 local schema_mail_receive_time = {
 	name = "mail_receive_time",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(60)"},		--主键
 		{name = "nTime", 	sql = "nTime INTEGER DEFAULT(0)"},
@@ -266,10 +262,10 @@ local schema_mail_receive_time = {
 
 local schema_achievement_data = {
 	name = "achievement_data",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(80)"},		--主键
-		{name = "achievement_data", 	sql = "achievement_data TEXT"},
+		{name = "achievement_data", 	sql = "achievement_data TEXT DEFAULT('[]')"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
@@ -277,13 +273,13 @@ local schema_achievement_data = {
 
 local schema_equipment_data = {
 	name = "equipment_data",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(80)"},		--主键
 		{name = "nSuitIndex", 	sql = "nSuitIndex TEXT"},
-		{name = "equipment_data", 	sql = "equipment_data TEXT"},
-		{name = "score", 	sql = "score TEXT"},
-		{name = "char_infomoreV2", 	sql = "char_infomoreV2 TEXT"},
+		{name = "equipment_data", 	sql = "equipment_data TEXT DEFAULT('[]')"},
+		{name = "score", 	sql = "score TEXT DEFAULT('[]')"},
+		{name = "char_infomoreV2", 	sql = "char_infomoreV2 TEXT DEFAULT('[]')"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey, nSuitIndex )"},
@@ -292,18 +288,18 @@ local schema_equipment_data = {
 --收支交易数据库
 local schema_trade_data = {
 	name = "trade_data",
-	version = "20170919",
+	version = VERSION,
 	data = {
 		{name = "szKey", 	sql = "szKey VARCHAR(80)"},		--主键
 		{name = "nTime", 	sql = "nTime INTEGER DEFAULT(0)"},		--主键
 		{name = "OrderTime", sql = "OrderTime INTEGER DEFAULT(0)"},
-		{name = "nMoney", 	sql = "nMoney TEXT"},
-		{name = "nItem_in", 	sql = "nItem_in TEXT"},
-		{name = "nItem_out", 	sql = "nItem_out TEXT"},
+		{name = "nMoney", 	sql = "nMoney TEXT DEFAULT('[]')"},
+		{name = "nItem_in", 	sql = "nItem_in TEXT DEFAULT('[]')"},
+		{name = "nItem_out", 	sql = "nItem_out TEXT DEFAULT('[]')"},
 		{name = "dwMapID", 	sql = "dwMapID INTEGER DEFAULT(0)"},
 		{name = "nType", 	sql = "nType INTEGER DEFAULT(0)"},
-		{name = "Distributor", 	sql = "Distributor TEXT"},
-		{name = "Source", 	sql = "Source TEXT"},
+		{name = "Distributor", 	sql = "Distributor TEXT DEFAULT('[]')"},
+		{name = "Source", 	sql = "Source TEXT DEFAULT('[]')"},
 		{name = "tDate", 	sql = "tDate TEXT"},
 		{name = "nDate", 	sql = "nDate TEXT"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
@@ -314,7 +310,7 @@ local schema_trade_data_temp = clone(schema_trade_data)
 schema_trade_data_temp.name = "trade_data_temp"
 -----------------------------------------------------
 function LR_AS_DB.Convert_Old_Version(option)
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = SQLite3_Open(path)
 	if option == "player_info" then
 		local path = sformat("%s\\UserList.dat",SaveDataPath)
@@ -361,11 +357,11 @@ end
 
 function LR_AS_DB.MainDBVacuum(skip)
 	local vacuum = function()
-		local path = sformat("%s\\%s", SaveDataPath, DB_name)
+		local path = sformat("%s\\%s", SaveDataPath, db_name)
 		local DB = SQLite3_Open(path)
 		DB:Execute("BEGIN TRANSACTION")
 		local SQL = "DELETE FROM %s WHERE bDel = 1"
-		local tables = {"bag_item_data", "bank_item_data", "bookrd_data", "exam_data", "fb_data", "mail_data", "mail_item_data", "mail_receive_time", "qiyu_data", "richang_data"}
+		local tables = {"bookrd_data", "exam_data", "fb_data", "mail_data", "mail_item_data", "mail_receive_time", "qiyu_data", "richang_data"}
 		for k, v in pairs (tables) do
 			local DB_DELETE = DB:Prepare(sformat(SQL, v))
 			DB_DELETE:Execute()
@@ -402,7 +398,7 @@ end
 
 function LR_AS_DB.MainDBBackup()
 	local backup = function()
-		local source = sformat("%s\\%s", SaveDataPath, DB_name)
+		local source = sformat("%s\\%s", SaveDataPath, db_name)
 		local nTime = GetCurrentTime()
 		local _date = TimeToDate(nTime)
 		local _year = _date.year
@@ -444,28 +440,99 @@ function LR_AS_DB.IniTradeDB()
 	LR.IniDB(path, "TradeDB.db", tTableConfig)
 end
 
+local tTableConfig = {
+	schema_group_list,
+	schema_player_group,
+	schema_player_list,
+	schema_player_info,
+	schema_exam_data,
+	schema_richang_data,
+	schema_richang_clear_time,
+	schema_fb_data,
+	schema_bag_item_data,
+	schema_bank_item_data,
+	schema_mail_item_data,
+	schema_mail_data,
+	schema_qiyu_data,
+	schema_bookrd_data,
+	schema_mail_receive_time,
+	schema_achievement_data,
+	schema_equipment_data,
+}
+
 function LR_AS_DB.IniMainDB()
-	local tTableConfig = {
-		schema_group_list,
-		schema_player_info,
-		schema_player_group,
-		schema_exam_data,
-		schema_richang_data,
-		schema_richang_clear_time,
-		schema_fb_data,
-		schema_bag_item_data,
-		schema_bank_item_data,
-		schema_mail_item_data,
-		schema_mail_data,
-		schema_qiyu_data,
-		schema_bookrd_data,
-		schema_mail_receive_time,
-		schema_achievement_data,
-		schema_equipment_data,
-	}
-	LR.IniDB(SaveDataPath, DB_name, tTableConfig)
+	local tTableConfig = tTableConfig
+	LR.IniDB(SaveDataPath, db_name, tTableConfig)
 end
 
+function LR_AS_DB.backup()
+	local begin_time = GetTickCount()
+
+	local tTableConfig = tTableConfig
+	--新建备份数据库
+	local nTime = GetCurrentTime()
+	local _date = TimeToDate(nTime)
+
+	local name = sformat("backup_%04d%02d%02d_%02dh%02dm%02ds.db", _date.year, _date.month, _date.day, _date.hour, _date.minute, _date.second)
+	local path = sformat("%s\\backup", SaveDataPath)
+	LR.IniDB(sformat("%s\\backup", SaveDataPath), name, tTableConfig)
+
+	for table_config_k, table_config_v in pairs(tTableConfig) do
+		local path = sformat("%s\\%s", SaveDataPath, db_name)
+		local DB = SQLite3_Open(path)
+		DB:Execute("BEGIN TRANSACTION")
+
+		local table_name = table_config_v.name
+		--获取全部数据
+		local DB_SELECT = DB:Prepare(sformat("SELECT * FROM %s", table_name))
+		local data = DB_SELECT:GetAll()
+
+		--打开备份数据库
+		local path2 = sformat("%s\\backup\\%s", SaveDataPath, name)
+		local DB2 = SQLite3_Open(path2)
+		DB2:Execute("BEGIN TRANSACTION")
+
+		--导入
+		for k, v in pairs(data) do
+			local key = {}
+			local wen = {}
+			local values = {}
+
+			for k2, key_data in pairs(table_config_v.data) do
+				if v[key_data.name] then
+					key[#key + 1] = key_data.name
+					wen[#wen + 1] = "?"
+					values[#values + 1] = v[key_data.name]
+				end
+			end
+
+			local keys = tconcat(key, ", ")
+			local wens = tconcat(wen, ", ")
+
+			local sql = sformat("REPLACE INTO %s ( %s ) VALUES ( %s )", table_name, keys, wens)
+			--Output(sql)
+			local DB_REPLACE = DB2:Prepare(sql)
+			if DB_REPLACE then
+				DB_REPLACE:ClearBindings()
+				DB_REPLACE:BindAll(unpack(values))
+				DB_REPLACE:Execute()
+			else
+				Output(sql)
+			end
+		end
+
+		DB2:Execute("END TRANSACTION")
+		DB2:Release()
+
+		DB:Execute("END TRANSACTION")
+		DB:Release()
+	end
+	local end_time = GetTickCount()
+	Log(sformat("backup cost %ss\n", tostring((end_time - begin_time) /1000.0)))
+	LR.SysMsg(sformat(_L["backup path: %s\\\n"], path))
+	LR.SysMsg(sformat(_L["backup dataname: %s\n"], name))
+	LR.SysMsg(sformat(_L["backup cost %ss\n"], tostring((end_time - begin_time) /1000.0)))
+end
 ----------------------------------------------
 ------------事件处理
 ----------------------------------------------
@@ -478,14 +545,10 @@ end
 --过图触发顺序
 ----SYNC_ROLE_DATA_END（可以获得角色信息）
 ----LOADING_END
-
-
 function LR_AS_DB.LOGIN_GAME()
 	LR_AS_DB.IniMainDB()
 	LR_AS_DB.IniTradeDB()
 end
 
 LR.RegisterEvent("LOGIN_GAME", function() LR_AS_DB.LOGIN_GAME() end)
-
-
 

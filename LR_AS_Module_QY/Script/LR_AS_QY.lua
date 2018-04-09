@@ -1,11 +1,16 @@
-local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
-local _L = LR.LoadLangPack(AddonPath)
-local DB_name = "maindb.db"
-local sformat, slen, sgsub, ssub, sfind = string.format, string.len, string.gsub, string.sub, string.find
-local mfloor, mceil, mmin, mmax = math.floor, math.ceil, math.min, math.max
-local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remove, table.sort
---------------------------------------------------------------------
+local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
+local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
+local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
+---------------------------------------------------------------
+local AddonPath = "Interface\\LR_Plugin\\LR_AS_Module_QY"
+local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics"
+local db_name = "maindb.db"
+local _L = LR.LoadLangPack(LanguagePath)
+local VERSION = "20180403"
+-------------------------------------------------------------
 local MONITOR_TYPE = {
 	WINDOW_DIALOG = 1,
 	ITEM = 2,
@@ -456,11 +461,9 @@ QIYU_MSG_NPC_NEARBY[QIYU.RONG_MA_BIAN] = {
 QIYU_ACHIEVEMENT[QIYU.RONG_MA_BIAN] = 6034
 
 --------------------------------------------------------------------
-LR_ACS_QiYu = LR_ACS_QiYu or {}
-LR_ACS_QiYu.SelfData = {}
-LR_ACS_QiYu.SelfAchievementData = {}
-LR_ACS_QiYu.AllUsrData = {}
-LR_ACS_QiYu.default = {
+local CustomVersion = "20170111"
+LR_AS_QY = {}
+LR_AS_QY.Default = {
 	List = {
 		[QIYU_NAME[QIYU.SHENG_FU_JU]] = true,
 		[QIYU_NAME[QIYU.ZHUO_YAO_JI]] = true,
@@ -476,34 +479,39 @@ LR_ACS_QiYu.default = {
 		[QIYU_NAME[QIYU.ZHU_MA_QING]] = false,
 	},
 	bUseCommonData = true,
-	Version = "20170111",
+	Version = CustomVersion,
 }
-LR_ACS_QiYu.QiYu = clone(QIYU)
-LR_ACS_QiYu.QiYuName = clone(QIYU_NAME)
-LR_ACS_QiYu.UsrData = clone(LR_ACS_QiYu.default)
+LR_AS_QY.UsrData = clone(LR_AS_QY.Default)
+RegisterCustomData("LR_AS_QY.UsrData", CustomVersion)
 
-local CustomVersion = "20170111"
-RegisterCustomData("LR_ACS_QiYu.UsrData", CustomVersion)
+local _QY = {}
+_QY.SelfData = {}
+_QY.SelfAchievementData = {}
+_QY.AllUsrData = {}
 
-function LR_ACS_QiYu.ResetUsrData()
-	LR_ACS_QiYu.UsrData = clone(LR_ACS_QiYu.default)
+_QY.QiYu = clone(QIYU)
+_QY.QiYuName = clone(QIYU_NAME)
+
+
+function _QY.ResetUsrData()
+	LR_AS_QY.UsrData = clone(LR_AS_QY.Default)
 end
 
-function LR_ACS_QiYu.CheckCommomUsrData()
+function _QY.CheckCommomUsrData()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 	local  path = sformat("%s\\UsrData\\QiYuCommonData.dat.jx3dat", SaveDataPath)
 	if not IsFileExist(path) then
-		local CommomMenuList = LR_ACS_QiYu.default
+		local CommomMenuList = LR_AS_QY.Default
 		local path = sformat("%s\\UsrData\\QiYuCommonData.dat", SaveDataPath)
 		SaveLUAData (path, CommomMenuList)
 	end
 end
 
-function LR_ACS_QiYu.SaveCommomUsrData()
-	if not LR_ACS_QiYu.UsrData.bUseCommonData then
+function _QY.SaveCommomUsrData()
+	if not LR_AS_QY.UsrData.bUseCommonData then
 		return
 	end
 	local me = GetClientPlayer()
@@ -511,13 +519,13 @@ function LR_ACS_QiYu.SaveCommomUsrData()
 		return
 	end
 	local path = sformat("%s\\UsrData\\QiYuCommonData.dat", SaveDataPath)
-	local UsrData = LR_ACS_QiYu.UsrData
+	local UsrData = LR_AS_QY.UsrData
 	SaveLUAData (path, UsrData)
 end
 
-function LR_ACS_QiYu.LoadCommomUsrData()
-	LR_ACS_QiYu.CheckCommomUsrData()
-	if not LR_ACS_QiYu.UsrData.bUseCommonData then
+function _QY.LoadCommomUsrData()
+	_QY.CheckCommomUsrData()
+	if not LR_AS_QY.UsrData.bUseCommonData then
 		return
 	end
 	local me = GetClientPlayer()
@@ -526,10 +534,10 @@ function LR_ACS_QiYu.LoadCommomUsrData()
 	end
 	local path = sformat("%s\\UsrData\\QiYuCommonData.dat", SaveDataPath)
 	local UsrData = LoadLUAData (path)
-	LR_ACS_QiYu.UsrData = clone(UsrData)
+	LR_AS_QY.UsrData = clone(UsrData)
 end
 
-function LR_ACS_QiYu.GetSelfQiYuAchievementData()
+function _QY.GetSelfQiYuAchievementData()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -542,44 +550,33 @@ function LR_ACS_QiYu.GetSelfQiYuAchievementData()
 			data[tostring(dwID)] = true
 		end
 	end
-	LR_ACS_QiYu.SelfAchievementData = clone(data)
+	_QY.SelfAchievementData = clone(data)
 end
 
-function LR_ACS_QiYu.SaveData()
+function _QY.SaveData(DB)
+	if not LR_AS_Base.UsrData.bRecord then
+		return
+	end
 	local me = GetClientPlayer()
-	if not me then
+	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
-	if IsRemotePlayer(me.dwID) then
-		return
-	end
-	LR_ACS_QiYu.GetSelfQiYuAchievementData()
+	_QY.GetSelfQiYuAchievementData()
 	local ServerInfo = {GetUserServer()}
 	local realArea, realServer = ServerInfo[5], ServerInfo[6]
 	local dwID = me.dwID
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
 	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_data ( szKey, qiyu_data, qiyu_achievement, bDel ) VALUES ( ?, ?, ?, ? )")
-	if LR_AS_Base.UsrData.OthersCanSee then
-		local SelfData = {}
-		for k, v in pairs(LR_ACS_QiYu.SelfData or {}) do
-			SelfData[tostring(k)] = v
-		end
-		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(szKey, LR.JsonEncode(SelfData), LR.JsonEncode(LR_ACS_QiYu.SelfAchievementData or {}), 0)
-		DB_REPLACE:Execute()
-	else
-		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(szKey, LR.JsonEncode({}), LR.JsonEncode({}), 1)
-		DB_REPLACE:Execute()
+	local SelfData = {}
+	for k, v in pairs(_QY.SelfData or {}) do
+		SelfData[tostring(k)] = v
 	end
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(SelfData), LR.JsonEncode(_QY.SelfAchievementData or {}), 0})))
+	DB_REPLACE:Execute()
 end
 
-function LR_ACS_QiYu.LoadAllUsrData(DB)
+function _QY.LoadAllUsrData(DB)
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -589,7 +586,7 @@ function LR_ACS_QiYu.LoadAllUsrData(DB)
 	local dwID = me.dwID
 	local szSelfKey = sformat("%s_%s_%d", realArea, realServer, dwID)
 	local DB_SELECT = DB:Prepare("SELECT * FROM qiyu_data WHERE bDel = 0 AND szKey IS NOT NULL")
-	local Data = DB_SELECT:GetAll() or {}
+	local Data = d2g(DB_SELECT:GetAll())
 	local AllUsrData = {}
 	for k, v in pairs (Data) do
 		AllUsrData[v.szKey] = clone(v)
@@ -604,38 +601,41 @@ function LR_ACS_QiYu.LoadAllUsrData(DB)
 		end
 		AllUsrData[v.szKey].qiyu_achievement = clone(achievement_data)
 	end
-	if next(LR_ACS_QiYu.SelfData) == nil then
+	if next(_QY.SelfData) == nil then
 		AllUsrData[szSelfKey] = AllUsrData[szSelfKey] or {}
-		LR_ACS_QiYu.SelfData = AllUsrData[szSelfKey].qiyu_data or {}
+		_QY.SelfData = AllUsrData[szSelfKey].qiyu_data or {}
 	else
 		AllUsrData[szSelfKey] = {}
-		AllUsrData[szSelfKey].qiyu_data = clone(LR_ACS_QiYu.SelfData)
+		AllUsrData[szSelfKey].qiyu_data = clone(_QY.SelfData)
 	end
-	LR_ACS_QiYu.GetSelfQiYuAchievementData()
-	AllUsrData[szSelfKey].qiyu_achievement = clone(LR_ACS_QiYu.SelfAchievementData)
-	LR_ACS_QiYu.AllUsrData = clone(AllUsrData)
+	_QY.GetSelfQiYuAchievementData()
+	AllUsrData[szSelfKey].qiyu_achievement = clone(_QY.SelfAchievementData)
+	_QY.AllUsrData = clone(AllUsrData)
 end
 
-function LR_ACS_QiYu.ClearAllData(DB)
+function _QY.ClearAllData(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM qiyu_data WHERE bDel = 0 AND szKey IS NOT NULL")
-	local Data = DB_SELECT:GetAll() or {}
+	local Data = d2g(DB_SELECT:GetAll())
 	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_data ( szKey, qiyu_data, qiyu_achievement, bDel ) VALUES ( ?, ?, ?, 0 )")
 	if Data and next(Data) ~= nil then
 		for k, v in pairs (Data) do
 			DB_REPLACE:ClearBindings()
-			DB_REPLACE:BindAll(v.szKey, LR.JsonEncode({}), v.qiyu_achievement)
+			DB_REPLACE:BindAll(unpack(g2d({v.szKey, LR.JsonEncode({}), v.qiyu_achievement})))
 			DB_REPLACE:Execute()
 		end
 	end
-	LR_ACS_QiYu.SelfData = {}
+	_QY.SelfData = {}
 end
-LR_AS_Base.Add2ResetData({szKey = "Reset_QiYu", fnAction = LR_ACS_QiYu.ClearAllData, nType = RESET_TYPE.EVERY_DAY, order = 80})
+
+function _QY.ResetDataEveryDay(DB)
+	_QY.ClearAllData(DB)
+end
 
 local _tempTime = 0
-function LR_ACS_QiYu.CheckItemNum(dwTabType, dwIndex)
+function _QY.CheckItemNum(dwTabType, dwIndex)
 	local now = GetLogicFrameCount()
 	if now - _tempTime < 2 then
-		LR.DelayCall(100, function() LR_ACS_QiYu.CheckItemNum(dwTabType, dwIndex) end)
+		LR.DelayCall(100, function() _QY.CheckItemNum(dwTabType, dwIndex) end)
 		return
 	end
 	for k, v in pairs(QIYU) do
@@ -643,7 +643,7 @@ function LR_ACS_QiYu.CheckItemNum(dwTabType, dwIndex)
 			local data = QIYU_ITEM[v] or {}
 			for k2, v2 in pairs (data) do
 				if dwTabType == v2.dwTabType and dwIndex == v2.dwIndex then
-					local num = LR_ACS_QiYu.GetSingleItemNum(dwTabType, dwIndex)
+					local num = _QY.GetSingleItemNum(dwTabType, dwIndex)
 					local flag = true
 					if QIYU_MNTP[v] ==  MONITOR_TYPE.MULTI_ITEM then
 						local me = GetClientPlayer()
@@ -663,10 +663,10 @@ function LR_ACS_QiYu.CheckItemNum(dwTabType, dwIndex)
 					end
 					local key = sformat("%d_%d", dwTabType, dwIndex)
 					if num < QIYU_ITEM_NUM[key] and flag then
-						LR_ACS_QiYu.SelfData[v] = LR_ACS_QiYu.SelfData[v] or 0
-						LR_ACS_QiYu.SelfData[v] = LR_ACS_QiYu.SelfData[v] + 1
-						LR_ACS_QiYu.SaveData()
-						LR_ACS_QiYu.ListQY()
+						_QY.SelfData[v] = _QY.SelfData[v] or 0
+						_QY.SelfData[v] = _QY.SelfData[v] + 1
+						_QY.SaveData()
+						_QY.ListQY()
 					end
 					QIYU_ITEM_NUM[key] = num
 				end
@@ -675,14 +675,14 @@ function LR_ACS_QiYu.CheckItemNum(dwTabType, dwIndex)
 	end
 end
 
-function LR_ACS_QiYu.GetSingleItemNum(dwTabType, dwIndex)
+function _QY.GetSingleItemNum(dwTabType, dwIndex)
 	local me = GetClientPlayer()
 	local num = me.GetItemAmountInAllPackages(dwTabType, dwIndex)
 	return num
 end
 
-function LR_ACS_QiYu.FIRST_LOADING_END()
-	LR_ACS_QiYu.LoadCommomUsrData()
+function _QY.FIRST_LOADING_END()
+	_QY.LoadCommomUsrData()
 
 	for k, v in pairs(QIYU) do
 		if QIYU_ITEM[v] then
@@ -690,7 +690,7 @@ function LR_ACS_QiYu.FIRST_LOADING_END()
 			for k2, v2 in pairs(data) do
 				local dwTabType = v2.dwTabType
 				local dwIndex = v2.dwIndex
-				local num = LR_ACS_QiYu.GetSingleItemNum(dwTabType, dwIndex)
+				local num = _QY.GetSingleItemNum(dwTabType, dwIndex)
 				local key = sformat("%d_%d", dwTabType, dwIndex)
 				QIYU_ITEM_NUM[key] = num
 			end
@@ -698,7 +698,7 @@ function LR_ACS_QiYu.FIRST_LOADING_END()
 	end
 end
 
-function LR_ACS_QiYu.DESTROY_ITEM()
+function _QY.DESTROY_ITEM()
 	local dwBoxIndex = arg0
 	local dwX = arg1
 	local nVersion = arg2
@@ -706,10 +706,10 @@ function LR_ACS_QiYu.DESTROY_ITEM()
 	local dwIndex = arg4
 
 	_tempTime = GetLogicFrameCount()
-	LR_ACS_QiYu.CheckItemNum(dwTabType, dwIndex)
+	_QY.CheckItemNum(dwTabType, dwIndex)
 end
 
-function LR_ACS_QiYu.BAG_ITEM_UPDATE()
+function _QY.BAG_ITEM_UPDATE()
 	local dwBoxIndex = arg0
 	local dwX = arg1
 
@@ -720,11 +720,11 @@ function LR_ACS_QiYu.BAG_ITEM_UPDATE()
 		local dwTabType = item.dwTabType
 		local dwIndex = item.dwIndex
 		_tempTime = GetLogicFrameCount()
-		LR_ACS_QiYu.CheckItemNum(dwTabType, dwIndex)
+		_QY.CheckItemNum(dwTabType, dwIndex)
 	end
 end
 
-function LR_ACS_QiYu.OPEN_WINDOW()
+function _QY.OPEN_WINDOW()
 	local dwIndex = arg0
 	local szText = LR.Trim(arg1)
 	local dwTargetType = arg2
@@ -760,20 +760,20 @@ function LR_ACS_QiYu.OPEN_WINDOW()
 					end
 				end
 				if bFound then
-					LR_ACS_QiYu.SelfData[v] = LR_ACS_QiYu.SelfData[v] or 0
-					LR_ACS_QiYu.SelfData[v] = LR_ACS_QiYu.SelfData[v]+1
+					_QY.SelfData[v] = _QY.SelfData[v] or 0
+					_QY.SelfData[v] = _QY.SelfData[v]+1
 					if bFinish then
-						LR_ACS_QiYu.SelfData[v] = 4
+						_QY.SelfData[v] = 4
 					end
-					LR_ACS_QiYu.SaveData()
-					LR_ACS_QiYu.ListQY()
+					_QY.SaveData()
+					_QY.ListQY()
 				end
 			end
 		end
 	end
 end
 
-function LR_ACS_QiYu.MSG_NPC_NEARBY(szMsg)
+function _QY.MSG_NPC_NEARBY(szMsg)
 	local szMsg = szMsg or ""
 	local me = GetClientPlayer()
 	if not me then
@@ -799,20 +799,20 @@ function LR_ACS_QiYu.MSG_NPC_NEARBY(szMsg)
 					end
 				end
 				if bFound then
-					LR_ACS_QiYu.SelfData[v] = LR_ACS_QiYu.SelfData[v] or 0
-					LR_ACS_QiYu.SelfData[v] = LR_ACS_QiYu.SelfData[v] + 1
+					_QY.SelfData[v] = _QY.SelfData[v] or 0
+					_QY.SelfData[v] = _QY.SelfData[v] + 1
 					if bFinish then
-						LR_ACS_QiYu.SelfData[v] = 4
+						_QY.SelfData[v] = 4
 					end
-					LR_ACS_QiYu.SaveData()
-					LR_ACS_QiYu.ListQY()
+					_QY.SaveData()
+					_QY.ListQY()
 				end
 			end
 		end
 	end
 end
 
-function LR_ACS_QiYu.ON_WARNING_MESSAGE()
+function _QY.ON_WARNING_MESSAGE()
 	local nMsgType = arg0
 	local szMsg = arg1
 
@@ -842,41 +842,62 @@ function LR_ACS_QiYu.ON_WARNING_MESSAGE()
 					end
 				end
 				if bFound then
-					LR_ACS_QiYu.SelfData[v] = LR_ACS_QiYu.SelfData[v] or 0
-					LR_ACS_QiYu.SelfData[v] = LR_ACS_QiYu.SelfData[v] + 1
+					_QY.SelfData[v] = _QY.SelfData[v] or 0
+					_QY.SelfData[v] = _QY.SelfData[v] + 1
 					if bFinish then
-						LR_ACS_QiYu.SelfData[v] = 4
+						_QY.SelfData[v] = 4
 					end
-					LR_ACS_QiYu.SaveData()
-					LR_ACS_QiYu.ListQY()
+					_QY.SaveData()
+					_QY.ListQY()
 				end
 			end
 		end
 	end
 end
 
-RegisterMsgMonitor(LR_ACS_QiYu.MSG_NPC_NEARBY, {"MSG_NPC_NEARBY"})
-LR.RegisterEvent("OPEN_WINDOW", function() LR_ACS_QiYu.OPEN_WINDOW() end)
-LR.RegisterEvent("DESTROY_ITEM", function() LR_ACS_QiYu.DESTROY_ITEM() end)
-LR.RegisterEvent("BAG_ITEM_UPDATE", function() LR_ACS_QiYu.BAG_ITEM_UPDATE() end)
-LR.RegisterEvent("FIRST_LOADING_END", function() LR_ACS_QiYu.FIRST_LOADING_END() end)
-LR.RegisterEvent("ON_WARNING_MESSAGE", function() LR_ACS_QiYu.ON_WARNING_MESSAGE() end)
+RegisterMsgMonitor(_QY.MSG_NPC_NEARBY, {"MSG_NPC_NEARBY"})
+LR.RegisterEvent("OPEN_WINDOW", function() _QY.OPEN_WINDOW() end)
+LR.RegisterEvent("DESTROY_ITEM", function() _QY.DESTROY_ITEM() end)
+LR.RegisterEvent("BAG_ITEM_UPDATE", function() _QY.BAG_ITEM_UPDATE() end)
+LR.RegisterEvent("FIRST_LOADING_END", function() _QY.FIRST_LOADING_END() end)
+LR.RegisterEvent("ON_WARNING_MESSAGE", function() _QY.ON_WARNING_MESSAGE() end)
 
 ----------------------------------------------------
 ------主界面显示奇遇信息
 ----------------------------------------------------
-LR_ACS_QiYu.Container = nil
-
-function LR_ACS_QiYu.ReFreshTitle()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+_QY.Container = nil
+function _QY.AddPage()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
 	if not frame then
 		return
 	end
-	local title_handle = frame:Lookup("PageSet_Menu"):Lookup("Page_LR_QYList"):Lookup("", "")
+
+	local PageSet_Menu = frame:Lookup("PageSet_Menu")
+	local Btn = PageSet_Menu:Lookup("WndCheck_QY")
+
+	local page = Wnd.OpenWindow(sformat("%s\\UI\\page.ini", AddonPath), "temp"):Lookup("Page_QY")
+	page:ChangeRelation(PageSet_Menu, true, true)
+	page:SetName("Page_QY")
+	Wnd.CloseWindow("temp")
+	PageSet_Menu:AddPage(page, Btn)
+
+	Btn:Enable(true)
+	Btn:Lookup("",""):Lookup("Text_QY"):SetFontColor(255, 255, 255)
+	_QY.ReFreshTitle()
+	_QY.ListQY()
+	_QY.AddPageButton()
+end
+
+function _QY.ReFreshTitle()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
+	if not frame then
+		return
+	end
+	local title_handle = frame:Lookup("PageSet_Menu"):Lookup("Page_QY"):Lookup("", "")
 	local n = 1
 	for k, v in pairs (QIYU) do
 		if n<10 then
-			if LR_ACS_QiYu.UsrData.List[QIYU_NAME[v]] then
+			if LR_AS_QY.UsrData.List[QIYU_NAME[v]] then
 				local text = title_handle:Lookup(sformat("Text_QY%d_Break", n))
 				text:SetText(QIYU_NAME[v])
 				text:RegisterEvent(277)
@@ -901,86 +922,76 @@ function LR_ACS_QiYu.ReFreshTitle()
 	end
 end
 
-function LR_ACS_QiYu.ListQY()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+function _QY.ListQY()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
 	if not frame then
 		return
 	end
 	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 
-	LR_ACS_QiYu.Container = frame:Lookup("PageSet_Menu/Page_LR_QYList/WndScroll_LR_QYList_Record/Wnd_LR_QYList_Record_List")
-	LR_ACS_QiYu.Container:Clear()
-	num = LR_ACS_QiYu.ShowItem(TempTable_Cal, 255, 1, 0)
-	num = LR_ACS_QiYu.ShowItem(TempTable_NotCal, 60, 1, num)
-	LR_ACS_QiYu.Container:FormatAllContentPos()
+	_QY.Container = frame:Lookup("PageSet_Menu/Page_QY/WndScroll_QY/Wnd_QY")
+	_QY.Container:Clear()
+	num = _QY.ShowItem(TempTable_Cal, 255, 1, 0)
+	num = _QY.ShowItem(TempTable_NotCal, 60, 1, num)
+	_QY.Container:FormatAllContentPos()
 end
 
-function LR_ACS_QiYu.ShowItem(t_Table, Alpha, bCal, _num)
+function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 	local num = _num
-	local TempTable = clone(t_Table)
+	local PlayerList = clone(t_Table)
 
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 
-	for i = 1, #TempTable, 1 do
+	for k, v in pairs(PlayerList) do
 		num = num+1
-		local wnd = LR_ACS_QiYu.Container:AppendContentFromIni("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_QYList_Item.ini", "QYList_WndWindow", num)
-		local items = wnd:Lookup("", "")
+		local wnd = _QY.Container:AppendContentFromIni(sformat("%s\\UI\\item.ini", AddonPath), "QYList_WndWindow", sformat("QY_%s_%s_%s", v.realArea, v.realServer, v.szName))
+		local handle = wnd:Lookup("", "")
 		if num % 2 ==  0 then
-			items:Lookup("Image_Line"):Hide()
+			handle:Lookup("Image_Line"):Hide()
 		else
-			items:Lookup("Image_Line"):SetAlpha(225)
+			handle:Lookup("Image_Line"):SetAlpha(225)
 		end
 
 		wnd:SetAlpha(Alpha)
 
-		local item_MenPai = items:Lookup("Image_NameIcon")
-		local item_Name = items:Lookup("Text_Name")
-		local item_Select = items:Lookup("Image_Select")
+		local item_MenPai = handle:Lookup("Image_NameIcon")
+		local item_Name = handle:Lookup("Text_Name")
+		local item_Select = handle:Lookup("Image_Select")
 		item_Select:SetAlpha(125)
 		item_Select:Hide()
 
-		item_MenPai:FromUITex(GetForceImage(TempTable[i].dwForceID))
-		local name = TempTable[i].szName
-		if slen(name) >12 then
-			local _start, _end  = sfind (name, "@")
-			if _start and _end then
-				name = sformat("%s...", ssub(name, 1, 9))
-			else
-				name = sformat("%s...", ssub(name, 1, 10))
-			end
+		item_MenPai:FromUITex(GetForceImage(v.dwForceID))
+		local name = v.szName
+		if wslen(name) > 6 then
+			name = sformat("%s...", wssub(name, 1, 5))
 		end
-		item_Name:SprintfText("%s（%d）", name, TempTable[i].nLevel)
-		local r, g, b = LR.GetMenPaiColor(TempTable[i].dwForceID)
+		item_Name:SprintfText(_L["%s(%d)"], name, v.nLevel)
+		local r, g, b = LR.GetMenPaiColor(v.dwForceID)
 		item_Name:SetFontColor(r, g, b)
-		--  Output(LR.GetMenPaiColor(TempTable[i].MenPai))
+		--  Output(LR.GetMenPaiColor(v.MenPai))
 
-		local realArea = TempTable[i].realArea
-		local realServer = TempTable[i].realServer
-		local szName = TempTable[i].szName
-		local dwID = TempTable[i].dwID
+		local realArea = v.realArea
+		local realServer = v.realServer
+		local szName = v.szName
+		local dwID = v.dwID
 		local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-		LR_ACS_QiYu.AllUsrData[szKey] = LR_ACS_QiYu.AllUsrData[szKey] or {}
-		local QY_Record = LR_ACS_QiYu.AllUsrData[szKey].qiyu_data or {}
-		local QY_Achievement  = LR_ACS_QiYu.AllUsrData[szKey].qiyu_achievement or {}
-		local ServerInfo2 = {GetUserServer()}
-		local loginArea2, loginServer2, realArea2, realServer2 = ServerInfo2[3], ServerInfo2[4], ServerInfo2[5], ServerInfo2[6]
 
-		if realArea2 == realArea and realServer2 == realServer and me.dwID == dwID then
-			QY_Record = LR_ACS_QiYu.SelfData or {}
-		end
+		_QY.AllUsrData[szKey] = _QY.AllUsrData[szKey] or {}
+		local QY_Record = _QY.AllUsrData[szKey].qiyu_data or {}
+		local QY_Achievement  = _QY.AllUsrData[szKey].qiyu_achievement or {}
 
 		------输出日常
 		local n = 1
-		local List = LR_ACS_QiYu.List
+		local List = _QY.List
 		for k, v in pairs(QIYU) do
 			if n<10 then
-				if LR_ACS_QiYu.UsrData.List[QIYU_NAME[v]] then
-					local Text_QY = items:Lookup(sformat("Text_QY%d", n))
+				if LR_AS_QY.UsrData.List[QIYU_NAME[v]] then
+					local Text_QY = handle:Lookup(sformat("Text_QY%d", n))
 					if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v])] then
-						Text_QY:SetText(_L["Done"])
+						Text_QY:SetText(_L["Achievement done"])
 						Text_QY:SetFontScheme(47)
 					else
 						local times = QY_Record[v] or 0
@@ -991,7 +1002,7 @@ function LR_ACS_QiYu.ShowItem(t_Table, Alpha, bCal, _num)
 							Text_QY:SetText(times)
 							Text_QY:SetFontScheme(31)
 						else
-							Text_QY:SetText("")
+							Text_QY:SetText("--")
 						end
 					end
 					n = n+1
@@ -1000,19 +1011,19 @@ function LR_ACS_QiYu.ShowItem(t_Table, Alpha, bCal, _num)
 		end
 
 		for i = n, 9, 1 do
-			local Text_QY = items:Lookup(sformat("Text_QY%d", i))
+			local Text_QY = handle:Lookup(sformat("Text_QY%d", i))
 			Text_QY:SetText("")
 		end
 
 		--------------------输出tips
-		items:RegisterEvent(786)
-		items.OnItemMouseEnter = function ()
+		handle:RegisterEvent(304)
+		handle.OnItemMouseEnter = function ()
 			item_Select:Show()
 			local nMouseX, nMouseY =  Cursor.GetPos()
 			local szTipInfo = {}
-			local szPath, nFrame = GetForceImage(TempTable[i].dwForceID)
+			local szPath, nFrame = GetForceImage(v.dwForceID)
 			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s（%d）\n", TempTable[i].szName, TempTable[i].nLevel), 62, r, g, b)
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s（%d）\n", v.szName, v.nLevel), 62, r, g, b)
 			szTipInfo[#szTipInfo+1] = GetFormatText(" ============== \t   \n", 62)
 			for k, v in pairs(QIYU) do
 				local times = QY_Record[v] or 0
@@ -1039,26 +1050,27 @@ function LR_ACS_QiYu.ShowItem(t_Table, Alpha, bCal, _num)
 			local szOutputTip = tconcat(szTipInfo)
 			OutputTip(szOutputTip, 200, {nMouseX, nMouseY, 0, 0})
 		end
-		items.OnItemMouseLeave = function()
+		handle.OnItemMouseLeave = function()
 			item_Select:Hide()
 			HideTip()
 		end
-		items.OnItemLButtonClick = function()
-			local realArea = TempTable[i].realArea
-			local realServer = TempTable[i].realServer
-			local dwID = TempTable[i].dwID
-			LR_ACS_QiYu_Panel:Open(realArea, realServer, dwID)
+		handle.OnItemLButtonClick = function()
+			LR_ACS_QiYu_Panel:Open(v.realArea, v.realServer, v.dwID)
+		end
+		handle.OnItemRButtonClick = function()
+			local menu = LR_AS_Panel.RClickMenu(realArea, realServer, dwID)
+			PopupMenu(menu)
 		end
 	end
 	return num
 end
 
-function LR_ACS_QiYu.AddPageButton()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+function _QY.AddPageButton()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
 	if not frame then
 		return
 	end
-	local page = frame:Lookup("PageSet_Menu/Page_LR_QYList")
+	local page = frame:Lookup("PageSet_Menu/Page_QY")
 
 	local fnEnter = function()
 		local nX, nY = this:GetAbsPos()
@@ -1070,14 +1082,19 @@ function LR_ACS_QiYu.AddPageButton()
 		HideTip()
 	end
 
-	LR_AS_Base.AddButton(page, "btn_5", _L["Show Group"], 340, 555, 110, 36, function() LR_AS_Group.ShowGroup() end)
+	LR_AS_Base.AddButton(page, "btn_5", _L["Show Group"], 340, 555, 110, 36, function() LR_AS_Group.PopupUIMenu() end)
 	LR_AS_Base.AddButton(page, "btn_4", _L["Reading Statistics"], 470, 555, 110, 36, function() LR_BookRd_Panel:Open() end)
-	LR_AS_Base.AddButton(page, "btn_3", _L["QiYu Detail"], 600, 555, 110, 36, function() LR_ACS_QiYu.OpenQYDetail_Panel() end)
-	LR_AS_Base.AddButton(page, "btn_2", _L["Settings"], 730, 555, 110, 36, function() LR_AccountStatistics.SetOption() end)
+	LR_AS_Base.AddButton(page, "btn_3", _L["QiYu Detail"], 600, 555, 110, 36, function() _QY.OpenQYDetail_Panel() end)
+	LR_AS_Base.AddButton(page, "btn_2", _L["Settings"], 730, 555, 110, 36, function() LR_AS_Base.SetOption() end)
 	LR_AS_Base.AddButton(page, "btn_1", _L["QiYu About"], 860, 555, 110, 36, nil, fnEnter, fnLeave)
 end
 
-function LR_ACS_QiYu.OpenQYDetail_Panel()
+function _QY.RefreshPage()
+	_QY.ReFreshTitle()
+	_QY.ListQY()
+end
+
+function _QY.OpenQYDetail_Panel()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -1086,7 +1103,6 @@ function LR_ACS_QiYu.OpenQYDetail_Panel()
 	local realArea, realServer = ServerInfo[5], ServerInfo[6]
 	local szName = me.szName
 	local dwID = me.dwID
-
 	LR_ACS_QiYu_Panel:Open(realArea, realServer, dwID)
 end
 
@@ -1108,10 +1124,10 @@ function LR_ACS_QiYu_Panel:OnCreate()
 	this:RegisterEvent("UI_SCALED")
 	LR_ACS_QiYu_Panel.UpdateAnchor(this)
 
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
-	LR_ACS_QiYu.LoadAllUsrData(DB)
+	_QY.LoadAllUsrData(DB)
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 
@@ -1284,17 +1300,17 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 
 	--设置ComboBox的名字
 	local hComboBox = self:Fetch("hComboBox")
-	hComboBox:SetText(LR_AS_Info.AllUsrList[szKey].szName)
+	hComboBox:SetText(LR_AS_Data.AllPlayerList[szKey].szName)
 
-	LR_ACS_QiYu.AllUsrData[szKey] = LR_ACS_QiYu.AllUsrData[szKey] or {}
-	local QY_Record = LR_ACS_QiYu.AllUsrData[szKey].qiyu_data or {}
-	local QY_Achievement = LR_ACS_QiYu.AllUsrData[szKey].qiyu_achievement or {}
+	_QY.AllUsrData[szKey] = _QY.AllUsrData[szKey] or {}
+	local QY_Record = _QY.AllUsrData[szKey].qiyu_data or {}
+	local QY_Achievement = _QY.AllUsrData[szKey].qiyu_achievement or {}
 	local ServerInfo2 = {GetUserServer()}
 	local loginArea2, loginServer2, realArea2, realServer2 = ServerInfo2[3], ServerInfo2[4], ServerInfo2[5], ServerInfo2[6]
 	local me = GetClientPlayer()
 	if realArea2 == realArea and realServer2 == realServer and me.dwID == dwID then
-		QY_Record = LR_ACS_QiYu.SelfData or {}
-		QY_Achievement = LR_ACS_QiYu.SelfAchievementData or {}
+		QY_Record = _QY.SelfData or {}
+		QY_Achievement = _QY.SelfAchievementData or {}
 	end
 
 	local m = 1
@@ -1323,7 +1339,7 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 		local times = QY_Record[v] or 0
 		local font = 18
 		if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v])] then
-			times = _L["Done"]
+			times = _L["Achievement done"]
 			font = 47
 		else
 			if times >= 3 then
@@ -1370,9 +1386,20 @@ function LR_ACS_QiYu_Panel:ReloadItemBox(realArea, realServer, dwID)
 end
 
 
+--------------------------------
+LR_AS_QY.QiYu = clone(QIYU)
+LR_AS_QY.QiYuName = clone(QIYU_NAME)
+LR_AS_QY.SaveCommomUsrData = _QY.SaveCommomUsrData
+LR_AS_QY.LoadCommomUsrData = _QY.LoadCommomUsrData
 
-
-
+-------------------------------
+--注册模块
+LR_AS_Module.QY = {}
+LR_AS_Module.QY.SaveData = _QY.SaveData
+LR_AS_Module.QY.LoadData = _QY.LoadAllUsrData
+LR_AS_Module.QY.ResetDataEveryDay = _QY.ResetDataEveryDay
+LR_AS_Module.QY.AddPage = _QY.AddPage
+LR_AS_Module.QY.RefreshPage = _QY.RefreshPage
 
 
 

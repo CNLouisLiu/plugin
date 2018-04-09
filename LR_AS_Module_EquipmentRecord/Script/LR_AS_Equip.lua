@@ -1,22 +1,33 @@
+local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
+local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
+local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
+---------------------------------------------------------------
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
-local DB_name = "maindb.db"
-local _L = LR.LoadLangPack(AddonPath)
-local sformat, slen, sgsub, ssub, sfind = string.format, string.len, string.gsub, string.sub, string.find
-local mfloor, mceil, mmin, mmax = math.floor, math.ceil, math.min, math.max
-local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remove, table.sort
-----------------------------------------------------------
+local db_name = "maindb.db"
+local _L = LR.LoadLangPack(LanguagePath)
+local VERSION = "20180403"
+---------------------------------------------
+LR_AS_Equip = {}
+LR_AS_Equip.Default = {
+	bShowButtonInCharacterPanel = true,
+	bAutoSaveWhenChangeEquipment = true,
+}
+LR_AS_Equip.UsrData = clone(LR_AS_Equip.Default)
+RegisterCustomData("LR_AS_Equip.UsrData", VERSION)
+--------------------------------------------
+
 -----统一一下设置：套装的序号从0开始，分别为0,1,2,3
------
-
-
-LR_AccountStatistics_Equip = LR_AccountStatistics_Equip or {
+local _Equip = {
 	EQUIPs = {},
 }
-LR_AccountStatistics_Equip.SelfData = {}
-LR_AccountStatistics_Equip.AllUsrData = {}
+_Equip.SelfData = {}
+_Equip.AllUsrData = {}
 
-LR_AccountStatistics_Equip.tEquipPos = {
+_Equip.tEquipPos = {
 	{position = EQUIPMENT_INVENTORY.BANGLE, name = "BANGLE", frameid = 60, }, -- 护臂
 	{position = EQUIPMENT_INVENTORY.CHEST, name = "CHEST", frameid = 62, }, -- 上衣
 	{position = EQUIPMENT_INVENTORY.WAIST, name = "WAIST", frameid = 69, }, -- 腰带
@@ -33,7 +44,7 @@ LR_AccountStatistics_Equip.tEquipPos = {
 	{position = EQUIPMENT_INVENTORY.BIG_SWORD, name = "BIG_SWORD", frameid = 77, }, -- 重剑
 }
 
-function LR_AccountStatistics_Equip.GetSuitIndex(nLogicIndex)
+function _Equip.GetSuitIndex(nLogicIndex)
 	local player = GetClientPlayer()
 	if not player then
 		return
@@ -48,7 +59,7 @@ function LR_AccountStatistics_Equip.GetSuitIndex(nLogicIndex)
 	return nSuitIndex, dwBox
 end
 
-function LR_AccountStatistics_Equip.GetAllEquipBox() -- update boxes
+function _Equip.GetAllEquipBox() -- update boxes
 	local player = GetClientPlayer()
 	if not player then
 		return
@@ -56,16 +67,16 @@ function LR_AccountStatistics_Equip.GetAllEquipBox() -- update boxes
 	if IsRemotePlayer(player.dwID) then
 		return
 	end
-	LR_AccountStatistics_Equip.SelfData = LR_AccountStatistics_Equip.SelfData or {}
-	local SelfData = LR_AccountStatistics_Equip.SelfData
+	_Equip.SelfData = _Equip.SelfData or {}
+	local SelfData = _Equip.SelfData
 	local EQUIPMENT_SUIT_COUNT = 4
 	for i = 0, EQUIPMENT_SUIT_COUNT - 1 do
-		local nSuitIndex , dwBox = LR_AccountStatistics_Equip.GetSuitIndex(i)
+		local nSuitIndex , dwBox = _Equip.GetSuitIndex(i)
 		SelfData[tostring(nSuitIndex)] = SelfData[tostring(nSuitIndex)] or {}
 		local Suits = {}
-		for k = 1, #LR_AccountStatistics_Equip.tEquipPos, 1 do
-			local nType = LR_AccountStatistics_Equip.tEquipPos[k].position
-			local szName = LR_AccountStatistics_Equip.tEquipPos[k].name
+		for k = 1, #_Equip.tEquipPos, 1 do
+			local nType = _Equip.tEquipPos[k].position
+			local szName = _Equip.tEquipPos[k].name
 			Suits[szName] = {}
 			local item = GetPlayerItem(player, dwBox, nType)
 			if item then
@@ -92,7 +103,7 @@ end
 -------------------------------------------------------------------------
 ----------获取装分
 --------------------------------------------------------------------------
-function LR_AccountStatistics_Equip.GetEquipScore()
+function _Equip.GetEquipScore()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -129,39 +140,32 @@ function LR_AccountStatistics_Equip.GetEquipScore()
 		char_infomore[#char_infomore].tip = tTip[tContent[i][3]]
 	end
 
-	LR_AccountStatistics_Equip.SelfData[tostring(nIndex)] = LR_AccountStatistics_Equip.SelfData[tostring(nIndex)] or {}
-	LR_AccountStatistics_Equip.SelfData[tostring(nIndex)].score = clone(score)
-	LR_AccountStatistics_Equip.SelfData[tostring(nIndex)].char_infomore = clone(char_infomore)
+	_Equip.SelfData[tostring(nIndex)] = _Equip.SelfData[tostring(nIndex)] or {}
+	_Equip.SelfData[tostring(nIndex)].score = clone(score)
+	_Equip.SelfData[tostring(nIndex)].char_infomore = clone(char_infomore)
 end
 
-function LR_AccountStatistics_Equip.SaveData(DB)
+function _Equip.SaveData(DB)
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	local SelfData = LR_AccountStatistics_Equip.SelfData or {}
+	local SelfData = _Equip.SelfData or {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO equipment_data ( szKey, nSuitIndex, equipment_data, score, char_infomoreV2, bDel ) VALUES ( ?, ?, ?, ?, ?, 0 )")
 	local DB_REPLACE2 = DB:Prepare("REPLACE INTO equipment_data ( szKey, nSuitIndex, bDel ) VALUES ( ?, ?, 1 )")
 	for nSuitIndex, v in pairs (SelfData) do
-		if true then
-		--if LR_AS_Base.UsrData.OthersCanSee then
-			DB_REPLACE:ClearBindings()
-			DB_REPLACE:BindAll(szKey, nSuitIndex, LR.JsonEncode(v.equipment_data), LR.JsonEncode(v.score), LR.JsonEncode(v.char_infomore))
-			DB_REPLACE:Execute()
-		else
-			DB_REPLACE2:ClearBindings()
-			DB_REPLACE2:BindAll(szKey, nSuitIndex)
-			DB_REPLACE2:Execute()
-		end
+		DB_REPLACE:ClearBindings()
+		DB_REPLACE:BindAll(unpack(g2d({szKey, nSuitIndex, LR.JsonEncode(v.equipment_data), LR.JsonEncode(v.score), LR.JsonEncode(v.char_infomore)})))
+		DB_REPLACE:Execute()
 	end
 end
 
-function LR_AccountStatistics_Equip.LoadData(DB, realArea, realServer, dwID)
+function _Equip.LoadData(DB, realArea, realServer, dwID)
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
 	local DB_SELECT = DB:Prepare("SELECT * FROM equipment_data WHERE szKey = ? AND bDel = 0 AND nSuitIndex IS NOT NULL")
 	DB_SELECT:ClearBindings()
-	DB_SELECT:BindAll(szKey)
-	local Data = DB_SELECT:GetAll() or {}
+	DB_SELECT:BindAll(g2d(szKey))
+	local Data = d2g(DB_SELECT:GetAll())
 	local t = {}
 	for k, v in pairs(Data) do
 		t[v.nSuitIndex] = {}
@@ -169,16 +173,16 @@ function LR_AccountStatistics_Equip.LoadData(DB, realArea, realServer, dwID)
 		t[v.nSuitIndex].score = LR.JsonDecode(v.score)
 		t[v.nSuitIndex].char_infomore = LR.JsonDecode(v.char_infomoreV2)
 	end
-	LR_AccountStatistics_Equip.AllUsrData[szKey] = clone(t)
+	_Equip.AllUsrData[szKey] = clone(t)
 	return t
 end
 
-function LR_AccountStatistics_Equip.LoadSelfData(DB)
+function _Equip.LoadSelfData(DB)
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	LR_AccountStatistics_Equip.SelfData = clone(LR_AccountStatistics_Equip.LoadData(DB, realArea, realServer, me.dwID))
+	_Equip.SelfData = clone(_Equip.LoadData(DB, realArea, realServer, me.dwID))
 end
 
 -------------------------------------------------------------------------
@@ -208,11 +212,11 @@ LR_AS_Equip_Panel.BOX_Position = {
 	{name = "ARROW", x = 237, y = 452, h = 30, w = 30, cn_name = _L["ARROW"], frameid = 59, }, -- 暗器
 }
 
-LR_AS_Equip_Panel.playerName = nil
-LR_AS_Equip_Panel.playerRealServer = nil
-LR_AS_Equip_Panel.playerRealArea = nil
-LR_AS_Equip_Panel.PlayerMenPai = nil
-LR_AS_Equip_Panel.playerID = nil
+LR_AS_Equip_Panel.szName = nil
+LR_AS_Equip_Panel.realServer = nil
+LR_AS_Equip_Panel.realArea = nil
+LR_AS_Equip_Panel.dwForceID = nil
+LR_AS_Equip_Panel.dwID = nil
 
 
 local CustomVersion = "20170111"
@@ -223,12 +227,12 @@ function LR_AS_Equip_Panel:OnCreate()
 
 	LR_AS_Equip_Panel.UpdateAnchor(this)
 	-------打开面板时保存数据
-	LR_AccountStatistics_Equip.GetAllEquipBox()
-	LR_AccountStatistics_Equip.GetEquipScore()
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
+	_Equip.GetAllEquipBox()
+	_Equip.GetEquipScore()
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
-	LR_AccountStatistics_Equip.SaveData(DB)
+	_Equip.SaveData(DB)
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 
@@ -265,10 +269,10 @@ function LR_AS_Equip_Panel:Init()
 	Image_Icon:SetAlpha(180)
 
 	--------------人物选择
-	local hComboBox = self:Append("ComboBox", frame, "hComboBox", {w = 160, x = 105, y = 45, text = LR_AS_Equip_Panel.playerName})
+	local hComboBox = self:Append("ComboBox", frame, "hComboBox", {w = 160, x = 105, y = 45, text = LR_AS_Equip_Panel.szName})
 	hComboBox:Enable(true)
 	hComboBox.OnClick = function (m)
-		local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
+		local TempTable_Cal, TempTable_NotCal = LR_AS_Base.PutOutUsrList(), {}
 		tsort(TempTable_Cal, function(a, b)
 			if a.nLevel == b.nLevel then
 				return a.dwForceID < b.dwForceID
@@ -296,12 +300,12 @@ function LR_AS_Equip_Panel:Init()
 					page[i][#page[i]+1] = {szOption = sformat("(%d)%s", TempTable[i * 20 + k].nLevel, TempTable[i * 20 + k].szName), bCheck = false, bChecked = false,
 						fnAction = function ()
 							hComboBox:SetText(TempTable[i * 20 + k].szName)
-							LR_AS_Equip_Panel.playerRealArea = TempTable[i * 20 + k].realArea
-							LR_AS_Equip_Panel.playerName = TempTable[i * 20 + k].szName
-							LR_AS_Equip_Panel.playerID = TempTable[i * 20 + k].dwID
-							LR_AS_Equip_Panel.playerRealServer = TempTable[i * 20 + k].realServer
-							LR_AS_Equip_Panel.PlayerMenPai = TempTable[i * 20 + k].dwForceID
-							LR_AS_Equip_Panel:LoadEquipSuit(0)
+							local realArea = TempTable[i * 20 + k].realArea
+							local realServer = TempTable[i * 20 + k].realServer
+							local szName = TempTable[i * 20 + k].szName
+							local dwID = TempTable[i * 20 + k].dwID
+							local dwForceID = TempTable[i * 20 + k].dwForceID
+							LR_AS_Equip_Panel:ReLoadEquipSuit(szName, realArea, realServer, dwForceID, dwID)
 						end,
 						szIcon = szIcon,
 						nFrame = nFrame,
@@ -442,21 +446,56 @@ function LR_AS_Equip_Panel:Init()
 	local hScroll = LR.AppendUI("Scroll", WndWindow_Charinfo, "Scroll", {x = 23, y = 135, w = 200, h = 360})
 	LR_AS_Equip_Panel.Scroll = hScroll
 
-	LR_AS_Equip_Panel:LoadEquipSuit(GetClientPlayer().GetEquipIDArray(0))
+	local realArea = LR_AS_Equip_Panel.realArea
+	local realServer = LR_AS_Equip_Panel.realServer
+	local szName = LR_AS_Equip_Panel.szName
+	local dwID = LR_AS_Equip_Panel.dwID
+	if szName == GetClientPlayer().szName and dwID == GetClientPlayer().dwID then
+		LR_AS_Equip_Panel:LoadEquipSuit(GetClientPlayer().GetEquipIDArray(0))
+	else
+		LR_AS_Equip_Panel:LoadEquipSuit(0)
+	end
 end
 
-function LR_AS_Equip_Panel:Open(szplayerName, szplayerRealArea, szplayerRealServer, szPlayerMenPai, dwID)
+function LR_AS_Equip_Panel:Open(szName, realArea, realServer, dwForceID, dwID)
 	local frame = self:Fetch("LR_AS_Equip_Panel")
-	if frame and frame:IsVisible() then
-		frame:Destroy()
+	if szName then
+		if frame then
+			LR_AS_Equip_Panel:ReLoadEquipSuit(szName, realArea, realServer, dwForceID, dwID)
+		else
+			LR_AS_Equip_Panel.realArea = realArea
+			LR_AS_Equip_Panel.realServer = realServer
+			LR_AS_Equip_Panel.szName = szName
+			LR_AS_Equip_Panel.dwID = dwID
+			LR_AS_Equip_Panel.dwForceID = dwForceID
+			frame = self:Init()
+		end
 	else
-		LR_AS_Equip_Panel.playerName = szplayerName
-		LR_AS_Equip_Panel.playerRealServer = szplayerRealServer
-		LR_AS_Equip_Panel.PlayerMenPai = szPlayerMenPai
-		LR_AS_Equip_Panel.playerRealArea = szplayerRealArea
-		LR_AS_Equip_Panel.playerID = dwID
-		frame = self:Init()
-		PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
+		if frame then
+			self:Destroy(frame)
+		else
+			local me = GetClientPlayer()
+			local ServerInfo = {GetUserServer()}
+			local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+			LR_AS_Equip_Panel.szName = me.szName
+			LR_AS_Equip_Panel.realServer = realServer
+			LR_AS_Equip_Panel.dwForceID = me.dwForceID
+			LR_AS_Equip_Panel.realArea = realArea
+			LR_AS_Equip_Panel.dwID = me.dwID
+			frame = self:Init()
+		end
+	end
+end
+
+function LR_AS_Equip_Panel:ReLoadEquipSuit(szName, realArea, realServer, dwForceID, dwID)
+	local frame = self:Fetch("LR_AS_Equip_Panel")
+	if frame then
+		LR_AS_Equip_Panel.realArea = realArea
+		LR_AS_Equip_Panel.realServer = realServer
+		LR_AS_Equip_Panel.szName = szName
+		LR_AS_Equip_Panel.dwID = dwID
+		LR_AS_Equip_Panel.dwForceID = dwForceID
+		LR_AS_Equip_Panel:LoadEquipSuit(0)
 	end
 end
 
@@ -485,19 +524,19 @@ function LR_AS_Equip_Panel:LoadCharscore(nIndex)
 		return
 	end
 	local nIndex = nIndex or 0
-	local realArea = LR_AS_Equip_Panel.playerRealArea
-	local realServer = LR_AS_Equip_Panel.playerRealServer
-	local szName = LR_AS_Equip_Panel.playerName
-	local dwID = LR_AS_Equip_Panel.playerID
+	local realArea = LR_AS_Equip_Panel.realArea
+	local realServer = LR_AS_Equip_Panel.realServer
+	local szName = LR_AS_Equip_Panel.szName
+	local dwID = LR_AS_Equip_Panel.dwID
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area2, Server2, realArea2, realServer2 = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local data
 	if not realArea or realArea2 == realArea and realServer2 == realServer and me.dwID == dwID then
-		data = clone(LR_AccountStatistics_Equip.SelfData)
+		data = clone(_Equip.SelfData)
 	else
-		data = clone(LR_AccountStatistics_Equip.AllUsrData[szKey])
+		data = clone(_Equip.AllUsrData[szKey])
 	end
 	local data2 = data[tostring(nIndex)] or {}
 	local score = data2.score or {}
@@ -571,23 +610,23 @@ function LR_AS_Equip_Panel:LoadEquipSuit(nIndex)
 		return
 	end
 
-	local realArea = LR_AS_Equip_Panel.playerRealArea
-	local realServer = LR_AS_Equip_Panel.playerRealServer
-	local szName = LR_AS_Equip_Panel.playerName
-	local dwID = LR_AS_Equip_Panel.playerID
+	local realArea = LR_AS_Equip_Panel.realArea
+	local realServer = LR_AS_Equip_Panel.realServer
+	local szName = LR_AS_Equip_Panel.szName
+	local dwID = LR_AS_Equip_Panel.dwID
 
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area2, Server2, realArea2, realServer2 = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local data
 	if not realArea or realArea2 == realArea and realServer2 == realServer and me.dwID == dwID then
-		data = clone(LR_AccountStatistics_Equip.SelfData)
-		LR_AccountStatistics_Equip.AllUsrData[sformat("%s_%s_%d", realArea, realServer, dwID)] = clone(data)
+		data = clone(_Equip.SelfData)
+		_Equip.AllUsrData[sformat("%s_%s_%d", realArea, realServer, dwID)] = clone(data)
 	else
-		local path = sformat("%s\\%s", SaveDataPath, DB_name)
+		local path = sformat("%s\\%s", SaveDataPath, db_name)
 		local DB = SQLite3_Open(path)
 		DB:Execute("BEGIN TRANSACTION")
-		data = LR_AccountStatistics_Equip.LoadData(DB, realArea, realServer, dwID)
+		data = _Equip.LoadData(DB, realArea, realServer, dwID)
 		DB:Execute("END TRANSACTION")
 		DB:Release()
 	end
@@ -604,7 +643,7 @@ function LR_AS_Equip_Panel:LoadEquipSuit(nIndex)
 			local Icon = LR_AS_Equip_Panel:Fetch(sformat("Icon_%s", szName))
 			local Border = LR_AS_Equip_Panel:Fetch(sformat("Border_%s", szName))
 			local OrangeBox = LR_AS_Equip_Panel:Fetch(sformat("OrangeBox_%s", szName))
-			if LR_AS_Equip_Panel.PlayerMenPai ~= 8 and  szName == "BIG_SWORD" then
+			if LR_AS_Equip_Panel.dwForceID ~= 8 and  szName == "BIG_SWORD" then
 				box:Hide()
 				Icon:Hide()
 				Border:Hide()
@@ -681,107 +720,134 @@ function LR_AS_Equip_Panel:LoadEquipSuit(nIndex)
 			end
 		end
 	end
-
 	self:LoadCharscore(nIndex)
 end
 
+
 ------------------------------------------------------------------
------hack
+-----Hook
 ------------------------------------------------------------------
-function LR_AccountStatistics_Equip.OpenPanel()
-	local player = GetClientPlayer()
-	if not player then
-		return
-	end
-	local szName = player.szName
+function _Equip.OpenPanel()
+	local me = GetClientPlayer()
 	local serverInfo = {GetUserServer()}
 	local realArea, realServer = serverInfo[5], serverInfo[6]
-	local dwMenpai = player.dwForceID
-	LR_AS_Equip_Panel:Open(szName, realArea, realServer, dwMenpai, player.dwID)
+	local dwForceID = me.dwForceID
+	local dwID = me.dwID
+	local szName = me.szName
+	LR_AS_Equip_Panel:Open(szName, realArea, realServer, dwForceID, dwID)
 end
 
-function LR_AccountStatistics_Equip.Hack()
+function _Equip.Hook()
 	local frame = Station.Lookup("Normal/CharacterPanel")
 	if frame then --背包界面添加一个按钮
 		local Btn_Equipment = frame:Lookup("LR_Btn_Equipment")
 		if Btn_Equipment then
 			Btn_Equipment:Destroy()
 		end
-		local Btn_Equipment = LR.AppendUI("UIButton", frame, "LR_Btn_Equipment", {x = 45 , y = 0 , w = 36 , h = 36, ani = {"ui\\Image\\Button\\SystemButton.UITex", 35, 36, 37, 38}})
-		Btn_Equipment:SetAlpha(180)
-		Btn_Equipment.OnClick = function()
-			LR_AccountStatistics_Equip.OpenPanel()
-		end
-		Btn_Equipment.OnEnter = function()
-			local x, y = this:GetAbsPos()
-			local w, h = this:GetSize()
-			local szTip = {}
-			szTip[#szTip+1] = GetFormatText(sformat("%s\n", _L["LR Equipment Statistics"]), 163)
-			szTip[#szTip+1] = GetFormatText(_L["Click to open LR Equipment Statistics Panel"], 162)
-			OutputTip(tconcat(szTip), 400, {x, y, w, h})
-		end
-		Btn_Equipment.OnLeave = function()
-			HideTip()
+		if LR_AS_Equip.UsrData.bShowButtonInCharacterPanel then
+			local Btn_Equipment = LR.AppendUI("UIButton", frame, "LR_Btn_Equipment", {x = 45 , y = 0 , w = 36 , h = 36, ani = {"ui\\Image\\Button\\SystemButton.UITex", 35, 36, 37, 38}})
+			Btn_Equipment:SetAlpha(180)
+			Btn_Equipment.OnClick = function()
+				_Equip.OpenPanel()
+			end
+			Btn_Equipment.OnEnter = function()
+				local x, y = this:GetAbsPos()
+				local w, h = this:GetSize()
+				local szTip = {}
+				szTip[#szTip+1] = GetFormatText(sformat("%s\n", _L["LR Equipment Statistics"]), 163)
+				szTip[#szTip+1] = GetFormatText(_L["Click to open LR Equipment Statistics Panel"], 162)
+				OutputTip(tconcat(szTip), 400, {x, y, w, h})
+			end
+			Btn_Equipment.OnLeave = function()
+				HideTip()
+			end
 		end
 	end
 end
 
 -----切换套装EQUIP_CHANGE
-function LR_AccountStatistics_Equip.EQUIP_CHANGE()
+function _Equip.EQUIP_CHANGE()
 	local me = GetClientPlayer()
 	if me.bFightState then
 		return
 	end
-	LR_AccountStatistics_Equip.bLock = true	--防止处理切换装备时大量产生的EQUIP_ITEM_UPDATE事件
+	_Equip.bLock = true	--防止处理切换装备时大量产生的EQUIP_ITEM_UPDATE事件
 	--获取装备、装分、属性
 	LR.DelayCall(100, function()
-		LR_AccountStatistics_Equip.GetAllEquipBox()
-		LR_AccountStatistics_Equip.GetEquipScore()
+		_Equip.GetAllEquipBox()
+		_Equip.GetEquipScore()
 		--保存
-		local path = sformat("%s\\%s", SaveDataPath, DB_name)
-		local DB = SQLite3_Open(path)
-		DB:Execute("BEGIN TRANSACTION")
-		LR_AccountStatistics_Equip.SaveData(DB)
-		DB:Execute("END TRANSACTION")
-		DB:Release()
-	end)
-	LR.DelayCall(250, function() LR_AccountStatistics_Equip.bLock = false end)
-end
-
----更换装备
-function LR_AccountStatistics_Equip.EQUIP_ITEM_UPDATE()
-	local me = GetClientPlayer()
-	if me.bFightState then
-		return
-	end
-	LR.DelayCall(100, function()
-		if not LR_AccountStatistics_Equip.bLock then
-			LR_AccountStatistics_Equip.GetAllEquipBox()
-			LR_AccountStatistics_Equip.GetEquipScore()
-			--保存
-			local path = sformat("%s\\%s", SaveDataPath, DB_name)
+		if LR_AS_Equip.UsrData.bAutoSaveWhenChangeEquipment then
+			local path = sformat("%s\\%s", SaveDataPath, db_name)
 			local DB = SQLite3_Open(path)
 			DB:Execute("BEGIN TRANSACTION")
-			LR_AccountStatistics_Equip.SaveData(DB)
+			_Equip.SaveData(DB)
 			DB:Execute("END TRANSACTION")
 			DB:Release()
 		end
 	end)
+	LR.DelayCall(500, function() _Equip.bLock = false end)
 end
 
-function LR_AccountStatistics_Equip.FIRST_LOADING_END()
-	LR_AccountStatistics_Equip.Hack()
-	LR.DelayCall(4000, function()
-		LR_AccountStatistics_Equip.GetAllEquipBox()
-		LR_AccountStatistics_Equip.GetEquipScore()
+---更换装备
+function _Equip.EQUIP_ITEM_UPDATE()
+	local me = GetClientPlayer()
+	if me.bFightState then
+		return
+	end
+	LR.DelayCall(100, function()
+		if not _Equip.bLock then
+			_Equip.GetAllEquipBox()
+			_Equip.GetEquipScore()
+			--保存
+			if LR_AS_Equip.UsrData.bAutoSaveWhenChangeEquipment then
+				local path = sformat("%s\\%s", SaveDataPath, db_name)
+				local DB = SQLite3_Open(path)
+				DB:Execute("BEGIN TRANSACTION")
+				_Equip.SaveData(DB)
+				DB:Execute("END TRANSACTION")
+				DB:Release()
+			end
+		end
 	end)
 end
 
-LR.RegisterEvent("FIRST_LOADING_END", function() LR_AccountStatistics_Equip.FIRST_LOADING_END() end)
-LR.RegisterEvent("EQUIP_CHANGE",function() LR_AccountStatistics_Equip.EQUIP_CHANGE() end)
-LR.RegisterEvent("EQUIP_ITEM_UPDATE",function() LR_AccountStatistics_Equip.EQUIP_ITEM_UPDATE() end)
+function _Equip.FIRST_LOADING_END(DB)
+	if LR_AS_Equip.UsrData.bShowButtonInCharacterPanel then
+		_Equip.Hook()
+	end
+	_Equip.LoadSelfData(DB)
+	LR.DelayCall(2000, function()
+		_Equip.GetAllEquipBox()
+		_Equip.GetEquipScore()
+	end)
+end
 
+function _Equip.ON_FRAME_CREATE()
+	local frame = arg0
+	local szName = frame:GetName()
+	if szName  ==  "CharacterPanel" then
+		_Equip.Hook()
+	end
+end
 
+LR.RegisterEvent("FIRST_LOADING_END", function() _Equip.FIRST_LOADING_END() end)
+LR.RegisterEvent("EQUIP_CHANGE", function() _Equip.EQUIP_CHANGE() end)
+LR.RegisterEvent("EQUIP_ITEM_UPDATE", function() _Equip.EQUIP_ITEM_UPDATE() end)
+LR.RegisterEvent("ON_FRAME_CREATE", function() _Equip.ON_FRAME_CREATE() end)
+--注册模块
+LR_AS_Module.EquipmentRecord = {}
+LR_AS_Module.EquipmentRecord.SaveData = _Equip.SaveData
+LR_AS_Module.EquipmentRecord.FIRST_LOADING_END = _Equip.FIRST_LOADING_END
 
+LR_AS_Equip.Hook = _Equip.Hook
 
+----------
+--[[
+装备统计模块
+因为只能获得当前装备的装分和属性，所以
+登录时先从数据库载入装备信息
+切套装或者换装备时更新装备信息
+在自动保存时保存所有信息
+]]
 

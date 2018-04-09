@@ -1,12 +1,15 @@
 local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
 local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
-local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
--------------------------------------------------------------
-local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
+---------------------------------------------------------------
+local AddonPath = "Interface\\LR_Plugin\\LR_AS_Module_RC"
+local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
-local _L = LR.LoadLangPack(AddonPath)
-local DB_name = "maindb.db"
+local db_name = "maindb.db"
+local _L = LR.LoadLangPack(LanguagePath)
+local VERSION = "20180403"
 -------------------------------------------------------------
 local RI_CHANG = {
 	DA = 1, 	--大战
@@ -51,30 +54,8 @@ local RESET_TYPE = {
 	THURSDAY = 3,
 }
 
-LR_AccountStatistics_RiChang = LR_AccountStatistics_RiChang or {}
-LR_AccountStatistics_RiChang.RI_CHANG = RI_CHANG
-LR_AccountStatistics_RiChang.RI_CHANG_NAME = RI_CHANG_NAME
-
-LR_AccountStatistics_RiChang.AllUsrData = {}
-LR_AccountStatistics_RiChang.SelfData = {
-	[RI_CHANG.DA] = {eQuestPhase = 0, need = 100, have = 0, finished = false,	},
-	[RI_CHANG.GONG] = {eQuestPhase = 0, need = 100, have = 0, finished = false,	},
-	[RI_CHANG.CHA] = {eQuestPhase = 0, need = 10, have = 0, finished = false,	},
-	[RI_CHANG.QIN] = {eQuestPhase = 0, need = 3, have = 0, finished = false,	},
-	[RI_CHANG.JU] = {eQuestPhase = 0, need = 3000, have = 0, finished = false,	},
-	[RI_CHANG.JING] = {eQuestPhase = 0, need = 1000, have = 0, finished = false,	},
-	[RI_CHANG.MEI] = {eQuestPhase = 0, need = 3, have = 0, finished = false,	},
-	[RI_CHANG.CAI] = {eQuestPhase = 0, need = 7, have = 0, finished = false,	},
-	[RI_CHANG.XUN] = {eQuestPhase = 0, need = 5, have = 0, finished = false,	},
-	[RI_CHANG.TU] = {eQuestPhase = 0, need = 2, have = 0, finished = false,	},
-	[RI_CHANG.MI] = {eQuestPhase = 0, need = 2, have = 0, finished = false,	},
-	[RI_CHANG.HUIGUANG] = {eQuestPhase = 0, need = 1, have = 0, finished = false,	},
-	[RI_CHANG.HUASHAN] = {eQuestPhase = 0, need = 100, have = 0, finished = false,	},
-	[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = 0, need = 2, have = 0, finished = false,	},
-	[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = 0, need = 1000, have = 0, finished = false,	},
-}
-
-LR_AccountStatistics_RiChang.Default = {
+LR_AS_RC = {}
+LR_AS_RC.Default = {
 	List = {
 		[RI_CHANG.DA] = true,
 		[RI_CHANG.GONG] = true,
@@ -94,11 +75,37 @@ LR_AccountStatistics_RiChang.Default = {
 	bUseCommonData = true,
 	Version = "20170626",
 }
-LR_AccountStatistics_RiChang.UsrData = clone(LR_AccountStatistics_RiChang.Default)
-LR_AccountStatistics_RiChang.CustomQuestList = {}
-LR_AccountStatistics_RiChang.SelfCustomQuestStatus = {}
+LR_AS_RC.UsrData = clone(LR_AS_RC.Default)
 local CustomVersion = "20170111"
-RegisterCustomData("LR_AccountStatistics_RiChang.UsrData", CustomVersion)
+RegisterCustomData("LR_AS_RC.UsrData", CustomVersion)
+
+LR_AS_RC.CustomQuestList = {}
+
+local _RC = {}
+_RC.RI_CHANG = RI_CHANG
+_RC.RI_CHANG_NAME = RI_CHANG_NAME
+
+_RC.AllUsrData = {}
+_RC.SelfData = {
+	[RI_CHANG.DA] = {eQuestPhase = 0, need = 100, have = 0, finished = false,	},
+	[RI_CHANG.GONG] = {eQuestPhase = 0, need = 100, have = 0, finished = false,	},
+	[RI_CHANG.CHA] = {eQuestPhase = 0, need = 10, have = 0, finished = false,	},
+	[RI_CHANG.QIN] = {eQuestPhase = 0, need = 3, have = 0, finished = false,	},
+	[RI_CHANG.JU] = {eQuestPhase = 0, need = 3000, have = 0, finished = false,	},
+	[RI_CHANG.JING] = {eQuestPhase = 0, need = 1000, have = 0, finished = false,	},
+	[RI_CHANG.MEI] = {eQuestPhase = 0, need = 3, have = 0, finished = false,	},
+	[RI_CHANG.CAI] = {eQuestPhase = 0, need = 7, have = 0, finished = false,	},
+	[RI_CHANG.XUN] = {eQuestPhase = 0, need = 5, have = 0, finished = false,	},
+	[RI_CHANG.TU] = {eQuestPhase = 0, need = 2, have = 0, finished = false,	},
+	[RI_CHANG.MI] = {eQuestPhase = 0, need = 2, have = 0, finished = false,	},
+	[RI_CHANG.HUIGUANG] = {eQuestPhase = 0, need = 1, have = 0, finished = false,	},
+	[RI_CHANG.HUASHAN] = {eQuestPhase = 0, need = 100, have = 0, finished = false,	},
+	[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = 0, need = 2, have = 0, finished = false,	},
+	[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = 0, need = 1000, have = 0, finished = false,	},
+}
+
+_RC.SelfCustomQuestStatus = {}
+
 
 -------------------------------
 local MONITED_QUEST_LIST = {}		----不在这个列表中的任务不会触发保存
@@ -111,70 +118,70 @@ end
 ------------------------------
 ----界面显示的日常列表
 ----公共列表数据
-function LR_AccountStatistics_RiChang.ResetMenuList()
+function _RC.ResetMenuList()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
-	LR_AccountStatistics_RiChang.UsrData = clone(LR_AccountStatistics_RiChang.Default)
-	if LR_AccountStatistics_RiChang.UsrData.bUseCommonData then
-		LR_AccountStatistics_RiChang.SaveCommomMenuList()
+	LR_AS_RC.UsrData = clone(LR_AS_RC.Default)
+	if LR_AS_RC.UsrData.bUseCommonData then
+		_RC.SaveCommomMenuList()
 	end
 end
 
-function LR_AccountStatistics_RiChang.CheckCommomMenuList()
+function _RC.CheckCommomMenuList()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 	local  path = sformat("%s\\RiChangCommonData.dat.jx3dat", SaveDataPath)
 	if not IsFileExist(path) then
-		local CommomMenuList = LR_AccountStatistics_RiChang.Default
+		local CommomMenuList = LR_AS_RC.Default
 		local path = sformat("%s\\RiChangCommonData.dat", SaveDataPath)
 		SaveLUAData (path, CommomMenuList)
 	end
 end
 
-function LR_AccountStatistics_RiChang.SaveCommomMenuList()
+function _RC.SaveCommomMenuList()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
-	if not LR_AccountStatistics_RiChang.UsrData.bUseCommonData then
+	if not LR_AS_RC.UsrData.bUseCommonData then
 		return
 	end
-	local CommomMenuList = LR_AccountStatistics_RiChang.UsrData
+	local CommomMenuList = LR_AS_RC.UsrData
 	local path = sformat("%s\\RiChangCommonData.dat", SaveDataPath)
 	SaveLUAData (path, CommomMenuList)
 end
 
-function LR_AccountStatistics_RiChang.LoadCommomMenuList()
+function _RC.LoadCommomMenuList()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
-	if not LR_AccountStatistics_RiChang.UsrData.bUseCommonData then
+	if not LR_AS_RC.UsrData.bUseCommonData then
 		return
 	end
-	LR_AccountStatistics_RiChang.CheckCommomMenuList()
+	_RC.CheckCommomMenuList()
 	local path = sformat("%s\\RiChangCommonData.dat", SaveDataPath)
 	local CommomMenuList = LoadLUAData  (path) or {}
-	LR_AccountStatistics_RiChang.UsrData = clone(CommomMenuList)
+	LR_AS_RC.UsrData = clone(CommomMenuList)
 end
 
 ----------------------------------------------------------------------------------------
 ----自定义监控任务
 ----------------------------
-function LR_AccountStatistics_RiChang.SaveCustomQuestList()
+function _RC.SaveCustomQuestList()
 	local path = sformat("%s\\CustomQuestList.dat", SaveDataPath)
-	local data = LR_AccountStatistics_RiChang.CustomQuestList or {}
+	local data = LR_AS_RC.CustomQuestList or {}
 	SaveLUAData(path, data)
 end
 
-function LR_AccountStatistics_RiChang.LoadCustomQuestList()
+function _RC.LoadCustomQuestList()
 	local path = sformat("%s\\CustomQuestList.dat", SaveDataPath)
 	local data = LoadLUAData(path) or {}
-	LR_AccountStatistics_RiChang.CustomQuestList = clone(data)
+	LR_AS_RC.CustomQuestList = clone(data)
 	local quest_list = {}
 	for k, v in pairs (data) do
 		quest_list[tonumber(v.dwID)] = true
@@ -182,12 +189,12 @@ function LR_AccountStatistics_RiChang.LoadCustomQuestList()
 	ADD2MONITED_QUEST_LIST(quest_list)
 end
 
-function LR_AccountStatistics_RiChang.GetCustomQuestStatus()
+function _RC.GetCustomQuestStatus()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
-	local CustomQuestList = LR_AccountStatistics_RiChang.CustomQuestList
+	local CustomQuestList = LR_AS_RC.CustomQuestList
 	local data = {}
 	for k, v in pairs (CustomQuestList) do
 		local dwID = v.dwID
@@ -231,13 +238,13 @@ function LR_AccountStatistics_RiChang.GetCustomQuestStatus()
 			end
 		end
 	end
-	LR_AccountStatistics_RiChang.SelfCustomQuestStatus = clone(data)
+	_RC.SelfCustomQuestStatus = clone(data)
 end
 
 -----------------------------------------------------------------------------------------
-function LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
+function _RC.LoadAllUsrData(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM richang_data WHERE bDel = 0 AND szKey IS NOT NULL ")
-	local Data = DB_SELECT:GetAll() or {}
+	local Data = d2g(DB_SELECT:GetAll())
 	local AllUsrData = {}
 	if Data and next(Data) ~= nil then
 		for k, v in pairs(Data) do
@@ -254,64 +261,54 @@ function LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
 			AllUsrData[v.szKey] = data2
 		end
 	end
-	LR_AccountStatistics_RiChang.AllUsrData = clone(AllUsrData)
+	_RC.AllUsrData = clone(AllUsrData)
 	local me = GetClientPlayer()
-	if not me then
+	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
-	if IsRemotePlayer(me.dwID) then
-		return
-	end
-	LR_AccountStatistics_RiChang.CheckAll()
+	_RC.CheckAll()		--检查自身任务状态
 	local ServerInfo = {GetUserServer()}
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	LR_AccountStatistics_RiChang.AllUsrData[szKey] = LR_AccountStatistics_RiChang.SelfData
+	_RC.AllUsrData[szKey] = clone(_RC.SelfData)
 
-	LR_AccountStatistics_RiChang.GetCustomQuestStatus()
-	LR_AccountStatistics_RiChang.AllUsrData[szKey].CUSTOM_QUEST = clone(LR_AccountStatistics_RiChang.SelfCustomQuestStatus)
+	_RC.GetCustomQuestStatus()
+	_RC.AllUsrData[szKey].CUSTOM_QUEST = clone(_RC.SelfCustomQuestStatus)
 end
 
-function LR_AccountStatistics_RiChang.SaveData(DB)
-	local me = GetClientPlayer()
-	if not me then
+function _RC.SaveData(DB)
+	if not LR_AS_Base.UsrData.bRecord then
 		return
 	end
-	if IsRemotePlayer(me.dwID) then
+	local me = GetClientPlayer()
+	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
 	local serverInfo = {GetUserServer()}
 	local realArea, realServer = serverInfo[5], serverInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	LR_AccountStatistics_RiChang.CheckAll()
-	if LR_AS_Base.UsrData.OthersCanSee then
-		local name, wen, value = {}, {}, {}
-		for k, v in pairs(RI_CHANG) do
-			name[#name+1] = k
-			wen[#wen+1] = "?"
-			value[#value+1] = LR.JsonEncode(LR_AccountStatistics_RiChang.SelfData[v])
-		end
-		---增加自定义任务数据
-		LR_AccountStatistics_RiChang.GetCustomQuestStatus()
-		name[#name+1] = "CUSTOM_QUEST"
+	_RC.CheckAll()
+	local name, wen, value = {}, {}, {}
+	for k, v in pairs(RI_CHANG) do
+		name[#name+1] = k
 		wen[#wen+1] = "?"
-		value[#value+1] = LR.JsonEncode(LR_AccountStatistics_RiChang.SelfCustomQuestStatus or {})
-
-		local DB_REPLACE = DB:Prepare(sformat("REPLACE INTO richang_data ( bDel, szKey, %s ) VALUES ( ?, %s, ? )", tconcat(name, ", "), tconcat(wen, ", ")))
-		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(0, szKey, unpack(value))
-		DB_REPLACE:Execute()
-	else
-		local DB_REPLACE = DB:Prepare("REPLACE INTO richang_data (szKey, bDel) VALUES ( ?, 1)")
-		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(szKey)
-		DB_REPLACE:Execute()
+		value[#value+1] = LR.JsonEncode(_RC.SelfData[v])
 	end
+	---增加自定义任务数据
+	_RC.GetCustomQuestStatus()
+	name[#name+1] = "CUSTOM_QUEST"
+	wen[#wen+1] = "?"
+	value[#value+1] = LR.JsonEncode(_RC.SelfCustomQuestStatus or {})
+
+	local DB_REPLACE = DB:Prepare(sformat("REPLACE INTO richang_data ( bDel, szKey, %s ) VALUES ( ?, %s, ? )", tconcat(name, ", "), tconcat(wen, ", ")))
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(unpack(g2d({0, szKey, unpack(value)})))
+	DB_REPLACE:Execute()
 end
 
 ----------------------------------------------------------------------------
 ---------各种日常检测
-LR_AccountStatistics_RiChang.List = {
+_RC.List = {
 	[1] = {szName = _L["DA"], nType = "RC", order = RI_CHANG.DA, },
 	[2] = {szName = _L["CHA"], nType = "RC", order = RI_CHANG.CHA, },
 	[3] = {szName = _L["GONG"], nType = "RC", order = RI_CHANG.GONG, },
@@ -329,7 +326,7 @@ LR_AccountStatistics_RiChang.List = {
 }
 
 ----大战副本数据
-LR_AccountStatistics_RiChang.Dazhan = {
+_RC.Dazhan = {
 	----[任务id] = true,
 --[[	[14765] = true, 		--14765 大战！英雄微山书院！
 	[14766] = true, 		--14766 大战！英雄天泣林！
@@ -342,16 +339,16 @@ LR_AccountStatistics_RiChang.Dazhan = {
 	[17819] = true,		--夕颜阁
 	[17820] = true,		--白帝水宫
 }
-ADD2MONITED_QUEST_LIST(LR_AccountStatistics_RiChang.Dazhan)
+ADD2MONITED_QUEST_LIST(_RC.Dazhan)
 
 -----检查大战状态
-function LR_AccountStatistics_RiChang.CheckDazhan()
+function _RC.CheckDazhan()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 
-	local Dazhan = LR_AccountStatistics_RiChang.Dazhan
+	local Dazhan = _RC.Dazhan
 	local eQuestPhase = 0
 	local dwQuestID = 0
 	for k, v in pairs (Dazhan) do
@@ -379,17 +376,17 @@ function LR_AccountStatistics_RiChang.CheckDazhan()
 			end
 			need = need+1
 		end
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.DA] = {eQuestPhase = eQuestPhase, need = need, have = have, }
+		_RC.SelfData[RI_CHANG.DA] = {eQuestPhase = eQuestPhase, need = need, have = have, }
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.DA] = {eQuestPhase = eQuestPhase, need = 3, have = 0, }
+		_RC.SelfData[RI_CHANG.DA] = {eQuestPhase = eQuestPhase, need = 3, have = 0, }
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:869 秘境任务牌子
 	local eCanAccept = me.CanAcceptQuest(17820, 869)		------用【大战！英雄微山书院！】测试大战是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.DA].finished = true
+		_RC.SelfData[RI_CHANG.DA].finished = true
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.DA].finished = false
+		_RC.SelfData[RI_CHANG.DA].finished = false
 	end
 end
 
@@ -399,7 +396,7 @@ local GONG_QUEST = {
 	[14831] = true,
 }
 ADD2MONITED_QUEST_LIST(GONG_QUEST)
-function LR_AccountStatistics_RiChang.CheckGongShiJian()
+function _RC.CheckGongShiJian()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -409,23 +406,23 @@ function LR_AccountStatistics_RiChang.CheckGongShiJian()
 	local dwQuestID = 14831
 	local eQuestPhase = me.GetQuestPhase(dwQuestID)
 	if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.GONG] = {eQuestPhase = eQuestPhase, need = 100, have = 0, }
+		_RC.SelfData[RI_CHANG.GONG] = {eQuestPhase = eQuestPhase, need = 100, have = 0, }
 	elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 		local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 		local quest_state = QuestTraceInfo.quest_state
 		local need = quest_state[1].need
 		local have = quest_state[1].have
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.GONG] = {eQuestPhase = eQuestPhase, need = need, have = have, }
+		_RC.SelfData[RI_CHANG.GONG] = {eQuestPhase = eQuestPhase, need = need, have = have, }
 	elseif eQuestPhase ==  3 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.GONG] = {eQuestPhase = eQuestPhase, need = 100, have = 100, }
+		_RC.SelfData[RI_CHANG.GONG] = {eQuestPhase = eQuestPhase, need = 100, have = 100, }
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:869 秘境任务牌子
 	local eCanAccept = me.CanAcceptQuest(dwQuestID, 869)		------测试公共日常是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.GONG].finished = true
+		_RC.SelfData[RI_CHANG.GONG].finished = true
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.GONG].finished = false
+		_RC.SelfData[RI_CHANG.GONG].finished = false
 	end
 end
 
@@ -434,7 +431,7 @@ local CHA_QUEST = {
 	[14246] = true,
 }
 ADD2MONITED_QUEST_LIST(CHA_QUEST)
-function LR_AccountStatistics_RiChang.CheckChaGuan()
+function _RC.CheckChaGuan()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -444,28 +441,28 @@ function LR_AccountStatistics_RiChang.CheckChaGuan()
 	local dwQuestID = 14246
 	local eQuestPhase = me.GetQuestPhase(dwQuestID)
 	if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.CHA] = {eQuestPhase = eQuestPhase, need = 10, have = 0, }
+		_RC.SelfData[RI_CHANG.CHA] = {eQuestPhase = eQuestPhase, need = 10, have = 0, }
 	elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 		local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 		local quest_state = QuestTraceInfo.quest_state
 		local need = quest_state[1].need
 		local have = quest_state[1].have
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.CHA] = {eQuestPhase = eQuestPhase, need = need, have = have, }
+		_RC.SelfData[RI_CHANG.CHA] = {eQuestPhase = eQuestPhase, need = need, have = have, }
 	elseif eQuestPhase ==  3 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.CHA] = {eQuestPhase = eQuestPhase, need = 10, have = 10, }
+		_RC.SelfData[RI_CHANG.CHA] = {eQuestPhase = eQuestPhase, need = 10, have = 10, }
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:45009 赵云睿
 	local eCanAccept = me.CanAcceptQuest(dwQuestID, 45009)		------测试茶馆是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.CHA].finished = true
+		_RC.SelfData[RI_CHANG.CHA].finished = true
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.CHA].finished = false
+		_RC.SelfData[RI_CHANG.CHA].finished = false
 	end
 end
 
 ---------勤修不辍数据
-LR_AccountStatistics_RiChang.QinXiu = {
+_RC.QinXiu = {
 	-----[dwQuestID] = ture,
 	[8206] = true, 		-----天策
 	[8347] = true, 		-----纯阳
@@ -495,15 +492,15 @@ LR_AccountStatistics_RiChang.QinXiu = {
 	[16205] = true, 		-----霸刀
 	[16206] = true, 		-----霸刀
 }
-ADD2MONITED_QUEST_LIST(LR_AccountStatistics_RiChang.QinXiu)
+ADD2MONITED_QUEST_LIST(_RC.QinXiu)
 -----检查勤修不辍
-function LR_AccountStatistics_RiChang.CheckQinXiu()
+function _RC.CheckQinXiu()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 
-	local QinXiu = LR_AccountStatistics_RiChang.QinXiu
+	local QinXiu = _RC.QinXiu
 	local eQuestPhase = 0
 	local dwQuestID = 0
 
@@ -519,23 +516,23 @@ function LR_AccountStatistics_RiChang.CheckQinXiu()
 		local eQuestPhase = me.GetQuestPhase(dwQuestID)	----任务状态
 		local eCanAccept = me.CanAcceptQuest(dwQuestID, 16747)		----任务CD
 		if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.QIN] = {eQuestPhase = eQuestPhase, need = 3, have = 0, }
+			_RC.SelfData[RI_CHANG.QIN] = {eQuestPhase = eQuestPhase, need = 3, have = 0, }
 		elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 			local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 			local quest_state = QuestTraceInfo.quest_state
 			local need = quest_state[1].need
 			local have = quest_state[1].have
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.QIN] = {eQuestPhase = eQuestPhase, need = need, have = have, }
+			_RC.SelfData[RI_CHANG.QIN] = {eQuestPhase = eQuestPhase, need = need, have = have, }
 		elseif eQuestPhase ==  3 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.QIN] = {eQuestPhase = eQuestPhase, need = 3, have = 3, }
+			_RC.SelfData[RI_CHANG.QIN] = {eQuestPhase = eQuestPhase, need = 3, have = 3, }
 		end
 		if eCanAccept ==  57 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.QIN].finished = true
+			_RC.SelfData[RI_CHANG.QIN].finished = true
 		else
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.QIN].finished = false
+			_RC.SelfData[RI_CHANG.QIN].finished = false
 		end
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.QIN] = {eQuestPhase = 0, need = 3, have = 0, finished = false, }
+		_RC.SelfData[RI_CHANG.QIN] = {eQuestPhase = 0, need = 3, have = 0, finished = false, }
 	end
 end
 
@@ -545,7 +542,7 @@ local MAOYI_QUEST = {
 	[11991] = true,
 }
 ADD2MONITED_QUEST_LIST(MAOYI_QUEST)
-function LR_AccountStatistics_RiChang.CheckMaoYi()
+function _RC.CheckMaoYi()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -564,23 +561,23 @@ function LR_AccountStatistics_RiChang.CheckMaoYi()
 		local eQuestPhase = me.GetQuestPhase(dwQuestID)	----任务状态
 		local eCanAccept = me.CanAcceptQuest(dwQuestID, dwTemplateID)		----任务CD
 		if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JU] = {eQuestPhase = eQuestPhase, need = "3K", have = 0, }
+			_RC.SelfData[RI_CHANG.JU] = {eQuestPhase = eQuestPhase, need = "3K", have = 0, }
 		elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 			local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 			local quest_state = QuestTraceInfo.need_item
 			local need = quest_state[1].need
 			local have = quest_state[1].have
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JU] = {eQuestPhase = eQuestPhase, need = "3K", have = have, }
+			_RC.SelfData[RI_CHANG.JU] = {eQuestPhase = eQuestPhase, need = "3K", have = have, }
 		elseif eQuestPhase ==  3 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JU] = {eQuestPhase = eQuestPhase, need = "3K", have = 3000, }
+			_RC.SelfData[RI_CHANG.JU] = {eQuestPhase = eQuestPhase, need = "3K", have = 3000, }
 		end
 		if eCanAccept ==  57 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JU].finished = true
+			_RC.SelfData[RI_CHANG.JU].finished = true
 		else
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JU].finished = false
+			_RC.SelfData[RI_CHANG.JU].finished = false
 		end
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JU] = {eQuestPhase = 0, need = "3K", have = 0, finished = false, }
+		_RC.SelfData[RI_CHANG.JU] = {eQuestPhase = 0, need = "3K", have = 0, finished = false, }
 	end
 end
 
@@ -592,7 +589,7 @@ local JINGKUANG_QUEST = {
 		[14730] = true, 	---恶人【戈壁晶矿引烽烟】
 }
 ADD2MONITED_QUEST_LIST(JINGKUANG_QUEST)
-function LR_AccountStatistics_RiChang.CheckJingKuang()
+function _RC.CheckJingKuang()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -619,26 +616,26 @@ function LR_AccountStatistics_RiChang.CheckJingKuang()
 	if dwQuestID ~=  0 then
 		local eQuestPhase = me.GetQuestPhase(dwQuestID)
 		if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JING] = {eQuestPhase = eQuestPhase, need = "1K", have = 0, }
+			_RC.SelfData[RI_CHANG.JING] = {eQuestPhase = eQuestPhase, need = "1K", have = 0, }
 		elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 			local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 			local quest_state = QuestTraceInfo.quest_state
 			local need = quest_state[1].need
 			local have = quest_state[1].have
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JING] = {eQuestPhase = eQuestPhase, need = "1K", have = have, }
+			_RC.SelfData[RI_CHANG.JING] = {eQuestPhase = eQuestPhase, need = "1K", have = have, }
 		elseif eQuestPhase ==  3 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JING] = {eQuestPhase = eQuestPhase, need = "1K", have = 1000, }
+			_RC.SelfData[RI_CHANG.JING] = {eQuestPhase = eQuestPhase, need = "1K", have = 1000, }
 		end
 
 		------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:46968 莫云（浩气盟）	;	46969 莫白(恶人谷)	；
 		local eCanAccept = me.CanAcceptQuest(dwQuestID, dwTemplateID)		------测试晶矿争夺是否有cd 。代码57：任务完成度已达上限
 		if eCanAccept ==  57 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JING].finished = true
+			_RC.SelfData[RI_CHANG.JING].finished = true
 		else
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JING].finished = false
+			_RC.SelfData[RI_CHANG.JING].finished = false
 		end
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.JING] = {eQuestPhase = 0, need = "1K", have = 0, finished = false, }
+		_RC.SelfData[RI_CHANG.JING] = {eQuestPhase = 0, need = "1K", have = 0, finished = false, }
 	end
 end
 
@@ -648,7 +645,7 @@ local CAIXIANCAO_QUEST = {
 	[8332] = true,
 }
 ADD2MONITED_QUEST_LIST(CAIXIANCAO_QUEST)
-function LR_AccountStatistics_RiChang.CheckCaiCao()
+function _RC.CheckCaiCao()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -658,7 +655,7 @@ function LR_AccountStatistics_RiChang.CheckCaiCao()
 	local dwQuestID = 8332
 	local eQuestPhase = me.GetQuestPhase(dwQuestID)
 	if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.CAI] = {eQuestPhase = eQuestPhase, need = 7, have = 0, }
+		_RC.SelfData[RI_CHANG.CAI] = {eQuestPhase = eQuestPhase, need = 7, have = 0, }
 	elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 		local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 		local quest_state = QuestTraceInfo.quest_state
@@ -668,17 +665,17 @@ function LR_AccountStatistics_RiChang.CheckCaiCao()
 				have = have+1
 			end
 		end
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.CAI] = {eQuestPhase = eQuestPhase, need = 7, have = have, }
+		_RC.SelfData[RI_CHANG.CAI] = {eQuestPhase = eQuestPhase, need = 7, have = have, }
 	elseif eQuestPhase ==  3 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.CAI] = {eQuestPhase = eQuestPhase, need = 7, have = 7, }
+		_RC.SelfData[RI_CHANG.CAI] = {eQuestPhase = eQuestPhase, need = 7, have = 7, }
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:16747 活动任务牌子
 	local eCanAccept = me.CanAcceptQuest(dwQuestID, 16747)		------测试采仙草是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.CAI].finished = true
+		_RC.SelfData[RI_CHANG.CAI].finished = true
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.CAI].finished = false
+		_RC.SelfData[RI_CHANG.CAI].finished = false
 	end
 end
 
@@ -687,7 +684,7 @@ local XUNLONGMAI_QUEST = {
 	[13600] = true,
 }
 ADD2MONITED_QUEST_LIST(XUNLONGMAI_QUEST)
-function LR_AccountStatistics_RiChang.CheckLongMai()
+function _RC.CheckLongMai()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -697,23 +694,23 @@ function LR_AccountStatistics_RiChang.CheckLongMai()
 	local dwQuestID = 13600
 	local eQuestPhase = me.GetQuestPhase(dwQuestID)
 	if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.XUN] = {eQuestPhase = eQuestPhase, need = 5, have = 0, }
+		_RC.SelfData[RI_CHANG.XUN] = {eQuestPhase = eQuestPhase, need = 5, have = 0, }
 	elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 		local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 		local quest_state = QuestTraceInfo.quest_state
 		local need = quest_state[1].need
 		local have = quest_state[1].have
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.XUN] = {eQuestPhase = eQuestPhase, need = 5, have = have, }
+		_RC.SelfData[RI_CHANG.XUN] = {eQuestPhase = eQuestPhase, need = 5, have = have, }
 	elseif eQuestPhase ==  3 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.XUN] = {eQuestPhase = eQuestPhase, need = 5, have = 5, }
+		_RC.SelfData[RI_CHANG.XUN] = {eQuestPhase = eQuestPhase, need = 5, have = 5, }
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:16747 活动任务牌子
 	local eCanAccept = me.CanAcceptQuest(dwQuestID, 16747)		------测试采仙草是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.XUN].finished = true
+		_RC.SelfData[RI_CHANG.XUN].finished = true
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.XUN].finished = false
+		_RC.SelfData[RI_CHANG.XUN].finished = false
 	end
 end
 
@@ -722,7 +719,7 @@ local MEIRENTU_QUEST = {
 	[7669] = true,
 }
 ADD2MONITED_QUEST_LIST(MEIRENTU_QUEST)
-function LR_AccountStatistics_RiChang.CheckMeiRenTu()
+function _RC.CheckMeiRenTu()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -732,7 +729,7 @@ function LR_AccountStatistics_RiChang.CheckMeiRenTu()
 	local dwQuestID = 7669
 	local eQuestPhase = me.GetQuestPhase(dwQuestID)
 	if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.TU] = {eQuestPhase = eQuestPhase, need = 2, have = 0, }
+		_RC.SelfData[RI_CHANG.TU] = {eQuestPhase = eQuestPhase, need = 2, have = 0, }
 	elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 		local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 		local quest_state = QuestTraceInfo.quest_state
@@ -742,17 +739,17 @@ function LR_AccountStatistics_RiChang.CheckMeiRenTu()
 				have = have+1
 			end
 		end
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.TU] = {eQuestPhase = eQuestPhase, need = 2, have = have, }
+		_RC.SelfData[RI_CHANG.TU] = {eQuestPhase = eQuestPhase, need = 2, have = have, }
 	elseif eQuestPhase ==  3 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.TU] = {eQuestPhase = eQuestPhase, need = 2, have = 2, }
+		_RC.SelfData[RI_CHANG.TU] = {eQuestPhase = eQuestPhase, need = 2, have = 2, }
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:16747 活动任务牌子
 	local eCanAccept = me.CanAcceptQuest(dwQuestID, 16747)		------测试采仙草是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.TU].finished = true
+		_RC.SelfData[RI_CHANG.TU].finished = true
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.TU].finished = false
+		_RC.SelfData[RI_CHANG.TU].finished = false
 	end
 end
 
@@ -786,7 +783,7 @@ local YINSHANHEISHI_QUEST = {
 }
 ADD2MONITED_QUEST_LIST(YINSHANHEISHI_QUEST)
 -----检查黑市/觅宝会任务
-function LR_AccountStatistics_RiChang.CheckHeiMi()
+function _RC.CheckHeiMi()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -843,15 +840,15 @@ function LR_AccountStatistics_RiChang.CheckHeiMi()
 		end
 	end
 
-	LR_AccountStatistics_RiChang.SelfData[RI_CHANG.MI] = {eQuestPhase = 0, need = num_all, have = num_finish, }
+	_RC.SelfData[RI_CHANG.MI] = {eQuestPhase = 0, need = num_all, have = num_finish, }
 	if num_accecp > 0 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.MI].eQuestPhase = 1
+		_RC.SelfData[RI_CHANG.MI].eQuestPhase = 1
 	end
 	if num_all ==  num_finish and num_all ~= 0 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.MI] = {eQuestPhase = 0, need = 0, have = 0, }
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.MI].finished = true
+		_RC.SelfData[RI_CHANG.MI] = {eQuestPhase = 0, need = 0, have = 0, }
+		_RC.SelfData[RI_CHANG.MI].finished = true
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.MI].finished = false
+		_RC.SelfData[RI_CHANG.MI].finished = false
 	end
 end
 
@@ -860,7 +857,7 @@ local HUIGUANG_QUEST = {
 	[15594] = true,
 }
 ADD2MONITED_QUEST_LIST(HUIGUANG_QUEST)
-function LR_AccountStatistics_RiChang.CheckHUIGUANG()
+function _RC.CheckHUIGUANG()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -870,23 +867,23 @@ function LR_AccountStatistics_RiChang.CheckHUIGUANG()
 	local dwQuestID = 15594
 	local eQuestPhase = me.GetQuestPhase(dwQuestID)
 	if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.HUIGUANG] = {eQuestPhase = eQuestPhase, need = 0, have = 0, }
+		_RC.SelfData[RI_CHANG.HUIGUANG] = {eQuestPhase = eQuestPhase, need = 0, have = 0, }
 	elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 --[[		local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 		local quest_state = QuestTraceInfo.quest_state
 		local need = quest_state[1].need
 		local have = quest_state[1].have]]
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.HUIGUANG] = {eQuestPhase = eQuestPhase, need = 1, have = 1, }
+		_RC.SelfData[RI_CHANG.HUIGUANG] = {eQuestPhase = eQuestPhase, need = 1, have = 1, }
 	elseif eQuestPhase ==  3 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.HUIGUANG] = {eQuestPhase = eQuestPhase, need = 0, have = 0, }
+		_RC.SelfData[RI_CHANG.HUIGUANG] = {eQuestPhase = eQuestPhase, need = 0, have = 0, }
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:52417 活动任务牌子
 	local eCanAccept = me.CanAcceptQuest(dwQuestID, 52417)		------测试回光朔影 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.HUIGUANG].finished = true
+		_RC.SelfData[RI_CHANG.HUIGUANG].finished = true
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.HUIGUANG].finished = false
+		_RC.SelfData[RI_CHANG.HUIGUANG].finished = false
 	end
 end
 
@@ -895,7 +892,7 @@ local CHENXIANGSHANGU_QUEST = {
 	[15770] = true,
 }
 ADD2MONITED_QUEST_LIST(CHENXIANGSHANGU_QUEST)
-function LR_AccountStatistics_RiChang.CheckHuaShan()
+function _RC.CheckHuaShan()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -905,23 +902,23 @@ function LR_AccountStatistics_RiChang.CheckHuaShan()
 	local dwQuestID = 15770
 	local eQuestPhase = me.GetQuestPhase(dwQuestID)
 	if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.HUASHAN] = {eQuestPhase = eQuestPhase, need = 100, have = 0, }
+		_RC.SelfData[RI_CHANG.HUASHAN] = {eQuestPhase = eQuestPhase, need = 100, have = 0, }
 	elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 		local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 		local need_item = QuestTraceInfo.need_item
 		local need = need_item[1].need
 		local have = need_item[1].have
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.HUASHAN] = {eQuestPhase = eQuestPhase, need = 100, have = have, }
+		_RC.SelfData[RI_CHANG.HUASHAN] = {eQuestPhase = eQuestPhase, need = 100, have = have, }
 	elseif eQuestPhase ==  3 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.HUASHAN] = {eQuestPhase = eQuestPhase, need = 100, have = 100, }
+		_RC.SelfData[RI_CHANG.HUASHAN] = {eQuestPhase = eQuestPhase, need = 100, have = 100, }
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:15770 活动任务牌子
 	local eCanAccept = me.CanAcceptQuest(dwQuestID, 52417)		------测试回光朔影 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.HUASHAN].finished = true
+		_RC.SelfData[RI_CHANG.HUASHAN].finished = true
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.HUASHAN].finished = false
+		_RC.SelfData[RI_CHANG.HUASHAN].finished = false
 	end
 end
 
@@ -930,7 +927,7 @@ local LONGMENJUEJING_QUEST = {
 	[17895] = true,
 }
 ADD2MONITED_QUEST_LIST(LONGMENJUEJING_QUEST)
-function LR_AccountStatistics_RiChang.CheckLongMenJueJing()
+function _RC.CheckLongMenJueJing()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -940,23 +937,23 @@ function LR_AccountStatistics_RiChang.CheckLongMenJueJing()
 	local dwQuestID = 17895
 	local eQuestPhase = me.GetQuestPhase(dwQuestID)
 	if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = eQuestPhase, need = 2, have = 0, }
+		_RC.SelfData[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = eQuestPhase, need = 2, have = 0, }
 	elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 		local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 		local quest_state = QuestTraceInfo.quest_state
 		local need = quest_state[1].need
 		local have = quest_state[1].have
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = eQuestPhase, need = 2, have = have, }
+		_RC.SelfData[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = eQuestPhase, need = 2, have = have, }
 	elseif eQuestPhase ==  3 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = eQuestPhase, need = 2, have = 2, }
+		_RC.SelfData[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = eQuestPhase, need = 2, have = 2, }
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:16747 活动任务牌子
 	local eCanAccept = me.CanAcceptQuest(dwQuestID, 59149)		------测试龙门绝境是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LONGMENJUEJING].finished = true
+		_RC.SelfData[RI_CHANG.LONGMENJUEJING].finished = true
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LONGMENJUEJING].finished = false
+		_RC.SelfData[RI_CHANG.LONGMENJUEJING].finished = false
 	end
 end
 
@@ -968,7 +965,7 @@ local LUOYANGSHENBING_QUEST = {
 	[17510] = true,		--恶人尊敬
 }
 ADD2MONITED_QUEST_LIST(LUOYANGSHENBING_QUEST)
-function LR_AccountStatistics_RiChang.CheckLuoYangShenBing()
+function _RC.CheckLuoYangShenBing()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -995,102 +992,91 @@ function LR_AccountStatistics_RiChang.CheckLuoYangShenBing()
 		local eQuestPhase = me.GetQuestPhase(dwQuestID)	----任务状态
 		local eCanAccept = me.CanAcceptQuest(dwQuestID, dwTemplateID)		----任务CD
 		if eQuestPhase ==  0 or eQuestPhase ==  -1 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = eQuestPhase, need = "1K", have = 0, }
+			_RC.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = eQuestPhase, need = "1K", have = 0, }
 		elseif eQuestPhase ==  1 or eQuestPhase ==  2 then
 			local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
 			local quest_state = QuestTraceInfo.quest_state
 			local need = quest_state[1].need
 			local have = quest_state[1].have
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = eQuestPhase, need = "1K", have = have, }
+			_RC.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = eQuestPhase, need = "1K", have = have, }
 		elseif eQuestPhase ==  3 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = eQuestPhase, need = "1K", have = 1000, }
+			_RC.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = eQuestPhase, need = "1K", have = 1000, }
 		end
 		if eCanAccept ==  57 then
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING].finished = true
+			_RC.SelfData[RI_CHANG.LUOYANGSHENBING].finished = true
 		else
-			LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING].finished = false
+			_RC.SelfData[RI_CHANG.LUOYANGSHENBING].finished = false
 		end
 	else
-		LR_AccountStatistics_RiChang.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = 0, need = "1K", have = 0, finished = false, }
+		_RC.SelfData[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = 0, need = "1K", have = 0, finished = false, }
 	end
 end
 
 ------------------------------------------------
 ---考试
 ------------------------------------------------
-LR_AS_Exam = LR_AS_Exam or {}
-LR_AS_Exam.AllUsrData = {}
-LR_AS_Exam.SelfData = {
+local _Exam = {}
+_Exam.AllUsrData = {}
+_Exam.SelfData = {
 	["ShengShi"] = 0,
 	["HuiShi"] = 0,
 }
 
-function LR_AS_Exam.LoadData(DB)
+function _Exam.LoadData(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM exam_data WHERE bDel = 0 AND szKey IS NOT NULL")
-	local Data = DB_SELECT:GetAll() or {}
+	local Data = d2g(DB_SELECT:GetAll())
 	local AllUsrData = {}
 	if Data and next(Data) ~=  nil then
 		for k, v in pairs(Data) do
 			AllUsrData[v.szKey] = v
 		end
 	end
-	LR_AS_Exam.AllUsrData = clone(AllUsrData)
+	_Exam.AllUsrData = clone(AllUsrData)
+	--替换记录中自身的记录
+	_Exam.CheckExam()
 	local me = GetClientPlayer()
-	if not me then
-		return
-	end
-	if IsRemotePlayer(me.dwID) then
-		return
-	end
-	LR_AS_Exam.CheckExam()
 	local ServerInfo = {GetUserServer()}
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	LR_AS_Exam.AllUsrData[szKey] = clone(LR_AS_Exam.SelfData)
+	_Exam.AllUsrData[szKey] = clone(_Exam.SelfData)
+	--复制到主表
+	LR_AS_Data.ExamData = clone(_Exam.AllUsrData)
 end
 
-function LR_AS_Exam.SaveData(DB)
+function _Exam.SaveData(DB)
+	if not LR_AS_Base.UsrData.bRecord then
+		return
+	end
 	local me = GetClientPlayer()
-	if not me then
+	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
-	if IsRemotePlayer(me.dwID) then
-		return
-	end
-	LR_AS_Exam.CheckExam()
+	_Exam.CheckExam()
 	local ServerInfo = {GetUserServer()}
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	local v = LR_AS_Exam.SelfData or {}
+	local v = _Exam.SelfData or {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO exam_data ( szKey, ShengShi, HuiShi, bDel ) VALUES ( ?, ?, ?, ? )")
-	if LR_AS_Base.UsrData.OthersCanSee then
-		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(szKey, v.ShengShi, v.HuiShi, 0)
-		DB_REPLACE:Execute()
-	else
-		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(szKey, 0, 0, 1)
-		DB_REPLACE:Execute()
-	end
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(unpack(g2d({szKey, v.ShengShi, v.HuiShi, 0})))
+	DB_REPLACE:Execute()
 end
 
-function LR_AS_Exam.ResetData(DB)
+function _Exam.ResetData(DB)
 	--清考试
 	local DB_SELECT = DB:Prepare("SELECT szKey FROM exam_data WHERE bDel = 0 AND szKey IS NOT NULL")
-	local result = DB_SELECT:GetAll() or {}
+	local result = d2g(DB_SELECT:GetAll())
 	if result and next(result) ~=  nil then
 		local DB_REPLACE = DB:Prepare("REPLACE INTO exam_data ( szKey, bDel ) VALUES ( ?, 0 )")
 		for k, v in pairs(result) do
 			DB_REPLACE:ClearBindings()
-			DB_REPLACE:BindAll(v.szKey)
+			DB_REPLACE:BindAll(g2d(v.szKey))
 			DB_REPLACE:Execute()
 		end
 	end
 end
-LR_AS_Base.Add2ResetData({szKey = "ResetExam_ZC", fnAction = LR_AS_Exam.ResetData, nType = RESET_TYPE.MONDAY, order = 30})
 
-
-function LR_AS_Exam.CheckExam()
+function _Exam.CheckExam()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -1099,129 +1085,26 @@ function LR_AS_Exam.CheckExam()
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	local buffList = LR.GetBuffList(me)
-	LR_AS_Exam.SelfData = {
+	_Exam.SelfData = {
 		["ShengShi"] = 0,
 		["HuiShi"] = 0,
 	}
 	if LR.HasBuff(buffList, 10936) then
-		LR_AS_Exam.SelfData["ShengShi"] = 1
+		_Exam.SelfData["ShengShi"] = 1
 	end
 	if LR.HasBuff(buffList, 4125) then
-		LR_AS_Exam.SelfData["HuiShi"] = 1
+		_Exam.SelfData["HuiShi"] = 1
 	end
 	if LR.GetItemNumInBagAndBank(5, 6261) > 0 then
-		LR_AS_Exam.SelfData["ShengShi"] = 1		---会试行文(省市buff有时会消失)
+		_Exam.SelfData["ShengShi"] = 1		---会试行文(省市buff有时会消失)
 	end
 
-	LR_AS_Exam.AllUsrData[szKey] = clone(LR_AS_Exam.SelfData)
+	_Exam.AllUsrData[szKey] = clone(_Exam.SelfData)
 end
 
--------------------------------------------------
---[[
-function LR_AccountStatistics_RiChang.ResetData()
-	local CurrentTime =  GetCurrentTime()
-	local _date = TimeToDate(CurrentTime)
-	local weekday = _date["weekday"]
-	local hour = _date["hour"]
-	local minute = _date["minute"]
-	local second = _date["second"]
-	-----------星期一大刷新（周常、日常数据）
-	if weekday ==  0 then
-		weekday = 7
-	end
-	if weekday ==  1 and hour < 7 then
-		return
-	end
-	local day = weekday-1
-	if day<0 then
-		day = 0
-	end
-	local RefreshTimeMonday = CurrentTime - day * 86400 - hour * 60 * 60 - minute* 60 - second + 7 * 60 *60
-	local RefreshTimeEveryDay		------------------每日重置日常任务时间
-	if hour<7 then
-		RefreshTimeEveryDay = CurrentTime -  (hour+24) * 60 * 60 - minute* 60 - second + 7 * 60 *60
-	else
-		RefreshTimeEveryDay = CurrentTime -  hour * 60 * 60 - minute* 60 - second + 7 * 60 *60
-	end
-	local RefreshTimeThursday = RefreshTimeMonday 	---周四刷新时间
-	if (weekday > 4) or (weekday ==  4 and hour>= 7 ) then
-		day = weekday - 4
-		if day<0 then
-			day = 0
-		end
-		RefreshTimeThursday = CurrentTime - day * 86400 - hour * 60 * 60 - minute* 60 - second + 7 * 60 *60
-	end
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
-	------载入时间
-	local DB_SELECT = DB:Prepare("SELECT * FROM richang_clear_time WHERE szName IS NOT NULL")
-	local Data = DB_SELECT:GetAll() or {}
-	local RC_ResetTime = {
-		ClearTimeRC = 0,			--日常
-		ClearTimeZC = 0,			--周常
-		ClearTime5R = 0,
-		ClearTime10R = 0,
-		ClearTime25R = 0,
- 	}
+-----------------------------------
 
-	if Data and next(Data) ~= nil then
-		for k, v in pairs(Data) do
-			RC_ResetTime[v.szName] = v.nTime
-		end
-	end
-	if RefreshTimeMonday > RC_ResetTime.ClearTimeZC or RefreshTimeEveryDay > RC_ResetTime.ClearTimeRC or RefreshTimeThursday > RC_ResetTime.ClearTime10R then
-		LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
-		if RefreshTimeMonday > RC_ResetTime.ClearTimeZC then
-			LR_AccountStatistics_RiChang.ClearZC(DB)
-			LR_AccountStatistics_RiChang.ClearRC(DB)
-			LR_AS_Exam.ResetData(DB)
-			LR_AccountStatistics_FBList.ClearAllData(DB)	--自带写入
-			LR_AccountStatistics_FBList.ClearAllReaminJianBen(DB)		--自带写入
-			LR_ACS_QiYu.ClearAllData(DB)
-			RC_ResetTime.ClearTimeZC = GetCurrentTime()
-			RC_ResetTime.ClearTimeRC = GetCurrentTime()
-			RC_ResetTime.ClearTime5R = GetCurrentTime()
-			RC_ResetTime.ClearTime10R = GetCurrentTime()
-			RC_ResetTime.ClearTime25R = GetCurrentTime()
-
-			LR.DelayCall(2000, function()
-				LR_AS_DB.MainDBVacuum(true)
-			end)
-		elseif RefreshTimeThursday > RC_ResetTime.ClearTime10R then
-			LR_AccountStatistics_RiChang.ClearRC(DB)
-			LR_AccountStatistics_FBList.ClearAllData10R(DB)	--自带写入
-			LR_AccountStatistics_FBList.ClearAllData5R(DB)		--自带写入
-			LR_ACS_QiYu.ClearAllData(DB)
-			RC_ResetTime.ClearTime5R = GetCurrentTime()
-			RC_ResetTime.ClearTimeRC = GetCurrentTime()
-			RC_ResetTime.ClearTime10R = GetCurrentTime()
-		else
-			LR_AccountStatistics_RiChang.ClearRC(DB)
-			LR_AccountStatistics_FBList.ClearAllData5R(DB)		--自带写入
-			LR_ACS_QiYu.ClearAllData(DB)
-			RC_ResetTime.ClearTime5R = GetCurrentTime()
-			RC_ResetTime.ClearTimeRC = GetCurrentTime()
-		end
-		---由于特殊性，奇遇数据要重新Load一下--不能通过游戏api函数获得
-		LR_ACS_QiYu.LoadAllUsrData(DB)
-
-
-		--记录保存时间
-		local szName = {"ClearTimeZC", "ClearTimeRC", "ClearTime5R", "ClearTime10R", "ClearTime25R"}
-		local DB_REPLACE2 = DB:Prepare("REPLACE INTO richang_clear_time (szName, nTime) VALUES ( ?, ? )")
-		for k, v in pairs (szName) do
-			DB_REPLACE2:ClearBindings()
-			DB_REPLACE2:BindAll(v, RC_ResetTime[v])
-			DB_REPLACE2:Execute()
-		end
-	end
-	DB:Execute("END TRANSACTION")
-	DB:Release()
-end
-]]
-
-function LR_AccountStatistics_RiChang.SaveClearData(DB)
+function _RC.SaveClearData(DB)
 	---将所有数据写回数据库
 	local name, wen = {}, {}
 	for k, v in pairs(RI_CHANG) do
@@ -1231,7 +1114,7 @@ function LR_AccountStatistics_RiChang.SaveClearData(DB)
 	name[#name + 1] = "CUSTOM_QUEST"
 	wen[#wen + 1] = "?"
 	local DB_REPLACE = DB:Prepare(sformat("REPLACE INTO richang_data ( bDel, szKey, %s ) VALUES ( ?, %s, ? )", tconcat(name, ", "), tconcat(wen, ", ")))
-	for szKey, v in pairs (LR_AccountStatistics_RiChang.AllUsrData) do
+	for szKey, v in pairs (_RC.AllUsrData) do
 		local value = {}
 		for  k2, v2 in pairs(RI_CHANG) do
 			value[#value+1] = LR.JsonEncode(v[v2])
@@ -1239,20 +1122,20 @@ function LR_AccountStatistics_RiChang.SaveClearData(DB)
 		value[#value + 1] = LR.JsonEncode(v.CUSTOM_QUEST)
 
 		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(0, szKey, unpack(value))
+		DB_REPLACE:BindAll(unpack(g2d({0, szKey, unpack(value)})))
 		DB_REPLACE:Execute()
 	end
 end
 
-function LR_AccountStatistics_RiChang.ClearZC(DB)
-	LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
-	local t_Table =  LR_AccountStatistics_RiChang.List
-	for szKey, v in pairs(LR_AccountStatistics_RiChang.AllUsrData) do
+function _RC.ClearZC(DB)
+	_RC.LoadAllUsrData(DB)
+	local t_Table =  _RC.List
+	for szKey, v in pairs(_RC.AllUsrData) do
 		for k2, v2 in pairs(t_Table) do
 			if v2.nType ==  "ZC" then		------用于过滤不是周长的任务
 				if v[v2.order] then
 					if v[v2.order].finished then
-						LR_AccountStatistics_RiChang.AllUsrData[szKey][v2.order].finished = false
+						_RC.AllUsrData[szKey][v2.order].finished = false
 					end
 				end
 			end
@@ -1260,7 +1143,7 @@ function LR_AccountStatistics_RiChang.ClearZC(DB)
 
 		local CUSTOM_QUEST = v.CUSTOM_QUEST or {}
 		if next(CUSTOM_QUEST) ~= nil then
-			for k2, v2 in pairs (LR_AccountStatistics_RiChang.CustomQuestList or {}) do
+			for k2, v2 in pairs (LR_AS_RC.CustomQuestList or {}) do
 				if v2.refresh == "WEEK" or v.refresh == "EVERYDAY" then
 					if CUSTOM_QUEST[tostring(v2.dwID)] then
 						CUSTOM_QUEST[tostring(v2.dwID)] = nil
@@ -1269,27 +1152,26 @@ function LR_AccountStatistics_RiChang.ClearZC(DB)
 			end
 		end
 	end
-	LR_AccountStatistics_RiChang.SaveClearData(DB)
+	_RC.SaveClearData(DB)
 end
-LR_AS_Base.Add2ResetData({szKey = "ResetRC_ZC", fnAction = LR_AccountStatistics_RiChang.ClearZC, nType = RESET_TYPE.MONDAY, order = 10})
 
 ------清除日常记录
-function LR_AccountStatistics_RiChang.ClearRC(DB)
-	LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
-	local t_Table =  LR_AccountStatistics_RiChang.List
-	for szKey, v in pairs(LR_AccountStatistics_RiChang.AllUsrData) do
+function _RC.ClearRC(DB)
+	_RC.LoadAllUsrData(DB)
+	local t_Table =  _RC.List
+	for szKey, v in pairs(_RC.AllUsrData) do
 		for k2, v2 in pairs(t_Table) do
 			if v2.nType ==  "RC" then		------用于过滤不是日常的任务
 				if v[v2.order] then
 					if v[v2.order].finished then
-						LR_AccountStatistics_RiChang.AllUsrData[szKey][v2.order].finished = false
+						_RC.AllUsrData[szKey][v2.order].finished = false
 					end
 				end
 			end
 		end
 
 		local CUSTOM_QUEST = v.CUSTOM_QUEST or {}
-		for k2, v2 in pairs (LR_AccountStatistics_RiChang.CustomQuestList or {}) do
+		for k2, v2 in pairs (LR_AS_RC.CustomQuestList or {}) do
 			if v2.refresh == "EVERYDAY" then
 				if CUSTOM_QUEST[tostring(v2.dwID)] then
 					CUSTOM_QUEST[tostring(v2.dwID)] = nil
@@ -1297,13 +1179,20 @@ function LR_AccountStatistics_RiChang.ClearRC(DB)
 			end
 		end
 	end
-	LR_AccountStatistics_RiChang.SaveClearData(DB)
+	_RC.SaveClearData(DB)
 end
-LR_AS_Base.Add2ResetData({szKey = "ResetRC_RC", fnAction = LR_AccountStatistics_RiChang.ClearRC, nType = RESET_TYPE.EVERY_DAY, order = 20})
 
+function _RC.ResetDataMonday(DB)
+	_RC.ClearZC(DB)
+	_Exam.ResetData(DB)
+end
+
+function _RC.ResetDataEveryDay(DB)
+	_RC.ClearRC(DB)
+end
 ---------------------------------
 -----记录所有任务状态
-function LR_AccountStatistics_RiChang.CheckAll()
+function _RC.CheckAll()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -1313,65 +1202,86 @@ function LR_AccountStatistics_RiChang.CheckAll()
 	end
 	-------PVE
 	----检查大战
-	LR_AccountStatistics_RiChang.CheckDazhan()
+	_RC.CheckDazhan()
 	----检查公共事件
-	LR_AccountStatistics_RiChang.CheckGongShiJian()
+	_RC.CheckGongShiJian()
 
 	-------PVX
 	----检查茶馆
-	LR_AccountStatistics_RiChang.CheckChaGuan()
+	_RC.CheckChaGuan()
 	----检查勤修不辍
-	LR_AccountStatistics_RiChang.CheckQinXiu()
+	_RC.CheckQinXiu()
 	----检查采仙草
-	LR_AccountStatistics_RiChang.CheckCaiCao()
+	_RC.CheckCaiCao()
 	----寻龙脉
-	LR_AccountStatistics_RiChang.CheckLongMai()
+	_RC.CheckLongMai()
 	----美人图
-	LR_AccountStatistics_RiChang.CheckMeiRenTu()
+	_RC.CheckMeiRenTu()
 	----觅宝会/黑市
-	LR_AccountStatistics_RiChang.CheckHeiMi()
+	_RC.CheckHeiMi()
 	----2016回光稻香村
-	LR_AccountStatistics_RiChang.CheckHUIGUANG()
+	_RC.CheckHUIGUANG()
 	----沉香扇骨
-	LR_AccountStatistics_RiChang.CheckHuaShan()
+	_RC.CheckHuaShan()
 
 	------PVP
 	----检查据点贸易
-	LR_AccountStatistics_RiChang.CheckMaoYi()
+	_RC.CheckMaoYi()
 	----检查晶矿争夺
-	LR_AccountStatistics_RiChang.CheckJingKuang()
+	_RC.CheckJingKuang()
 	----检查龙门绝境
-	LR_AccountStatistics_RiChang.CheckLongMenJueJing()
+	_RC.CheckLongMenJueJing()
 	---检查洛阳神兵
-	LR_AccountStatistics_RiChang.CheckLuoYangShenBing()
+	_RC.CheckLuoYangShenBing()
 
 	----考试
-	LR_AS_Exam.CheckExam()
+	_Exam.CheckExam()
 end
 
 ------------------------------------------------------
 -----主界面显示日常
 ------------------------------------------------------
-LR_AccountStatistics_RiChang.Container = nil
-
-function LR_AccountStatistics_RiChang.ReFreshTitle()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+_RC.Container = nil
+function _RC.AddPage()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
 	if not frame then
 		return
 	end
-	local title_handle = frame:Lookup("PageSet_Menu"):Lookup("Page_LR_RCList"):Lookup("", "")
+
+	local PageSet_Menu = frame:Lookup("PageSet_Menu")
+	local Btn = PageSet_Menu:Lookup("WndCheck_RC")
+
+	local page = Wnd.OpenWindow(sformat("%s\\UI\\page.ini", AddonPath), "temp"):Lookup("Page_RC")
+	page:ChangeRelation(PageSet_Menu, true, true)
+	page:SetName("Page_RC")
+	Wnd.CloseWindow("temp")
+	PageSet_Menu:AddPage(page, Btn)
+
+	Btn:Enable(true)
+	Btn:Lookup("",""):Lookup("Text_RC"):SetFontColor(255, 255, 255)
+	_RC.ReFreshTitle()
+	_RC.ListRC()
+	_RC.AddPageButton()
+end
+
+function _RC.ReFreshTitle()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
+	if not frame then
+		return
+	end
+	local title_handle = frame:Lookup("PageSet_Menu"):Lookup("Page_RC"):Lookup("", "")
 	local n = 1
-	local List = LR_AccountStatistics_RiChang.List
+	local List = _RC.List
 	--插件自己定义的日常
 	for i = 1, #List, 1 do
-		if LR_AccountStatistics_RiChang.UsrData.List[List[i].order] and n<= 8 then
+		if LR_AS_RC.UsrData.List[List[i].order] and n<= 8 then
 			local text = title_handle:Lookup(sformat("Text_RC%d_Break", n))
 			text:SetText(List[i].szName)
 			n = n+1
 		end
 	end
 	---玩家自己设置的日常
-	for k, v in pairs (LR_AccountStatistics_RiChang.CustomQuestList) do
+	for k, v in pairs (LR_AS_RC.CustomQuestList) do
 		if v.bShow and n <= 8 then
 			local text = title_handle:Lookup(sformat("Text_RC%d_Break", n))
 			text:SetText(v.szName)
@@ -1385,75 +1295,69 @@ function LR_AccountStatistics_RiChang.ReFreshTitle()
 	end
 end
 
-function LR_AccountStatistics_RiChang.ListRC()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+function _RC.ListRC()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
 	if not frame then
 		return
 	end
 	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 
-	LR_AccountStatistics_RiChang.Container = frame:Lookup("PageSet_Menu/Page_LR_RCList/WndScroll_LR_RCList_Record/Wnd_LR_RCList_Record_List")
-	LR_AccountStatistics_RiChang.Container:Clear()
-	num = LR_AccountStatistics_RiChang.ShowItem (TempTable_Cal, 255, 1, 0)
-	num = LR_AccountStatistics_RiChang.ShowItem (TempTable_NotCal, 60, 1, num)
-	LR_AccountStatistics_RiChang.Container:FormatAllContentPos()
+	_RC.Container = frame:Lookup("PageSet_Menu/Page_RC/WndScroll_RC/Wnd_RC")
+	_RC.Container:Clear()
+	num = _RC.ShowItem (TempTable_Cal, 255, 1, 0)
+	num = _RC.ShowItem (TempTable_NotCal, 60, 1, num)
+	_RC.Container:FormatAllContentPos()
 end
 
-function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
+function _RC.ShowItem(t_Table, Alpha, bCal, _num)
 	local num = _num
-	local TempTable = clone(t_Table)
+	local PlayerList = clone(t_Table)
 
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 
-	for i = 1, #TempTable, 1 do
+	for k, v in pairs(PlayerList) do
 		num = num+1
-		local wnd = LR_AccountStatistics_RiChang.Container:AppendContentFromIni("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_RCList_Item.ini", "RCList_WndWindow", num)
-		local items = wnd:Lookup("", "")
+		local wnd = _RC.Container:AppendContentFromIni(sformat("%s\\UI\\item.ini", AddonPath), "RCList_WndWindow", sformat("RC_%s_%s_%s", v.realArea, v.realServer, v.szName))
+		local handle = wnd:Lookup("", "")
 		if num % 2 ==  0 then
-			items:Lookup("Image_Line"):Hide()
+			handle:Lookup("Image_Line"):Hide()
 		else
-			items:Lookup("Image_Line"):SetAlpha(225)
+			handle:Lookup("Image_Line"):SetAlpha(225)
 		end
-
 		wnd:SetAlpha(Alpha)
 
-		local item_MenPai = items:Lookup("Image_NameIcon")
-		local item_Name = items:Lookup("Text_Name")
-		local item_Select = items:Lookup("Image_Select")
+		local item_MenPai = handle:Lookup("Image_NameIcon")
+		local item_Name = handle:Lookup("Text_Name")
+		local item_Select = handle:Lookup("Image_Select")
 		item_Select:SetAlpha(125)
 		item_Select:Hide()
 
-		item_MenPai:FromUITex(GetForceImage(TempTable[i].dwForceID))
-		local name = TempTable[i].szName
-		if slen(name) >12 then
-			local _start, _end  = sfind (name, "@")
-			if _start and _end then
-				name = sformat("%s...", ssub(name, 1, 9))
-			else
-				name = sformat("%s...", ssub(name, 1, 10))
-			end
+		item_MenPai:FromUITex(GetForceImage(v.dwForceID))
+		local name = v.szName
+		if wslen(name) > 6 then
+			name = sformat("%s...", wssub(name, 1, 5))
 		end
-		item_Name:SprintfText("%s（%d）", name, TempTable[i].nLevel)
-		local r, g, b = LR.GetMenPaiColor(TempTable[i].dwForceID)
+		item_Name:SprintfText(_L["%s(%d)"], name, v.nLevel)
+		local r, g, b = LR.GetMenPaiColor(v.dwForceID)
 		item_Name:SetFontColor(r, g, b)
-		--  Output(LR.GetMenPaiColor(TempTable[i].MenPai))
+		--  Output(LR.GetMenPaiColor(v.MenPai))
 
-		local realArea = TempTable[i].realArea
-		local realServer = TempTable[i].realServer
-		local szName = TempTable[i].szName
+		local realArea = v.realArea
+		local realServer = v.realServer
+		local szName = v.szName
 		local player  = GetClientPlayer()
-		local szKey = sformat("%s_%s_%d", realArea, realServer, TempTable[i].dwID)
-		local RC_Record = LR_AccountStatistics_RiChang.AllUsrData[szKey] or {}
+		local szKey = sformat("%s_%s_%d", realArea, realServer, v.dwID)
+		local RC_Record = _RC.AllUsrData[szKey] or {}
 
 		------输出日常
 		local n = 1
-		local List = LR_AccountStatistics_RiChang.List
+		local List = _RC.List
 		for i = 1, #List, 1 do
-			if LR_AccountStatistics_RiChang.UsrData.List[List[i].order] and n<= 8 then
-				local Text_FB = items:Lookup(sformat("Text_RC%d", n))
+			if LR_AS_RC.UsrData.List[List[i].order] and n<= 8 then
+				local Text_FB = handle:Lookup(sformat("Text_RC%d", n))
 				if RC_Record[List[i].order] then
 					if RC_Record[List[i].order].finished then
 						Text_FB:SetText(_L["Done"])
@@ -1484,11 +1388,11 @@ function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 		end
 
 		---自定义任务
-		local CustomQuestList = LR_AccountStatistics_RiChang.CustomQuestList or {}
+		local CustomQuestList = LR_AS_RC.CustomQuestList or {}
 		local CUSTOM_QUEST = RC_Record.CUSTOM_QUEST or {}
 		for k, v in pairs(CustomQuestList) do
 			if v.bShow and n <= 8 then
-				local Text_FB = items:Lookup(sformat("Text_RC%d", n))
+				local Text_FB = handle:Lookup(sformat("Text_RC%d", n))
 				if CUSTOM_QUEST[tostring(v.dwID)] then
 					if CUSTOM_QUEST[tostring(v.dwID)].full then
 						Text_FB:SetText(_L["Done"])
@@ -1520,24 +1424,24 @@ function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 		end
 
 		for j = n, 8, 1 do
-			local Text_FB = items:Lookup(sformat("Text_RC%d", j))
+			local Text_FB = handle:Lookup(sformat("Text_RC%d", j))
 			Text_FB:SetText("")
 			Text_FB:SetFontScheme(41)
 		end
 
 		--------------------输出tips
-		items:RegisterEvent(786)
-		items.OnItemMouseEnter = function ()
+		handle:RegisterEvent(304)
+		handle.OnItemMouseEnter = function ()
 			item_Select:Show()
 			local nMouseX, nMouseY =  Cursor.GetPos()
 			local szTipInfo = {}
-			local szPath, nFrame = GetForceImage(TempTable[i].dwForceID)
+			local szPath, nFrame = GetForceImage(v.dwForceID)
 			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s（%d）\n", TempTable[i].szName, TempTable[i].nLevel), 62, r, g, b)
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s（%d）\n", v.szName, v.nLevel), 62, r, g, b)
 			--szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\Common\\Money.uitex", 246, 260, 26)
 			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 260, 27)
 			szTipInfo[#szTipInfo+1] = GetFormatText("\n", 62)
-			local List = LR_AccountStatistics_RiChang.List
+			local List = _RC.List
 			for i = 1, #List, 1 do
 				if RC_Record[List[i].order] then
 					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：\t", List[i].szName), 224)
@@ -1560,7 +1464,7 @@ function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 			end
 
 			------自定义任务
-			local CustomQuestList = LR_AccountStatistics_RiChang.CustomQuestList or {}
+			local CustomQuestList = LR_AS_RC.CustomQuestList or {}
 			local CUSTOM_QUEST = RC_Record.CUSTOM_QUEST or {}
 			if next(CustomQuestList) ~= nil then
 				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Custom quest under"]), 47)
@@ -1590,29 +1494,41 @@ function LR_AccountStatistics_RiChang.ShowItem (t_Table, Alpha, bCal, _num)
 
 			OutputTip(tconcat(szTipInfo), 250, {nMouseX, nMouseY, 0, 0})
 		end
-		items.OnItemMouseLeave = function()
+		handle.OnItemMouseLeave = function()
 			item_Select:Hide()
 			HideTip()
 		end
-		items.OnItemLButtonClick = function()
-
+		handle.OnItemLButtonClick = function()
+			--
+		end
+		handle.OnItemRButtonClick = function()
+			local menu = LR_AS_Panel.RClickMenu(v.realArea, v.realServer, v.dwID)
+			PopupMenu(menu)
 		end
 	end
 	return num
 end
 
-function LR_AccountStatistics_RiChang.AddPageButton()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+function _RC.AddPageButton()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
 	if not frame then
 		return
 	end
-	local page = frame:Lookup("PageSet_Menu/Page_LR_RCList")
-	LR_AS_Base.AddButton(page, "btn_5", _L["Show Group"], 340, 555, 110, 36, function() LR_AS_Group.ShowGroup() end)
-	LR_AS_Base.AddButton(page, "btn_4", _L["Reading Statistics"], 470, 555, 110, 36, function() LR_BookRd_Panel:Open() end)
+	local page = frame:Lookup("PageSet_Menu/Page_RC")
+	LR_AS_Base.AddButton(page, "btn_5", _L["Show Group"], 340, 555, 110, 36, function() LR_AS_Group.PopupUIMenu() end)
+	if LR_AS_Module["BookRd"] then
+		LR_AS_Base.AddButton(page, "btn_4", _L["Reading Statistics"], 470, 555, 110, 36, function() LR_BookRd_Panel:Open() end)
+	end
 	LR_AS_Base.AddButton(page, "btn_3", _L["Quest Tools"], 600, 555, 110, 36, function() LR_QuestTools:Open() end)
-	LR_AS_Base.AddButton(page, "btn_2", _L["Settings"], 730, 555, 110, 36, function() LR_AccountStatistics.SetOption() end)
-	LR_AS_Base.AddButton(page, "btn_1", _L["7 YEAR"], 730, 555, 110, 36, function() LR_Acc_Achievement_Panel:Open() end)
+	LR_AS_Base.AddButton(page, "btn_2", _L["Settings"], 730, 555, 110, 36, function() LR_AS_Base.SetOption() end)
+	--LR_AS_Base.AddButton(page, "btn_1", _L["7 YEAR"], 730, 555, 110, 36, function() LR_Acc_Achievement_Panel:Open() end)
 end
+
+function _RC.RefreshPage()
+	_RC.ReFreshTitle()
+	_RC.ListRC()
+end
+
 
 -----------------------------------------------------------------
 LR_QuestTools = CreateAddon("LR_QuestTools")
@@ -1820,17 +1736,17 @@ local function SAVE_QUEST(dwQuestID)
 	if _time - _quest_save_time < 60 * 1 then
 		return
 	end
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
-	LR_AccountStatistics_RiChang.SaveData(DB)
+	_RC.SaveData(DB)
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 	Log("[LR] RI_CHANG_QUEST_EVENT_SAVE\n")
 	_quest_save_time = GetCurrentTime()
 end
 
-function LR_AccountStatistics_RiChang.QUEST_ACCEPTED()
+function _RC.QUEST_ACCEPTED()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -1839,7 +1755,7 @@ function LR_AccountStatistics_RiChang.QUEST_ACCEPTED()
 	SAVE_QUEST(dwQuestID)
 end
 
-function LR_AccountStatistics_RiChang.QUEST_DATA_UPDATE()
+function _RC.QUEST_DATA_UPDATE()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -1848,7 +1764,7 @@ function LR_AccountStatistics_RiChang.QUEST_DATA_UPDATE()
 	SAVE_QUEST(dwQuestID)
 end
 
-function LR_AccountStatistics_RiChang.QUEST_FINISHED()
+function _RC.QUEST_FINISHED()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -1857,7 +1773,7 @@ function LR_AccountStatistics_RiChang.QUEST_FINISHED()
 	SAVE_QUEST(dwQuestID)
 end
 
-function LR_AccountStatistics_RiChang.QUEST_FAILED()
+function _RC.QUEST_FAILED()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -1866,7 +1782,7 @@ function LR_AccountStatistics_RiChang.QUEST_FAILED()
 	SAVE_QUEST(dwQuestID)
 end
 
-function LR_AccountStatistics_RiChang.QUEST_CANCELED()
+function _RC.QUEST_CANCELED()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -1875,24 +1791,51 @@ function LR_AccountStatistics_RiChang.QUEST_CANCELED()
 	SAVE_QUEST(dwQuestID)
 end
 
-function LR_AccountStatistics_RiChang.FIRST_LOADING_END()
-	if not (LR_AccountStatistics_RiChang.UsrData and LR_AccountStatistics_RiChang.UsrData.Version and LR_AccountStatistics_RiChang.UsrData.Version == LR_AccountStatistics_RiChang.Default.Version) then
-		LR_AccountStatistics_RiChang.ResetMenuList()
+function _RC.FIRST_LOADING_END()
+	if not (LR_AS_RC.UsrData and LR_AS_RC.UsrData.Version and LR_AS_RC.UsrData.Version == LR_AS_RC.Default.Version) then
+		_RC.ResetMenuList()
 	end
-	LR_AccountStatistics_RiChang.LoadCustomQuestList()
-	LR_AccountStatistics_RiChang.GetCustomQuestStatus()
+	_RC.LoadCustomQuestList()
+	_RC.GetCustomQuestStatus()
 
-	LR_AccountStatistics_RiChang.LoadCommomMenuList()
+	_RC.LoadCommomMenuList()
 	LR.DelayCall(300, function()
-		LR_AccountStatistics_RiChang.ResetData()
-		LR_AccountStatistics_RiChang.CheckAll()
+		_RC.ResetData()
+		_RC.CheckAll()
 	end)
 end
 
-LR.RegisterEvent("QUEST_ACCEPTED", function() LR_AccountStatistics_RiChang.QUEST_ACCEPTED() end)
-LR.RegisterEvent("QUEST_DATA_UPDATE", function() LR_AccountStatistics_RiChang.QUEST_DATA_UPDATE() end)
-LR.RegisterEvent("QUEST_FINISHED", function() LR_AccountStatistics_RiChang.QUEST_FINISHED() end)
-LR.RegisterEvent("QUEST_FAILED", function() LR_AccountStatistics_RiChang.QUEST_FAILED() end)
-LR.RegisterEvent("QUEST_CANCELED", function() LR_AccountStatistics_RiChang.QUEST_CANCELED() end)
+LR.RegisterEvent("QUEST_ACCEPTED", function() _RC.QUEST_ACCEPTED() end)
+LR.RegisterEvent("QUEST_DATA_UPDATE", function() _RC.QUEST_DATA_UPDATE() end)
+LR.RegisterEvent("QUEST_FINISHED", function() _RC.QUEST_FINISHED() end)
+LR.RegisterEvent("QUEST_FAILED", function() _RC.QUEST_FAILED() end)
+LR.RegisterEvent("QUEST_CANCELED", function() _RC.QUEST_CANCELED() end)
+LR.RegisterEvent("FIRST_LOADING_END", function() _RC.FIRST_LOADING_END() end)
 
-LR.RegisterEvent("FIRST_LOADING_END", function() LR_AccountStatistics_RiChang.FIRST_LOADING_END() end)
+------------------------------------------
+LR_AS_RC.LoadCustomQuestList = _RC.LoadCustomQuestList
+LR_AS_RC.SaveCommomMenuList = _RC.SaveCommomMenuList
+LR_AS_RC.SaveCustomQuestList = _RC.SaveCustomQuestList
+LR_AS_RC.RI_CHANG = RI_CHANG
+LR_AS_RC.RI_CHANG_NAME = RI_CHANG_NAME
+
+------------------------------------------
+function _RC.SaveData2(DB)
+	_RC.SaveData(DB)
+	_Exam.SaveData(DB)
+end
+
+function _RC.LoadData2(DB)
+	_RC.LoadAllUsrData(DB)
+	_Exam.LoadData(DB)
+end
+
+--注册模块
+LR_AS_Module.RC = {}
+LR_AS_Module.RC.SaveData = _RC.SaveData2
+LR_AS_Module.RC.LoadData = _RC.LoadData2
+LR_AS_Module.RC.ResetDataMonday = _RC.ResetDataMonday		--包含了清考试记录
+LR_AS_Module.RC.ResetDataEveryDay = _RC.ResetDataEveryDay
+LR_AS_Module.RC.AddPage = _RC.AddPage
+LR_AS_Module.RC.RefreshPage = _RC.RefreshPage
+

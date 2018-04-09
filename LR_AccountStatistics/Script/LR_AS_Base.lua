@@ -1,140 +1,126 @@
 local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
 local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
-local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
 ---------------------------------------------------------------
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
-local DB_name = "maindb.db"
-local _L  =  LR.LoadLangPack(AddonPath)
-local CustomVersion = "20170111"
------------------------------------------------------------
+local db_name = "maindb.db"
+local _L = LR.LoadLangPack(LanguagePath)
+local VERSION = "20180408"
+-------------------------------------------------------------
+local Module_List = {
+	"PlayerList", "PlayerInfo", "Group", "ItemRecord", "EquipmentRecord", "BookRd", "AchievementRecord", "FBList", "RC", "QY",
+}
+
+LR_AS_Module = {
+	--["PlayerList"] = {FIRST_LOADING_END = XX, SaveData = XX},
+}
+
 LR_AS_Base = LR_AS_Base or {}
 LR_AS_Base.default = {
 	UsrData = {
-		OthersCanSee = false,
-		nkey = "nMoney",
-		nsort = "desc",
-		AutoSave = true,
-		OpenSave = true,
-		CloseSave = true,
+		bRecord = false,
+		bAutoSave = true,
+		bExitSave = true,
+		bEscSave = true,
+		bOpenFrameSave = true,
+		bCloseFrameSave = true,
+		nKey = "nLevel",
+		nSort = "desc",
 		FloatPanel = false,
 		NotCalList = {},
+		bAutoBackup = false,
+		nAutoBackupType = 1,		--1：每周第一次上线，2：每天第一次上线
+		nUpdateDel = 0,
 	},
 }
-
 LR_AS_Base.UsrData = clone(LR_AS_Base.default.UsrData)
-RegisterCustomData("LR_AS_Base.UsrData", CustomVersion)
+RegisterCustomData("LR_AS_Base.UsrData", VERSION)
+
+LR_AS_Data = {}
+LR_AS_Data.AllPlayerList = {}
+LR_AS_Data.AllUsrFilteredList = {}
+LR_AS_Data.AllUsrSortedList = {}
+LR_AS_Data.AllPlayerInfo = {}
+LR_AS_Data.AllGroupList = {}
+LR_AS_Data.AllUsrGroup = {}
+LR_AS_Data.ExamData = {}
+
+---------------------------------
+---LoadData
+---------------------------------
+function LR_AS_Base.LoadData()
+	local _begin_time = GetTickCount()
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].LoadData then
+			LR_AS_Module[v].LoadData(DB)
+		end
+	end
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+	Log(sformat("[LR] AS load cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
+end
 
 ---------------------------------
 ---AutoSave
 ---------------------------------
-LR_AS_Base.AutoSaveList = {
-	--{szKey = "", fnAction = function() ... end, order = x,}
-}
-
-function LR_AS_Base.Add2AutoSave(list)
-	local list = list or {szKey = "none", fnAction = function() return false end, order = 9999}
-	tinsert(LR_AS_Base.AutoSaveList, {szKey = list.szKey, fnAction = list.fnAction, order = list.order})
-	tsort(LR_AS_Base.AutoSaveList, function(a, b) return a.order < b.order end)
+function LR_AS_Base.SaveData()
+	local me = GetClientPlayer()
+	if not me or IsRemotePlayer(me.dwID) then
+		return
+	end
+	--------------save
+	local _begin_time = GetTickCount()
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].SaveData then
+			LR_AS_Module[v].SaveData(DB)
+		end
+	end
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+	Log(sformat("[LR] AS save cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
 end
 
 function LR_AS_Base.AutoSave()
 	--check
-	if not LR_AS_Base.UsrData.AutoSave then
+	if not LR_AS_Base.UsrData.bAutoSave then
 		return
 	end
-	local me = GetClientPlayer()
-	if not me then
-		return
-	end
-	if IsRemotePlayer(me.dwID) then
-		return
-	end
-	--------------save
-	local _check_time = GetTickCount()
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
-	for k, v in pairs(LR_AS_Base.AutoSaveList) do
-		v.fnAction(DB)
-	end
-	---保存分组的精力体力信息
-	LR_AS_Group.UpdateMyGroupInfo(DB)
-	----人物数据（金钱、帮贡等）
-	LR_AS_Info.SaveSelfInfo(DB)
-	------保存仓库
-	LR_AccountStatistics_Bank.SaveData(DB)
-	------保存背包
-	LR_AccountStatistics_Bag.SaveData(DB)
-	------保存装备、属性、装分
-	LR_AccountStatistics_Equip.SaveData(DB)
-	-----保存副本数据
-	LR_AccountStatistics_FBList.SaveData(DB)
-	-----保存阅读数据
-	LR_AccountStatistics_BookRd.SaveData(DB)
-	----日常数据
-	LR_AccountStatistics_RiChang.SaveData(DB)
-	--保存考试
-	LR_AS_Exam.SaveData(DB)
-	----记录成就
-	LR_AccountStatistics_Achievement.SaveData(DB)
-
-	DB:Execute("END TRANSACTION")
-	DB:Release()
-
-	-----副本
-	ApplyMapSaveCopy()
-	Log(sformat("[LR] AS Auto save cost %0.3f s", (GetTickCount() - _check_time) * 1.0 / 1000))
+	LR_AS_Base.SaveData()
 end
 
 ---------------------------------
----ResetData（周一周四重置数据）
+---ResetData（周一/周五重置数据）
 ---------------------------------
-local RESET_TYPE = {
-	NONE = 0,
-	EVERY_DAY = 1,
-	MONDAY = 2,
-	THURSDAY = 3,
-}
-
-LR_AS_Base.ResetDataList = {
-	--{szKey = "", fnAction = function() ... end, order = x,},
-}
-
-function LR_AS_Base.Debug1()
-	for k, v in pairs(LR_AS_Base.ResetDataList) do
-		Output(v.szKey, v.nType)
-	end
-end
-
-
-function LR_AS_Base.Add2ResetData(list)
-	local list = list or {szKey = "none", fnAction = function() return false end, order = 9999, nType = RESET_TYPE.NONE}
-	tinsert(LR_AS_Base.ResetDataList, {szKey = list.szKey, fnAction = list.fnAction, order = list.order, nType = list.nType})
-	tsort(LR_AS_Base.ResetDataList, function(a, b) return a.order < b.order end)
-end
-
 function LR_AS_Base.ResetDataEveryDay(DB)
-	for k, v in pairs(LR_AS_Base.ResetDataList) do
-		if v.nType == RESET_TYPE.EVERY_DAY then
-			v.fnAction(DB)
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].ResetDataEveryDay then
+			LR_AS_Module[v].ResetDataEveryDay(DB)
 		end
 	end
 end
 
 function LR_AS_Base.ResetDataMonday(DB)
-	for k, v in pairs(LR_AS_Base.ResetDataList) do
-		if v.nType == RESET_TYPE.MONDAY then
-			v.fnAction(DB)
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].ResetDataMonday then
+			LR_AS_Module[v].ResetDataMonday(DB)
 		end
 	end
 end
 
 function LR_AS_Base.ResetDataThursday(DB)
-	for k, v in pairs(LR_AS_Base.ResetDataList) do
-		if v.nType == RESET_TYPE.THURSDAY then
-			v.fnAction(DB)
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].ResetDataThursday then
+			LR_AS_Module[v].ResetDataThursday(DB)
 		end
 	end
 end
@@ -167,59 +153,68 @@ function LR_AS_Base.ResetData()
 		RefreshTimeEveryDay = CurrentTime -  hour * 60 * 60 - minute* 60 - second + 7 * 60 *60
 	end
 	---周四刷新时间
-	local RefreshTimeThursday = RefreshTimeMonday
-	if (weekday > 4) or (weekday ==  4 and hour>= 7 ) then
-		day = weekday - 4
+	local RefreshTimeFriday = RefreshTimeMonday
+	if (weekday > 5) or (weekday ==  5 and hour>= 7 ) then
+		day = weekday - 5
 		if day<0 then
 			day = 0
 		end
-		RefreshTimeThursday = CurrentTime - day * 86400 - hour * 60 * 60 - minute* 60 - second + 7 * 60 *60
+		RefreshTimeFriday = CurrentTime - day * 86400 - hour * 60 * 60 - minute* 60 - second + 7 * 60 *60
 	end
 	--------
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
 	------载入时间
 	local RC_ResetTime = {
 		ClearTimeEveryDay = 0,
 		ClearTimeMonday = 0,
-		ClearTimeThursday = 0,
+		ClearTimeFriday = 0,
 	}
 	local DB_SELECT = DB:Prepare("SELECT * FROM richang_clear_time WHERE szName IS NOT NULL")
-	local Data = DB_SELECT:GetAll() or {}
-	if Data and next(Data) ~= nil then
-		for k, v in pairs(Data) do
-			if RC_ResetTime[v.szName] then
-				RC_ResetTime[v.szName] = v.nTime or 0
-			end
+	local Data = DB_SELECT:GetAll()
+	for k, v in pairs(Data) do
+		if RC_ResetTime[v.szName] then
+			RC_ResetTime[v.szName] = v.nTime or 0
 		end
 	end
-	if RefreshTimeMonday > RC_ResetTime.ClearTimeMonday or RefreshTimeThursday > RC_ResetTime.ClearTimeThursday or RefreshTimeEveryDay > RC_ResetTime.ClearTimeEveryDay then
+
+	if RefreshTimeMonday > RC_ResetTime.ClearTimeMonday or RefreshTimeFriday > RC_ResetTime.ClearTimeFriday or RefreshTimeEveryDay > RC_ResetTime.ClearTimeEveryDay then
 		if RefreshTimeMonday > RC_ResetTime.ClearTimeMonday then
 			LR_AS_Base.ResetDataMonday(DB)
 			LR_AS_Base.ResetDataThursday(DB)
 			LR_AS_Base.ResetDataEveryDay(DB)
 			----
 			RC_ResetTime.ClearTimeMonday = CurrentTime
-			RC_ResetTime.ClearTimeThursday = CurrentTime
+			RC_ResetTime.ClearTimeFriday = CurrentTime
 			RC_ResetTime.ClearTimeEveryDay = CurrentTime
 			----每周优化数据库
-			LR.DelayCall(2000, function()
+			LR.DelayCall(1000, function()
 				LR_AS_DB.MainDBVacuum(true)
+				if LR_AS_Base.UsrData.bAutoBackup and LR_AS_Base.UsrData.nAutoBackupType == 1 then
+					LR.SysMsg(_L["[LR]Auto backup data\n"])
+					LR_AS_DB.backup()
+				end
 			end)
-		elseif RefreshTimeThursday > RC_ResetTime.ClearTimeThursday then
+		elseif RefreshTimeFriday > RC_ResetTime.ClearTimeFriday then
 			LR_AS_Base.ResetDataThursday(DB)
 			LR_AS_Base.ResetDataEveryDay(DB)
 			--
-			RC_ResetTime.ClearTimeThursday = CurrentTime
+			RC_ResetTime.ClearTimeFriday = CurrentTime
 			RC_ResetTime.ClearTimeEveryDay = CurrentTime
 		elseif RefreshTimeEveryDay > RC_ResetTime.ClearTimeEveryDay then
 			LR_AS_Base.ResetDataEveryDay(DB)
 			--
 			RC_ResetTime.ClearTimeEveryDay = CurrentTime
+			LR.DelayCall(1000, function()
+				if LR_AS_Base.UsrData.bAutoBackup and LR_AS_Base.UsrData.nAutoBackupType == 2 then
+					LR.SysMsg(_L["[LR]Auto backup data\n"])
+					LR_AS_DB.backup()
+				end
+			end)
 		end
 		--记录保存时间
-		local szName = {"ClearTimeEveryDay", "ClearTimeMonday", "ClearTimeThursday"}
+		local szName = {"ClearTimeEveryDay", "ClearTimeMonday", "ClearTimeFriday"}
 		local DB_REPLACE2 = DB:Prepare("REPLACE INTO richang_clear_time (szName, nTime) VALUES ( ?, ? )")
 		for k, v in pairs (szName) do
 			DB_REPLACE2:ClearBindings()
@@ -235,39 +230,32 @@ end
 ---------------------------------
 ---FirstLoadingEnd	--主要用于需要数据库的操作
 ---------------------------------
-LR_AS_Base.FirstLoadingEndList = {
-	--{szKey = "", fnAction = function() ... end, order = x},
-}
-
-function LR_AS_Base.Add2FirstLoadingEndList(list)
-	local list = list or {szKey = "none", fnAction = function() return false end, order = 9999}
-	tinsert(LR_AS_Base.FirstLoadingEndList, {szKey = list.szKey, fnAction = list.fnAction, order = list.order, nType = list.nType})
-	tsort(LR_AS_Base.FirstLoadingEndList, function(a, b) return a.order < b.order end)
-end
-
 function LR_AS_Base.FIRST_LOADING_END()
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
+	local _begin_time = GetTickCount()
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
-	for k, v in pairs(LR_AS_Base.FirstLoadingEndList) do
-		v.fnAction(DB)
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].FIRST_LOADING_END then
+			LR_AS_Module[v].FIRST_LOADING_END(DB)
+		end
 	end
-	LR_AS_Group.LoadGroupListData(DB)
-	LR_AS_Group.LoadAllUserGroup(DB)
-	LR_AS_Info.LoadUserList(DB)
-	LR_AS_Info.LoadAllUserInformation(DB)
-
-	--装备获取及装分
-	LR_AccountStatistics_Equip.LoadSelfData(DB)
-	----获取奇遇数据
-	LR_ACS_QiYu.LoadAllUsrData(DB)
-
 	DB:Execute("END TRANSACTION")
 	DB:Release()
-	FireEvent("LR_ACS_REFRESH_FP")
+	Log(sformat("[LR] AS FIRST_LOADING_END load data cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
+	--FireEvent("LR_ACS_REFRESH_FP")
+
+	if not LR_AS_Base.UsrData.bRecord and LR_AS_Base.UsrData.nUpdateDel ~= VERSION then
+		local me = GetClientPlayer()
+		local ServerInfo = {GetUserServer()}
+		local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+		local player = {dwID = me.dwID, realArea = realArea, realServer = realServer}
+		LR_AS_Base.DelPlayer(player)
+		LR_AS_Base.UsrData.nUpdateDel = VERSION
+	end
 
 	LR_AS_Base.ResetData()
-	LR.DelayCall(15000, LR_AS_Base.AutoSave())
+	LR.DelayCall(6000, function() LR_AS_Base.AutoSave() end)
 end
 
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_AS_Base.FIRST_LOADING_END() end)
@@ -282,67 +270,27 @@ function LR_AS_Base.ON_FRAME_CREATE()
 	local frame = arg0
 	local szName = frame:GetName()
 	if szName  ==  "ExitPanel" then
-		frame:Lookup("Btn_Sure"):Enable(false)
-		LR.DelayCall(1000, function()
-			local frame = Station.Lookup("Topmost2/ExitPanel")
-			if frame then
-				frame:Lookup("Btn_Sure"):Enable(true)
-			end
-		end)
-		Log("[LR_AccountStatistics]:Exit save")
-		LR_AS_Base.AutoSave()
-		LR_ACS_QiYu.SaveData()
-		LR_Acc_Trade.MoveData2MainTable()
-		FireEvent("LR_ACS_REFRESH_FP")
-		frame:Lookup("Btn_Sure"):Enable(true)
-	elseif szName  ==  "OptionPanel" then
-		---每10秒最多触发一次
-		local _time = GetCurrentTime()
-		if _time - _auto_save_lasttime > 10 then
-			local _check_time = GetTickCount()
-			local path = sformat("%s\\%s", SaveDataPath, DB_name)
-			local DB = SQLite3_Open(path)
-			DB:Execute("BEGIN TRANSACTION")
-			LR_AS_Group.LoadAllUserGroup(DB)
-			LR_AS_Info.LoadUserList(DB)
-			LR_AS_Info.LoadAllUserInformation(DB)
-			DB:Execute("END TRANSACTION")
-			DB:Release()
-			Log(sformat("[LR] Sync user data cost %0.3f s", (GetTickCount() - _check_time) * 1.0 / 1000 ))
-			-----------邮件提醒
-			LR_AccountStatistics_Mail_Check.CheckAllMail()
-			LR_Acc_Trade.OutPutMoneyChange()
-			_auto_save_lasttime = _time
-		end
-
-		if _time - _auto_save_lasttime2 > 60 * 3 then
+		if LR_AS_Base.UsrData.bAutoSave and  LR_AS_Base.UsrData.bExitSave then
+			frame:Lookup("Btn_Sure"):Enable(false)
+			LR.DelayCall(1000, function()
+				local frame = Station.Lookup("Topmost2/ExitPanel")
+				if frame then
+					frame:Lookup("Btn_Sure"):Enable(true)
+				end
+			end)
+			Log("[LR_AccountStatistics]:Exit save")
 			LR_AS_Base.AutoSave()
-			LR_ACS_QiYu.SaveData()
-			_auto_save_lasttime2 = _time
+			frame:Lookup("Btn_Sure"):Enable(true)
 		end
-
+	elseif szName  ==  "OptionPanel" then
+		if LR_AS_Base.UsrData.bAutoSave and  LR_AS_Base.UsrData.bEscSave then
+			Log("[LR_AccountStatistics]:Esc save")
+			LR_AS_Base.AutoSave()
+		end
 		FireEvent("LR_ACS_REFRESH_FP")
-	elseif szName  ==  "BigBagPanel" then
-		----在背包界面添加一个打开人物品统计的按钮
-		LR.DelayCall(500, function()
-			LR_AccountStatistics_Bag.HookBag()
-		end)
-	elseif szName == "MailPanel" then
-		LR_Acc_Trade.OpenMailPanel()
-		-----
-		LR.DelayCall(200, function()
-			LR_AccountStatistics_Bag.HookMailPanel()
-		end)
-	elseif szName == "GuildBankPanel" then
-		LR.DelayCall(150, function() LR_GuildBank.HookGuildBank() end)
-	elseif szName ==  "AuctionPanel" then
-		LR_Acc_Trade.GetItemInBag()
-	elseif szName ==  "CharacterPanel" then
-		LR_AccountStatistics_Equip.Hack()
 	end
 end
 LR.RegisterEvent("ON_FRAME_CREATE", function() LR_AS_Base.ON_FRAME_CREATE()  end)
-
 ---------------------------------
 ---在界面上添加按钮
 ---------------------------------
@@ -358,151 +306,263 @@ end
 ---------------------------------
 ---删除数据
 ---------------------------------
-function LR_AS_Base.DelOneData (key, DB)
-	local key = key
-	local loginArea = key.loginArea
-	local loginServer = key.loginServer
-	local realArea = key.realArea or loginArea
-	local realServer = key.realServer or loginServer
-	local szName = key.szName
-	local dwID = key.dwID
-
-	------删除UserList内的数据
+function LR_AS_Base.DelPlayer(player)
+	local realArea = player.realArea
+	local realServer = player.realServer
+	local dwID = player.dwID
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-	LR_AS_Info.AllUsrList[szKey] = nil
 
-	-----删除成就数据
-	DB:Execute(sformat("DELETE FROM achievement_data WHERE szKey = '%s'", szKey))
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
 
-	-----删除背包数据
-	DB:Execute(sformat("DELETE FROM bag_item_data WHERE belong = '%s'", szKey))
-
-	-----删除仓库数据
-	DB:Execute(sformat("DELETE FROM bank_item_data WHERE belong = '%s'", szKey))
-
-	----删除阅读信息
-	DB:Execute(sformat("DELETE FROM bookrd_data WHERE szKey = '%s'", szKey))
-
-	----删除装备信息
-	DB:Execute(sformat("DELETE FROM equipment_data WHERE szKey = '%s'", szKey))
-
-	----删除考试数据
-	DB:Execute(sformat("DELETE FROM exam_data WHERE szKey = '%s'", szKey))
-
-	----删除副本数据
-	DB:Execute(sformat("DELETE FROM fb_data WHERE szKey = '%s'", szKey))
-
-	----删除邮件数据
-	DB:Execute(sformat("DELETE FROM mail_data WHERE belong = '%s'", szKey))
-	DB:Execute(sformat("DELETE FROM mail_item_data WHERE belong = '%s'", szKey))
-	DB:Execute(sformat("DELETE FROM mail_receive_time WHERE szKey = '%s'", szKey))
+	------删除用户列表数据
+	LR_AS_Data.AllPlayerList[szKey] = nil
+	DB:Execute(sformat("DELETE FROM player_list WHERE szKey = '%s'", g2d(szKey)))
 
 	----删除人物所在分组
-	DB:Execute(sformat("DELETE FROM player_group WHERE szKey = '%s'", szKey))
+	DB:Execute(sformat("DELETE FROM player_group WHERE szKey = '%s'", g2d(szKey)))
 
 	-----删除角色信息数据
-	DB:Execute(sformat("DELETE FROM player_info WHERE szKey = '%s' ", szKey))
+	DB:Execute(sformat("DELETE FROM player_info WHERE szKey = '%s' ", g2d(szKey)))
+
+	-----删除背包数据
+	DB:Execute(sformat("DELETE FROM bag_item_data WHERE belong = '%s'", g2d(szKey)))
+
+	-----删除仓库数据
+	DB:Execute(sformat("DELETE FROM bank_item_data WHERE belong = '%s'", g2d(szKey)))
+
+	----删除邮件数据
+	if true then
+		local me = GetClientPlayer()
+		local ServerInfo = {GetUserServer()}
+		local loginArea2, loginServer2, realArea2, realServer2 = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+		local szKey2 = sformat("%s_%s_%d", realArea2, realServer2, me.dwID)
+		if szKey2 ~= szKey then
+			DB:Execute(sformat("DELETE FROM mail_data WHERE belong = '%s'", g2d(szKey)))
+			DB:Execute(sformat("DELETE FROM mail_item_data WHERE belong = '%s'", g2d(szKey)))
+			DB:Execute(sformat("DELETE FROM mail_receive_time WHERE szKey = '%s'", g2d(szKey)))
+		end
+	end
+
+	-----删除成就数据
+	DB:Execute(sformat("DELETE FROM achievement_data WHERE szKey = '%s'", g2d(szKey)))
+
+	----删除阅读信息
+	DB:Execute(sformat("DELETE FROM bookrd_data WHERE szKey = '%s'", g2d(szKey)))
+
+	----删除装备信息
+	DB:Execute(sformat("DELETE FROM equipment_data WHERE szKey = '%s'", g2d(szKey)))
+
+	----删除考试数据
+	DB:Execute(sformat("DELETE FROM exam_data WHERE szKey = '%s'", g2d(szKey)))
+
+	----删除副本数据
+	DB:Execute(sformat("DELETE FROM fb_data WHERE szKey = '%s'", g2d(szKey)))
 
 	----删除角色奇遇数据
-	DB:Execute(sformat("DELETE FROM qiyu_data WHERE szKey = '%s'", szKey))
+	DB:Execute(sformat("DELETE FROM qiyu_data WHERE szKey = '%s'", g2d(szKey)))
 
 	----删除日常数据
-	DB:Execute(sformat("DELETE FROM richang_data WHERE szKey = '%s'", szKey))
+	DB:Execute(sformat("DELETE FROM richang_data WHERE szKey = '%s'", g2d(szKey)))
 
-	LR.SysMsg(_L["Delete successful!\n"])
+
+	--重建用户列表
+	LR_AS_Module.PlayerList.LoadData(DB)
+
+	DB:Execute("END TRANSACTION")
+	DB:Release()
 end
 
 ---------------------------------
 ---拆分 显示和不显示的 人物列表
 ---------------------------------
-function LR_AS_Base.SeparateUsrList()
-	local nkey = LR_AS_Base.UsrData.nkey or "nMoney"
-	local nsort = LR_AS_Base.UsrData.nsort or "desc"
-
-	LR_AS_Info.UpdateSelfInfoInAllData()
-	local AllUsrData = LR_AS_Info.AllUsrData or {}
-	local TempTable = {}
-	for k, v in pairs (AllUsrData) do
-		TempTable[#TempTable+1] = clone(v)
+function LR_AS_Base.PutOutUsrList()
+	local temp = {}
+	for k, v in pairs(LR_AS_Data.AllPlayerList) do
+		temp[#temp + 1] = clone(v)
 	end
 
-	tsort(TempTable, function(a, b)
-			if a[nkey] and b[nkey] then
-				if nsort  ==  "asc" then
-					if a[nkey]  ==  b[nkey] then
-						if  a["nLevel"]  ==  b["nLevel"] then
-							if a["dwForceID"]  ==  b["dwForceID"] then
-								if a["szName"]  ==  b["szName"] then
-									return a["dwID"] < b["dwID"]
-								else
-									return a["szName"] < b["szName"]
-								end
-							else
-								return a["dwForceID"] < b["dwForceID"]
-							end
-						else
-							return a["nLevel"] > b["nLevel"]
-						end
+	tsort(temp,function(a, b)
+		if a.nLevel == b.nLevel then
+			if a.dwForceID == b.dwForceID then
+				if a.realArea == b.realArea then
+					if a.realServer == b.realServer then
+						return a.szName < b.szName
 					else
-						return a[nkey] < b[nkey]
+						return a.realServer < b.realServer
 					end
 				else
-					if a[nkey]  ==  b[nkey] then
-						if  a["nLevel"]  ==  b["nLevel"] then
-							if a["dwForceID"]  ==  b["dwForceID"] then
-								if a["szName"]  ==  b["szName"] then
-									return a["dwID"] > b["dwID"]
-								else
-									return a["szName"] > b["szName"]
-								end
-							else
-								return a["dwForceID"] < b["dwForceID"]
-							end
-						else
-							return a["nLevel"] < b["nLevel"]
-						end
-					else
-						return a[nkey] > b[nkey]
-					end
+					return a.realArea < b.realArea
 				end
 			else
-				return true
+				return a.dwForceID < b.dwForceID
 			end
-		end)
+		else
+			return a.nLevel > b.nLevel
+		end
+	end)
+
+	return temp
+end
+
+function LR_AS_Base.SeparateUsrList()
+	local nKey = LR_AS_Base.UsrData.nKey or "nLevel"
+	local nSort = LR_AS_Base.UsrData.nSort or "desc"
+
+	if not LR_AS_Module["PlayerInfo"] then
+		LR_AS_Base.UsrData.nKey = "nLevel"
+		nKey = "nLevel"
+	end
+
+	local AllPlayerList = LR_AS_Data.AllPlayerList
+	local TempTable = {}
+	for k, v in pairs (AllPlayerList) do
+		TempTable[#TempTable+1] = clone(v)
+		if nKey ~= "nLevel" then
+			TempTable[#TempTable][nKey] = LR_AS_Data.AllPlayerInfo[v.szKey][nKey]
+		end
+	end
+
+	tsort(TempTable,function(a, b)
+		if nSort == "desc" then
+			if a[nKey] == b[nKey] then
+				if a.nLevel == b.nLevel then
+					if a.dwForceID == b.dwForceID then
+						if a.szName == b.szName then
+							return a.dwID < b.dwID
+						else
+							return a.szName < b.szName
+						end
+					else
+						return a.dwForceID < b.dwForceID
+					end
+				else
+					return a.nLevel > b.nLevel
+				end
+			else
+				return a[nKey] > b[nKey]
+			end
+		else
+			if a[nKey] == b[nKey] then
+				if a.nLevel == b.nLevel then
+					if a.dwForceID == b.dwForceID then
+						if a.szName == b.szName then
+							return a.dwID > b.dwID
+						else
+							return a.szName > b.szName
+						end
+					else
+						return a.dwForceID > b.dwForceID
+					end
+				else
+					return a.nLevel < b.nLevel
+				end
+			else
+				return a[nKey] < b[nKey]
+			end
+		end
+	end)
+
+
+--[[	tsort(TempTable, function(a, b)
+		if a[nKey] and b[nKey] then
+			if nSort  ==  "asc" then
+				if a[nKey]  ==  b[nKey] then
+					if  a["nLevel"]  ==  b["nLevel"] then
+						if a["dwForceID"]  ==  b["dwForceID"] then
+							if a["szName"]  ==  b["szName"] then
+								return a["dwID"] < b["dwID"]
+							else
+								return a["szName"] < b["szName"]
+							end
+						else
+							return a["dwForceID"] < b["dwForceID"]
+						end
+					else
+						return a["nLevel"] > b["nLevel"]
+					end
+				else
+					return a[nKey] < b[nKey]
+				end
+			else
+				if a[nKey]  ==  b[nKey] then
+					if  a["nLevel"]  ==  b["nLevel"] then
+						if a["dwForceID"]  ==  b["dwForceID"] then
+							if a["szName"]  ==  b["szName"] then
+								return a["dwID"] > b["dwID"]
+							else
+								return a["szName"] > b["szName"]
+							end
+						else
+							return a["dwForceID"] < b["dwForceID"]
+						end
+					else
+						return a["nLevel"] < b["nLevel"]
+					end
+				else
+					return a[nKey] > b[nKey]
+				end
+			end
+		else
+			return true
+		end
+	end)]]
 
 	local TempTable_NotCal = {}
 	local TempTable_Cal = {}
 
 	for i = 1, #TempTable, 1 do
-		local bShow = true
-		local GroupChose = LR_AS_Group.GroupChose
 		local realArea = TempTable[i].realArea
 		local realServer = TempTable[i].realServer
 		local dwID = TempTable[i].dwID
 		local szName = TempTable[i].szName
 		local key = sformat("%s_%s_%d", realArea, realServer, dwID)
+
 		local NotCalList = LR_AS_Base.UsrData.NotCalList or {}
-		if #GroupChose == 0 then
-			if NotCalList[key] then
-				bShow = false
-			end
-		else
-			local isExist = false
-			for j = 1, #GroupChose, 1 do
-				if LR_AS_Group.ifGroupHasUser(key, GroupChose[j]) then
+		local bCal = true
+		if NotCalList[key] then
+			bCal = false
+		end
+
+		local GroupChose = LR_AS_Group.GroupChose
+		local isExist = true
+		if next(GroupChose) ~= nil then
+			isExist = false
+			for k, v in pairs(GroupChose) do
+				if LR_AS_Group.ifGroupHasUser(key, v) then
 					isExist = true
 				end
 			end
-			if not isExist then
-				bShow = false
-			end
 		end
-		if bShow then
-			tinsert (TempTable_Cal, TempTable[i])
+
+		if LR_AS_Group.ShowDataNotInGroup then
+			if bCal and isExist then
+				tinsert(TempTable_Cal, TempTable[i])
+			else
+				tinsert(TempTable_NotCal, TempTable[i])
+			end
 		else
-			tinsert (TempTable_NotCal, TempTable[i])
+			if isExist then
+				if bCal then
+					tinsert(TempTable_Cal, TempTable[i])
+				else
+					tinsert(TempTable_NotCal, TempTable[i])
+				end
+			end
 		end
 	end
 
 	return TempTable_Cal, TempTable_NotCal
+end
+
+---------------------------------
+---打开设置界面
+---------------------------------
+function LR_AS_Base.SetOption()
+	LR_TOOLS:OpenPanel(_L["LR_AS_Global_Settings"])
+	local frame = Station.Lookup("Normal/LR_TOOLS")
+	if frame then
+		frame:BringToTop()
+	end
 end

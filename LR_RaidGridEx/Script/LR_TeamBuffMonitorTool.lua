@@ -861,7 +861,7 @@ function LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(flag, buff, m, head)
 
 	if not hBuffSearch then
 		-----±³¾°Ìõ
-		hBuffSearch = self:Append("Handle", hWin, sformat("hBuffSearch_%s", szKey), {x = 0, y = 0, w = 196, h = 40, eventid = 524596})
+		hBuffSearch = self:Append("Handle", hWin, sformat("hBuffSearch_%s", szKey), {x = 0, y = 0, w = 196, h = 40, eventid = 4194303})
 		--hBuffSearch:GetHandle():RegisterEvent(4194303)
 		local Image_Line = LR.AppendUI("Image", hBuffSearch, "Image_BuffLine"..m, {x = 0, y = 0, w = 196, h = 40})
 		Image_Line:FromUITex("ui\\Image\\button\\ShopButton.UITex",75)
@@ -930,7 +930,8 @@ function LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(flag, buff, m, head)
 			end
 		end
 
-		hBuffSearch.OnLeave = function()
+		--hBuffSearch.OnLeave = function()
+		hBuffSearch:GetHandle().OnItemMouseLeave = function()
 			-----
 			local Image_Hover = self:Fetch(sformat("Image_BuffSearchHover_%s", szKey))
 			if Image_Hover then
@@ -1130,7 +1131,7 @@ function LR_TeamBuffTool.OpenBuffBoxPanel(buff)
 	end
 
 	local nX, nY = Cursor.GetPos()
-	hFrame:SetAbsPos(nX, nY)
+	hFrame:SetAbsPos(nX + 5, nY + 5)
 	hFrame:StartMoving()
 
 	local hHandle = hFrame:Lookup("","")

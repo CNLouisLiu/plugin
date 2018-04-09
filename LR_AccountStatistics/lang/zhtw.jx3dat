@@ -450,7 +450,7 @@ data={
 	--20170711add--
 	["LR_Mail:You have not received letters for at least %d days.\n"]="懶人郵件：你至少 %d 天沒收郵件了。（信使處查看郵件後，此提示消失。）\n",
 	["LR_Mail:You have not received letters for %d days.\n"]="懶人郵件：你 %d 天沒收郵件了。（信使處查看郵件後，此提示消失。）\n",
-	["LR_Mail:Someone's mail is about to expire. Open [LR_Bag] to have a look."]="懶人郵件：有人的郵件快到期了，點擊設置界面【賬目本】-【全局設置】-【查看即將到期郵件】按鈕查看具體信息。",
+	["LR_Mail:Someone's mail is about to expire. Open [LR_Bag] to have a look."]="懶人郵件：有人的郵件快到期了，點擊設置界面【賬目本】-【物品統計】-【查看即將到期郵件】按鈕查看具體信息。",
 	[" %s->%s  overdue (%d) \t%d\n"]=" %s->%s  已到期 (%d) \t%d\n",
 	["LR_AS"]="賬目本",
 	["LR_AS_Global_Settings"]="全局設置",
@@ -467,7 +467,7 @@ data={
 	["TRADE DB Settings"]="收支記錄數據庫",
 	["TRADE DB Batch Import"]="批量導入(舊)",
 	["Are you sure to vacuum main database ?"]="你確定要優化主數據庫嗎？",
-	["VACUUM Success!"]="懶人賬目本數據庫優化成功！",
+	["VACUUM Success!"]="【懶人賬目本】數據庫優化成功！",
 	["Are you sure to backup main database ?"]="你確定要備份主數據庫嗎？",
 	["Please backup manually."]="請手動備份數據庫。",
 	["Are you sure to patch import data (database version) ?"]="你確定要根據現有的角色列表，批量導入各角色的舊版交易數據('.jx3dat')嗎?\n這個操作將花費很多時間，並占用大量磁盤資源。",
@@ -656,4 +656,40 @@ data={
 
 	["RONG_MA_BIAN"]="戎馬邊",
 	["DIALOG_RONG_MA_BIAN_01"]="再畫也不會有什麼進展了",
+
+	--20180402add--
+	["Record the current user's data."]="記錄當前用戶的數據",
+	["The relevant data has been deleted from the database.\n"]="相關數據已從數據庫中刪除。\n",
+	["Save when popup system menu.(ESC)"]="彈出系統菜單(ESC)時保存。",
+	["Save when the exit interface pops up."]="彈出退出界面時保存",
+
+	["LR_AS_PlayerInfo"]="人物信息",
+
+	["Display button on BigBagPanel."]="在背包界面顯示【物品統計】按鈕",
+	["Display button on MailPanel."]="在郵箱界面顯示【郵件統計】按鈕",
+
+	["LR_Equipment_Record"]="裝備統計",
+	["Display button on CharacterPanel."]="在人物裝備界面顯示【裝備統計】按鈕",
+	["Save data when change equipment."]="裝備變化時保存數據",
+
+	["LR_Achievement_Record"]="成就統計",
+
+	["%s(%d)"]="%s（%d）",
+	["Achievement done"]="成就已有",
+
+	["Show money change when esc"]="ESC時顯示金錢變動信息",
+
+	["BTN_Sort"]="整理",
+	["backup path: %s\\\n"]="備份路徑：%s\\\n",
+	["backup dataname: %s\n"]="備份名字：%s\n",
+	["backup cost %ss\n"]="備份用時：%s秒\n",
+
+	["Are you sure to backup database ?"]="確定要備份數據庫？",
+	["Auto backup data"]="自動備份數據庫",
+	["Backup frequency"]="備份頻率",
+	["First launch every week"]="每周第一次上線",
+	["First launch every day"]="每天第一次上線",
+	["[LR]Auto backup data\n"]="【懶人賬目本】自動備份數據\n",
+
+
 }

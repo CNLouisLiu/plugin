@@ -1,15 +1,22 @@
-local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
+local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
+local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
+---------------------------------------------------------------
+local AddonPath = "Interface\\LR_Plugin\\LR_AS_Module_CashFlowRecord"
+local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
-local _L = LR.LoadLangPack(AddonPath)
+local db_name = "maindb.db"
+local _L = LR.LoadLangPack(LanguagePath)
+local VERSION = "20180403"
+---------------------------------------------
 local _log_time = 0		--防刷屏设置
 local _log_flag = 0		--防刷屏设置
 local _save_time = 0
 local _save_flag = false
-local sformat, slen, sgsub, ssub, sfind, slower = string.format, string.len, string.gsub, string.sub, string.find, string.lower
-local mfloor, mceil, mmin, mmax = math.floor, math.ceil, math.min, math.max
-local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remove, table.sort
 -------------------------------------------------------------
-LR_Acc_Trade = LR_Acc_Trade or {
+LR_AS_Trade = LR_AS_Trade or {
 	Trade_LIst = {},
 	Login_Time = 0,
 	Login_Money = 0,
@@ -23,6 +30,10 @@ LR_Acc_Trade = LR_Acc_Trade or {
 	Mail_Flag = false,
 	Mail_TarID = 0,
 }
+LR_AS_Trade.UsrData = {
+	ShowMoneyChangeLog = true,
+}
+RegisterCustomData("LR_AS_Trade.UsrData", VERSION)
 
 local _Event_Trace = {}
 local _Doodad_item = {}
@@ -533,7 +544,7 @@ end
 ------保存
 ----------------------------------------------------------------
 local _SaveTempDataTime = 0
-function LR_Acc_Trade.SaveTempData(bSaveImmediately)
+function LR_AS_Trade.SaveTempData(bSaveImmediately)
 	local _time = GetCurrentTime()
 	----每5分钟缓存一次
 	if _time - _SaveTempDataTime < 60 * 5 and not bSaveImmediately then
@@ -552,13 +563,13 @@ function LR_Acc_Trade.SaveTempData(bSaveImmediately)
 	local path = sformat("%s\\TradeData\\%s\\%s\\%s\\TradeDB.db", SaveDataPath, realArea, realServer, szName)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
-	LR_Acc_Trade.SaveTempData2(DB)
+	LR_AS_Trade.SaveTempData2(DB)
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 	_SaveTempDataTime = GetCurrentTime()
 end
 
-function LR_Acc_Trade.SaveTempData2(DB)
+function LR_AS_Trade.SaveTempData2(DB)
 	local data = clone(_2bSave)
 	_2bSave = {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO trade_data_temp ( szKey, nTime, OrderTime, nMoney, nItem_in, nItem_out, dwMapID, nType, Distributor, Source, tDate, nDate, bDel ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
@@ -574,13 +585,13 @@ function LR_Acc_Trade.SaveTempData2(DB)
 			local nMoney = {nGoldBrick = nGoldBrick, nGold = nGold, nSilver = nSilver, nCopper = nCopper}
 			DB_REPLACE:ClearBindings()
 			--Output(szKey, v2.nTime, v2.OrderTime, LR.JsonEncode(nMoney), LR.JsonEncode(v2.nItem_in or {}), LR.JsonEncode(v2.nItem_out or {}), v2.dwMapID, v2.nType, LR.JsonEncode(v2.Distributor or {}), LR.JsonEncode(v2.Source or {}), LR.JsonEncode(v2.tDate or {}), nDate, 0)
-			DB_REPLACE:BindAll(szKey, v2.nTime, v2.OrderTime, LR.JsonEncode(nMoney), LR.JsonEncode(v2.nItem_in or {}), LR.JsonEncode(v2.nItem_out or {}), v2.dwMapID, v2.nType, LR.JsonEncode(v2.Distributor or {}), LR.JsonEncode(v2.Source or {}), LR.JsonEncode(v2.tDate or {}), nDate)
+			DB_REPLACE:BindAll(unpack(g2d({szKey, v2.nTime, v2.OrderTime, LR.JsonEncode(nMoney), LR.JsonEncode(v2.nItem_in or {}), LR.JsonEncode(v2.nItem_out or {}), v2.dwMapID, v2.nType, LR.JsonEncode(v2.Distributor or {}), LR.JsonEncode(v2.Source or {}), LR.JsonEncode(v2.tDate or {}), nDate})))
 			DB_REPLACE:Execute()
 		end
 	end
 end
 
-function LR_Acc_Trade.MoveData2MainTable()
+function LR_AS_Trade.MoveData2MainTable()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -594,7 +605,7 @@ function LR_Acc_Trade.MoveData2MainTable()
 	local path = sformat("%s\\TradeData\\%s\\%s\\%s\\TradeDB.db", SaveDataPath, realArea, realServer, szName)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
-	LR_Acc_Trade.SaveTempData2(DB)
+	LR_AS_Trade.SaveTempData2(DB)
 	LR_AS_DB.MoveTradeDB(DB)
 	DB:Execute("DROP TABLE trade_data_temp")
 	DB:Execute("END TRANSACTION")
@@ -602,7 +613,7 @@ function LR_Acc_Trade.MoveData2MainTable()
 	LR_AS_DB.IniTradeDB()
 end
 
-function LR_Acc_Trade.VacuumData()
+function LR_AS_Trade.VacuumData()
 	local vacuum = function()
 		local me = GetClientPlayer()
 		if not me then
@@ -636,7 +647,7 @@ function LR_Acc_Trade.VacuumData()
 	MessageBox(msg)
 end
 
-function LR_Acc_Trade.LoadData(nType, nPage)
+function LR_AS_Trade.LoadData(nType, nPage)
 	local nPage = nPage or 0
 	local me = GetClientPlayer()
 	if not me then
@@ -685,7 +696,7 @@ function LR_Acc_Trade.LoadData(nType, nPage)
 		SQL2 = sformat("SELECT COUNT(*) AS COUNT FROM trade_data WHERE bDel = 0 AND szKey IS NOT NULL AND nDate > date('now', 'localtime', '-%d day')", weekday)
 	end
 	local DB_SELECT2 = DB:Prepare(SQL2)
-	local data2 = DB_SELECT2:GetAll()
+	local data2 = d2g(DB_SELECT2:GetAll())
 	nPage = mmax(nPage, 1)
 	LR_Acc_Trade_Panel.nCount = data2[1].COUNT
 	LR_Acc_Trade_Panel.nTotalPage = mfloor((LR_Acc_Trade_Panel.nCount - 1)/100) + 1
@@ -696,18 +707,18 @@ function LR_Acc_Trade.LoadData(nType, nPage)
 	local DB_SELECT, data
 	if LR_Acc_Trade_Panel.notByPage then
 		DB_SELECT = DB:Prepare(SQL3)
-		data = DB_SELECT:GetAll()
+		data = d2g(DB_SELECT:GetAll())
 	else
 		DB_SELECT = DB:Prepare(SQL)
 		DB_SELECT:ClearBindings()
 		DB_SELECT:BindAll((nPage - 1) * 100)
-		data = DB_SELECT:GetAll()
+		data = d2g(DB_SELECT:GetAll())
 	end
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 
-	local Trade_LIst = LR_Acc_Trade.Trade_LIst
-	local index = LR_Acc_Trade.index
+	local Trade_LIst = LR_AS_Trade.Trade_LIst
+	local index = LR_AS_Trade.index
 	_History = {}
 	_Today = {}
 	_This_Week = {}
@@ -742,7 +753,7 @@ function LR_Acc_Trade.LoadData(nType, nPage)
 
 end
 
-function LR_Acc_Trade.Convert2_1d1(data)
+function LR_AS_Trade.Convert2_1d1(data)
 	local me = GetClientPlayer()
 	if not me then
 		return {}
@@ -762,19 +773,19 @@ function LR_Acc_Trade.Convert2_1d1(data)
 	return t
 end
 
-function LR_Acc_Trade.ImportOldData()
+function LR_AS_Trade.ImportOldData()
 	local me = GetClientPlayer()
 	local serverInfo = {GetUserServer()}
 	local realArea, realServer = serverInfo[5], serverInfo[6]
 	local szName = me.szName
-	if LR_Acc_Trade.ImportOldData2(realArea, realServer, szName) then
+	if LR_AS_Trade.ImportOldData2(realArea, realServer, szName) then
 		LR.SysMsg(sformat("%s\n", _L["Import success"]))
 		LR.GreenAlert(sformat("%s\n", _L["Import success"]))
 	end
 end
 
 
-function LR_Acc_Trade.ImportOldData2(realArea, realServer, szName)
+function LR_AS_Trade.ImportOldData2(realArea, realServer, szName)
 	local me = GetClientPlayer()
 	if IsRemotePlayer(me.dwID) then
 		LR.SysMsg(sformat("%s\n", _L["Can not import data in current status."]))
@@ -804,7 +815,7 @@ function LR_Acc_Trade.ImportOldData2(realArea, realServer, szName)
 				local nMoney = {nGoldBrick = nGoldBrick, nGold = nGold, nSilver = nSilver, nCopper = nCopper}
 				DB_REPLACE:ClearBindings()
 				--Output(szKey, v2.nTime, v2.OrderTime, LR.JsonEncode(nMoney), LR.JsonEncode(v2.nItem_in or {}), LR.JsonEncode(v2.nItem_out or {}), v2.dwMapID, v2.nType, LR.JsonEncode(v2.Distributor or {}), LR.JsonEncode(v2.Source or {}), LR.JsonEncode(v2.tDate or {}), nDate, 0)
-				DB_REPLACE:BindAll(szKey, v.nTime, v.OrderTime, LR.JsonEncode(nMoney), LR.JsonEncode(v.nItem_in or {}), LR.JsonEncode(v.nItem_out or {}), v.dwMapID, v.nType, LR.JsonEncode(v.Distributor or {}), LR.JsonEncode(v.Source or {}), LR.JsonEncode(tDate), nDate)
+				DB_REPLACE:BindAll(unpack(g2d({szKey, v.nTime, v.OrderTime, LR.JsonEncode(nMoney), LR.JsonEncode(v.nItem_in or {}), LR.JsonEncode(v.nItem_out or {}), v.dwMapID, v.nType, LR.JsonEncode(v.Distributor or {}), LR.JsonEncode(v.Source or {}), LR.JsonEncode(tDate), nDate})))
 				DB_REPLACE:Execute()
 			end
 		end
@@ -826,7 +837,7 @@ function LR_Acc_Trade.ImportOldData2(realArea, realServer, szName)
 						local nMoney = {nGoldBrick = nGoldBrick, nGold = nGold, nSilver = nSilver, nCopper = nCopper}
 						DB_REPLACE:ClearBindings()
 						--Output(szKey, v2.nTime, v2.OrderTime, LR.JsonEncode(nMoney), LR.JsonEncode(v2.nItem_in or {}), LR.JsonEncode(v2.nItem_out or {}), v2.dwMapID, v2.nType, LR.JsonEncode(v2.Distributor or {}), LR.JsonEncode(v2.Source or {}), LR.JsonEncode(v2.tDate or {}), nDate, 0)
-						DB_REPLACE:BindAll(szKey, v.nTime, v.OrderTime, LR.JsonEncode(nMoney), LR.JsonEncode(v.nItem_in or {}), LR.JsonEncode(v.nItem_out or {}), v.dwMapID, v.nType, LR.JsonEncode(v.Distributor or {}), LR.JsonEncode(v.Source or {}), LR.JsonEncode(v.tDate or {}), nDate)
+						DB_REPLACE:BindAll(unpack(g2d({szKey, v.nTime, v.OrderTime, LR.JsonEncode(nMoney), LR.JsonEncode(v.nItem_in or {}), LR.JsonEncode(v.nItem_out or {}), v.dwMapID, v.nType, LR.JsonEncode(v.Distributor or {}), LR.JsonEncode(v.Source or {}), LR.JsonEncode(v.tDate or {}), nDate})))
 						DB_REPLACE:Execute()
 					end
 				end
@@ -838,7 +849,7 @@ function LR_Acc_Trade.ImportOldData2(realArea, realServer, szName)
 	return true
 end
 
-function LR_Acc_Trade.BatchImportOldData()
+function LR_AS_Trade.BatchImportOldData()
 	local batch_import = function ()
 		local t = GetTickCount()
 		local AllUsrList = clone(LR_AS_Info.AllUsrList)
@@ -846,7 +857,7 @@ function LR_Acc_Trade.BatchImportOldData()
 			local realArea = v.realArea
 			local realServer = v.realServer
 			local szName = v.szName
-			LR_Acc_Trade.ImportOldData2(realArea, realServer, szName)
+			LR_AS_Trade.ImportOldData2(realArea, realServer, szName)
 		end
 		local cost = ( GetTickCount() - t ) * 1.0 / 1000
 		LR.SysMsg(sformat(_L["Cost %0.3f s.\n"], cost))
@@ -864,7 +875,7 @@ function LR_Acc_Trade.BatchImportOldData()
 end
 
 
-function LR_Acc_Trade.ImportNewVersionData()
+function LR_AS_Trade.ImportNewVersionData()
 	local me = GetClientPlayer()
 	if IsRemotePlayer(me.dwID) then
 		LR.SysMsg(sformat("%s\n", _L["Can not import data in current status."]))
@@ -879,7 +890,7 @@ function LR_Acc_Trade.ImportNewVersionData()
 		local DB = SQLite3_Open(path)
 		DB:Execute("BEGIN TRANSACTION")
 		DB_SELECT = DB:Prepare("SELECT * FROM trade_data WHERE bDel = 0 AND szKey IS NOT NULL")
-		local Data = DB_SELECT:GetAll() or {}
+		local Data = d2g(DB_SELECT:GetAll())
 		DB:Execute("END TRANSACTION")
 		DB:Release()
 
@@ -893,7 +904,7 @@ function LR_Acc_Trade.ImportNewVersionData()
 		local DB_REPLACE = DB2:Prepare("REPLACE INTO trade_data ( szKey, nTime, OrderTime, nMoney, nItem_in, nItem_out, dwMapID, nType, Distributor, Source, tDate, nDate, bDel ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
 		for k, v in pairs (Data) do
 			DB_REPLACE:ClearBindings()
-			DB_REPLACE:BindAll(v.szKey, v.nTime, v.OrderTime, v.nMoney, v.nItem_in, v.nItem_out, v.dwMapID, v.nType, v.Distributor, v.Source, v.tDate, v.nDate)
+			DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nTime, v.OrderTime, v.nMoney, v.nItem_in, v.nItem_out, v.dwMapID, v.nType, v.Distributor, v.Source, v.tDate, v.nDate})))
 			DB_REPLACE:Execute()
 		end
 		DB2:Execute("END TRANSACTION")
@@ -928,7 +939,7 @@ function LR_Acc_Trade.ImportNewVersionData()
 			DB:Release()
 			return
 		end
-		local data = DB_SELECT:GetAll() or {}
+		local data = d2g(DB_SELECT:GetAll())
 		DB:Release()
 		if next(data) == nil then
 			LR.SysMsg(sformat("%s\n", _L["File open error."]))
@@ -970,7 +981,7 @@ end
 ----------------------------------------------------------------
 ------事件处理
 ----------------------------------------------------------------
-function LR_Acc_Trade.GetTargetInfo()
+function LR_AS_Trade.GetTargetInfo()
 	local info = {
 		szName = "",
 		szTitle = "",
@@ -1001,8 +1012,8 @@ function LR_Acc_Trade.GetTargetInfo()
 	return info
 end
 
-function LR_Acc_Trade.OpenShop()
-	local Shop = LR_Acc_Trade.Shop
+function LR_AS_Trade.OpenShop()
+	local Shop = LR_AS_Trade.Shop
 	Shop.dwShopID = arg0
 	Shop.nShopType = arg1
 	Shop.dwValidPage = arg2
@@ -1010,10 +1021,10 @@ function LR_Acc_Trade.OpenShop()
 	Shop.dwNpcID = arg4
 end
 
-function LR_Acc_Trade.BAG_ITEM_UPDATE()
+function LR_AS_Trade.BAG_ITEM_UPDATE()
 	local dwBoxIndex = arg0
 	local dwX = arg1
-	if LR_Acc_Trade.Mail_Flag then
+	if LR_AS_Trade.Mail_Flag then
 		return
 	end
 	local me = GetClientPlayer()
@@ -1050,7 +1061,7 @@ function LR_Acc_Trade.BAG_ITEM_UPDATE()
 	local AuctionPanel = Station.Lookup("Normal/AuctionPanel")
 	if AuctionPanel then
 		if _Event_Trace[#_Event_Trace].szName ==  "BAG_ITEM_UPDATE_HAVE" then
-			LR_Acc_Trade.GetItemInBag()
+			LR_AS_Trade.GetItemInBag()
 		end
 		_Event_Trace[#_Event_Trace].dwBoxIndex = dwBoxIndex
 		_Event_Trace[#_Event_Trace].dwX = dwX
@@ -1069,7 +1080,7 @@ function LR_Acc_Trade.BAG_ITEM_UPDATE()
 					Temp_Record:SetType(TRADE.H_RETURN)
 				end
 
-				local Shop = LR_Acc_Trade.Shop
+				local Shop = LR_AS_Trade.Shop
 				local dwNpcID = Shop.dwNpcID
 				local npc = GetNpc(dwNpcID)
 				if npc then
@@ -1081,7 +1092,7 @@ function LR_Acc_Trade.BAG_ITEM_UPDATE()
 					Temp_Record:SetSource(Source)
 				end
 
-				LR_Acc_Trade.AddRecord(Temp_Record)
+				LR_AS_Trade.AddRecord(Temp_Record)
 				if Temp_Record:GetType() ==  TRADE.RETURN then
 					_Event_Trace[#_Event_Trace+1] = {szName = "SOLD_ITEM_UPDATE_NONE"}
 				elseif Temp_Record:GetType() ==  TRADE.H_RETURN then
@@ -1093,7 +1104,7 @@ function LR_Acc_Trade.BAG_ITEM_UPDATE()
 	end
 end
 
-function LR_Acc_Trade.SOLD_ITEM_UPDATE()
+function LR_AS_Trade.SOLD_ITEM_UPDATE()
 	local dwBoxIndex = arg0
 	local dwX = arg1
 	local me = GetClientPlayer()
@@ -1130,7 +1141,7 @@ function LR_Acc_Trade.SOLD_ITEM_UPDATE()
 	end
 end
 
-function LR_Acc_Trade.TIME_LIMIT_SOLD_ITEM_UPDATE()
+function LR_AS_Trade.TIME_LIMIT_SOLD_ITEM_UPDATE()
 	local dwBoxIndex = arg0
 	local dwX = arg1
 	local me = GetClientPlayer()
@@ -1167,7 +1178,7 @@ function LR_Acc_Trade.TIME_LIMIT_SOLD_ITEM_UPDATE()
 	end
 end
 
-function LR_Acc_Trade.DESTROY_ITEM()
+function LR_AS_Trade.DESTROY_ITEM()
 	local dwBoxIndex = arg0
 	local dwX = arg1
 	local nVersion = arg2
@@ -1192,8 +1203,8 @@ function LR_Acc_Trade.DESTROY_ITEM()
 			_Event.Obj:SetTime():SetOrderTime():SetMapID()
 
 			local key = sformat("%d_%d", dwBoxIndex, dwX)
-			if LR_Acc_Trade.Tradeing_Bag[key] then
-				local _item = LR_Acc_Trade.Tradeing_Bag[key]
+			if LR_AS_Trade.Tradeing_Bag[key] then
+				local _item = LR_AS_Trade.Tradeing_Bag[key]
 				_Event.Obj:AddItem_out({{nVersion = _item.nVersion, dwTabType = _item.dwTabType, dwIndex = _item.dwIndex, nStackNum = _item.nStackNum, nBookID = _item.nBookID}})
 			end
 
@@ -1202,8 +1213,8 @@ function LR_Acc_Trade.DESTROY_ITEM()
 	end
 end
 
-function LR_Acc_Trade.MONEY_UPDATE()
-	if LR_Acc_Trade.Mail_Flag then
+function LR_AS_Trade.MONEY_UPDATE()
+	if LR_AS_Trade.Mail_Flag then
 		return
 	end
 	local nGold = arg0
@@ -1245,7 +1256,7 @@ function LR_Acc_Trade.MONEY_UPDATE()
 					Temp_Record:SetType(TRADE.H_RETURN)
 				end
 
-				local Shop = LR_Acc_Trade.Shop
+				local Shop = LR_AS_Trade.Shop
 				local dwNpcID = Shop.dwNpcID
 				local npc = GetNpc(dwNpcID)
 				if npc then
@@ -1257,7 +1268,7 @@ function LR_Acc_Trade.MONEY_UPDATE()
 					Temp_Record:SetSource(Source)
 				end
 
-				LR_Acc_Trade.AddRecord(Temp_Record)
+				LR_AS_Trade.AddRecord(Temp_Record)
 			end
 		elseif #_Event_Trace>= 2 then
 			if nMoney2 > 0 then
@@ -1279,20 +1290,20 @@ function LR_Acc_Trade.MONEY_UPDATE()
 							end
 						end
 
-						LR_Acc_Trade.AddRecord(Temp_Record)
+						LR_AS_Trade.AddRecord(Temp_Record)
 					end
 				end
 			end
 		end
 		if nMoney2 >0 and _GoldTeam.bOn then
-			LR.DelayCall(100, function() LR_Acc_Trade.CheckGoldTeam(_Event.Obj) end)
+			LR.DelayCall(100, function() LR_AS_Trade.CheckGoldTeam(_Event.Obj) end)
 		end
 	end
 end
 
-function LR_Acc_Trade.TRADING_OPEN_NOTIFY()
+function LR_AS_Trade.TRADING_OPEN_NOTIFY()
 	local dwID = arg0
-	LR_Acc_Trade.Tradeing_TarID = dwID
+	LR_AS_Trade.Tradeing_TarID = dwID
 
 	Dbug.Debug("TRADING_OPEN_NOTIFY")
 	local _Event = {}
@@ -1301,7 +1312,7 @@ function LR_Acc_Trade.TRADING_OPEN_NOTIFY()
 	_Event_Trace[#_Event_Trace+1] = _Event
 end
 
-function LR_Acc_Trade.TRADING_UPDATE_ITEM()
+function LR_AS_Trade.TRADING_UPDATE_ITEM()
 	local dwCharacterID = arg0
 	local dwBoxIndex = arg1
 	local dX = arg2
@@ -1326,27 +1337,27 @@ function LR_Acc_Trade.TRADING_UPDATE_ITEM()
 		if item.nGenre ==  ITEM_GENRE.BOOK then
 			nBookID = item.nBookID
 		end
-		LR_Acc_Trade.Tradeing_Bag[sformat("%d_%d", dwBoxIndex, dX)] = {nVersion = item.nVersion, dwTabType = item.dwTabType, dwIndex = item.dwIndex, nStackNum = nStackNum, nBookID = nBookID}
+		LR_AS_Trade.Tradeing_Bag[sformat("%d_%d", dwBoxIndex, dX)] = {nVersion = item.nVersion, dwTabType = item.dwTabType, dwIndex = item.dwIndex, nStackNum = nStackNum, nBookID = nBookID}
 	end
 end
 
-function LR_Acc_Trade.TRADING_UPDATE_CONFIRM()
+function LR_AS_Trade.TRADING_UPDATE_CONFIRM()
 	Dbug.Debug("TRADING_UPDATE_CONFIRM")
 	local _Event = {}
 	_Event.szName = "TRADING_UPDATE_CONFIRM"
 	_Event_Trace[#_Event_Trace+1] = _Event
 
-	LR_Acc_Trade.Tradeing_Flag = LR_Acc_Trade.Tradeing_Flag+1
+	LR_AS_Trade.Tradeing_Flag = LR_AS_Trade.Tradeing_Flag+1
 end
 
-function LR_Acc_Trade.TRADING_CLOSE()
+function LR_AS_Trade.TRADING_CLOSE()
 	Dbug.Debug("TRADING_CLOSE")
 	local _Event = {}
 	_Event.szName = "TRADING_CLOSE"
 	_Event_Trace[#_Event_Trace+1] = _Event
 end
 
-function LR_Acc_Trade.SYS_MSG()
+function LR_AS_Trade.SYS_MSG()
 	if not (arg0 == "UI_OME_SHOP_RESPOND" or arg0 == "UI_OME_TRADING_RESPOND" or arg0 == "UI_OME_LOOT_RESPOND") then
 		return
 	end
@@ -1420,7 +1431,7 @@ function LR_Acc_Trade.SYS_MSG()
 				Temp_Record:AddItem_out(Obj_item_out:GetItem_out())
 				Temp_Record:SetType(TRADE.SHOP_SELL)
 
-				local Shop = LR_Acc_Trade.Shop
+				local Shop = LR_AS_Trade.Shop
 				local dwNpcID = Shop.dwNpcID
 				local npc = GetNpc(dwNpcID)
 				if npc then
@@ -1432,7 +1443,7 @@ function LR_Acc_Trade.SYS_MSG()
 					Temp_Record:SetSource(Source)
 				end
 
-				LR_Acc_Trade.AddRecord(Temp_Record)
+				LR_AS_Trade.AddRecord(Temp_Record)
 			end
 		elseif _Event_Trace[#_Event_Trace].szName == "UI_OME_SHOP_RESPOND_2" then	--购买物品成功
 			local bAdd = false
@@ -1479,7 +1490,7 @@ function LR_Acc_Trade.SYS_MSG()
 				end
 				Temp_Record:AddItem_in(Obj_item_in:GetItem_in())
 				Temp_Record:SetType(TRADE.SHOP_BUY)
-				local Shop = LR_Acc_Trade.Shop
+				local Shop = LR_AS_Trade.Shop
 				local dwNpcID = Shop.dwNpcID
 				local npc = GetNpc(dwNpcID)
 				if npc then
@@ -1490,7 +1501,7 @@ function LR_Acc_Trade.SYS_MSG()
 					local Source = {dwID = dwID, szName = szName, szTitle = LR.Trim(npc.szTitle), nType = TARGET.NPC, nCamp = nil, dwForceID = nil, }
 					Temp_Record:SetSource(Source)
 				end
-				LR_Acc_Trade.AddRecord(Temp_Record)
+				LR_AS_Trade.AddRecord(Temp_Record)
 			end
 		elseif _Event_Trace[#_Event_Trace].szName == "UI_OME_SHOP_RESPOND_3" then	-----修理成功
 			if #_Event_Trace>= 2 then
@@ -1500,7 +1511,7 @@ function LR_Acc_Trade.SYS_MSG()
 					Temp_Record:SetTime():SetOrderTime():SetMapID()
 					Temp_Record:AddMoney(Obj_money:GetMoney())
 					Temp_Record:SetType(TRADE.REPAIR)
-					local Shop = LR_Acc_Trade.Shop
+					local Shop = LR_AS_Trade.Shop
 					local dwNpcID = Shop.dwNpcID
 					local npc = GetNpc(dwNpcID)
 					if npc then
@@ -1511,7 +1522,7 @@ function LR_Acc_Trade.SYS_MSG()
 						local Source = {dwID = dwID, szName = szName, szTitle = LR.Trim(npc.szTitle), nType = TARGET.NPC, nCamp = nil, dwForceID = nil, }
 						Temp_Record:SetSource(Source)
 					end
-					LR_Acc_Trade.AddRecord(Temp_Record)
+					LR_AS_Trade.AddRecord(Temp_Record)
 				end
 			end
 		elseif _Event_Trace[#_Event_Trace].szName == "UI_OME_SHOP_RESPOND_5" then	----退货成功
@@ -1550,7 +1561,7 @@ function LR_Acc_Trade.SYS_MSG()
 					Temp_Record:AddItem_in(Obj_item_in:GetItem_in())
 				end
 				Temp_Record:SetType(TRADE.SHOP_RETURN)
-				local Shop = LR_Acc_Trade.Shop
+				local Shop = LR_AS_Trade.Shop
 				local dwNpcID = Shop.dwNpcID
 				local npc = GetNpc(dwNpcID)
 				if npc then
@@ -1561,7 +1572,7 @@ function LR_Acc_Trade.SYS_MSG()
 					local Source = {dwID = dwID, szName = szName, szTitle = LR.Trim(npc.szTitle), nType = TARGET.NPC, nCamp = nil, dwForceID = nil, }
 					Temp_Record:SetSource(Source)
 				end
-				LR_Acc_Trade.AddRecord(Temp_Record)
+				LR_AS_Trade.AddRecord(Temp_Record)
 			end
 		elseif _Event_Trace[#_Event_Trace].szName == "UI_OME_TRADING_RESPOND_1" then	----交易成功
 			local Temp_Record = _Trade:new()
@@ -1584,25 +1595,25 @@ function LR_Acc_Trade.SYS_MSG()
 			end
 			Temp_Record:SetType(TRADE.TRADE)
 
-			local player = GetPlayer(LR_Acc_Trade.Tradeing_TarID)
+			local player = GetPlayer(LR_AS_Trade.Tradeing_TarID)
 			if player then
 				local Source = {dwID = player.dwID, szName = LR.Trim(player.szName), szTitle = LR.Trim(player.szTitle), nType = TARGET.PLAYER, nCamp = player.nCamp, dwForceID = player.dwForceID, }
 				Temp_Record:SetSource(Source)
 			end
 
-			LR_Acc_Trade.AddRecord(Temp_Record)
+			LR_AS_Trade.AddRecord(Temp_Record)
 
-			LR_Acc_Trade.Tradeing_Flag = 0
+			LR_AS_Trade.Tradeing_Flag = 0
 		end
 	end
 end
 
-function LR_Acc_Trade.LOOT_ITEM()
+function LR_AS_Trade.LOOT_ITEM()
 	local dwPlayerID = arg0
 	local dwItemID = arg1
 	local dwCount = arg2
 
-	if LR_Acc_Trade.Mail_Flag then
+	if LR_AS_Trade.Mail_Flag then
 		return
 	end
 
@@ -1637,7 +1648,7 @@ function LR_Acc_Trade.LOOT_ITEM()
 	_Event_Trace[#_Event_Trace+1] = _Event
 
 	if _Event_Trace[#_Event_Trace].szName == "LOOT_ITEM" then
-		if LR_Acc_Trade.Tradeing_Flag ==  2 then
+		if LR_AS_Trade.Tradeing_Flag ==  2 then
 			return
 		end
 		local frame = Station.Lookup("Normal/ShopPanel")
@@ -1659,14 +1670,14 @@ function LR_Acc_Trade.LOOT_ITEM()
 							_items[#_items] = nil
 						end
 					end
-					LR_Acc_Trade.AddRecord(Temp_Record)
+					LR_AS_Trade.AddRecord(Temp_Record)
 				end
 			end
 		end
 	end
 end
 
-function LR_Acc_Trade.OPEN_DOODAD()
+function LR_AS_Trade.OPEN_DOODAD()
 	local dwDoodadID = arg0
 	local dwPlayerID = arg1
 
@@ -1720,7 +1731,7 @@ function LR_Acc_Trade.OPEN_DOODAD()
 	_Event_Trace[#_Event_Trace+1] = _Event
 end
 
-function LR_Acc_Trade.SYNC_LOOT_LIST()
+function LR_AS_Trade.SYNC_LOOT_LIST()
 	local dwDoodadID = arg0
 	local me = GetClientPlayer()
 	if not me then
@@ -1782,13 +1793,13 @@ function LR_Acc_Trade.SYNC_LOOT_LIST()
 				Temp_Record:AddMoney(Obj_money:GetMoney())
 				Temp_Record:SetSource(Obj_Souce:GetSource())
 				Temp_Record:SetType(TRADE.LOOT_MONEY)
-				LR_Acc_Trade.AddRecord(Temp_Record)
+				LR_AS_Trade.AddRecord(Temp_Record)
 			end
 		end
 	end
 end
 
-function LR_Acc_Trade.ON_BG_CHANNEL_MSG()
+function LR_AS_Trade.ON_BG_CHANNEL_MSG()
 	local szKey = arg0
 	local nChannel = arg1
 	local dwTalkerID = arg2
@@ -1830,11 +1841,11 @@ function LR_Acc_Trade.ON_BG_CHANNEL_MSG()
 			end
 		end
 		Temp_Record:SetType(TRADE.GKP)
-		LR_Acc_Trade.AddRecord(Temp_Record)
+		LR_AS_Trade.AddRecord(Temp_Record)
 	end
 end
 
-function LR_Acc_Trade.AUCTION_MESSAGE_NOTIFY()
+function LR_AS_Trade.AUCTION_MESSAGE_NOTIFY()
 	local code = arg0
 	local szName = LR.Trim(arg1)
 	local nGold = arg2
@@ -1861,7 +1872,7 @@ function LR_Acc_Trade.AUCTION_MESSAGE_NOTIFY()
 		Temp_Record:AddMoney(Obj_money:GetMoney())
 		Temp_Record:AddItem_in(Obj_item_in:GetItem_out())
 		Temp_Record:SetType(TRADE.AUCTION_BUY)
-		LR_Acc_Trade.AddRecord(Temp_Record)
+		LR_AS_Trade.AddRecord(Temp_Record)
 	elseif code == 3 then	----寄卖成功
 		local Obj_item_out = _Event_Trace[#_Event_Trace].Obj
 		local Obj_money = _Event_Trace[#_Event_Trace].Obj
@@ -1870,11 +1881,11 @@ function LR_Acc_Trade.AUCTION_MESSAGE_NOTIFY()
 		Temp_Record:AddMoney(Obj_money:GetMoney())
 		Temp_Record:AddItem_out(Obj_item_out:GetItem_out())
 		Temp_Record:SetType(TRADE.AUCTION_SUCCESS)
-		LR_Acc_Trade.AddRecord(Temp_Record)
+		LR_AS_Trade.AddRecord(Temp_Record)
 	end
 end
 
-function LR_Acc_Trade.AUCTION_SELL_RESPOND()
+function LR_AS_Trade.AUCTION_SELL_RESPOND()
 	if arg0 ==  1 then
 		Dbug.Debug("AUCTION_SELL_RESPOND_SUCCEED")
 		local _Event = {}
@@ -1900,20 +1911,20 @@ function LR_Acc_Trade.AUCTION_SELL_RESPOND()
 				Temp_Record:SetType(TRADE.AUCTION_SELL)
 				local Source = _Auction
 				Temp_Record:SetSource(Source)
-				LR_Acc_Trade.AddRecord(Temp_Record)
+				LR_AS_Trade.AddRecord(Temp_Record)
 			end
 		end
 	end
 end
 
-function LR_Acc_Trade.TEAM_VOTE_REQUEST()
+function LR_AS_Trade.TEAM_VOTE_REQUEST()
 	if arg0 == 1 then
 		_GoldTeam.bOn = true
 		_GoldTeam.nTime = GetTime()
 	end
 end
 
-function LR_Acc_Trade.TEAM_VOTE_MSG(szMsg)
+function LR_AS_Trade.TEAM_VOTE_MSG(szMsg)
 	local _s, _e = sfind(szMsg, _L["Begin TeamGold"])
 	if _s then
 		_GoldTeam.bOn = true
@@ -1925,18 +1936,18 @@ function LR_Acc_Trade.TEAM_VOTE_MSG(szMsg)
 		Temp_Record:SetTime():SetOrderTime():SetMapID()
 		Temp_Record:AddMoney(nMoney*10000*(-1))
 		Temp_Record:SetType(TRADE.GOLDTEAM_ADDMONEY)
-		LR_Acc_Trade.AddRecord(Temp_Record)
+		LR_AS_Trade.AddRecord(Temp_Record)
 	end
 end
 
-function LR_Acc_Trade.FAN_PAI_JIANG_LI(szMsg)
+function LR_AS_Trade.FAN_PAI_JIANG_LI(szMsg)
 	local _s, _e = sfind(szMsg, _L["FAN_PAI_JIANG_LI_STRING"])
 	if _s then
 
 	end
 end
 
-function LR_Acc_Trade.QUEST_FINISHED()
+function LR_AS_Trade.QUEST_FINISHED()
 	local dwQuestID = arg0
 	local QuestInfo = LR.Table_GetQuestStringInfo(dwQuestID)
 	local szQuestName = LR.Trim(QuestInfo.szName)
@@ -1960,13 +1971,13 @@ function LR_Acc_Trade.QUEST_FINISHED()
 				Temp_Record:AddMoney(Obj_money:GetMoney())
 				Temp_Record:AddItem_in(Obj_item_in:GetItem_in())
 				Temp_Record:SetType(TRADE.QUEST)
-				LR_Acc_Trade.AddRecord(Temp_Record)
+				LR_AS_Trade.AddRecord(Temp_Record)
 			end
 		end
 	end
 end
 
-function LR_Acc_Trade.CheckGoldTeam(Temp_Record)
+function LR_AS_Trade.CheckGoldTeam(Temp_Record)
 	local nTime = GetTime()
 	if not _GoldTeam.bOn then
 		return
@@ -1983,17 +1994,17 @@ function LR_Acc_Trade.CheckGoldTeam(Temp_Record)
 		if t == _L["MSG_1"] then
 			local Temp_Record = Temp_Record
 			Temp_Record:SetType(TRADE.GOLDTEAM)
-			LR_Acc_Trade.AddRecord(Temp_Record)
+			LR_AS_Trade.AddRecord(Temp_Record)
 			_GoldTeam.bOn = false
 			_GoldTeam.nTime = 0
 		end
 	end
 end
 
-function LR_Acc_Trade.Mail_GetItemInMail()
+function LR_AS_Trade.Mail_GetItemInMail()
 	local me = GetClientPlayer()
 	local Mail = GetMailClient()
-	local npcID = LR_Acc_Trade.Mail_TarID
+	local npcID = LR_AS_Trade.Mail_TarID
 	if npcID == 0 then
 		return
 	end
@@ -2065,7 +2076,7 @@ function LR_Acc_Trade.Mail_GetItemInMail()
 	return data, data2
 end
 
-function LR_Acc_Trade.Mail_GetItemInBag()
+function LR_AS_Trade.Mail_GetItemInBag()
 	local me = GetClientPlayer()
 	local data = {
 		nMoney = 0,
@@ -2108,7 +2119,7 @@ function LR_Acc_Trade.Mail_GetItemInBag()
 	return data
 end
 
-function LR_Acc_Trade.Mail_GetChangeInMail()
+function LR_AS_Trade.Mail_GetChangeInMail()
 	local data = {
 		nMoney = 0,
 		items = {},
@@ -2151,7 +2162,7 @@ function LR_Acc_Trade.Mail_GetChangeInMail()
 	return data, data2
 end
 
-function LR_Acc_Trade.Mail_GetChangeInBag()
+function LR_AS_Trade.Mail_GetChangeInBag()
 	local data = {
 		nMoney = 0,
 		items = {},
@@ -2185,17 +2196,17 @@ function LR_Acc_Trade.Mail_GetChangeInBag()
 	return data
 end
 
-function LR_Acc_Trade.isMailPanelOpen()
+function LR_AS_Trade.isMailPanelOpen()
 	local frame = Station.Lookup("Normal/MailPanel")
 	if frame then
-		LR.DelayCall(1000, function() LR_Acc_Trade.isMailPanelOpen() end)
+		LR.DelayCall(1000, function() LR_AS_Trade.isMailPanelOpen() end)
 		return
 	else
-		_Item_In_Mail_new, _Item_In_MailPay_new = LR_Acc_Trade.Mail_GetItemInMail()
-		_Item_In_Mail_change, _Item_In_MailPay_change = LR_Acc_Trade.Mail_GetChangeInMail()
+		_Item_In_Mail_new, _Item_In_MailPay_new = LR_AS_Trade.Mail_GetItemInMail()
+		_Item_In_Mail_change, _Item_In_MailPay_change = LR_AS_Trade.Mail_GetChangeInMail()
 
-		_Item_In_Bag_new = LR_Acc_Trade.Mail_GetItemInBag()
-		_Item_In_Bag_change = LR_Acc_Trade.Mail_GetChangeInBag()
+		_Item_In_Bag_new = LR_AS_Trade.Mail_GetItemInBag()
+		_Item_In_Bag_change = LR_AS_Trade.Mail_GetChangeInBag()
 
 		----收件
 		if _Item_In_Mail_change.nMoney~= 0 or next(_Item_In_Mail_change.items)~= nil then
@@ -2204,7 +2215,7 @@ function LR_Acc_Trade.isMailPanelOpen()
 			Temp_Record:AddMoney(_Item_In_Mail_change.nMoney)
 			Temp_Record:AddItem_in(_Item_In_Mail_change.items)
 			Temp_Record:SetType(TRADE.MAIL_GET)
-			LR_Acc_Trade.AddRecord(Temp_Record)
+			LR_AS_Trade.AddRecord(Temp_Record)
 		end
 
 		--付费
@@ -2214,7 +2225,7 @@ function LR_Acc_Trade.isMailPanelOpen()
 			Temp_Record2:AddMoney(- (_Item_In_MailPay_change.nPayMoney))
 			Temp_Record2:AddItem_in(_Item_In_MailPay_change.items)
 			Temp_Record2:SetType(TRADE.MAIL_PAY)
-			LR_Acc_Trade.AddRecord(Temp_Record2)
+			LR_AS_Trade.AddRecord(Temp_Record2)
 		end
 
 		--发件
@@ -2224,7 +2235,7 @@ function LR_Acc_Trade.isMailPanelOpen()
 			Temp_Record3:AddMoney(- (_Item_In_Bag_change.nMoney))
 			Temp_Record3:AddItem_out(_Item_In_Bag_change.items)
 			Temp_Record3:SetType(TRADE.MAIL_SEND)
-			LR_Acc_Trade.AddRecord(Temp_Record3)
+			LR_AS_Trade.AddRecord(Temp_Record3)
 		end
 
 		_Item_In_Mail_old = {nMoney = 0, items = {}, }
@@ -2237,25 +2248,25 @@ function LR_Acc_Trade.isMailPanelOpen()
 		_Item_In_Bag_new = {nMoney = 0, items = {}, }
 		_Item_In_Bag_change = {nMoney = 0, items = {}, }
 
-		LR_Acc_Trade.Mail_Flag = false
+		LR_AS_Trade.Mail_Flag = false
 
-		LR_Acc_Trade.SaveTempData()
+		LR_AS_Trade.SaveTempData()
 	end
 end
 
-function LR_Acc_Trade.OpenMailPanel()
-	LR_Acc_Trade.Mail_Flag = true
+function LR_AS_Trade.OpenMailPanel()
+	LR_AS_Trade.Mail_Flag = true
 	LR.DelayCall(800, function()
-		_Item_In_Mail_old, _Item_In_MailPay_old = LR_Acc_Trade.Mail_GetItemInMail()
-		_Item_In_Bag_old = LR_Acc_Trade.Mail_GetItemInBag()
+		_Item_In_Mail_old, _Item_In_MailPay_old = LR_AS_Trade.Mail_GetItemInMail()
+		_Item_In_Bag_old = LR_AS_Trade.Mail_GetItemInBag()
 	end)
-	LR.DelayCall(1000, function() LR_Acc_Trade.isMailPanelOpen() end)
+	LR.DelayCall(1000, function() LR_AS_Trade.isMailPanelOpen() end)
 end
 
-function LR_Acc_Trade.AddRecord(Temp_Record)
+function LR_AS_Trade.AddRecord(Temp_Record)
 	local Temp_Record = Temp_Record
-	local Trade_LIst = LR_Acc_Trade.Trade_LIst
-	local index = LR_Acc_Trade.index
+	local Trade_LIst = LR_AS_Trade.Trade_LIst
+	local index = LR_AS_Trade.index
 	local bAdd = true
 
 	if next(_This_Login) ~=  nil then
@@ -2348,28 +2359,28 @@ function LR_Acc_Trade.AddRecord(Temp_Record)
 	_Event_Trace = {}
 	_Bag_item = {}
 	LR_Acc_Trade_Panel:Refresh()
-	LR_Acc_Trade.SaveTempData()
+	LR_AS_Trade.SaveTempData()
 end
 
-function LR_Acc_Trade.FIRST_LOADING_END()
+function LR_AS_Trade.FIRST_LOADING_END()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 	local nMoney = me.GetMoney()
-	LR_Acc_Trade.Login_Money = nMoney.nCopper+nMoney.nSilver*100+nMoney.nGold*10000
+	LR_AS_Trade.Login_Money = nMoney.nCopper+nMoney.nSilver*100+nMoney.nGold*10000
 end
 
 -------------金钱变动提醒
-function LR_Acc_Trade.OutPutMoneyChange()
+function LR_AS_Trade.OutPutMoneyChange()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 	local nMoney = me.GetMoney()
 	local money = nMoney.nCopper+nMoney.nSilver*100+nMoney.nGold*10000
-	local delta_money = money - LR_Acc_Trade.Login_Money
-	local text_money = LR_Acc_Trade.FormatMoney(delta_money)
+	local delta_money = money - LR_AS_Trade.Login_Money
+	local text_money = LR_AS_Trade.FormatMoney(delta_money)
 
 	local t_text = {}
 	t_text[#t_text+1] = _L["LR:This login, you got money:"]
@@ -2382,13 +2393,13 @@ function LR_Acc_Trade.OutPutMoneyChange()
 		t_text[#t_text+1] = _L["(8s)"]
 		_log_flag = 0
 	end
-	t_text[#t_text+1] = "\n\n"
+	t_text[#t_text+1] = "\n"
 
 	local text = tconcat(t_text)
 	LR.SysMsg(text)
 end
 
-function LR_Acc_Trade.OPEN_WINDOW()
+function LR_AS_Trade.OPEN_WINDOW()
 	local dwIndex = arg0
 	local szText = LR.Trim(arg1)
 	local dwTargetType = arg2
@@ -2399,12 +2410,12 @@ function LR_Acc_Trade.OPEN_WINDOW()
 		if LR.Trim(npc.szTitle) ==  _L["TRADER"] then
 			_Auction = {dwID = npc.dwID, szName = LR.Trim(npc.szName), szTitle = LR.Trim(npc.szTitle), nType = TARGET.NPC}
 		elseif sfind(szText, _L["feige"]) then
-			LR_Acc_Trade.Mail_TarID = dwTargetID
+			LR_AS_Trade.Mail_TarID = dwTargetID
 		end
 	end
 end
 
-function LR_Acc_Trade.FormatMoney(nMoney)
+function LR_AS_Trade.FormatMoney(nMoney)
 	local nMoney = nMoney
 	local t = {}
 	if type(nMoney) ==  "table" then
@@ -2459,7 +2470,7 @@ function LR_Acc_Trade.FormatMoney(nMoney)
 	return szText
 end
 
-function LR_Acc_Trade.GetItemInBag()
+function LR_AS_Trade.GetItemInBag()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -2484,39 +2495,39 @@ function LR_Acc_Trade.GetItemInBag()
 	end
 end
 
-LR.RegisterEvent("SYS_MSG", function() LR_Acc_Trade.SYS_MSG() end)
-LR.RegisterEvent("SHOP_OPENSHOP", function() LR_Acc_Trade.OpenShop() end)
-LR.RegisterEvent("MONEY_UPDATE", function() LR_Acc_Trade.MONEY_UPDATE() end)
+LR.RegisterEvent("SYS_MSG", function() LR_AS_Trade.SYS_MSG() end)
+LR.RegisterEvent("SHOP_OPENSHOP", function() LR_AS_Trade.OpenShop() end)
+LR.RegisterEvent("MONEY_UPDATE", function() LR_AS_Trade.MONEY_UPDATE() end)
 
-LR.RegisterEvent("FIRST_LOADING_END", function() LR_Acc_Trade.FIRST_LOADING_END() end)
---LR.RegisterEvent("ON_FRAME_CREATE", function() LR_Acc_Trade.ON_FRAME_CREATE() end)
-LR.RegisterEvent("OPEN_WINDOW", function() LR_Acc_Trade.OPEN_WINDOW() end)
+LR.RegisterEvent("FIRST_LOADING_END", function() LR_AS_Trade.FIRST_LOADING_END() end)
+--LR.RegisterEvent("ON_FRAME_CREATE", function() LR_AS_Trade.ON_FRAME_CREATE() end)
+LR.RegisterEvent("OPEN_WINDOW", function() LR_AS_Trade.OPEN_WINDOW() end)
 
-LR.RegisterEvent("BAG_ITEM_UPDATE", function() LR_Acc_Trade.BAG_ITEM_UPDATE() end)
-LR.RegisterEvent("SOLD_ITEM_UPDATE", function() LR_Acc_Trade.SOLD_ITEM_UPDATE() end)
-LR.RegisterEvent("TIME_LIMIT_SOLD_ITEM_UPDATE", function() LR_Acc_Trade.TIME_LIMIT_SOLD_ITEM_UPDATE() end)
+LR.RegisterEvent("BAG_ITEM_UPDATE", function() LR_AS_Trade.BAG_ITEM_UPDATE() end)
+LR.RegisterEvent("SOLD_ITEM_UPDATE", function() LR_AS_Trade.SOLD_ITEM_UPDATE() end)
+LR.RegisterEvent("TIME_LIMIT_SOLD_ITEM_UPDATE", function() LR_AS_Trade.TIME_LIMIT_SOLD_ITEM_UPDATE() end)
 
-LR.RegisterEvent("TRADING_OPEN_NOTIFY", function() LR_Acc_Trade.TRADING_OPEN_NOTIFY() end)
-LR.RegisterEvent("TRADING_UPDATE_CONFIRM", function() LR_Acc_Trade.TRADING_UPDATE_CONFIRM() end)
-LR.RegisterEvent("TRADING_CLOSE", function() LR_Acc_Trade.TRADING_CLOSE() end)
-LR.RegisterEvent("TRADING_UPDATE_ITEM", function() LR_Acc_Trade.TRADING_UPDATE_ITEM() end)
+LR.RegisterEvent("TRADING_OPEN_NOTIFY", function() LR_AS_Trade.TRADING_OPEN_NOTIFY() end)
+LR.RegisterEvent("TRADING_UPDATE_CONFIRM", function() LR_AS_Trade.TRADING_UPDATE_CONFIRM() end)
+LR.RegisterEvent("TRADING_CLOSE", function() LR_AS_Trade.TRADING_CLOSE() end)
+LR.RegisterEvent("TRADING_UPDATE_ITEM", function() LR_AS_Trade.TRADING_UPDATE_ITEM() end)
 
-LR.RegisterEvent("DESTROY_ITEM", function() LR_Acc_Trade.DESTROY_ITEM() end)
+LR.RegisterEvent("DESTROY_ITEM", function() LR_AS_Trade.DESTROY_ITEM() end)
 
-LR.RegisterEvent("LOOT_ITEM", function() LR_Acc_Trade.LOOT_ITEM() end)
+LR.RegisterEvent("LOOT_ITEM", function() LR_AS_Trade.LOOT_ITEM() end)
 
-LR.RegisterEvent("OPEN_DOODAD", function() LR_Acc_Trade.OPEN_DOODAD() end)
-LR.RegisterEvent("SYNC_LOOT_LIST", function() LR.DelayCall(70, LR_Acc_Trade.SYNC_LOOT_LIST()) end)
+LR.RegisterEvent("OPEN_DOODAD", function() LR_AS_Trade.OPEN_DOODAD() end)
+LR.RegisterEvent("SYNC_LOOT_LIST", function() LR.DelayCall(70, LR_AS_Trade.SYNC_LOOT_LIST()) end)
 
-LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() LR_Acc_Trade.ON_BG_CHANNEL_MSG() end)
+LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() LR_AS_Trade.ON_BG_CHANNEL_MSG() end)
 
-LR.RegisterEvent("AUCTION_SELL_RESPOND", function() LR_Acc_Trade.AUCTION_SELL_RESPOND() end)
-LR.RegisterEvent("AUCTION_MESSAGE_NOTIFY", function() LR_Acc_Trade.AUCTION_MESSAGE_NOTIFY() end)
+LR.RegisterEvent("AUCTION_SELL_RESPOND", function() LR_AS_Trade.AUCTION_SELL_RESPOND() end)
+LR.RegisterEvent("AUCTION_MESSAGE_NOTIFY", function() LR_AS_Trade.AUCTION_MESSAGE_NOTIFY() end)
 
-LR.RegisterEvent("TEAM_VOTE_REQUEST", function() LR_Acc_Trade.TEAM_VOTE_REQUEST() end)
-RegisterMsgMonitor(LR_Acc_Trade.TEAM_VOTE_MSG, {"MSG_SYS"})
+LR.RegisterEvent("TEAM_VOTE_REQUEST", function() LR_AS_Trade.TEAM_VOTE_REQUEST() end)
+RegisterMsgMonitor(LR_AS_Trade.TEAM_VOTE_MSG, {"MSG_SYS"})
 
-LR.RegisterEvent("QUEST_FINISHED", function() LR_Acc_Trade.QUEST_FINISHED() end)
+LR.RegisterEvent("QUEST_FINISHED", function() LR_AS_Trade.QUEST_FINISHED() end)
 
 ----------------------------------------------------------------
 ------界面
@@ -2545,7 +2556,7 @@ function LR_Acc_Trade_Panel:OnCreate()
 	LR_Acc_Trade_Panel.UpdateAnchor(this)
 	RegisterGlobalEsc("LR_Acc_Trade_Panel", function () return true end , function() LR_Acc_Trade_Panel:Open() end)
 	LR_Acc_Trade_Panel.Show_Type = OP1.THIS_LOGIN
-	LR_Acc_Trade.MoveData2MainTable()
+	LR_AS_Trade.MoveData2MainTable()
 end
 
 function LR_Acc_Trade_Panel:OnEvents(event)
@@ -2607,13 +2618,13 @@ function LR_Acc_Trade_Panel:Init()
 				else
 					LR_Acc_Trade_Panel.Show_Type = OP1[v]
 					if OP1[v] == OP1.LAST_SEVEN_DAYS then
-						LR_Acc_Trade.LoadData(OP1.LAST_SEVEN_DAYS)
+						LR_AS_Trade.LoadData(OP1.LAST_SEVEN_DAYS)
 					elseif OP1[v] == OP1.THIS_WEEK then
-						LR_Acc_Trade.LoadData(OP1.THIS_WEEK)
+						LR_AS_Trade.LoadData(OP1.THIS_WEEK)
 					elseif OP1[v] == OP1.THIS_MONTH then
-						LR_Acc_Trade.LoadData(OP1.THIS_MONTH)
+						LR_AS_Trade.LoadData(OP1.THIS_MONTH)
 					elseif OP1[v] == OP1.TODAY then
-						LR_Acc_Trade.LoadData(OP1.TODAY)
+						LR_AS_Trade.LoadData(OP1.TODAY)
 					end
 					LR_Acc_Trade_Panel:Refresh()
 				end
@@ -2629,7 +2640,7 @@ function LR_Acc_Trade_Panel:Init()
 					szMessage = _L["Are you sure to import old version data (not database version) ?"],
 					szName = "import old version",
 					fnAutoClose = function() return false end,
-					{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() LR_Acc_Trade.ImportOldData() end, },
+					{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() LR_AS_Trade.ImportOldData() end, },
 					{szOption = g_tStrings.STR_HOTKEY_CANCEL, },
 				}
 				MessageBox(msg)
@@ -2637,7 +2648,7 @@ function LR_Acc_Trade_Panel:Init()
 		}
 		t[#t+1] = {szOption = _L["Import new version data (database version)"],
 			fnAction = function()
-				LR_Acc_Trade.ImportNewVersionData()
+				LR_AS_Trade.ImportNewVersionData()
 			end
 		}
 		PopupMenu(m)
@@ -2645,7 +2656,7 @@ function LR_Acc_Trade_Panel:Init()
 
 	local BTN_SAVE = self:Append("Button", frame, "BTN_SAVE", {text = _L["SAVE"] , x = 200, y = 51, w = 95, h = 30})
 	BTN_SAVE.OnClick = function()
-		LR_Acc_Trade.MoveData2MainTable()
+		LR_AS_Trade.MoveData2MainTable()
 	end
 
 	local hFAQ_Back = self:Append("Image", frame, "FAQ_back" , {x = 305 , y = 53 , w = 24 , h = 24, })
@@ -2679,25 +2690,25 @@ function LR_Acc_Trade_Panel:Init()
 	local BTN_FIRST = self:Append("Button", Wnd_PageBTN, "BTN_FIRST", {text = _L["FIRST"] , x = 0, y = 0, w = 95, h = 36})
 	--绑定按钮点击事件
 	BTN_FIRST.OnClick = function()
-		LR_Acc_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, LR_Acc_Trade_Panel.nFirstPage)
+		LR_AS_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, LR_Acc_Trade_Panel.nFirstPage)
 		LR_Acc_Trade_Panel:Refresh()
 	end
 	local BTN_PRE = self:Append("Button", Wnd_PageBTN, "BTN_PRE", {text = _L["PRE"] , x = 100, y = 0, w = 95, h = 36})
 	--绑定按钮点击事件
 	BTN_PRE.OnClick = function()
-		LR_Acc_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, LR_Acc_Trade_Panel.nPrePage)
+		LR_AS_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, LR_Acc_Trade_Panel.nPrePage)
 		LR_Acc_Trade_Panel:Refresh()
 	end
 	local BTN_NEXT = self:Append("Button", Wnd_PageBTN, "BTN_NEXT", {text = _L["NEXT"] , x = 200, y = 0, w = 95, h = 36})
 	--绑定按钮点击事件
 	BTN_NEXT.OnClick = function()
-		LR_Acc_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, LR_Acc_Trade_Panel.nNextPage)
+		LR_AS_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, LR_Acc_Trade_Panel.nNextPage)
 		LR_Acc_Trade_Panel:Refresh()
 	end
 	local BTN_LAST = self:Append("Button", Wnd_PageBTN, "BTN_LAST", {text = _L["LAST"] , x = 300, y = 0, w = 95, h = 36})
 	--绑定按钮点击事件
 	BTN_LAST.OnClick = function()
-		LR_Acc_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, LR_Acc_Trade_Panel.nLastPage)
+		LR_AS_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, LR_Acc_Trade_Panel.nLastPage)
 		LR_Acc_Trade_Panel:Refresh()
 	end
 	local EDIT_PAGE = self:Append("Edit", Wnd_PageBTN, "EDIT_PAGE", {w = 60, h = 24, x = 400, y = 6, text = "0", font = 22})
@@ -2708,7 +2719,7 @@ function LR_Acc_Trade_Panel:Init()
 		if type(nPage) ~= "number" then
 			return
 		end
-		LR_Acc_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, nPage)
+		LR_AS_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, nPage)
 		LR_Acc_Trade_Panel:Refresh()
 	end
 	local TEXT_PAGE = self:Append("Text", Wnd_PageBTN, "TEXT_PAGE", {w = 400, h = 24, x = 5, y = 40, text = "", font = 2})
@@ -2718,7 +2729,7 @@ function LR_Acc_Trade_Panel:Init()
 	CheckBox_PAGE.OnCheck = function (arg0)
 		LR_Acc_Trade_Panel.notByPage = arg0
 		if LR_Acc_Trade_Panel.Show_Type ~= OP1.THIS_LOGIN then
-			LR_Acc_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, LR_Acc_Trade_Panel.nPage)
+			LR_AS_Trade.LoadData(LR_Acc_Trade_Panel.Show_Type, LR_Acc_Trade_Panel.nPage)
 			LR_Acc_Trade_Panel:Refresh()
 		end
 	end
@@ -2814,7 +2825,7 @@ function LR_Acc_Trade_Panel:Open()
 	if frame then
 		self:Destroy(frame)
 	else
-		--LR_Acc_Trade.LoadData(nil, true)
+		--LR_AS_Trade.LoadData(nil, true)
 		frame = self:Init()
 
 		PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
@@ -2823,7 +2834,7 @@ end
 
 function LR_Acc_Trade_Panel:LoadItemBox(hWin)
 	local index  = {}
-	local Trade_LIst = LR_Acc_Trade.Trade_LIst
+	local Trade_LIst = LR_AS_Trade.Trade_LIst
 	local nMoneyall = 0
 	local old_year, old_month, old_day = 0, 0, 0
 
@@ -3209,7 +3220,7 @@ function LR_Acc_Trade_Panel:LoadItemBox(hWin)
 				self:Append("Text", handle_content, sformat("Text_content_%d_QUEST_1", i), {h = 30, text = _L["Finish quest "] , font = _font})
 				for k = 1, #t_item, 1 do
 					local dwQuestID = t_item[k].nBookID
-					local szQuestName = t_item[k].szName
+					local szQuestName = LR.GetQuestName(dwQuestID)
 					local text = self:Append("Text", handle_content, sformat("Text_QUEST_%d_1", i), {h = 30, text = sformat("[%s] ", szQuestName), font = 27})
 					text:RegisterEvent(272)
 					text.OnEnter = function()
@@ -3689,7 +3700,7 @@ function LR_Acc_Trade_ChooseDate_Panel:Init()
 		local Scroll = LR_Acc_Trade_Panel:Fetch("Scroll")
 		if Scroll then
 			LR_Acc_Trade_Panel.Show_Type = OP1.HISTORY
-			LR_Acc_Trade.LoadData(OP1.HISTORY)
+			LR_AS_Trade.LoadData(OP1.HISTORY)
 			LR_Acc_Trade_Panel:ClearHandle(Scroll)
 			LR_Acc_Trade_Panel:LoadItemBox(Scroll)
 			Scroll:UpdateList()
@@ -3725,3 +3736,24 @@ AH_MailBank.HookMailPanel = function()
 		_Hook.HookMailPanel()
 	end)
 end
+
+local _option_time = 0
+function LR_AS_Trade.ON_FRAME_CREATE()
+	local frame = arg0
+	local szName = frame:GetName()
+
+	if szName == "MailPanel" then
+		LR_Acc_Trade.OpenMailPanel()
+	elseif szName ==  "AuctionPanel" then
+		LR_Acc_Trade.GetItemInBag()
+	elseif szName == "OptionPanel" then
+		if LR_AS_Trade.UsrData.ShowMoneyChangeLog then
+			if GetTickCount() - _option_time > 10 * 1000 then
+				_option_time = GetTickCount()
+				LR_AS_Trade.OutPutMoneyChange()
+			end
+		end
+	end
+end
+
+LR.RegisterEvent("ON_FRAME_CREATE", function() LR_AS_Trade.ON_FRAME_CREATE() end)

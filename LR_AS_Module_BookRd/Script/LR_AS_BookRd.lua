@@ -1,25 +1,26 @@
-local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
+local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
+local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
+---------------------------------------------------------------
+local AddonPath = "Interface\\LR_Plugin\\LR_AS_Module_BookRd"
+local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
-local _L = LR.LoadLangPack(AddonPath)
-local DB_name = "maindb.db"
-local sformat, slen, sgsub, ssub, sfind = string.format, string.len, string.gsub, string.sub, string.find
-local mfloor, mceil, mmin, mmax = math.floor, math.ceil, math.min, math.max
-local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remove, table.sort
+local db_name = "maindb.db"
+local _L = LR.LoadLangPack(LanguagePath)
+local VERSION = "20180403"
 --------------------------------------------------------------------
 --记录阅读情况
 -------------------------------------------------------------------
-LR_AccountStatistics_BookRd = LR_AccountStatistics_BookRd or {}
-LR_AccountStatistics_BookRd.src = "%s\\UsrData\\%s\\%s\\%s\\BookRecord_%s.dat"
-LR_AccountStatistics_BookRd.UsrData = {
-	On = true,
-}
-LR_AccountStatistics_BookRd.RecordList = {}	----存放自身的阅读数据
-LR_AccountStatistics_BookRd.AllUsrData = {}
+local _BookRd = {}
+_BookRd.RecordList = {}	----存放自身的阅读数据
+_BookRd.AllUsrData = {}
 
-LR_AccountStatistics_BookRd.bHookedReadPanel = false
-LR_AccountStatistics_BookRd.bHookedBookExchangePanel = false
+_BookRd.bHookedReadPanel = false
+_BookRd.bHookedBookExchangePanel = false
 
-function LR_AccountStatistics_BookRd.HookReadPanel()
+function _BookRd.HookReadPanel()
 	local frame = Station.Lookup("Normal/CraftReadManagePanel")
 	if frame then --背包界面添加一个按钮
 		local Btn_Read = frame:Lookup("Btn_Read")
@@ -47,9 +48,9 @@ function LR_AccountStatistics_BookRd.HookReadPanel()
 	end
 end
 
-function LR_AccountStatistics_BookRd.HookBookExchangePanel()
+function _BookRd.HookBookExchangePanel()
 	local frame = Station.Lookup("Normal/BookExchangePanel")
-	if not LR_AccountStatistics_BookRd.bHookedBookExchangePanel and frame and frame:IsVisible() then --书籍兑换界面添加一个按钮
+	if not _BookRd.bHookedBookExchangePanel and frame and frame:IsVisible() then --书籍兑换界面添加一个按钮
 		local temp = Wnd.OpenWindow("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_ReadButton.ini", "LR_AccountStatistics_ReadButton")
 		if not frame:Lookup("Btn_Read") then
 			local hBtnRead = temp:Lookup("Btn_Read")
@@ -74,48 +75,39 @@ function LR_AccountStatistics_BookRd.HookBookExchangePanel()
 			end
 		end
 		Wnd.CloseWindow(temp)
-		LR_AccountStatistics_BookRd.bHookedBookExchangePanel = false
+		_BookRd.bHookedBookExchangePanel = false
 	elseif not frame or not frame:IsVisible() then
-		LR_AccountStatistics_BookRd.bHookedBookExchangePanel = false
+		_BookRd.bHookedBookExchangePanel = false
 	end
 end
 
-function LR_AccountStatistics_BookRd.SaveData(DB)
+function _BookRd.SaveData(DB)
+	if not LR_AS_Base.UsrData.bRecord then
+		return
+	end
 	local me =  GetClientPlayer()
-	if not me then
-		return
-	end
-	if IsRemotePlayer(me.dwID) then
-		return
-	end
-	LR_AccountStatistics_BookRd.GetSelfBookRecord()
+	_BookRd.GetSelfBookRecord()
 	local ServerInfo = {GetUserServer()}
 	local realArea, realServer = ServerInfo[5], ServerInfo[6]
 	local dwID = me.dwID
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
 	local RecordList = {}
-	for dwBookID,  v in pairs (LR_AccountStatistics_BookRd.RecordList) do
+	for dwBookID,  v in pairs (_BookRd.RecordList) do
 		RecordList[tostring(dwBookID)] = {}
 		for dwSegmentID, v2 in pairs (v) do
 			RecordList[tostring(dwBookID)][tostring(dwSegmentID)] = true
 		end
 	end
 	local DB_REPLACE = DB:Prepare("REPLACE INTO bookrd_data ( szKey, bookrd_data, bDel ) VALUES ( ?, ?, ? )")
-	if LR_AS_Base.UsrData.OthersCanSee then
-		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(szKey, LR.JsonEncode(RecordList), 0)
-		DB_REPLACE:Execute()
-	else
-		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(szKey, LR.JsonEncode({}), 1)
-		DB_REPLACE:Execute()
-	end
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(RecordList), 0})))
+	DB_REPLACE:Execute()
 end
---LR_AS_Base.Add2AutoSave({szKey = "SaveBookRdData", fnAction = LR_AccountStatistics_BookRd.SaveData, order = 40})
+--LR_AS_Base.Add2AutoSave({szKey = "SaveBookRdData", fnAction = _BookRd.SaveData, order = 40})
 
-function LR_AccountStatistics_BookRd.LoadAllUsrData(DB)
+function _BookRd.LoadAllUsrData(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM bookrd_data WHERE bDel = 0 AND szKey IS NOT NULL")
-	local Data = DB_SELECT:GetAll() or {}
+	local Data = d2g(DB_SELECT:GetAll())
 	local AllUsrData = {}
 	for k, v in pairs(Data) do
 		AllUsrData[v.szKey] = {}
@@ -129,16 +121,16 @@ function LR_AccountStatistics_BookRd.LoadAllUsrData(DB)
 		AllUsrData[v.szKey] = clone (bookrd_data)
 	end
 	--讲自己的数据加入列表
-	LR_AccountStatistics_BookRd.GetSelfBookRecord()
+	_BookRd.GetSelfBookRecord()
 	local ServerInfo = {GetUserServer()}
 	local realArea, realServer = ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, GetClientPlayer().dwID)
-	AllUsrData[szKey] = clone(LR_AccountStatistics_BookRd.RecordList)
-	LR_AccountStatistics_BookRd.AllUsrData = clone(AllUsrData)
-	--Output(LR_AccountStatistics_BookRd.AllUsrData)
+	AllUsrData[szKey] = clone(_BookRd.RecordList)
+	_BookRd.AllUsrData = clone(AllUsrData)
+	--Output(_BookRd.AllUsrData)
 end
 
-function LR_AccountStatistics_BookRd.GetSelfBookRecord()
+function _BookRd.GetSelfBookRecord()
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -158,54 +150,54 @@ function LR_AccountStatistics_BookRd.GetSelfBookRecord()
 		end
 		i = i+t.dwBookNumber
 	end
-	LR_AccountStatistics_BookRd.RecordList = clone(RecordList)
+	_BookRd.RecordList = clone(RecordList)
 end
 
 ------------------------------------------------------------------------------------
 -----载入任务信息
 ------------------------------------------------------------------------------------
-LR_AccountStatistics_BookRd.MissionData = {}
-function LR_AccountStatistics_BookRd.LoadMissionData()
-	local src = "Interface\\LR_Plugin\\LR_AccountStatistics\\Script\\AllMission.dat"
-	LR_AccountStatistics_BookRd.MissionData = LoadLUAData(src) or {}
+_BookRd.MissionData = {}
+function _BookRd.LoadMissionData()
+	local src = sformat("%s\\Script\\AllMission.dat", AddonPath)
+	_BookRd.MissionData = LoadLUAData(src) or {}
 end
 
 ------------------------------------------------------------------------------------
 -----载入碑铭信息
 ------------------------------------------------------------------------------------
-LR_AccountStatistics_BookRd.BeiMingData = {}
-function LR_AccountStatistics_BookRd.LoadBeiMingData()
-	local src = "Interface\\LR_Plugin\\LR_AccountStatistics\\Script\\BeiMingData.dat"
-	LR_AccountStatistics_BookRd.BeiMingData = LoadLUAData(src) or {}
+_BookRd.BeiMingData = {}
+function _BookRd.LoadBeiMingData()
+	local src = sformat("%s\\Script\\BeiMingData.dat", AddonPath)
+	_BookRd.BeiMingData = LoadLUAData(src) or {}
 end
 
 ------------------------------------------------------------------------------------
 -----载入卖书籍的商店的信息
 ------------------------------------------------------------------------------------
-LR_AccountStatistics_BookRd.BookShopData = {}
-function LR_AccountStatistics_BookRd.LoadBookShopData()
-	local src = "Interface\\LR_Plugin\\LR_AccountStatistics\\Script\\BookSelling.dat"
-	LR_AccountStatistics_BookRd.BookShopData = LoadLUAData(src) or {}
+_BookRd.BookShopData = {}
+function _BookRd.LoadBookShopData()
+	local src = sformat("%s\\Script\\BookSelling.dat", AddonPath)
+	_BookRd.BookShopData = LoadLUAData(src) or {}
 end
 
 ------------------------------------------------------------------------------------
 -----载入书籍掉落的信息
 ------------------------------------------------------------------------------------
-LR_AccountStatistics_BookRd.BookLootData = {}
-function LR_AccountStatistics_BookRd.LoadBookLootData()
-	local src = "Interface\\LR_Plugin\\LR_AccountStatistics\\Script\\DoodadLoot.dat"
-	LR_AccountStatistics_BookRd.BookLootData = LoadLUAData(src) or {}
+_BookRd.BookLootData = {}
+function _BookRd.LoadBookLootData()
+	local src = sformat("%s\\Script\\DoodadLoot.dat", AddonPath)
+	_BookRd.BookLootData = LoadLUAData(src) or {}
 end
 
-function LR_AccountStatistics_BookRd.LOGIN_GAME()
-	LR_AccountStatistics_BookRd.LoadMissionData()
-	LR_AccountStatistics_BookRd.LoadBeiMingData()
-	LR_AccountStatistics_BookRd.LoadBookShopData()
-	LR_AccountStatistics_BookRd.LoadBookLootData()
+function _BookRd.LOGIN_GAME()
+	_BookRd.LoadMissionData()
+	_BookRd.LoadBeiMingData()
+	_BookRd.LoadBookShopData()
+	_BookRd.LoadBookLootData()
 	Log("LR bookrd_data loaded.\n")
 end
 
-LR.RegisterEvent("LOGIN_GAME", function() LR_AccountStatistics_BookRd.LOGIN_GAME() end)
+LR.RegisterEvent("LOGIN_GAME", function() _BookRd.LOGIN_GAME() end)
 ------------------------------------------------------------------------------------
 -----阅读小窗口
 ------------------------------------------------------------------------------------
@@ -268,7 +260,6 @@ end
 
 function LR_BookRd_Panel:OnCreate()
 	this:RegisterEvent("UI_SCALED")
-	this:RegisterEvent("CUSTOM_DATA_LOADED")
 	LR_BookRd_Panel.UpdateAnchor(this)
 	RegisterGlobalEsc("LR_BookRd_Panel", function () return true end , function() LR_BookRd_Panel:Open() end)
 	local player =  GetClientPlayer()
@@ -280,20 +271,16 @@ function LR_BookRd_Panel:OnCreate()
 		LR_AS_Base.AutoSave()
 	end
 	--加载阅读数据
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
-	LR_AccountStatistics_BookRd.LoadAllUsrData(DB)
+	_BookRd.LoadAllUsrData(DB)
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 end
 
 function LR_BookRd_Panel:OnEvents(event)
-	if event ==  "CUSTOM_DATA_LOADED" then
-		if arg0 ==  "Role" then
-			LR_BookRd_Panel.UpdateAnchor(this)
-		end
-	elseif event ==  "UI_SCALED" then
+	if event ==  "UI_SCALED" then
 		LR_BookRd_Panel.UpdateAnchor(this)
 	end
 end
@@ -723,7 +710,7 @@ function LR_BookRd_Panel:LoadUsrNameBox(hWin)
 	end
 
 	local m = 1
-	for szKey, v in pairs(LR_AccountStatistics_BookRd.AllUsrData) do
+	for szKey, v in pairs(_BookRd.AllUsrData) do
 		if v[LR_BookRd_Panel.BookSuitID] and next(v[LR_BookRd_Panel.BookSuitID]) ~= nil then
 			if v[LR_BookRd_Panel.BookSuitID][LR_BookRd_Panel.BookNameID] then
 				--背景条
@@ -733,7 +720,7 @@ function LR_BookRd_Panel:LoadUsrNameBox(hWin)
 				Image_Line:SetImageType(10)
 				Image_Line:SetAlpha(200)
 
-				local User = LR_AS_Info.AllUsrData[szKey]
+				local User = LR_AS_Data.AllPlayerList[szKey]
 				if User then
 					local r, g, b = LR.GetMenPaiColor(User.dwForceID)
 					local Image_MenPai = self:Append("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 15, y = 0, w = 30, h = 30})
@@ -763,8 +750,8 @@ function LR_BookRd_Panel:GetSource(hWin)
 	szBookName = LR.Trim(szBookName)
 
 	------任务
-	for i = 1, #LR_AccountStatistics_BookRd.MissionData, 1 do
-		if LR_AccountStatistics_BookRd.MissionData[i].szBookName ==  szBookName then
+	for i = 1, #_BookRd.MissionData, 1 do
+		if _BookRd.MissionData[i].szBookName ==  szBookName then
 			--背景条
 			local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", m), {x = 0, y = 0, w = 396, h = 30})
 			local Image_Line = self:Append("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 0, y = 0, w = 396, h = 30})
@@ -773,9 +760,9 @@ function LR_BookRd_Panel:GetSource(hWin)
 			Image_Line:SetAlpha(200)
 
 			--任务名称
-			local szName = LR_AccountStatistics_BookRd.MissionData[i].szQuestName
-			local szMapName = Table_GetMapName(LR_AccountStatistics_BookRd.MissionData[i].dwMapID)
-			local szAcceptNpcName = LR_AccountStatistics_BookRd.MissionData[i].szAcceptNpcName
+			local szName = _BookRd.MissionData[i].szQuestName
+			local szMapName = Table_GetMapName(_BookRd.MissionData[i].dwMapID)
+			local szAcceptNpcName = _BookRd.MissionData[i].szAcceptNpcName
 			local Text_break2 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 396, h = 30, x  = 15, y = 2, text  = sformat("%s%s（%s）%s", _L["[Quest]"], szName, szMapName, szAcceptNpcName), font = 31})
 			Text_break2:SetHAlign(0)
 			Text_break2:SetVAlign(1)
@@ -785,8 +772,8 @@ function LR_BookRd_Panel:GetSource(hWin)
 	end
 
 	-----碑铭
-	for i = 1, #LR_AccountStatistics_BookRd.BeiMingData, 1 do
-		local data = LR_AccountStatistics_BookRd.BeiMingData[i]
+	for i = 1, #_BookRd.BeiMingData, 1 do
+		local data = _BookRd.BeiMingData[i]
 		local _start, _end = sfind(data.szBeiMingName, szBookName)
 		if _start then
 			--背景条
@@ -807,9 +794,9 @@ function LR_BookRd_Panel:GetSource(hWin)
 
 
 	------商店
-	for i = 1, #LR_AccountStatistics_BookRd.BookShopData, 1 do
-		for k = 1, #LR_AccountStatistics_BookRd.BookShopData[i].tSellItem, 1 do
-			if LR.Trim(LR_AccountStatistics_BookRd.BookShopData[i].tSellItem[k].szItemName) ==  LR.Trim(szBookName) then
+	for i = 1, #_BookRd.BookShopData, 1 do
+		for k = 1, #_BookRd.BookShopData[i].tSellItem, 1 do
+			if LR.Trim(_BookRd.BookShopData[i].tSellItem[k].szItemName) ==  LR.Trim(szBookName) then
 				--背景条
 				local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", m), {x = 0, y = 0, w = 396, h = 30})
 				local Image_Line = self:Append("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 0, y = 0, w = 396, h = 30})
@@ -817,9 +804,9 @@ function LR_BookRd_Panel:GetSource(hWin)
 				Image_Line:SetImageType(10)
 				Image_Line:SetAlpha(200)
 				--商店名称
-				local szMapName = Table_GetMapName(LR_AccountStatistics_BookRd.BookShopData[i].dwMapID)
-				local szTitle = LR_AccountStatistics_BookRd.BookShopData[i].szNpcTitle
-				local szNpcName = LR_AccountStatistics_BookRd.BookShopData[i].szNpcName
+				local szMapName = Table_GetMapName(_BookRd.BookShopData[i].dwMapID)
+				local szTitle = _BookRd.BookShopData[i].szNpcTitle
+				local szNpcName = _BookRd.BookShopData[i].szNpcName
 				local Text_break2 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 396, h = 30, x  = 15, y = 2, text = sformat("【%s】%s（%s）", szTitle, szNpcName, szMapName), font = 39})
 				Text_break2:SetHAlign(0)
 				Text_break2:SetVAlign(1)
@@ -831,8 +818,8 @@ function LR_BookRd_Panel:GetSource(hWin)
 
 
 	---杀怪掉落
-	for i = 1, #LR_AccountStatistics_BookRd.BookLootData, 1 do
-		if LR.Trim(LR_AccountStatistics_BookRd.BookLootData[i].szBookName) ==  LR.Trim(szBookName) then
+	for i = 1, #_BookRd.BookLootData, 1 do
+		if LR.Trim(_BookRd.BookLootData[i].szBookName) ==  LR.Trim(szBookName) then
 			--背景条
 			local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", m), {x = 0, y = 0, w = 396, h = 30})
 			local Image_Line = self:Append("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 0, y = 0, w = 396, h = 30})
@@ -840,7 +827,7 @@ function LR_BookRd_Panel:GetSource(hWin)
 			Image_Line:SetImageType(10)
 			Image_Line:SetAlpha(200)
 			--掉落名称
-			local text = LR_AccountStatistics_BookRd.BookLootData[i].Loot
+			local text = _BookRd.BookLootData[i].Loot
 			local Text_break2 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 396, h = 30, x  = 15, y = 2, text = sformat("%s%s", _L["Drop"], text), font = 35})
 			Text_break2:SetHAlign(0)
 			Text_break2:SetVAlign(1)
@@ -869,5 +856,7 @@ function LR_BookRd_Panel:GetSource(hWin)
 
 end
 
-
+--注册模块
+LR_AS_Module.BookRd = {}
+LR_AS_Module.BookRd.SaveData = _BookRd.SaveData
 

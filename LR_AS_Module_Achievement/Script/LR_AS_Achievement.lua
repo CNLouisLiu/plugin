@@ -1,16 +1,21 @@
-local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
+local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
+local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
+---------------------------------------------------------------
+local AddonPath = "Interface\\LR_Plugin\\LR_AS_Module_Achievement"
+local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
-local DB_name = "maindb.db"
-local _L  =  LR.LoadLangPack(AddonPath)
-local sformat, slen, sgsub, ssub, sfind  =  string.format, string.len, string.gsub, string.sub, string.find
-local mfloor, mceil  =  math.floor, math.ceil
-local tconcat, tinsert, tremove, tsort  =  table.concat, table.insert, table.remove, table.sort
+local db_name = "maindb.db"
+local _L = LR.LoadLangPack(LanguagePath)
+local VERSION = "20180403"
 -------------------------------------------------------------
-LR_AccountStatistics_Achievement = {}
-LR_AccountStatistics_Achievement.SelfData = {}
-LR_AccountStatistics_Achievement.AllUsrData = {}
+local _Achievement = {}
+_Achievement.SelfData = {}
+_Achievement.AllUsrData = {}
 
-LR_AccountStatistics_Achievement.fenlei = {
+_Achievement.fenlei = {
 	[_L["MengHuiDaoXiang"]] = {5449, 5450, 5451, 5452, 5453, 5454, 5455, 5456, 5457, 5458, 5459, 5460, 5461, 5462, 5463, 5464, 5465, 5466, 5467, 5468, 5469, 5470, }, 	--梦回稻香
 	[_L["MidAutumn"]] = {1434, 1435, 598, 599, 600, 596, 595, 601, 1060, 1061, 1062, 2629, 2650, 2651, 2652, 2653, 2654, 597, 2605, 2631, 2644, }, 	--中秋节
 	[_L["ChineseNewYear"]] = {1571, 1576, 1243, 1245, 1252, 1246, 2899, 2900, 2901, 3391, 4037, 4490, 5274, 5275, 5276, 5277, 1248, 1254, 1244}, 	--春节
@@ -25,47 +30,46 @@ LR_AccountStatistics_Achievement.fenlei = {
 }
 
 --获取成就数据
-function LR_AccountStatistics_Achievement.GetSelfData()
+function _Achievement.GetSelfData()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 
-	for k, v in pairs(LR_AccountStatistics_Achievement.fenlei) do
+	for k, v in pairs(_Achievement.fenlei) do
 		if type(v) == "table" then
 			--Output(k)
 			for i = 1, #v, 1 do
-				LR_AccountStatistics_Achievement.SelfData[v[i]] = me.IsAchievementAcquired(v[i])
+				_Achievement.SelfData[v[i]] = me.IsAchievementAcquired(v[i])
 				--Output(v[i])
 			end
 		end
 	end
 end
 --保存成就数据
-function LR_AccountStatistics_Achievement.SaveData(DB)
+function _Achievement.SaveData(DB)
+	if not LR_AS_Base.UsrData.bRecord then
+		return
+	end
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
 	local SelfData = {}
-	LR_AccountStatistics_Achievement.GetSelfData()
-	for achievement_id, v in pairs (LR_AccountStatistics_Achievement.SelfData) do
+	_Achievement.GetSelfData()
+	for achievement_id, v in pairs (_Achievement.SelfData) do
 		SelfData[tostring(achievement_id)] = v
 	end
 	local DB_REPLACE = DB:Prepare("REPLACE INTO achievement_data ( szKey, achievement_data, bDel ) VALUES ( ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
-	if LR_AS_Base.UsrData.OthersCanSee then
-		DB_REPLACE:BindAll(szKey, LR.JsonEncode(SelfData), 0)
-	else
-		DB_REPLACE:BindAll(szKey, LR.JsonEncode({}), 1)
-	end
+	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(SelfData), 0})))
 	DB_REPLACE:Execute()
 end
 
 --载入成就数据
-function LR_AccountStatistics_Achievement.LoadAllUsrData(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM achievement_data INNER JOIN player_info ON player_info.szKey = achievement_data.szKey WHERE achievement_data.bDel = 0 AND achievement_data.szKey IS NOT NULL")
-	local Data = DB_SELECT:GetAll() or {}
+function _Achievement.LoadAllUsrData(DB)
+	local DB_SELECT = DB:Prepare("SELECT * FROM achievement_data INNER JOIN player_list ON player_list.szKey = achievement_data.szKey WHERE achievement_data.bDel = 0 AND achievement_data.szKey IS NOT NULL")
+	local Data = d2g(DB_SELECT:GetAll())
 	local AllUsrData = {}
 	for k, v in pairs (Data) do
 		local data = LR.JsonDecode(v.achievement_data)
@@ -76,16 +80,16 @@ function LR_AccountStatistics_Achievement.LoadAllUsrData(DB)
 		AllUsrData[v.szKey] = clone(data2)
 	end
 	---添加自己
-	LR_AccountStatistics_Achievement.GetSelfData()
+	_Achievement.GetSelfData()
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	AllUsrData[szKey] = clone (LR_AccountStatistics_Achievement.SelfData)
-	LR_AccountStatistics_Achievement.AllUsrData = clone(AllUsrData)
+	AllUsrData[szKey] = clone (_Achievement.SelfData)
+	_Achievement.AllUsrData = clone(AllUsrData)
 end
 
-function LR_AccountStatistics_Achievement.LoadCustomFenlei()
+function _Achievement.LoadCustomFenlei()
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
@@ -95,29 +99,29 @@ function LR_AccountStatistics_Achievement.LoadCustomFenlei()
 	local data = LoadLUAData(path) or {}
 	for k, v in pairs(data) do
 		if type(v)  ==  "table" then
-			LR_AccountStatistics_Achievement.fenlei[k] = v
+			_Achievement.fenlei[k] = v
 		end
 	end
 end
 
-function LR_AccountStatistics_Achievement.NEW_ACHIEVEMENT()
-	LR_AccountStatistics_Achievement.GetSelfData()
+function _Achievement.NEW_ACHIEVEMENT()
+	_Achievement.GetSelfData()
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	AllUsrData[szKey] = clone (LR_AccountStatistics_Achievement.SelfData)
-	LR_AccountStatistics_Achievement.AllUsrData = clone(AllUsrData)
+	AllUsrData[szKey] = clone (_Achievement.SelfData)
+	_Achievement.AllUsrData = clone(AllUsrData)
 
 	LR_Acc_Achievement_Panel:ReloadItemBox()
 end
 
-function LR_AccountStatistics_Achievement.LOGIN_GAME()
-	LR_AccountStatistics_Achievement.LoadCustomFenlei()
+function _Achievement.LOGIN_GAME()
+	_Achievement.LoadCustomFenlei()
 end
 
-LR.RegisterEvent("NEW_ACHIEVEMENT", function() LR_AccountStatistics_Achievement.NEW_ACHIEVEMENT() end)
-LR.RegisterEvent("LOGIN_GAME", function() LR_AccountStatistics_Achievement.LOGIN_GAME() end)
+LR.RegisterEvent("NEW_ACHIEVEMENT", function() _Achievement.NEW_ACHIEVEMENT() end)
+LR.RegisterEvent("LOGIN_GAME", function() _Achievement.LOGIN_GAME() end)
 ------------------------------
 --界面
 ------------------------------
@@ -133,10 +137,10 @@ LR_Acc_Achievement_Panel.UsrData  =  {
 function LR_Acc_Achievement_Panel:OnCreate()
 	this:RegisterEvent("UI_SCALED")
 
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
-	LR_AccountStatistics_Achievement.LoadAllUsrData(DB)
+	_Achievement.LoadAllUsrData(DB)
 	DB:Execute("END TRANSACTION")
 	DB:Release()
 
@@ -171,7 +175,7 @@ function LR_Acc_Achievement_Panel:Init()
 	local hComboBoxShow  =  self:Append("ComboBox", frame, "hComboBoxShow", {w  =  250, x  =  20, y  =  51, text  =  LR_Acc_Achievement_Panel.Select or "" })
 	hComboBoxShow:Enable(true)
 	hComboBoxShow.OnClick  =  function(m)
-		local fenlei = LR_AccountStatistics_Achievement.fenlei or {}
+		local fenlei = _Achievement.fenlei or {}
 		for k, v in pairs (fenlei) do
 			local menu = {szOption = k, bCheck = true, bMCheck = true, bChecked = function() return LR_Acc_Achievement_Panel.Select  ==  k end,
 			fnAction = function()
@@ -261,7 +265,7 @@ function LR_Acc_Achievement_Panel:Open()
 end
 
 function LR_Acc_Achievement_Panel:LoadItemBox(hWin)
-	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
+	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.PutOutUsrList(), {}
 
 	local m
 	m = self:LoadItem(hWin, TempTable_Cal, 1)
@@ -315,11 +319,11 @@ function LR_Acc_Achievement_Panel:LoadItem(hWin, t_table, m)
 			local szName = t_table[i].szName
 			local dwID = t_table[i].dwID
 			local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-			local data = LR_AccountStatistics_Achievement.AllUsrData[szKey] or {}
+			local data = _Achievement.AllUsrData[szKey] or {}
 
 			local Select = LR_Acc_Achievement_Panel.Select or _L["MengHuiDaoXiang"]
-			if LR_AccountStatistics_Achievement.fenlei[Select] and type(LR_AccountStatistics_Achievement.fenlei[Select]) == "table" then
-				local selectData = LR_AccountStatistics_Achievement.fenlei[Select]
+			if _Achievement.fenlei[Select] and type(_Achievement.fenlei[Select]) == "table" then
+				local selectData = _Achievement.fenlei[Select]
 				for ix = 1, #selectData, 1 do
 					local text_finish = self:Append("Text", hIconViewContent, sformat("Text_Finish_%d_%s", i+m, selectData[ix]), {w  =  35, h  =  30, x = 150+(ix-1)*35 , text  =  "   " , font  =  22})
 					if data[selectData[ix]] then
@@ -374,8 +378,8 @@ function  LR_Acc_Achievement_Panel:Load_tHead()
 			self:ClearHandle(tHead_Handle)
 		end
 		local Select = LR_Acc_Achievement_Panel.Select or _L["MengHuiDaoXiang"]
-		if LR_AccountStatistics_Achievement.fenlei[Select] and type(LR_AccountStatistics_Achievement.fenlei[Select]) == "table" then
-			local data = LR_AccountStatistics_Achievement.fenlei[Select]
+		if _Achievement.fenlei[Select] and type(_Achievement.fenlei[Select]) == "table" then
+			local data = _Achievement.fenlei[Select]
 			local Text_Ach = {}
 			local Image_Ach = {}
 			for i = 1, #data, 1 do
@@ -420,3 +424,6 @@ function LR_Acc_Achievement_Panel:ReloadItemBox()
 	end
 end
 
+--注册模块
+LR_AS_Module.AchievementRecord = {}
+LR_AS_Module.AchievementRecord.SaveData = _Achievement.SaveData

@@ -1,50 +1,23 @@
-local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
+local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
+local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
+---------------------------------------------------------------
+local AddonPath = "Interface\\LR_Plugin\\LR_AS_Module_FBList"
+local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
-local _L = LR.LoadLangPack(AddonPath)
-local DB_name = "maindb.db"
-local sformat, slen, sgsub, ssub, sfind = string.format, string.len, string.gsub, string.sub, string.find
-local mfloor, mceil, mmin, mmax = math.floor, math.ceil, math.min, math.max
-local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remove, table.sort
-----------------------------------------------------------
-local VERSION = "20171228"
---------------------------------------------------------
-LR_AccountStatistics_FBList =  LR_AccountStatistics_FBList or {}
-LR_AccountStatistics_FBList.src = "%s\\%s\\%s\\%s\\FBList_%s.dat"
-LR_AccountStatistics_FBList.SettingsSrc = "%s\\CommonSetting_FBList.dat"
-LR_AccountStatistics_FBList.AllUsrData = {}
-LR_AccountStatistics_FBList.SelfData = {}
+local db_name = "maindb.db"
+local _L = LR.LoadLangPack(LanguagePath)
+local VERSION = "20180403"
+-------------------------------------------------------------
+--[[
+因为获取副本信息是异步操作
+上线马上获取一次副本信息，当副本进度变化时更新副本信息
+副本信息的保存在异步获得副本信息后
+]]
 
-LR_AccountStatistics_FBList.FB25R = {}
-LR_AccountStatistics_FBList.FB10R = {}
-LR_AccountStatistics_FBList.FB5R = {}
-
-local RESET_TYPE = {
-	NONE = 0,
-	EVERY_DAY = 1,
-	MONDAY = 2,
-	THURSDAY = 3,
-}
-
-function LR_AccountStatistics_FBList.GetFBData()
-	local fenlei = {
-		[25] = {},
-		[10] = {},
-		[5] = {},
-	}
-	for dwMapID, v in pairs (LR.MapType) do
-		if fenlei[v.nMaxPlayerCount] then
-			fenlei[v.nMaxPlayerCount][#fenlei[v.nMaxPlayerCount]+1] = {dwMapID = dwMapID, Level = v.Level}
-		end
-	end
-	tsort(fenlei[25], function(a, b) return a.dwMapID > b.dwMapID end)
-	tsort(fenlei[10], function(a, b) return a.dwMapID > b.dwMapID end)
-	tsort(fenlei[5], function(a, b) return a.dwMapID > b.dwMapID end)
-	LR_AccountStatistics_FBList.FB25R = clone(fenlei[25])
-	LR_AccountStatistics_FBList.FB10R = clone(fenlei[10])
-	LR_AccountStatistics_FBList.FB5R = clone(fenlei[5])
-end
-LR_AccountStatistics_FBList.GetFBData()
-
+LR_AS_FBList = {}
 local DefaultUsrData = {
 	On = true,
 	CommonSetting = true,
@@ -58,95 +31,109 @@ local DefaultUsrData = {
 	},
 	VERSION = VERSION,
 }
-LR_AccountStatistics_FBList.UsrData = clone( DefaultUsrData )
-RegisterCustomData("LR_AccountStatistics_FBList.UsrData", VERSION)
+LR_AS_FBList.UsrData = clone( DefaultUsrData )
+RegisterCustomData("LR_AS_FBList.UsrData", VERSION)
+
+local _FBList = {}
+_FBList.src = "%s\\%s\\%s\\%s\\FBList_%s.dat"
+_FBList.SettingsSrc = "%s\\CommonSetting_FBList.dat"
+_FBList.AllUsrData = {}
+_FBList.SelfData = {}
+
+_FBList.FB25R = {}
+_FBList.FB10R = {}
+_FBList.FB5R = {}
+
+function _FBList.GetFBData()
+	local fenlei = {
+		[25] = {},
+		[10] = {},
+		[5] = {},
+	}
+	for dwMapID, v in pairs (LR.MapType) do
+		if fenlei[v.nMaxPlayerCount] then
+			fenlei[v.nMaxPlayerCount][#fenlei[v.nMaxPlayerCount]+1] = {dwMapID = dwMapID, Level = v.Level}
+		end
+	end
+	tsort(fenlei[25], function(a, b) return a.dwMapID > b.dwMapID end)
+	tsort(fenlei[10], function(a, b) return a.dwMapID > b.dwMapID end)
+	tsort(fenlei[5], function(a, b) return a.dwMapID > b.dwMapID end)
+	_FBList.FB25R = clone(fenlei[25])
+	_FBList.FB10R = clone(fenlei[10])
+	_FBList.FB5R = clone(fenlei[5])
+end
+_FBList.GetFBData()
 
 ------------------------------------------------------------
-function LR_AccountStatistics_FBList.LoadCommonSetting()
-	if not LR_AccountStatistics_FBList.UsrData.CommonSetting then
+function _FBList.LoadCommonSetting()
+	if not LR_AS_FBList.UsrData.CommonSetting then
 		return
 	end
 	local path = sformat("%s\\CommonSetting_FBList.dat", SaveDataPath)
 	local data = LoadLUAData(path) or {}
 	if data.VERSION and data.VERSION == VERSION then
-		LR_AccountStatistics_FBList.UsrData.bShowMapID = clone(data.bShowMapID or {})
+		LR_AS_FBList.UsrData.bShowMapID = clone(data.bShowMapID or {})
 	else
-		LR_AccountStatistics_FBList.UsrData.bShowMapID =  clone( DefaultUsrData.bShowMapID )
-		LR_AccountStatistics_FBList.SaveCommonSetting ()
+		LR_AS_FBList.UsrData.bShowMapID =  clone( DefaultUsrData.bShowMapID )
+		_FBList.SaveCommonSetting()
 	end
 end
 
-function LR_AccountStatistics_FBList.SaveCommonSetting()
-	if not LR_AccountStatistics_FBList.UsrData.CommonSetting then
+function _FBList.SaveCommonSetting()
+	if not LR_AS_FBList.UsrData.CommonSetting then
 		return
 	end
 	local data = {}
 	data.VERSION = VERSION
-	data.bShowMapID = LR_AccountStatistics_FBList.UsrData.bShowMapID or {}
+	data.bShowMapID = LR_AS_FBList.UsrData.bShowMapID or {}
 	local path = sformat("%s\\CommonSetting_FBList.dat", SaveDataPath)
 	SaveLUAData(path, data)
 end
 
-
-------↓↓↓清除所有人的每周可获得监本数量
-function LR_AccountStatistics_FBList.ClearAllReaminJianBen(DB)
-	local DB_SELECT = DB:Prepare("SELECT * FROM player_info WHERE szKey IS NOT NULL")
-	local Data = DB_SELECT:GetAll() or {}
-	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, dwID, szName, nLevel, dwForceID, nGold, nSilver, nCopper, JianBen, BangGong, XiaYi, WeiWang, ZhanJieJiFen, ZhanJieDengJi, MingJianBi, szTitle, nCurrentStamina, nMaxStamina, nCurrentThew, nMaxThew, nCurrentTrainValue, nCamp, szTongName, remainJianBen, loginArea, loginServer, realArea, realServer, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1500, ?, ?, ?, ?, ?)")
-	for k, v in pairs (Data) do
-		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(v.szKey, v.dwID, v.szName, v.nLevel, v.dwForceID, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.BangGong, v.XiaYi, v.WeiWang, v.ZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.szTitle, v.nCurrentStamina, v.nMaxStamina, v.nCurrentThew, v.nMaxThew, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.loginArea, v.loginServer, v.realArea, v.realServer, GetCurrentTime())
-		DB_REPLACE:Execute()
-	end
-end
-LR_AS_Base.Add2ResetData({szKey = "ResetJianBen", fnAction = LR_AccountStatistics_FBList.ClearAllReaminJianBen, nType = RESET_TYPE.MONDAY, order = 30})
-
 ------↓↓↓清除所有人的副本数据，包括10人本，25人本，5人本
-function LR_AccountStatistics_FBList.ClearAllData(DB)
+function _FBList.ClearAllData(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0 AND szKey IS NOT NULL")
-	local Data = DB_SELECT:GetAll() or {}
+	local Data = d2g(DB_SELECT:GetAll())
 	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
 	for k, v in pairs (Data) do
 		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(v.szKey, LR.JsonEncode({}))
+		DB_REPLACE:BindAll(g2d(v.szKey), g2d(LR.JsonEncode({})))
 		DB_REPLACE:Execute()
 	end
 end
-LR_AS_Base.Add2ResetData({szKey = "Reset_All_FB", fnAction = LR_AccountStatistics_FBList.ClearAllData, nType = RESET_TYPE.MONDAY, order = 40})
 
 ------↓↓↓清除所有人物的10人本数据
-function LR_AccountStatistics_FBList.ClearAllData10R(DB)
+function _FBList.ClearAllData10R(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0 AND szKey IS NOT NULL")
-	local Data = DB_SELECT:GetAll() or {}
+	local Data = d2g(DB_SELECT:GetAll())
 	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
 	for k, v in pairs (Data) do
 		local FB_Record = LR.JsonDecode(v.fb_data) or {}
 		---拷贝25人本的数据
 		local t = {}
-		local FB25R = LR_AccountStatistics_FBList.FB25R
+		local FB25R = _FBList.FB25R
 		for j = 1, #FB25R, 1 do
 			if FB_Record[tostring(FB25R[j].dwMapID)] ~=  nil then
 				t[tostring(FB25R[j].dwMapID)] = FB_Record[tostring(FB25R[j].dwMapID)]
 			end
 		end
 		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(v.szKey, LR.JsonEncode(t))
+		DB_REPLACE:BindAll(g2d(v.szKey), g2d(LR.JsonEncode(t)))
 		DB_REPLACE:Execute()
 	end
 end
-LR_AS_Base.Add2ResetData({szKey = "Reset_All_10RFB", fnAction = LR_AccountStatistics_FBList.ClearAllData10R, nType = RESET_TYPE.THURSDAY, order = 50})
 
 ------↓↓↓清除所有人物的5人副本数据
-function LR_AccountStatistics_FBList.ClearAllData5R(DB)
+function _FBList.ClearAllData5R(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0 AND szKey IS NOT NULL")
-	local Data = DB_SELECT:GetAll() or {}
+	local Data = d2g(DB_SELECT:GetAll())
 	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
 	for k, v in pairs (Data) do
 		local FB_Record = LR.JsonDecode(v.fb_data) or {}
 		---拷贝25/10人本的数据
 		local t = {}
-		local FB25R = LR_AccountStatistics_FBList.FB25R
-		local FB10R = LR_AccountStatistics_FBList.FB10R
+		local FB25R = _FBList.FB25R
+		local FB10R = _FBList.FB10R
 		for j = 1, #FB25R, 1 do
 			if FB_Record[tostring(FB25R[j].dwMapID)] ~=  nil then
 				t[tostring(FB25R[j].dwMapID)] = FB_Record[tostring(FB25R[j].dwMapID)]
@@ -158,53 +145,56 @@ function LR_AccountStatistics_FBList.ClearAllData5R(DB)
 			end
 		end
 		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(v.szKey, LR.JsonEncode(t))
+		DB_REPLACE:BindAll(unpack(g2d({v.szKey, LR.JsonEncode(t)})))
 		DB_REPLACE:Execute()
 	end
 end
-LR_AS_Base.Add2ResetData({szKey = "Reset_All_5RFB", fnAction = LR_AccountStatistics_FBList.ClearAllData5R, nType = RESET_TYPE.EVERY_DAY, order = 60})
+
+function _FBList.ResetDataMonday(DB)
+	_FBList.ClearAllData(DB)
+end
+
+function _FBList.ResetDataEveryDay(DB)
+	_FBList.ClearAllData5R(DB)
+end
+
+function _FBList.ResetDataFriday(DB)
+	_FBList.ClearAllData10R(DB)
+end
+
 
 ------↓↓↓获取副本CD（异步）
-function LR_AccountStatistics_FBList.GetFBList()
-	--Output("GetFBList")
+function _FBList.GetFBList()
 	ApplyMapSaveCopy()
 end
 
 ------↓↓↓保存自己的副本CD数据
-function LR_AccountStatistics_FBList.SaveData(DB)
-	local me = GetClientPlayer()
-	if not me then
+function _FBList.SaveData(DB)
+	if not LR_AS_Base.UsrData.bRecord then
 		return
 	end
-	if IsRemotePlayer(me.dwID) then
+	local me = GetClientPlayer()
+	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
 	local serverInfo = {GetUserServer()}
 	local realArea, realServer = serverInfo[5], serverInfo[6]
 	local dwID = me.dwID
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-	if LR_AS_Base.UsrData.OthersCanSee then
-		if next(LR_AccountStatistics_FBList.SelfData) ~=  nil then
-			local FB_Record = {}
-			for dwMapID, nCopyIndex in pairs (LR_AccountStatistics_FBList.SelfData) do
-				FB_Record[tostring(dwMapID)] = nCopyIndex
-			end
-			local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
-			DB_REPLACE:ClearBindings()
-			DB_REPLACE:BindAll(szKey, LR.JsonEncode(FB_Record))
-			DB_REPLACE:Execute()
-		end
-	else
-		local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, bDel ) VALUES ( ?, 1 )")
-		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(szKey)
-		DB_REPLACE:Execute()
+
+	local FB_Record = {}
+	for dwMapID, nCopyIndex in pairs (_FBList.SelfData) do
+		FB_Record[tostring(dwMapID)] = nCopyIndex
 	end
+	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(FB_Record)})))
+	DB_REPLACE:Execute()
 end
 
-function LR_AccountStatistics_FBList.LoadAllUsrData(DB)
+function _FBList.LoadAllUsrData(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM fb_data WHERE bDel = 0 AND szKey IS NOT NULL")
-	local Data = DB_SELECT:GetAll()
+	local Data = d2g(DB_SELECT:GetAll())
 	local AllUsrData = {}
 	if Data and next(Data) ~= nil then
 		for k, v in pairs (Data) do
@@ -216,13 +206,15 @@ function LR_AccountStatistics_FBList.LoadAllUsrData(DB)
 			AllUsrData[v.szKey] = clone(FB_Record)
 		end
 	end
-	LR_AccountStatistics_FBList.AllUsrData = clone(AllUsrData)
+	_FBList.AllUsrData = clone(AllUsrData)
 
+	--将自己的数据加入列表
+	_FBList.GetFBList()
 	--将自己的数据加入列表
 	local ServerInfo = {GetUserServer()}
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, GetClientPlayer().dwID)
-	LR_AccountStatistics_FBList.AllUsrData[szKey] = clone(LR_AccountStatistics_FBList.SelfData)
+	_FBList.AllUsrData[szKey] = clone(_FBList.SelfData)
 end
 
 ------↓↓↓对服务器获取副本CD事件的响应
@@ -234,59 +226,62 @@ arg0 = {
 	...
 }
 ]]
-function LR_AccountStatistics_FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
-	local FB_Record = arg0 or {}
-	if next(FB_Record) ==  nil then
-		return
-	end
-	LR_AccountStatistics_FBList.SelfData = clone(FB_Record)
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
+function _FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
+	local FB_Record = arg0
+	---讲数据添加进数据库
+	local ServerInfo = {GetUserServer()}
+	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	local szKey = sformat("%s_%s_%d", realArea, realServer, GetClientPlayer().dwID)
+	_FBList.SelfData = clone(FB_Record)
+	_FBList.AllUsrData[szKey] = clone(FB_Record)
+
+	--保存进数据库
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = SQLite3_Open(path)
 	DB:Execute("BEGIN TRANSACTION")
-	LR_AccountStatistics_FBList.SaveData(DB)
+	_FBList.SaveData(DB)
 	DB:Execute("END TRANSACTION")
 	DB:Release()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
 	if frame then
-		LR_AccountStatistics_FBList.ListFB()
+		_FBList.ListFB()
 	end
 end
 
 
-function LR_AccountStatistics_FBList.FIRST_LOADING_END()
-	LR_AccountStatistics_FBList.LoadCommonSetting()
-	LR.DelayCall(6000, function()
-		LR_AccountStatistics_FBList.GetFBList()
+function _FBList.FIRST_LOADING_END()
+	_FBList.LoadCommonSetting()
+	LR.DelayCall(300, function()
+		_FBList.GetFBList()
 	end)
 end
 
-function LR_AccountStatistics_FBList.ResetData()
+function _FBList.ResetData()
 	local SettingsSrc2 = sformat("%s\\CommonSetting_FBList.dat", SaveDataPath)
 	local bShowMapID = clone( DefaultUsrData.bShowMapID )
 	SaveLUAData( SettingsSrc2, bShowMapID )
-	LR_AccountStatistics_FBList.UsrData = clone( DefaultUsrData )
+	LR_AS_FBList.UsrData = clone( DefaultUsrData )
 end
 
-
-LR.RegisterEvent("ON_APPLY_PLAYER_SAVED_COPY_RESPOND", function() LR_AccountStatistics_FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND() end)
-LR.RegisterEvent("FIRST_LOADING_END", function() LR_AccountStatistics_FBList.FIRST_LOADING_END() end)
-
+LR.RegisterEvent("ON_APPLY_PLAYER_SAVED_COPY_RESPOND", function() _FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND() end)
+LR.RegisterEvent("FIRST_LOADING_END", function() _FBList.FIRST_LOADING_END() end)
 -------------------------------------------------------------------
-function LR_AccountStatistics_FBList.GetFBNameByID(dwMapID)
-	for i = 1, #LR_AccountStatistics_FBList.FB25R, 1 do
-		if LR_AccountStatistics_FBList.FB25R[i].dwMapID ==  dwMapID then
+function _FBList.GetFBNameByID(dwMapID)
+	for i = 1, #_FBList.FB25R, 1 do
+		if _FBList.FB25R[i].dwMapID ==  dwMapID then
 			return LR.MapType[dwMapID].szName
 		end
 	end
-	for i = 1, #LR_AccountStatistics_FBList.FB10R, 1 do
-		if LR_AccountStatistics_FBList.FB10R[i].dwMapID ==  dwMapID then
+	for i = 1, #_FBList.FB10R, 1 do
+		if _FBList.FB10R[i].dwMapID ==  dwMapID then
 			return LR.MapType[dwMapID].szName
 		end
 	end
 	return "未知地图"
 end
 
-function LR_AccountStatistics_FBList.GetFBIDByMapID(fb_data, dwMapID)
+function _FBList.GetFBIDByMapID(fb_data, dwMapID)
 	local fb_data = fb_data or {}
 	if next(fb_data) == nil then
 		return nil
@@ -301,94 +296,111 @@ end
 ------------------------------------------------------
 ----主界面显示副本数据
 ------------------------------------------------------
-LR_AccountStatistics_FBList.Container = nil
+_FBList.Container = nil
 
-function LR_AccountStatistics_FBList.ReFreshTitle()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+function _FBList.AddPage()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
 	if not frame then
 		return
 	end
-	local title_handle = frame:Lookup("PageSet_Menu"):Lookup("Page_LR_FBList"):Lookup("", "")
-	for i = 1, #LR_AccountStatistics_FBList.UsrData.bShowMapID, 1 do
-		local text = title_handle:Lookup(sformat("Text_FB%d_Break", i))
-		text:SetText(LR_AccountStatistics_FBList.GetFBNameByID(LR_AccountStatistics_FBList.UsrData.bShowMapID[i].dwMapID))
+
+	local PageSet_Menu = frame:Lookup("PageSet_Menu")
+	local Btn = PageSet_Menu:Lookup("WndCheck_FBList")
+	--PageSet_Menu:Lookup("Page_FBList"):Destroy()
+
+	local page = Wnd.OpenWindow(sformat("%s\\UI\\Page.ini", AddonPath), "temp"):Lookup("Page_FBList")
+	page:ChangeRelation(PageSet_Menu, true, true)
+	page:SetName("Page_FBList")
+	Wnd.CloseWindow("temp")
+	PageSet_Menu:AddPage(page, Btn)
+
+	Btn:Enable(true)
+	Btn:Lookup("",""):Lookup("Text_FBList"):SetFontColor(255, 255, 255)
+	_FBList.ReFreshTitle()
+	_FBList.ListFB()
+	_FBList.AddPageButton()
+end
+
+function _FBList.ReFreshTitle()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
+	if not frame then
+		return
 	end
-	for i = #LR_AccountStatistics_FBList.UsrData.bShowMapID+1, 6, 1 do
+	local title_handle = frame:Lookup("PageSet_Menu"):Lookup("Page_FBList"):Lookup("", "")
+	for i = 1, #LR_AS_FBList.UsrData.bShowMapID, 1 do
+		local text = title_handle:Lookup(sformat("Text_FB%d_Break", i))
+		text:SetText(_FBList.GetFBNameByID(LR_AS_FBList.UsrData.bShowMapID[i].dwMapID))
+	end
+	for i = #LR_AS_FBList.UsrData.bShowMapID+1, 6, 1 do
 		local text = title_handle:Lookup(sformat("Text_FB%d_Break", i))
 		text:SetText("")
 	end
 end
 
-
-function LR_AccountStatistics_FBList.ListFB()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+function _FBList.ListFB()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
 	if not frame then
 		return
 	end
 	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
-	LR_AccountStatistics_FBList.Container = frame:Lookup("PageSet_Menu/Page_LR_FBList/WndScroll_LR_FBList_Record/Wnd_LR_FBList_Record_List")
-	LR_AccountStatistics_FBList.Container:Clear()
-	num = LR_AccountStatistics_FBList.ShowItem (TempTable_Cal, 255, 1, 0)
-	num = LR_AccountStatistics_FBList.ShowItem (TempTable_NotCal, 60, 1, num)
-	LR_AccountStatistics_FBList.Container:FormatAllContentPos()
+	_FBList.Container = frame:Lookup("PageSet_Menu/Page_FBList/WndScroll_FBList/Wnd_FBList")
+	_FBList.Container:Clear()
+	num = _FBList.ShowItem (TempTable_Cal, 255, 1, 0)
+	num = _FBList.ShowItem (TempTable_NotCal, 60, 1, num)
+	_FBList.Container:FormatAllContentPos()
 end
 
-function LR_AccountStatistics_FBList.ShowItem (t_Table, Alpha, bCal, _num)
+function _FBList.ShowItem(t_Table, Alpha, bCal, _num)
 	local num = _num
-	local TempTable = clone(t_Table)
+	local PlayerList = clone(t_Table)
 
-	local player  = GetClientPlayer()
-	if not player then
+	local me  = GetClientPlayer()
+	if not me then
 		return
 	end
 
-	for i = 1, #TempTable, 1 do
+	for k, v in pairs(PlayerList) do
 		num = num+1
-		local wnd = LR_AccountStatistics_FBList.Container:AppendContentFromIni("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics_FBList_Item.ini", "FBList_WndWindow", num)
-		local items = wnd:Lookup("", "")
-		if num % 2 ==  0 then
-			items:Lookup("Image_Line"):Hide()
-		else
-			items:Lookup("Image_Line"):SetAlpha(225)
-		end
+		local wnd = _FBList.Container:AppendContentFromIni(sformat("%s\\UI\\item.ini", AddonPath), "FBList_WndWindow", sformat("%s_%s_%s", v.realArea, v.realServer, v.szName))
+		local handle = wnd:Lookup("", "")
 
+		if num % 2 ==  0 then
+			handle:Lookup("Image_Line"):Hide()
+		else
+			handle:Lookup("Image_Line"):SetAlpha(225)
+		end
 		wnd:SetAlpha(Alpha)
 
-		local item_MenPai = items:Lookup("Image_NameIcon")
-		local item_Name = items:Lookup("Text_Name")
-		local item_Select = items:Lookup("Image_Select")
+		local item_MenPai = handle:Lookup("Image_NameIcon")
+		local item_Name = handle:Lookup("Text_Name")
+		local item_Select = handle:Lookup("Image_Select")
 		item_Select:SetAlpha(125)
 		item_Select:Hide()
 
-		item_MenPai:FromUITex(GetForceImage(TempTable[i].dwForceID))
-		local name = TempTable[i].szName
-		if slen(name) >12 then
-			local _start, _end  = sfind (name, "@")
-			if _start and _end then
-				name = sformat("%s...", ssub(name, 1, 9))
-			else
-				name = sformat("%s...", ssub(name, 1, 10))
-			end
+		--名字
+		item_MenPai:FromUITex(GetForceImage(v.dwForceID))
+		local name = v.szName
+		if wslen(name) > 6 then
+			name = sformat("%s...", wssub(name, 1, 5))
 		end
-		item_Name:SprintfText("%s（%d）", name, TempTable[i].nLevel)
-		local r, g, b = LR.GetMenPaiColor(TempTable[i].dwForceID)
+		item_Name:SprintfText(_L["%s(%d)"], name, v.nLevel)
+		local r, g, b = LR.GetMenPaiColor(v.dwForceID)
 		item_Name:SetFontColor(r, g, b)
-		--  Output(LR.GetMenPaiColor(TempTable[i].MenPai))
 
-		local realArea = TempTable[i].realArea
-		local realServer = TempTable[i].realServer
-		local realArea = TempTable[i].realArea
-		local realServer = TempTable[i].realServer
-		local szName = TempTable[i].szName
-		local dwID = TempTable[i].dwID
+		local realArea = v.realArea
+		local realServer = v.realServer
+		local realArea = v.realArea
+		local realServer = v.realServer
+		local szName = v.szName
+		local dwID = v.dwID
 		local FB_Record = {}
 
 		local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-		FB_Record = LR_AccountStatistics_FBList.AllUsrData[szKey] or {}
+		FB_Record = _FBList.AllUsrData[szKey] or {}
 
-		for i = 1, #LR_AccountStatistics_FBList.UsrData.bShowMapID, 1 do
-			local Text_FB = items:Lookup(sformat("Text_FB%d", i))
-			local FB_ID = LR_AccountStatistics_FBList.GetFBIDByMapID(FB_Record, LR_AccountStatistics_FBList.UsrData.bShowMapID[i].dwMapID)
+		for i = 1, #LR_AS_FBList.UsrData.bShowMapID, 1 do
+			local Text_FB = handle:Lookup(sformat("Text_FB%d", i))
+			local FB_ID = _FBList.GetFBIDByMapID(FB_Record, LR_AS_FBList.UsrData.bShowMapID[i].dwMapID)
 			if FB_ID ==  nil then
 				Text_FB:SetText("--")
 				Text_FB:SetFontScheme(80)
@@ -398,34 +410,34 @@ function LR_AccountStatistics_FBList.ShowItem (t_Table, Alpha, bCal, _num)
 			end
 		end
 
-		for i = #LR_AccountStatistics_FBList.UsrData.bShowMapID+1, 6, 1 do
-			local Text_FB = items:Lookup(sformat("Text_FB%d", i))
+		for i = #LR_AS_FBList.UsrData.bShowMapID+1, 6, 1 do
+			local Text_FB = handle:Lookup(sformat("Text_FB%d", i))
 			Text_FB:SetText("")
 			Text_FB:SetFontScheme(41)
 		end
 
 		local item_button = wnd:Lookup("Btn_FBSetting")
 		item_button.OnLButtonClick =  function ()
-			local frame = Station.Lookup("Normal/LR_Acc_FB_Detail_Panel")
-			local realArea = TempTable[i].realArea
-			local realServer = TempTable[i].realServer
-			local dwID = TempTable[i].dwID
+			local frame = Station.Lookup("Normal/LR_AS_FB_Detail_Panel")
+			local realArea = v.realArea
+			local realServer = v.realServer
+			local dwID = v.dwID
 			if not frame then
-				LR_Acc_FB_Detail_Panel:Open(realArea, realServer, dwID)
+				LR_AS_FB_Detail_Panel:Open(realArea, realServer, dwID)
 			else
-				LR_Acc_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
+				LR_AS_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
 			end
 		end
 
 		--------------------输出tips
-		items:RegisterEvent(786)
-		items.OnItemMouseEnter = function ()
+		handle:RegisterEvent(304)
+		handle.OnItemMouseEnter = function ()
 			item_Select:Show()
 			local nMouseX, nMouseY =  Cursor.GetPos()
 			local szTipInfo = {}
-			local szPath, nFrame = GetForceImage(TempTable[i].dwForceID)
+			local szPath, nFrame = GetForceImage(v.dwForceID)
 			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s（%d）\n", TempTable[i].szName, TempTable[i].nLevel), 62, r, g, b)
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s（%d）\n", v.szName, v.nLevel), 62, r, g, b)
 			--szTipInfo[#szTipInfo+1] = GetFormatText(" ================================ \n", 17)
 			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
 			szTipInfo[#szTipInfo+1] = GetFormatText("\n", 41)
@@ -439,97 +451,107 @@ function LR_AccountStatistics_FBList.ShowItem (t_Table, Alpha, bCal, _num)
 			local szOutputTip = tconcat(szTipInfo)
 			OutputTip(szOutputTip, 330, {nMouseX, nMouseY, 0, 0})
 		end
-		items.OnItemMouseLeave = function()
+		handle.OnItemMouseLeave = function()
 			item_Select:Hide()
 			HideTip()
 		end
-		items.OnItemLButtonClick = function()
-			local frame = Station.Lookup("Normal/LR_Acc_FB_Detail_Panel")
-			local realArea = TempTable[i].realArea
-			local realServer = TempTable[i].realServer
-			local dwID = TempTable[i].dwID
+		handle.OnItemLButtonClick = function()
+			local frame = Station.Lookup("Normal/LR_AS_FB_Detail_Panel")
+			local realArea = v.realArea
+			local realServer = v.realServer
+			local dwID = v.dwID
 			if not frame then
-				LR_Acc_FB_Detail_Panel:Open(realArea, realServer, dwID)
+				LR_AS_FB_Detail_Panel:Open(realArea, realServer, dwID)
 			else
-				LR_Acc_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
+				LR_AS_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
 			end
+		end
+		handle.OnItemRButtonClick = function()
+			local menu = LR_AS_Panel.RClickMenu(realArea, realServer, dwID)
+			PopupMenu(menu)
 		end
 	end
 	return num
 end
 
 --添加底部按钮
-function LR_AccountStatistics_FBList.AddPageButton()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+function _FBList.AddPageButton()
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
 	if not frame then
 		return
 	end
-	local page = frame:Lookup("PageSet_Menu/Page_LR_FBList")
-	LR_AS_Base.AddButton(page, "btn_5", _L["Show Group"], 340, 555, 110, 36, function() LR_AS_Group.ShowGroup() end)
-	LR_AS_Base.AddButton(page, "btn_4", _L["Reading Statistics"], 470, 555, 110, 36, function() LR_BookRd_Panel:Open() end)
-	LR_AS_Base.AddButton(page, "btn_3", _L["FB Detail"], 600, 555, 110, 36, function() LR_Acc_FB_Detail_Panel:Open() end)
-	LR_AS_Base.AddButton(page, "btn_2", _L["Settings"], 730, 555, 110, 36, function() LR_AccountStatistics.SetOption() end)
+	local page = frame:Lookup("PageSet_Menu/Page_FBList")
+	LR_AS_Base.AddButton(page, "btn_5", _L["Show Group"], 340, 555, 110, 36, function() LR_AS_Group.PopupUIMenu() end)
+	if LR_AS_Module["BookRd"] then
+		LR_AS_Base.AddButton(page, "btn_4", _L["Reading Statistics"], 470, 555, 110, 36, function() LR_BookRd_Panel:Open() end)
+	end
+	LR_AS_Base.AddButton(page, "btn_3", _L["FB Detail"], 600, 555, 110, 36, function() LR_AS_FB_Detail_Panel:Open() end)
+	LR_AS_Base.AddButton(page, "btn_2", _L["Settings"], 730, 555, 110, 36, function() LR_AS_Base.SetOption() end)
 end
 
+function _FBList.RefreshPage()
+	_FBList.ReFreshTitle()
+	_FBList.ListFB()
+end
 
 ------------------------------------------------------------------------------------
 -----明细小窗口
 ------------------------------------------------------------------------------------
-LR_Acc_FB_Detail_Panel = CreateAddon("LR_Acc_FB_Detail_Panel")
-LR_Acc_FB_Detail_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
+LR_AS_FB_Detail_Panel = CreateAddon("LR_AS_FB_Detail_Panel")
+LR_AS_FB_Detail_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
-LR_Acc_FB_Detail_Panel.UsrData = {
+LR_AS_FB_Detail_Panel.UsrData = {
 	Anchor = {s = "CENTER", r = "CENTER", x = 0, y = 0},
 }
 
-LR_Acc_FB_Detail_Panel.szPlayerName = nil
-LR_Acc_FB_Detail_Panel.realServer = nil
-LR_Acc_FB_Detail_Panel.realArea = nil
+LR_AS_FB_Detail_Panel.szPlayerName = nil
+LR_AS_FB_Detail_Panel.realServer = nil
+LR_AS_FB_Detail_Panel.realArea = nil
 
 local CustomVersion = "20170111"
-RegisterCustomData("LR_Acc_FB_Detail_Panel.UsrData", CustomVersion)
+RegisterCustomData("LR_AS_FB_Detail_Panel.UsrData", CustomVersion)
 
-LR_Acc_FB_Detail_Panel:BindEvent("OnFrameDragEnd", "OnDragEnd")
-LR_Acc_FB_Detail_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
-LR_Acc_FB_Detail_Panel:BindEvent("OnFrameKeyDown", "OnKeyDown")
+LR_AS_FB_Detail_Panel:BindEvent("OnFrameDragEnd", "OnDragEnd")
+LR_AS_FB_Detail_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
+LR_AS_FB_Detail_Panel:BindEvent("OnFrameKeyDown", "OnKeyDown")
 
 
-function LR_Acc_FB_Detail_Panel:OnCreate()
+function LR_AS_FB_Detail_Panel:OnCreate()
 	this:RegisterEvent("UI_SCALED")
 	--this:RegisterEvent("CUSTOM_DATA_LOADED")
-	LR_Acc_FB_Detail_Panel.UpdateAnchor(this)
+	LR_AS_FB_Detail_Panel.UpdateAnchor(this)
 
 	-------打开面板时保存数据
 	if LR_AS_Base.UsrData.AutoSave and LR_AS_Base.UsrData.OpenSave then
 		LR_AS_Base.AutoSave()
 	end
 
-	RegisterGlobalEsc("LR_Acc_FB_Detail_Panel", function () return true end , function() LR_Acc_FB_Detail_Panel:Open() end)
+	RegisterGlobalEsc("LR_AS_FB_Detail_Panel", function () return true end , function() LR_AS_FB_Detail_Panel:Open() end)
 end
 
-function LR_Acc_FB_Detail_Panel:OnEvents(event)
+function LR_AS_FB_Detail_Panel:OnEvents(event)
 	if event ==  "UI_SCALED" then
-		LR_Acc_FB_Detail_Panel.UpdateAnchor(this)
+		LR_AS_FB_Detail_Panel.UpdateAnchor(this)
 	end
 end
 
-function LR_Acc_FB_Detail_Panel.UpdateAnchor(frame)
-	frame:SetPoint(LR_Acc_FB_Detail_Panel.UsrData.Anchor.s, 0, 0, LR_Acc_FB_Detail_Panel.UsrData.Anchor.r, LR_Acc_FB_Detail_Panel.UsrData.Anchor.x, LR_Acc_FB_Detail_Panel.UsrData.Anchor.y)
+function LR_AS_FB_Detail_Panel.UpdateAnchor(frame)
+	frame:SetPoint(LR_AS_FB_Detail_Panel.UsrData.Anchor.s, 0, 0, LR_AS_FB_Detail_Panel.UsrData.Anchor.r, LR_AS_FB_Detail_Panel.UsrData.Anchor.x, LR_AS_FB_Detail_Panel.UsrData.Anchor.y)
 	frame:CorrectPos()
 end
 
-function LR_Acc_FB_Detail_Panel:OnDestroy()
-	UnRegisterGlobalEsc("LR_Acc_FB_Detail_Panel")
+function LR_AS_FB_Detail_Panel:OnDestroy()
+	UnRegisterGlobalEsc("LR_AS_FB_Detail_Panel")
 	PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
 end
 
-function LR_Acc_FB_Detail_Panel:OnDragEnd()
+function LR_AS_FB_Detail_Panel:OnDragEnd()
 	this:CorrectPos()
-	LR_Acc_FB_Detail_Panel.UsrData.Anchor = GetFrameAnchor(this)
+	LR_AS_FB_Detail_Panel.UsrData.Anchor = GetFrameAnchor(this)
 end
 
-function LR_Acc_FB_Detail_Panel:Init()
-	local frame = self:Append("Frame", "LR_Acc_FB_Detail_Panel", {title = _L["LR FB Details"], style = "SMALL"})
+function LR_AS_FB_Detail_Panel:Init()
+	local frame = self:Append("Frame", "LR_AS_FB_Detail_Panel", {title = _L["LR FB Details"], style = "SMALL"})
 
 	local imgTab = self:Append("Image", frame, "TabImg", {w = 381, h = 33, x = 0, y = 50})
     imgTab:SetImage("ui\\Image\\UICommon\\ActivePopularize2.UITex", 46)
@@ -607,7 +629,7 @@ function LR_Acc_FB_Detail_Panel:Init()
 							local realArea = TempTable[i * 20 + k].realArea
 							local realServer = TempTable[i * 20 + k].realServer
 							local dwID = TempTable[i * 20 + k].dwID
-							LR_Acc_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
+							LR_AS_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
 						end,
 						szIcon =  szIcon,
 						nFrame =  nFrame,
@@ -635,44 +657,47 @@ function LR_Acc_FB_Detail_Panel:Init()
 		PopupMenu(m)
 	end
 	----------关于
-	LR.AppendAbout(LR_Acc_FB_Detail_Panel, frame)
+	LR.AppendAbout(LR_AS_FB_Detail_Panel, frame)
 end
 
-function LR_Acc_FB_Detail_Panel:Open(realArea, realServer, dwID)
-	local frame = self:Fetch("LR_Acc_FB_Detail_Panel")
-	if frame then
-		self:Destroy(frame)
+function LR_AS_FB_Detail_Panel:Open(realArea, realServer, dwID)
+	local frame = self:Fetch("LR_AS_FB_Detail_Panel")
+	if realArea then
+		if frame then
+			LR_AS_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
+		else
+			LR_AS_FB_Detail_Panel.realArea = realArea
+			LR_AS_FB_Detail_Panel.realServer = realServer
+			LR_AS_FB_Detail_Panel.dwID = dwID
+			frame = self:Init()
+		end
 	else
-		if realArea then
-			LR_Acc_FB_Detail_Panel.realArea = realArea
-			LR_Acc_FB_Detail_Panel.realServer = realServer
-			LR_Acc_FB_Detail_Panel.dwID = dwID
+		if frame then
+			self:Destroy(frame)
 		else
 			local serverInfo = {GetUserServer()}
 			local realArea, realServer = serverInfo[5], serverInfo[6]
-			local szName = GetClientPlayer().szName
-			LR_Acc_FB_Detail_Panel.realArea = realArea
-			LR_Acc_FB_Detail_Panel.realServer = realServer
-			LR_Acc_FB_Detail_Panel.dwID = GetClientPlayer().dwID
+			LR_AS_FB_Detail_Panel.realArea = realArea
+			LR_AS_FB_Detail_Panel.realServer = realServer
+			LR_AS_FB_Detail_Panel.dwID = GetClientPlayer().dwID
+			frame = self:Init()
 		end
-		frame = self:Init()
-		PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
 	end
 end
 
-function LR_Acc_FB_Detail_Panel:LoadItemBox(hWin)
+function LR_AS_FB_Detail_Panel:LoadItemBox(hWin)
 	local hComboBox = self:Fetch("hComboBox")
-	local FB_25R = LR_AccountStatistics_FBList.FB25R
-	local FB_10R = LR_AccountStatistics_FBList.FB10R
-	local realServer = LR_Acc_FB_Detail_Panel.realServer
-	local realArea = LR_Acc_FB_Detail_Panel.realArea
-	local dwID = LR_Acc_FB_Detail_Panel.dwID
+	local FB_25R = _FBList.FB25R
+	local FB_10R = _FBList.FB10R
+	local realServer = LR_AS_FB_Detail_Panel.realServer
+	local realArea = LR_AS_FB_Detail_Panel.realArea
+	local dwID = LR_AS_FB_Detail_Panel.dwID
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-	local FB_Record = LR_AccountStatistics_FBList.AllUsrData[szKey] or {}
+	local FB_Record = _FBList.AllUsrData[szKey] or {}
 
 	local szName = ""
-	if LR_AS_Info.AllUsrList[szKey] then
-		szName = LR_AS_Info.AllUsrList[szKey].szName
+	if LR_AS_Data.AllPlayerList[szKey] then
+		szName = LR_AS_Data.AllPlayerList[szKey].szName
 	end
 	hComboBox:SetText(szName)
 
@@ -704,7 +729,7 @@ function LR_Acc_FB_Detail_Panel:LoadItemBox(hWin)
 		Text_break1:SetHAlign(0)
 		Text_break1:SetVAlign(1)
 
-		local FB_ID = LR_AccountStatistics_FBList.GetFBIDByMapID(FB_Record, FB_25R[i].dwMapID)
+		local FB_ID = _FBList.GetFBIDByMapID(FB_Record, FB_25R[i].dwMapID)
 		local Text_ID =  ""
 		if FB_ID ~=  nil then
 			Text_ID = sformat("ID: %d", FB_ID)
@@ -743,7 +768,7 @@ function LR_Acc_FB_Detail_Panel:LoadItemBox(hWin)
 		Text_break1:SetHAlign(0)
 		Text_break1:SetVAlign(1)
 
-		local FB_ID = LR_AccountStatistics_FBList.GetFBIDByMapID(FB_Record, FB_10R[i].dwMapID)
+		local FB_ID = _FBList.GetFBIDByMapID(FB_Record, FB_10R[i].dwMapID)
 		local Text_ID =  ""
 		if FB_ID ~=  nil then
 			Text_ID = sformat("ID: %d", FB_ID)
@@ -757,10 +782,10 @@ function LR_Acc_FB_Detail_Panel:LoadItemBox(hWin)
 	end
 end
 
-function LR_Acc_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
-	LR_Acc_FB_Detail_Panel.dwID = dwID
-	LR_Acc_FB_Detail_Panel.realServer = realServer
-	LR_Acc_FB_Detail_Panel.realArea = realArea
+function LR_AS_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
+	LR_AS_FB_Detail_Panel.dwID = dwID
+	LR_AS_FB_Detail_Panel.realServer = realServer
+	LR_AS_FB_Detail_Panel.realArea = realArea
 	local cc = self:Fetch("Scroll")
 	if cc then
 		self:ClearHandle(cc)
@@ -772,7 +797,7 @@ end
 -----------------------------------------------------------------------------
 ---------进入副本小提示
 -----------------------------------------------------------------------------
-LR_FB_Tips = {
+local LR_FB_Tips = {
 	FirstCheck = false,
 	SecondCheck = false,
 	tCopyID = {},
@@ -792,7 +817,7 @@ function LR_FB_Tips.LOADING_END()
 	end
 	LR_FB_Tips.FirstCheck = false
 	LR_FB_Tips.SecondCheck = false
-	LR.DelayCall(500, function() LR_AccountStatistics_FBList.GetFBList() end)
+	--LR.DelayCall(500, function() _FBList.GetFBList() end)
 	LR.DelayCall(3000, function() LR_FB_Tips.OutBlackCD() end)
 end
 
@@ -810,17 +835,14 @@ function LR_FB_Tips.CheckCD()
 		return
 	end
 	local scene = me.GetScene()
-	if not scene then
-		return
-	end
-	if scene.nType ~=  MAP_TYPE.DUNGEON then
+	if not scene or scene.nType ~=  MAP_TYPE.DUNGEON then
 		return
 	end
 	local dwMapID = scene.dwMapID
 	local nCopyIndex = scene.nCopyIndex
 	local szName = Table_GetMapName(dwMapID)
 	local MSG = {}
-	local FB_ID = LR_AccountStatistics_FBList.GetFBIDByMapID(LR_AccountStatistics_FBList.SelfData, dwMapID)
+	local FB_ID = _FBList.GetFBIDByMapID(_FBList.SelfData, dwMapID)
 	if not LR_FB_Tips.FirstCheck then
 		MSG[#MSG+1] = sformat(_L["LR:You enter FB[%s], ID is %d, "], szName, nCopyIndex)
 		if FB_ID ~= nil then
@@ -884,9 +906,30 @@ function LR_FB_Tips.OutBlackCD()
 end
 
 function LR_FB_Tips.ON_MAP_COPY_PROGRESS_UPDATE()
-	LR.DelayCall(150, function() LR_AccountStatistics_FBList.GetFBList() end)
+	LR.DelayCall(150, function() _FBList.GetFBList() end)
 end
 
 LR.RegisterEvent("LOADING_END", function() LR_FB_Tips.LOADING_END() end)
 LR.RegisterEvent("ON_MAP_COPY_PROGRESS_UPDATE", function() LR_FB_Tips.ON_MAP_COPY_PROGRESS_UPDATE() end)
 LR.RegisterEvent("ON_APPLY_PLAYER_SAVED_COPY_RESPOND", function() LR_FB_Tips.ON_APPLY_PLAYER_SAVED_COPY_RESPOND() end)
+
+------------------------------------------
+LR_AS_FBList.FB25R = _FBList.FB25R
+LR_AS_FBList.FB10R = _FBList.FB10R
+LR_AS_FBList.FB5R = _FBList.FB5R
+LR_AS_FBList.SaveCommonSetting = _FBList.SaveCommonSetting
+LR_AS_FBList.LoadCommonSetting = _FBList.LoadCommonSetting
+
+
+------------------------------------------
+--注册模块
+LR_AS_Module.FBList = {}
+LR_AS_Module.FBList.SaveData = _FBList.SaveData
+LR_AS_Module.FBList.LoadData = _FBList.LoadAllUsrData
+LR_AS_Module.FBList.ResetDataMonday = _FBList.ResetDataMonday
+LR_AS_Module.FBList.ResetDataEveryDay = _FBList.ResetDataEveryDay
+LR_AS_Module.FBList.ResetDataFriday = _FBList.ResetDataFriday
+LR_AS_Module.FBList.AddPage = _FBList.AddPage
+LR_AS_Module.FBList.RefreshPage = _FBList.RefreshPage
+
+

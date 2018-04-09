@@ -1,53 +1,58 @@
-local AddonPath="Interface\\LR_Plugin\\LR_AccountStatistics"
-local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_AccountStatistics"
-local _L = LR.LoadLangPack(AddonPath)
-local sformat, slen, sgsub, ssub,sfind = string.format, string.len, string.gsub, string.sub, string.find
-local mfloor, mceil, mmin, mmax = math.floor, math.ceil, math.min, math.max
-local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remove, table.sort
-----------------------------------------------------------
+local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
+local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
+local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
+---------------------------------------------------------------
+local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics"
+local db_name = "maindb.db"
+local _L = LR.LoadLangPack(LanguagePath)
+local VERSION = "20180403"
+-------------------------------------------------------------
+LR_AS_FP={
+	on=true,
+	last_time=0,
+}
 local DefaultData={
 	Version="1.0",
 	Anchor = {x = 500, y = 20},
 }
-
-LR_AccountStatistics_FP={
-	on=true,
-	last_time=0,
-}
-LR_AccountStatistics_FP.UsrData = clone(DefaultData)
+LR_AS_FP.UsrData = clone(DefaultData)
 
 -----------------------------------------------------------------
-function LR_AccountStatistics_FP.SaveCommonData()
+function LR_AS_FP.SaveCommonData()
 	local path = sformat("%s\\UsrData\\FloatPanelData.dat", SaveDataPath)
 	local data = {}
 	data.Version = DefaultData.Version
-	data.Anchor = clone(LR_AccountStatistics_FP.UsrData.Anchor)
+	data.Anchor = clone(LR_AS_FP.UsrData.Anchor)
 	SaveLUAData(path, data)
 end
 
-function LR_AccountStatistics_FP.LoadCommonData()
+function LR_AS_FP.LoadCommonData()
 	local path =sformat("%s\\UsrData\\FloatPanelData.dat", SaveDataPath)
 	local data = LoadLUAData(path) or {}
 	if data.Version and data.Version == DefaultData.Version then
-		LR_AccountStatistics_FP.UsrData = clone(data)
+		LR_AS_FP.UsrData = clone(data)
 	else
-		LR_AccountStatistics_FP.UsrData = clone(DefaultData)
-		LR_AccountStatistics_FP.SaveCommonData()
+		LR_AS_FP.UsrData = clone(DefaultData)
+		LR_AS_FP.SaveCommonData()
 	end
 end
 ----------------------------------------------------------------
-
-
-function LR_AccountStatistics_FP.OnFrameCreate()
+function LR_AS_FP.OnFrameCreate()
 	this:RegisterEvent("UI_SCALED")
 
-	this:Lookup("Btn_MainBtn").OnLButtonClick= function ()
-		LR_AccountStatistics.OpenPanel()
+	this:Lookup("Btn_MainBtn").OnLButtonClick= function()
+		LR_AS_Panel.OpenPanel()
 	end
-	this:Lookup("Btn_MainBtn").OnRButtonClick= function ()
-		LR_Acc_Trade_Panel:Open()
+	this:Lookup("Btn_MainBtn").OnRButtonClick= function()
+		if LR_Acc_Trade_Panel then
+			LR_Acc_Trade_Panel:Open()
+		end
 	end
-	this:Lookup("Btn_MainBtn").OnMouseEnter= function ()
+	this:Lookup("Btn_MainBtn").OnMouseEnter= function()
 		local me = GetClientPlayer()
 		local x, y=this:GetAbsPos()
 		local w, h = this:GetSize()
@@ -57,21 +62,21 @@ function LR_AccountStatistics_FP.OnFrameCreate()
 	this:Lookup("Btn_MainBtn").OnMouseLeave= function ()
 		HideTip()
 	end
-	LR_AccountStatistics_FP.ShowMoney(0)
-	LR_AccountStatistics_FP.UpdateAnchor()
-	LR_AccountStatistics_FP.Refresh()
+	LR_AS_FP.ShowMoney(0)
+	LR_AS_FP.UpdateAnchor()
+	LR_AS_FP.Refresh()
 end
 
-function LR_AccountStatistics_FP.OnFrameDragEnd()
+function LR_AS_FP.OnFrameDragEnd()
 	this:CorrectPos()
 	local x, y = this:GetRelPos()
-	LR_AccountStatistics_FP.UsrData.Anchor = {x = x, y = y}
-	LR_AccountStatistics_FP.SaveCommonData()
+	LR_AS_FP.UsrData.Anchor = {x = x, y = y}
+	LR_AS_FP.SaveCommonData()
 end
 
-function LR_AccountStatistics_FP.UpdateAnchor()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics_FP")
-	local x, y = LR_AccountStatistics_FP.UsrData.Anchor.x, LR_AccountStatistics_FP.UsrData.Anchor.y
+function LR_AS_FP.UpdateAnchor()
+	local frame = Station.Lookup("Normal/LR_AS_FP")
+	local x, y = LR_AS_FP.UsrData.Anchor.x, LR_AS_FP.UsrData.Anchor.y
 	local nW, nH = Station.GetClientSize(true)
 	if x < 0 then x = 0 end
 	if x > nW - 100 then x = nW - 100 end
@@ -83,31 +88,37 @@ function LR_AccountStatistics_FP.UpdateAnchor()
 	end
 end
 
-function LR_AccountStatistics_FP.OnEvent(event)
-	if event == "CUSTOM_DATA_LOADED" then
-		if arg0 == "Role" then
-			LR_AccountStatistics_FP.UpdateAnchor(this)
-		end
-	elseif event == "UI_SCALED" then
-		LR_AccountStatistics_FP.UpdateAnchor(this)
+function LR_AS_FP.OnEvent(event)
+	if event == "UI_SCALED" then
+		LR_AS_FP.UpdateAnchor(this)
 	end
 end
 
-function LR_AccountStatistics_FP.OnFrameBreathe()
+function LR_AS_FP.OnFrameBreathe()
 	----нч
 end
 
-function LR_AccountStatistics_FP.Refresh()
-	local AllMoney=0
-	local TempTable_Cal,TempTable_NotCal = LR_AS_Base.SeparateUsrList()
-	for i=1,#TempTable_Cal,1 do
-		AllMoney=AllMoney+TempTable_Cal[i].nMoney
+function LR_AS_FP.Refresh()
+	local AllMoney = 0
+	if LR_AS_Module["PlayerInfo"] then
+		local TempTable_Cal,TempTable_NotCal = LR_AS_Base.SeparateUsrList()
+		for k, v in pairs(TempTable_Cal) do
+			local PlayerInfo = LR_AS_Data.AllPlayerInfo
+			local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
+			if PlayerInfo[szKey] then
+				AllMoney = AllMoney + PlayerInfo[szKey].nMoney
+			end
+		end
+	else
+		local me = GetClientPlayer()
+		local nMoney = me.GetMoney()
+		AllMoney = nMoney.nGold * 10000 + nMoney.nSilver * 100 + nMoney.nCopper
 	end
-	LR_AccountStatistics_FP.ShowMoney(AllMoney)
+	LR_AS_FP.ShowMoney(AllMoney)
 end
 
-function LR_AccountStatistics_FP.ShowMoney(nMoney)
-	local frame = Station.Lookup("Normal/LR_AccountStatistics_FP")
+function LR_AS_FP.ShowMoney(nMoney)
+	local frame = Station.Lookup("Normal/LR_AS_FP")
 	if not frame then
 		return
 	end
@@ -172,38 +183,45 @@ function LR_AccountStatistics_FP.ShowMoney(nMoney)
 	end
 end
 ------------------------------------------------------
-function LR_AccountStatistics_FP.OpenPanel()
-	if LR_AS_Base.UsrData.FloatPanel then
-		local frame = Station.Lookup("Normal/LR_AccountStatistics_FP")
-		if not frame then
-			local path = sformat("%s\\UI\\LR_AccountStatistics_FP.ini", AddonPath)
-			Wnd.OpenWindow(path, "LR_AccountStatistics_FP")
-		end
-	end
-end
-
-function LR_AccountStatistics_FP.ClosePanel()
-	local frame = Station.Lookup("Normal/LR_AccountStatistics_FP")
+function LR_AS_FP.OpenPanel()
+	local frame = Station.Lookup("Normal/LR_AS_FP")
 	if frame then
 		Wnd.CloseWindow(frame)
+	else
+		local path = sformat("%s\\UI\\LR_AS_FP.ini", AddonPath)
+		Wnd.OpenWindow(path, "LR_AS_FP")
 	end
 end
+
+function LR_AS_FP.LoadPlayerInfo()
+	if LR_AS_Module["PlayerInfo"] then
+		local path = sformat("%s\\%s", SaveDataPath, db_name)
+		local DB = SQLite3_Open(path)
+		DB:Execute("BEGIN TRANSACTION")
+		LR_AS_Module["PlayerInfo"].LoadData(DB)
+		DB:Execute("END TRANSACTION")
+		DB:Release()
+	end
+end
+
 -----------------------------------------------------
-function LR_AccountStatistics_FP.LOGIN_GAME()
-	LR_AccountStatistics_FP.LoadCommonData()
+function LR_AS_FP.LOGIN_GAME()
+	LR_AS_FP.LoadCommonData()
 end
 
-function LR_AccountStatistics_FP.FIRST_LOADING_END()
-	LR_AccountStatistics_FP.OpenPanel()
+function LR_AS_FP.FIRST_LOADING_END()
+	if LR_AS_Base.UsrData.FloatPanel then
+		LR_AS_FP.OpenPanel()
+	end
 end
 
-function LR_AccountStatistics_FP.MONEY_UPDATE()
-	LR_AS_Info.GetUserInfo()
-	LR_AccountStatistics_FP.Refresh()
+function LR_AS_FP.MONEY_UPDATE()
+	LR_AS_FP.LoadPlayerInfo()
+	LR_AS_FP.Refresh()
 end
 
-LR.RegisterEvent("LOGIN_GAME", function() LR_AccountStatistics_FP.LOGIN_GAME() end)
-LR.RegisterEvent("FIRST_LOADING_END", function() LR_AccountStatistics_FP.FIRST_LOADING_END() end)
-LR.RegisterEvent("LR_ACS_REFRESH_FP", function() LR_AccountStatistics_FP.Refresh() end)
-LR.RegisterEvent("MONEY_UPDATE", function() LR_AccountStatistics_FP.MONEY_UPDATE() end)
+LR.RegisterEvent("LOGIN_GAME", function() LR_AS_FP.LOGIN_GAME() end)
+LR.RegisterEvent("FIRST_LOADING_END", function() LR_AS_FP.FIRST_LOADING_END() end)
+LR.RegisterEvent("LR_ACS_REFRESH_FP", function() LR_AS_FP.Refresh() end)
+LR.RegisterEvent("MONEY_UPDATE", function() LR_AS_FP.MONEY_UPDATE() end)
 

@@ -450,7 +450,7 @@ data={
 	--20170711add--
 	["LR_Mail:You have not received letters for at least %d days.\n"]="懒人邮件：你至少 %d 天没收邮件了。（信使处查看邮件后，此提示消失。）\n",
 	["LR_Mail:You have not received letters for %d days.\n"]="懒人邮件：你 %d 天没收邮件了。（信使处查看邮件后，此提示消失。）\n",
-	["LR_Mail:Someone's mail is about to expire. Open [LR_Bag] to have a look."]="懒人邮件：有人的邮件快到期了，点击设置界面【账目本】-【全局设置】-【查看即将到期邮件】按钮查看具体信息。",
+	["LR_Mail:Someone's mail is about to expire. Open [LR_Bag] to have a look."]="懒人邮件：有人的邮件快到期了，点击设置界面【账目本】-【物品统计】-【查看即将到期邮件】按钮查看具体信息。",
 	[" %s->%s  overdue (%d) \t%d\n"]=" %s->%s  已到期 (%d) \t%d\n",
 	["LR_AS"]="账目本",
 	["LR_AS_Global_Settings"]="全局设置",
@@ -467,7 +467,7 @@ data={
 	["TRADE DB Settings"]="收支记录数据库",
 	["TRADE DB Batch Import"]="批量导入(旧)",
 	["Are you sure to vacuum main database ?"]="你确定要优化主数据库吗？",
-	["VACUUM Success!"]="懒人账目本数据库优化成功！",
+	["VACUUM Success!"]="【懒人账目本】数据库优化成功！",
 	["Are you sure to backup main database ?"]="你确定要备份主数据库吗？",
 	["Please backup manually."]="请手动备份数据库。",
 	["Are you sure to patch import data (database version) ?"]="你确定要根据现有的角色列表，批量导入各角色的旧版交易数据('.jx3dat')吗?\n这个操作将花费很多时间，并占用大量磁盘资源。",
@@ -656,4 +656,40 @@ data={
 
 	["RONG_MA_BIAN"]="戎马边",
 	["DIALOG_RONG_MA_BIAN_01"]="再画也不会有什么进展了",
+
+	--20180402add--
+	["Record the current user's data."]="记录当前用户的数据",
+	["The relevant data has been deleted from the database.\n"]="相关数据已从数据库中删除。\n",
+	["Save when popup system menu.(ESC)"]="弹出系统菜单(ESC)时保存。",
+	["Save when the exit interface pops up."]="弹出退出界面时保存",
+
+	["LR_AS_PlayerInfo"]="人物信息",
+
+	["Display button on BigBagPanel."]="在背包界面显示【物品统计】按钮",
+	["Display button on MailPanel."]="在邮箱界面显示【邮件统计】按钮",
+
+	["LR_Equipment_Record"]="装备统计",
+	["Display button on CharacterPanel."]="在人物装备界面显示【装备统计】按钮",
+	["Save data when change equipment."]="装备变化时保存数据",
+
+	["LR_Achievement_Record"]="成就统计",
+
+	["%s(%d)"]="%s（%d）",
+	["Achievement done"]="成就已有",
+
+	["Show money change when esc"]="ESC时显示金钱变动信息",
+
+	["BTN_Sort"]="整理",
+	["backup path: %s\\\n"]="备份路径：%s\\\n",
+	["backup dataname: %s\n"]="备份名字：%s\n",
+	["backup cost %ss\n"]="备份用时：%s秒\n",
+
+	["Are you sure to backup database ?"]="确定要备份数据库？",
+	["Auto backup data"]="自动备份数据库",
+	["Backup frequency"]="备份频率",
+	["First launch every week"]="每周第一次上线",
+	["First launch every day"]="每天第一次上线",
+	["[LR]Auto backup data\n"]="【懒人账目本】自动备份数据\n",
+
+
 }

@@ -87,7 +87,13 @@ end
 function LR.StrDB2Game(szText)
 	local szText = szText
 	if SZLANG == "zhcn" then
-		szText = UTF8ToAnsi(szText)
+		if type(szText) == "string" then
+			szText = UTF8ToAnsi(szText)
+		elseif type(szText) == "table" then
+			for k, v in pairs(szText) do
+				szText[k] = LR.StrDB2Game(v)
+			end
+		end
 	end
 	return szText
 end
@@ -95,7 +101,13 @@ end
 function LR.StrGame2DB(szText)
 	local szText = szText
 	if SZLANG == "zhcn" then
-		szText = AnsiToUTF8(szText)
+		if type(szText) == "string" then
+			szText = AnsiToUTF8(szText)
+		elseif type(szText) == "table" then
+			for k, v in pairs(szText) do
+				szText[k] = LR.StrGame2DB(v)
+			end
+		end
 	end
 	return szText
 end
@@ -528,7 +540,8 @@ end
 --------------------------------------------------------
 ---金钱操作
 --------------------------------------------------------
-function LR.MoneyToGoldSilverAndCopper (nMoney)
+function LR.MoneyToGoldSilverAndCopper(nMoney)
+	local nMoney = nMoney or 0
 	local nGoldBrick, nGold, nSilver, nCopper = 0, 0, 0, 0
 	if nMoney >= 0 then
 		nGoldBrick = mfloor(nMoney / 100000000)
@@ -1424,6 +1437,17 @@ LR.tAllSceneQuest = {}  ---------------存放所有任务
 		},
 	}, ]]
 
+function LR.GetQuestName(dwQuestID)
+	local QuestInfo = LR.Table_GetQuestStringInfo(dwQuestID)
+	if not QuestInfo then
+		--LR.SysMsg(_L["Error, no this quest.\n"])
+		return _L["Unknown quest"]
+	end
+	local szQuestName = QuestInfo.szName
+	return szQuestName
+end
+
+
 function LR.Table_GetQuestPosInfo(dwQuestID, szType, nIndex)
 	local tQuestPosInfo = g_tTable.Quest:Search(dwQuestID)
 	if not tQuestPosInfo then
@@ -1855,16 +1879,19 @@ end
 ---------------------------------------------
 ----DelayCall
 ---------------------------------------------
-function LR.OnFrameCreate()
+LR_Breathe = {}
+function LR_Breathe.OnFrameCreate()
 
 end
 
-function LR.OnFrameBreathe()
-	local nFrame = GetLogicFrameCount()
+function LR_Breathe.OnFrameBreathe()
+	--Output("LR_Breathe.OnFrameBreathe")
+	local nFrame = GetTickCount()
 	for k, v in pairs(LR.tBreatheCall) do
 		if v then
+			--Output(k, v.nNextFrame, nFrame, v.nStep)
 			if nFrame >= v.nNextFrame then
-				v.nNextFrame = nFrame + v.nStep
+				v.nNextFrame = nFrame + v.nStep * 62.5
 				local res, err = pcall(v.fnAction)
 				if not res then
 
@@ -1874,7 +1901,7 @@ function LR.OnFrameBreathe()
 	end
 end
 
-function LR.OnFrameRender()
+function LR_Breathe.OnFrameRender()
 	local nTime = GetTime()
 	for k, v in pairs (LR.tDelayCall) do
 		if v then
@@ -1895,7 +1922,7 @@ end
 
 function LR.DelayCall(nDelayTime, fnAction, szKey)
 	----nDelayTime 延迟时间 单位：毫秒
-	local _time = GetTime()
+	local _time = GetTickCount()
 	local nTime = nDelayTime + _time
 	if szKey then
 		local szKey = tostring(szKey)
@@ -1906,7 +1933,7 @@ function LR.DelayCall(nDelayTime, fnAction, szKey)
 end
 
 function LR.UnDelayCall(szKey)
-	LR.tDelayCall[szKey] = {nTime = GetTime() + 1, fnAction = function()  end, szKey = szKey, }
+	LR.tDelayCall[szKey] = {nTime = GetTickCount() + 1, fnAction = function()  end, szKey = szKey, }
 end
 
 
@@ -1917,16 +1944,16 @@ function LR.BreatheCall(szKey, fnAction, nTime)
 		if nTime and nTime > 0 then
 			nFrame = mceil(nTime / 62.5)
 		end
-		LR.tBreatheCall[key] = {fnAction = fnAction, nNextFrame = GetLogicFrameCount() + 1, nStep = nFrame }
+		LR.tBreatheCall[key] = {fnAction = fnAction, nNextFrame = GetTickCount() + 1, nStep = nFrame }
 	else
-		LR.tBreatheCall[key] = {fnAction = function() LR.tBreatheCall[key] = nil end, nNextFrame = GetLogicFrameCount() + 1, nStep = 1 }
+		LR.tBreatheCall[key] = {fnAction = function() LR.tBreatheCall[key] = nil end, nNextFrame = GetTickCount() + 1, nStep = 1 }
 	end
 end
 
 function LR.UnBreatheCall(szKey)
 	LR.BreatheCall(szKey)
 end
-Wnd.OpenWindow("Interface\\LR_Plugin\\LR_1Base\\UI\\LR_1Base_None.ini", "LR")
+Wnd.OpenWindow("Interface\\LR_Plugin\\LR_1Base\\UI\\LR_1Base_None.ini", "LR_Breathe")
 
 ------------------------------------------------------------------------------------
 -------
@@ -2175,7 +2202,10 @@ end
 
 LR.BreatheCall("Black_BreatheCheck", function() LR.Black_BreatheCheck() end)
 LR.BreatheCall("CheckTargetChange", function() LR.CheckTargetChange() end)
-LR.RegisterEvent("LOADING_END", function() LR.Black_LOADING_END() end)
+LR.RegisterEvent("LOADING_END", function()
+	LR.Black_LOADING_END()
+	--_nType, _ID = TARGET.NO_TARGET, 0
+end)
 LR.RegisterEvent("FIRST_LOADING_END", function()
 	LR.Black_FIRST_LOADING_END()
 	LR.LoadMenPaiColor()

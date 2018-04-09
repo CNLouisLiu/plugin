@@ -1,156 +1,106 @@
 local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
 local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
-local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
+local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
 ---------------------------------------------------------------
 local AddonPath = "Interface\\LR_Plugin\\LR_AccountStatistics"
+local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
-local DB_name = "maindb.db"
-local _L  =  LR.LoadLangPack(AddonPath)
-local CustomVersion = "20170111"
----------------------------------------------------------------
-LR_AccountStatistics = LR_AccountStatistics or {}
+local db_name = "maindb.db"
+local _L = LR.LoadLangPack(LanguagePath)
+local VERSION = "20180403"
+-------------------------------------------------------------
+LR_AS_Panel = {}
+LR_AS_Panel.Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0}
 
-
-
-function LR_AccountStatistics.OnFrameCreate()
-	-----账目本容器
-	LR_AccountStatistics.LR_AS_Container = this:Lookup("PageSet_Menu/Page_LR_AS_Record/WndScroll_LR_AS_Record/WndContainer_Record_List")
-	-----副本列表容器
-	LR_AccountStatistics.LR_FBList_Container = this:Lookup("PageSet_Menu/Page_LR_FBList/WndScroll_LR_FBList_Record/Wnd_LR_FBList_Record_List")
-	LR_AccountStatistics.LR_FBList_Title_handle = this:Lookup("PageSet_Menu"):Lookup("Page_LR_FBList"):Lookup("", "")
-	-----日常统计容器
-	LR_AccountStatistics.LR_RCList_Container = this:Lookup("PageSet_Menu/Page_LR_RCList/WndScroll_LR_RCList_Record/Wnd_LR_RCList_Record_List")
-	LR_AccountStatistics.LR_RCList_Title_handle = this:Lookup("PageSet_Menu"):Lookup("Page_LR_RCList"):Lookup("", "")
-	-----奇遇统计容器
-	LR_AccountStatistics.LR_QYList_Container = this:Lookup("PageSet_Menu/Page_LR_QYList/WndScroll_LR_QYList_Record/Wnd_LR_QYList_Record_List")
-	LR_AccountStatistics.LR_QYList_Title_handle = this:Lookup("PageSet_Menu"):Lookup("Page_LR_QYList"):Lookup("", "")
-
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
-	----打开时刷新数据
-	LR_AS_Group.LoadGroupListData(DB)
-	LR_AS_Group.LoadAllUserGroup(DB)
-	LR_AS_Info.LoadUserList(DB)
-	LR_AS_Info.LoadAllUserInformation(DB)
-	LR_AccountStatistics_FBList.GetFBList()
-	LR_AS_Exam.LoadData(DB)
-	LR_AccountStatistics_RiChang.LoadAllUsrData(DB)
-	LR_AccountStatistics_RiChang.CheckAll()
-	LR_AccountStatistics_FBList.LoadAllUsrData(DB)
-	LR_ACS_QiYu.LoadAllUsrData(DB)		--奇遇数据
-
-
-	this:RegisterEvent("UI_SCALED")
-	this:RegisterEvent("CUSTOM_DATA_LOADED")
-
-	this:Lookup("Btn_Close").OnLButtonClick =  function ()
-		Wnd.CloseWindow("LR_AccountStatistics")
-	end
-
-	RegisterGlobalEsc("LR_AccountStatistics", function () return true end , function() Wnd.CloseWindow("LR_AccountStatistics") end)
-	PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
-
-	----界面
-	this:Lookup("", ""):Lookup("Text_Title"):SetText(_L["LR_AccountStatistics"])
-
-	this:Lookup("PageSet_Menu/WndCheck_LR_AS_Record"):Lookup("", ""):Lookup("Text_LR_AS_Record"):SetText(_L["AccountStatistics"])
-	this:Lookup("PageSet_Menu/Page_LR_AS_Record"):Lookup("", ""):Lookup("Text_LR_AS_RecordSettlement"):SetText(_L["Total:"])
-
-	this:Lookup("PageSet_Menu/WndCheck_LR_FBList"):Lookup("", ""):Lookup("Text_LR_FBList_Record"):SetText(_L["FBStatistics"])
-	LR_AccountStatistics.LR_FBList_Title_handle:Lookup("Text_FBList_Record_Break1"):SetText(_L["Name"])
-
-	this:Lookup("PageSet_Menu/WndCheck_LR_RCList"):Lookup("", ""):Lookup("Text_LR_RCList_Record"):SetText(_L["RCStatistics"])
-	LR_AccountStatistics.LR_RCList_Title_handle:Lookup("Text_RCList_Record_Break1"):SetText(_L["Name"])
-
-	this:Lookup("PageSet_Menu/WndCheck_LR_QYList"):Lookup("", ""):Lookup("Text_LR_QYList_Record"):SetText(_L["QYStatistics"])
-	LR_AccountStatistics.LR_QYList_Title_handle:Lookup("Text_QYList_Record_Break1"):SetText(_L["Name"])
-
-	this:SetPoint("CENTER", 0, 0, "CENTER", 0, 0)
-
-	LR_AS_Info.ReFreshTitle()
-	LR_AS_Info.ListAS()
-	LR_AS_Info.AddPageButton()
-
-	LR_AccountStatistics_FBList.ReFreshTitle()
-	LR_AccountStatistics_FBList.ListFB()
-	LR_AccountStatistics_FBList.AddPageButton()
-
-	LR_AccountStatistics_RiChang.ReFreshTitle()
-	LR_AccountStatistics_RiChang.ListRC()
-	LR_AccountStatistics_RiChang.AddPageButton()
-
-	LR_ACS_QiYu.ReFreshTitle()
-	LR_ACS_QiYu.ListQY()
-	LR_ACS_QiYu.AddPageButton()
-
-	-------打开面板时保存数据
-	if LR_AS_Base.UsrData.AutoSave then
-		LR_AS_Base.AutoSave()
-	end
-
-	-----------邮件提醒
-	LR_AccountStatistics_Mail_Check.CheckAllMail()
-
-	LR_AccountStatistics_FBList.ListFB()
-	LR_AccountStatistics_RiChang.ListRC()
-	LR_ACS_QiYu.ListQY()
-
-	DB:Execute("END TRANSACTION")
-	DB:Release()
-
-	FireEvent("LR_ACS_REFRESH_FP")
-	LR.AppendAbout(Addon, this)
+function LR_AS_Panel.UpdateAnchor(frame)
+	frame:CorrectPos()
+	frame:SetPoint(LR_AS_Panel.Anchor.s, 0, 0, LR_AS_Panel.Anchor.r, LR_AS_Panel.Anchor.x, LR_AS_Panel.Anchor.y)
 end
 
-function LR_AccountStatistics.OnFrameDestroy ()
-	UnRegisterGlobalEsc("LR_AccountStatistics")
+function LR_AS_Panel.OnFrameCreate()
+	this:RegisterEvent("UI_SCALED")
+	LR_AS_Panel.UpdateAnchor(this)
+
+	this:Lookup("Btn_Close").OnLButtonClick =  function ()
+		Wnd.CloseWindow("LR_AS_Panel")
+	end
+
+	RegisterGlobalEsc("LR_AS_Panel", function () return true end , function() Wnd.CloseWindow("LR_AS_Panel") end)
+	PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
+
+	LR_AS_Base.LoadData()
+	----界面
+	this:Lookup("", ""):Lookup("Text_Title"):SetText(_L["LR_AccountStatistics"])
+	local keys = {"PlayerInfo", "FBList", "RC", "QY"}
+	local values = {_L["AccountStatistics"], _L["FBStatistics"], _L["RCStatistics"], _L["QYStatistics"]}
+	for k, v in pairs (keys) do
+		local text = this:Lookup("PageSet_Menu"):Lookup(sformat("WndCheck_%s", v)):Lookup("",""):Lookup(sformat("Text_%s", v))
+		text:SetText(values[k])
+		text:SetFontColor(128, 128, 128)
+		local btn = this:Lookup("PageSet_Menu"):Lookup(sformat("WndCheck_%s", v))
+		btn:Enable(false)
+	end
+
+	local flag = false
+	for k, v in pairs(keys) do
+		if LR_AS_Module[v] and LR_AS_Module[v].AddPage then
+			LR_AS_Module[v].AddPage()
+			flag = true
+		end
+	end
+	if flag then
+		this:Lookup("PageSet_Menu"):ActivePage(0)
+	end
+
+	LR.AppendAbout(Addon, this)
+	FireEvent("LR_ACS_REFRESH_FP")
+end
+
+function LR_AS_Panel.OnFrameDestroy ()
+	UnRegisterGlobalEsc("LR_AS_Panel")
 	PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
 end
 
-function LR_AccountStatistics.OnEvent(event)
-	----
+function LR_AS_Panel.OnEvent(event)
+	if event == "UI_SCALED" then
+		LR_AS_Panel.UpdateAnchor(this)
+	end
 end
 
-function LR_AccountStatistics.OpenPanel(flag)
-	local frame = Station.Lookup("Normal/LR_AccountStatistics")
+function LR_AS_Panel.OpenPanel(flag)
+	local frame = Station.Lookup("Normal/LR_AS_Panel")
 	if frame and not flag then
 		Wnd.CloseWindow(frame)
 	else
-		Wnd.OpenWindow("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AccountStatistics.ini", "LR_AccountStatistics")
+		Wnd.OpenWindow("Interface\\LR_Plugin\\LR_AccountStatistics\\UI\\LR_AS_Panel.ini", "LR_AS_Panel")
 	end
 end
 
-function LR_AccountStatistics.OnFrameBreathe()
+function LR_AS_Panel.OnFrameBreathe()
 	if GetLogicFrameCount() % (16*5) ~=  0 then
 		return
 	end
-	local player = GetClientPlayer()
-	if not player then
+	local me = GetClientPlayer()
+	if not me then
 		return
 	end
-	local path = sformat("%s\\%s", SaveDataPath, DB_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
-	LR_AS_Group.LoadGroupListData(DB)	--分组数据
-	LR_AS_Group.LoadAllUserGroup(DB)	--人物分组
-	LR_AS_Info.GetUserInfo()	--获取自身数据
-	LR_AS_Info.LoadAllUserInformation(DB)		--人物数据
-	LR_AS_Exam.LoadData(DB)	--考试数据
-	LR_AccountStatistics_RiChang.LoadAllUsrData(DB)	--日常数据
-	LR_AccountStatistics_FBList.LoadAllUsrData(DB)	--副本数据
-	LR_ACS_QiYu.LoadAllUsrData(DB)		--奇遇数据
-	---展示
-	LR_AS_Info.ListAS()
-	LR_AccountStatistics_FBList.ListFB()
-	LR_AccountStatistics_RiChang.ListRC()
-	LR_ACS_QiYu.ListQY()
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR_AS_Base.LoadData()
+	LR_AS_Panel.RefreshUI()
 end
 
-function LR_AccountStatistics.CheckTable(t_Table, dwID)
+function LR_AS_Panel.RefreshUI()
+	local keys = {"PlayerInfo", "FBList", "RC", "QY"}
+	for k, v in pairs (keys) do
+		if LR_AS_Module[v] and LR_AS_Module[v].RefreshPage then
+			LR_AS_Module[v].RefreshPage()
+		end
+	end
+	FireEvent("LR_ACS_REFRESH_FP")
+end
+
+function LR_AS_Panel.CheckTable(t_Table, dwID)
 	local TempTable = t_Table
 	local CheckID =  dwID
 	for k, v in pairs (TempTable) do
@@ -164,10 +114,207 @@ end
 ---------------------------------
 ---打开设置界面
 ---------------------------------
-function LR_AccountStatistics.SetOption()
+function LR_AS_Panel.SetOption()
 	LR_TOOLS:OpenPanel(_L["LR_AS_Global_Settings"])
 	local frame = Station.Lookup("Normal/LR_TOOLS")
 	if frame then
 		frame:BringToTop()
 	end
 end
+
+-------------------------------
+---弹出菜单
+-------------------------------
+function LR_AS_Panel.RClickMenu(realArea, realServer, dwID)
+	if not realArea then
+		return {}
+	end
+	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
+	local player = LR_AS_Data.AllPlayerList[szKey] or {}
+	if next(player) == nil then
+		return {}
+	end
+	local menu = {}
+	local szPath, nFrame = GetForceImage(player.dwForceID)
+	tinsert(menu, {
+		szOption = player.szName,
+		szLayer = "ICON_RIGHT",
+		rgb = {LR.GetMenPaiColor(player.dwForceID)},
+		szIcon = szPath,
+		nFrame = nFrame,
+	})
+
+	if LR_AS_Module["PlayerInfo"] then
+		tinsert(menu, { bDevide = true })
+		tinsert(menu, {
+			szOption = _L["Add this money"],
+			bCheck = true,
+			bMCheck = false,
+			rgb = {255, 255, 255},
+			fnAction = function ()
+				local NotCalList = LR_AS_Base.UsrData.NotCalList or {}
+				if NotCalList[szKey] then
+					NotCalList[szKey] = nil
+				else
+					NotCalList[szKey] = true
+				end
+				--刷新
+				LR_AS_Panel.RefreshUI()
+			end,
+			bChecked = function ()
+				local NotCalList = LR_AS_Base.UsrData.NotCalList or {}
+				if NotCalList[szKey] then
+					return false
+				else
+					return true
+				end
+			end,
+		})
+	end
+
+	tinsert(menu, { bDevide = true })
+	if LR_AS_Module["ItemRecord"] then
+		tinsert(menu, {
+			szOption = _L["Show item statistics"],
+			fnAction = function ()
+				LR_AS_ItemRecord_Panel:Open(player.realArea, player.realServer, player.dwID)
+			end,
+		})
+	end
+
+	if LR_AS_Module["FBList"] then
+		tinsert(menu, {
+			szOption = _L["Show FB Details"],
+			fnAction = function ()
+				LR_AS_FB_Detail_Panel:Open(player.realArea, player.realServer, player.dwID)
+			end,
+		})
+	end
+
+	if LR_AS_Module["EquipmentRecord"] then
+		tinsert(menu, {
+			szOption = _L["Show Equipment"],
+			fnAction = function ()
+				LR_AS_Equip_Panel:Open(player.szName, player.realArea, player.realServer, player.dwForceID, player.dwID)
+			end,
+		})
+	end
+
+	---------------
+	tinsert(menu, { bDevide = true })
+	local menu2 = {
+		szOption = _L["Group Settings"],
+		fnDisable = function ()
+			return false
+		end,
+		}
+	for groupID, groupV in pairs(LR_AS_Group.GroupList) do
+		local szGroupName = groupV.szName
+		tinsert (menu2, {
+			szOption = szGroupName,
+			bCheck = true, bMCheck = true, bChecked = function() return LR_AS_Group.ifGroupHasUser(szKey, groupID) end,
+			fnAction = function(UserData)
+				--保存
+				local path = sformat("%s\\%s", SaveDataPath, db_name)
+				local DB = SQLite3_Open(path)
+				DB:Execute("BEGIN TRANSACTION")
+				LR_AS_Group.ChangeUserGroup(szKey, groupID, DB)
+				LR_AS_Group.SaveData(DB)
+				DB:Execute("END TRANSACTION")
+				DB:Release()
+				--刷新UI
+				LR_AS_Panel.RefreshUI()
+			end,
+		})
+	end
+	tinsert(menu2, {bDevide = true})
+	tinsert(menu2, {szOption = _L["Group Cancel"],
+		fnAction = function()
+			local path = sformat("%s\\%s", SaveDataPath, db_name)
+			local DB = SQLite3_Open(path)
+			DB:Execute("BEGIN TRANSACTION")
+			LR_AS_Group.ChangeUserGroup(szKey, 0, DB)
+			LR_AS_Group.SaveData(DB)
+			DB:Execute("END TRANSACTION")
+			DB:Release()
+			--刷新UI
+			LR_AS_Panel.RefreshUI()
+		end,
+	})
+	tinsert(menu2, {szOption = _L["Add Group"],
+		fnAction = function()
+			GetUserInput(_L["Group Name"], function(szText)
+				local szText =  string.gsub(szText, "^%s*%[?(.-)%]?%s*$", "%1")
+				if szText ~=  "" then
+					local path = sformat("%s\\%s", SaveDataPath, db_name)
+					local DB = SQLite3_Open(path)
+					DB:Execute("BEGIN TRANSACTION")
+					LR_AS_Group.AddGroup(szText, DB)
+					LR_AS_Module.Group.LoadData(DB)
+					DB:Execute("END TRANSACTION")
+					DB:Release()
+					--刷新UI
+					LR_AS_Panel.RefreshUI()
+				end
+			end)
+		end,
+	})
+	tinsert(menu, menu2)
+	if player.dwID ~=  GetClientPlayer().dwID then
+		tinsert(menu, {	szOption =  _L["Make Friend"],
+			fnAction = function()
+				GetClientPlayer().AddFellowship(player.szName)
+			end}
+		)
+	end
+	tinsert(menu, { bDevide = true })
+	tinsert(menu, {
+		szOption = _L["Delete Data"],
+		fnAction = function ()
+			local sure_delete = function()
+				local szKey = {dwID = player.dwID, loginArea = player.loginArea, loginServer = player.loginServer, szName = player.szName, realArea = player.realArea, realServer = player.realServer}
+				if next(szKey)~= nil then
+					local path = sformat("%s\\%s", SaveDataPath, db_name)
+					local DB = SQLite3_Open(path)
+					DB:Execute("BEGIN TRANSACTION")
+					LR_AS_Base.DelPlayer(szKey, DB)
+					DB:Execute("END TRANSACTION")
+					DB:Release()
+					--读取
+					LR_AS_Base.LoadData()
+					--刷新UI
+					LR_AS_Panel.RefreshUI()
+				else
+					return
+				end
+			end
+
+			local msg = {
+				szMessage = sformat("%s %s?", _L["Sure to delete"], player.szName),
+				szName = "delete",
+				fnAutoClose = function() return false end,
+				{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() sure_delete() end, },
+				{szOption = g_tStrings.STR_HOTKEY_CANCEL, fnAction = function()  end, },
+			}
+			MessageBox(msg)
+		end,
+		fnDisable = function()
+			local me = GetClientPlayer()
+			local ServerInfo = {GetUserServer()}
+			local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+			if me.szName == player.szName and realArea == player.realArea and realServer == player.realServer then
+				return true
+			end
+			return false
+		end,
+	})
+	return menu
+end
+
+
+
+
+
+
+
+

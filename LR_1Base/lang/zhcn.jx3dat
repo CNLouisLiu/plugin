@@ -180,4 +180,6 @@ data={
 	["View attribute"]="查看属性（懒人）",
 	["LR team notice"]="团队告示",
 	["Not show when loading end"]="过图时不显示",
+
+	["Unknown quest"]="未知任务",
 }

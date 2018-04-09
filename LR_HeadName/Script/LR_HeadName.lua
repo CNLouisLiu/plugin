@@ -3214,6 +3214,7 @@ function LR_HeadName.LOGIN_GAME()
 end
 
 function LR_HeadName.LOADING_END()
+	FireEvent("PLAYER_ENTER_SCENE", GetClientPlayer().dwID)
 	if not FIRST_LOADING_END then
 		return
 	end
