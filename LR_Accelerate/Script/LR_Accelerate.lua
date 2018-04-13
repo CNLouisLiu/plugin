@@ -127,6 +127,7 @@ LR_Accelerate.QiXueLv955 = {
 	[8]={szName=_L["QinXin/NingJue(ChangGeMen)"],delta=51},	--沁心/凝绝（长歌门）
 	[9]={szName=_L["RuFeng(CangJian)"],delta=82},	--如风（藏剑）
 	[10]={szName=_L["SuiBing(NaiXiu)"],delta=51},		--碎冰（奶秀）
+	[11]={szName=_L["YuHan(NaiXiu)"],delta=204},		--余寒（奶秀）
 	--[11]={szName=_L["FaJing(MingJiaoT)"],delta=105},	--法境（明教T）
 	--[12]={szName=_L["YiFeng(BaDao)"],delta=51},
 }

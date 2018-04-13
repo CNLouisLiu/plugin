@@ -2047,6 +2047,7 @@ function LR_TeamGrid.OnRButtonClick()
 			LR_TeamGrid.ReDrawAllMembers(true)
 			LR_TeamSkillMonitor.ShowSkillPanel()
 			LR_TeamGrid.UpdateRoleBodySize()
+			LR_TeamGrid.ResizeTitle()
 		end
 	end
 end
@@ -2097,6 +2098,7 @@ function LR_TeamGrid.OnCheckBoxCheck()
 		LR_TeamGrid.ReDrawAllMembers(true)
 		LR_TeamSkillMonitor.ShowSkillPanel()
 		LR_TeamGrid.UpdateRoleBodySize()
+		LR_TeamGrid.ResizeTitle()
 	end
 end
 
@@ -2107,6 +2109,7 @@ function LR_TeamGrid.OnCheckBoxUncheck()
 		LR_TeamGrid.ReDrawAllMembers(true)
 		LR_TeamSkillMonitor.ShowSkillPanel()
 		LR_TeamGrid.UpdateRoleBodySize()
+		LR_TeamGrid.ResizeTitle()
 	end
 end
 
@@ -3005,7 +3008,7 @@ function LR_TeamGrid.ResizeTitle()
 	local Wnd_Body = hFrame:Lookup("Wnd_Body")
 	local w2, h2 = Wnd_Body:GetSize()
 
-	local w = mmax(w1 + 5, w2)
+	local w = mmax(w1 + 5, w2, 80)
 	--¿¼ÂÇ¼¼ÄÜÃæ°å
 	local Wnd_Skill_Box = hFrame:Lookup("Wnd_Skill_Box")
 	local w3, h3 = Wnd_Skill_Box:GetSize()
