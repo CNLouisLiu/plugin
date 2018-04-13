@@ -305,6 +305,10 @@ function LR.GetItemNumInBagAndBank(dwTabType, dwIndex, nBookID)
 	return bagNum + bankNum
 end
 
+function LR.FormatTimeString(nTime)
+	local t = TimeToDate(nTime)
+	return string.format("%d-%02d-%02d %02d:%02d:%02d", t.year, t.month, t.day, t.hour, t.minute, t.second)
+end
 ------------------------------------------------------------------
 ------UI
 ------------------------------------------------------------------
@@ -1045,7 +1049,6 @@ function LR.ParseFaceIcon (t)
 	end
 	return t2
 end
-
 
 -- 判断某个频道能否发言
 -- (bool) LR.CanTalk(number nChannel)

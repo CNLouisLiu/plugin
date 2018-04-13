@@ -1239,8 +1239,13 @@ function LR_TeamBuffMonitor.LR_RAID_EDGE_DELETE()
 	local cache = _EDGEINDICATOR_BUFF_CACHE[dwPlayerID][tBuff.dwID]
 
 	if next(cache) ~= nil then
-		hEdge.hShadow:Hide()
-		hEdge.hShadowBg:Hide()
+		if hEdge.hShadow then
+			hEdge.hShadow:Hide()
+		end
+
+		if hEdge.hShadowBg then
+			hEdge.hShadowBg:Hide()
+		end
 
 		_EDGEINDICATOR_BUFF_HANDLE_CACHE[dwPlayerID][tBuff.edge] = {}
 		_EDGEINDICATOR_BUFF_SHOW[dwPlayerID][tBuff.edge] = {}

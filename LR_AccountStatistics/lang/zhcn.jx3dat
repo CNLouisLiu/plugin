@@ -691,5 +691,20 @@ data={
 	["First launch every day"]="每天第一次上线",
 	["[LR]Auto backup data\n"]="【懒人账目本】自动备份数据\n",
 
+	["ADVENTURE_PATT"] = "“(.-)”[女侠在].-触发奇遇【(.-)】",
+	["QY_History"]="奇遇大事件",
 
+	["QYName"]="奇遇名字",
+	["szName"]="玩家名字",
+	["realArea"]="区域",
+	["realServer"]="服务器",
+	["nTime"]="时间",
+	["Monitor and record qiyu world msg"]="监控并记录世界奇遇公告",
+	["Open qy history panel"]="奇遇大事件",
+	["All QY"]="所有奇遇",
+	["All Pet"]="所有宠物",
+	["This server"]="本服",
+	["Record pet pick"]="记录自己的宠物拾取",
+	["World_QY_History"]="世界奇遇",
+	["Pet_Pick_History"]="宠物奇遇",
 }

@@ -9,7 +9,7 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20180408"
+local VERSION = "20180420"
 -------------------------------------------------------------
 LR_AS_DB = LR_AS_DB or {}
 LR_AS_DEBUG = false
@@ -533,6 +533,47 @@ function LR_AS_DB.backup()
 	LR.SysMsg(sformat(_L["backup dataname: %s\n"], name))
 	LR.SysMsg(sformat(_L["backup cost %ss\n"], tostring((end_time - begin_time) /1000.0)))
 end
+
+----------------------------------------------
+------------奇遇历史事件
+----------------------------------------------
+local schema_qyhistory_list = {
+	name = "qiyu_history",
+	version = VERSION,
+	data = {
+		{name = "szName", sql = "szName VARCHAR(30) DEFAULT('playername')"},
+		{name = "szQYName", sql = "szQYName VARCHAR(30) DEFAULT('qyname')"},
+		{name = "realArea", sql = "realArea VARCHAR(30) DEFAULT('daqu')"},
+		{name = "realServer", sql = "realServer VARCHAR(30) DEFAULT('fuwuqi')"},
+		{name = "nMethod", sql = "nMethod INTEGER DEFAULT(0)"},
+		{name = "bFinished", sql = "bFinished INTEGER DEFAULT(0)"},
+		{name = "nTime", 	sql = "nTime INTEGER DEFAULT(0)"},
+		{name = "hash", sql = "hash VARCHAR(40) DEFAULT('')"},
+	},
+	primary_key = {sql = "PRIMARY KEY ( szName, szQYName, realArea, realServer )"},
+}
+
+local schema_pethistory_list = {
+	name = "pet_history",
+	version = VERSION,
+	data = {
+		{name = "szName", sql = "szName VARCHAR(30) DEFAULT('playername')"},
+		{name = "szPetName", sql = "szPetName VARCHAR(30) DEFAULT('qyname')"},
+		{name = "realArea", sql = "realArea VARCHAR(30) DEFAULT('daqu')"},
+		{name = "realServer", sql = "realServer VARCHAR(30) DEFAULT('fuwuqi')"},
+		{name = "nTime", 	sql = "nTime INTEGER DEFAULT(0)"},
+		{name = "hash", sql = "hash VARCHAR(40) DEFAULT('')"},
+	},
+	primary_key = {sql = "PRIMARY KEY ( szName, szPetName, realArea, realServer )"},
+}
+
+function LR_AS_DB.IniQYHistoryDB()
+	local tTableConfig = {schema_qyhistory_list, schema_pethistory_list}
+	local path = SaveDataPath
+	local db_name = "qiyu_history.db"
+	LR.IniDB(SaveDataPath, db_name, tTableConfig)
+end
+
 ----------------------------------------------
 ------------事件处理
 ----------------------------------------------
@@ -548,6 +589,7 @@ end
 function LR_AS_DB.LOGIN_GAME()
 	LR_AS_DB.IniMainDB()
 	LR_AS_DB.IniTradeDB()
+	LR_AS_DB.IniQYHistoryDB()
 end
 
 LR.RegisterEvent("LOGIN_GAME", function() LR_AS_DB.LOGIN_GAME() end)

@@ -1744,6 +1744,7 @@ local function SAVE_QUEST(dwQuestID)
 	DB:Release()
 	Log("[LR] RI_CHANG_QUEST_EVENT_SAVE\n")
 	_quest_save_time = GetCurrentTime()
+	LR_AS_Panel:RefreshUI()
 end
 
 function _RC.QUEST_ACCEPTED()

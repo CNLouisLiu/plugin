@@ -408,7 +408,28 @@ local LR_TeamGrid_UI ={
 			callback = function()
 				LR_TeamBuffTool_Panel:Open()
 			end
-		},{	name="LR_TeamGrid_UI_Reset",type="Button",x=400,y=340,text=_L["Reset settings"],
+		},{	name = "LR_TeamGrid_UI_co13", type="ComboBox", text = _L["Control Panel Set"], x = 270, y = 340, w = 160,
+			default = function ()
+				return LR_TeamGrid.bOn
+			end,
+			callback = function(m)
+				local szOption = {"ShowLootModeBtn", "ShowLootLevelBtn", "ShowWorldMarkBtn", "ShowGoldTeamBtn", "ShowTeamNoticeBtn", "ShowVoiceBtn", "ShowMiniBtn"}
+
+				for k, v in pairs(szOption) do
+					m[#m + 1] = { szOption = _L[v], bCheck = true, bMCheck = false,
+						bChecked = function()
+							return LR_TeamGrid.UsrData.CommonSettings.TitleButton[v]
+						end,
+						fnAction = function()
+							LR_TeamGrid.UsrData.CommonSettings.TitleButton[v] = not LR_TeamGrid.UsrData.CommonSettings.TitleButton[v]
+							LR_TeamGrid.SaveCommonData()
+							LR_TeamGrid.ListButtons()
+						end,
+					}
+				end
+				PopupMenu(m)
+			end,
+		},{	name="LR_TeamGrid_UI_Reset",type="Button",x = 450, y = 340, text = _L["Reset settings"],
 			enable = function ()
 				return LR_TeamGrid.bOn
 			end,

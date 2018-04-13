@@ -530,4 +530,14 @@ data={
 	["LClick image to change status.\n"]="點擊前面的圖片(勾/感嘆號)切換允許/禁止狀態。\n",
 	["RClick to delete group.\n"]="右擊刪除分組\n",
 
+	["Control Panel Set"]="控制條按鈕設置",
+	["ShowLootModeBtn"]="顯示分配模式按鈕",
+	["ShowLootLevelBtn"]="顯示分配等級按鈕",
+	["ShowWorldMarkBtn"]="顯示世界標記按鈕",
+	["ShowGoldTeamBtn"]="顯示金團記錄按鈕",
+	["ShowTeamNoticeBtn"]="顯示團隊告示按鈕",
+	["ShowVoiceBtn"]="顯示團隊語音按鈕",
+	["ShowMiniBtn"]="顯示最小化按鈕",
+	["Rclick to fold or expand panel"]="右鍵摺疊/展開面板",
+
 }

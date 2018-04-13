@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local VERSION = "20180120"
+local VERSION = "20180413"
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
@@ -87,6 +87,16 @@ local DefaultCommonSettings = {
 	backGroundAlphaType = 1,	--血量透明度着色。1：固定透明度；2：按距离透明度；3：按血量透明度
 	backGroundFixedAlpha = 255,
 	bgColorFillType = 2,	--1：不渲染、纯色;2：中间有条阴影；3：默认方式
+	TitleButton = {
+		ShowLootModeBtn = true,
+		ShowLootLevelBtn = true,
+		ShowWorldMarkBtn = true,
+		ShowGoldTeamBtn = true,
+		ShowTeamNoticeBtn = true,
+		ShowVoiceBtn = true,
+		ShowMiniBtn = true,
+	},
+
 	distanceLevel = {
 		[1] = 8,
 		[2] = 20,
@@ -1790,8 +1800,9 @@ function LR_TeamGrid.OnFrameCreate()
 	LR_TeamGrid.Handle_BodySub = frame:Lookup("Wnd_BodySub"):Lookup("","")
 	LR_TeamGrid.Handle_RolesSub = LR_TeamGrid.Handle_BodySub:Lookup("Handle_RolesSub")
 	LR_TeamGrid.Handle_TeamNumSub = LR_TeamGrid.Handle_BodySub:Lookup("Handle_TeamNumSub")
-	frame:Lookup("Wnd_Title"):Lookup("Btn_Mic"):Lookup("",""):Lookup("Handle_HotKey"):Lookup("Text_HotKey"):SetFontScale(0.9)
-	frame:Lookup("Wnd_Title"):Lookup("Btn_Mic"):Lookup("",""):Lookup("Handle_Free_Mic"):Lookup("Text_Free"):SetFontScale(0.9)
+	LR_TeamGrid.bMiniPanel = false
+
+	LR_TeamGrid.ListButtons()
 	LR.DelayCall(2000, function()
 		LR_TeamGrid.GVOICE_MIC_STATE_CHANGED()
 		LR_TeamGrid.GVOICE_SPEAKER_STATE_CHANGED()
@@ -1868,81 +1879,6 @@ function LR_TeamGrid.OnFrameCreate()
 		LR_TeamGrid.DrawImageLoot(team.nLootMode)
 		LR_TeamGrid.DrawImageLootLevel(team.nRollQuality)
 
-		local Image_Loot = LR_TeamGrid.Handle_Title:Lookup("Image_Loot")
-		Image_Loot:Show()
-		Image_Loot:SetAlpha(186)
-		Image_Loot:RegisterEvent(786)
-		Image_Loot.OnItemMouseEnter = function()
-			Image_Loot:SetAlpha(255)
-			local nMouseX, nMouseY =  Cursor.GetPos()
-			local szTipInfo={}
-			local team=GetClientTeam()
-			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Distribute Mode Now:"],41)
-			if team.nLootMode == 1 then
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Free Pick"]), 41,255,255,255)
-			elseif team.nLootMode == 2 then
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Distributor"]), 41,0,255,0)
-			elseif team.nLootMode == 3 then
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Team Pick"]), 41,0,128,255)
-			elseif team.nLootMode == 4 then
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Gold Team"]), 41,255,128,0)
-			end
-			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Click to change distribute mode"],30)
-			OutputTip(tconcat(szTipInfo), 330, {nMouseX, nMouseY, 0, 0})
-		end
-		Image_Loot.OnItemMouseLeave = function()
-			Image_Loot:SetAlpha(186)
-			HideTip()
-		end
-		Image_Loot.OnItemLButtonClick = function()
-			local menu= {}
-			InsertDistributeMenu(menu,not LR_TeamGrid.IsLooter(GetClientPlayer().dwID))
-			if not LR_TeamGrid.IsLooter( GetClientPlayer().dwID) then
-				tinsert(menu[1],{szOption=_L["You have not the distribute right,you can not change the distribute mode."],fnDisable = function() return true end})
-			end
-			PopupMenu(menu[1])
-		end
-
-		local Image_Level = LR_TeamGrid.Handle_Title:Lookup("Image_LootLevel")
-		Image_Level:SetAlpha(186)
-		Image_Level:RegisterEvent(786)
-		Image_Level.OnItemMouseEnter = function()
-			Image_Level:SetAlpha(255)
-			local nMouseX, nMouseY =  Cursor.GetPos()
-			local szTipInfo={}
-			local team=GetClientTeam()
-			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Distribute Level Now:"],41)
-			if team.nRollQuality == 2 then
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Green"]), 41,0,255,0)
-			elseif team.nRollQuality == 3 then
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Blue"]), 41,0,255,255)
-			elseif team.nRollQuality == 4 then
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Purple"]),41,255,89,255)
-			elseif team.nRollQuality == 5 then
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Orange"]),41,255,128,0)
-			end
-			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Click to change distribute level"],30)
-			OutputTip(tconcat(szTipInfo), 330, {nMouseX, nMouseY, 0, 0})
-		end
-		Image_Level.OnItemMouseLeave = function()
-			Image_Level:SetAlpha(186)
-			HideTip()
-		end
-		Image_Level.OnItemLButtonClick = function()
-			local menu= {}
-			InsertDistributeMenu(menu,not LR_TeamGrid.IsLooter( GetClientPlayer().dwID))
-			if not LR_TeamGrid.IsLooter( GetClientPlayer().dwID) then
-				tinsert(menu[2],{szOption=_L["You have not the distribute right,you can not change the distribute level."],fnDisable = function() return true end})
-			end
-			PopupMenu(menu[2])
-		end
-
-		LR_TeamGrid.Handle_Body:RegisterEvent(786)
-		LR_TeamGrid.Handle_Body.OnItemMouseEnter = function()
-			--Station.SetCapture(frame)
-			--Output("sdf")
-		end
-
 		LR_TeamSkillMonitor.ShowSkillPanel()
 	end
 end
@@ -1984,8 +1920,6 @@ function LR_TeamGrid.OnEvent(szEvent)
 		LR_TeamGrid.TEAM_VOTE_RESPOND()
 	elseif szEvent == "BUFF_UPDATE" then
 		LR_TeamBuffMonitor.BUFF_UPDATE2()
-	elseif szEvent == "JH_RAID_REC_BUFF" then
-		--LR_TeamBuffMonitor.JH_RAID_REC_BUFF()
 	elseif szEvent == "LR_RAID_BUFF_ADD_FRESH" then
 		LR_TeamBuffMonitor.LR_RAID_BUFF_ADD_FRESH()
 	elseif szEvent == "LR_RAID_BUFF_DELETE" then
@@ -2092,6 +2026,8 @@ function LR_TeamGrid.OnFrameBreathe()
 	LR_TeamSkillMonitor.RefreshAllSkillBox()
 	LR_TeamBossMonitor.CheckAllOTState()
 	LR_TeamBossMonitor.DrawAllBossTarget()
+
+	GVoiceBase_CheckMicState()
 end
 
 function LR_TeamGrid.OnFrameDragEnd()
@@ -2100,10 +2036,39 @@ function LR_TeamGrid.OnFrameDragEnd()
 	Anchor.x, Anchor.y = this:GetRelPos()
 end
 
+function LR_TeamGrid.OnRButtonClick()
+	local szName = this:GetName()
+	if szName == "Btn_Option" then
+		local Wnd_Fold = LR_TeamGrid.frameSelf:Lookup("Wnd_Title"):Lookup("WndContainer_Title"):Lookup("Wnd_Fold")
+		if Wnd_Fold then
+			Wnd_Fold:Lookup("CheckBox_Fold"):Check(not LR_TeamGrid.bMiniPanel)
+		else
+			LR_TeamGrid.bMiniPanel = not LR_TeamGrid.bMiniPanel
+			LR_TeamGrid.ReDrawAllMembers(true)
+			LR_TeamSkillMonitor.ShowSkillPanel()
+			LR_TeamGrid.UpdateRoleBodySize()
+		end
+	end
+end
+
 function LR_TeamGrid.OnLButtonClick()
 	local szName = this:GetName()
 	if szName == "Btn_Option" then
 		LR_TeamMenu.PopOptions()
+	elseif szName == "Btn_LootMode" then
+		local menu= {}
+		InsertDistributeMenu(menu,not LR_TeamGrid.IsLooter(GetClientPlayer().dwID))
+		if not LR_TeamGrid.IsLooter( GetClientPlayer().dwID) then
+			tinsert(menu[1],{szOption=_L["You have not the distribute right,you can not change the distribute mode."],fnDisable = function() return true end})
+		end
+		PopupMenu(menu[1])
+	elseif szName == "Btn_LootLevel" then
+		local menu= {}
+		InsertDistributeMenu(menu,not LR_TeamGrid.IsLooter( GetClientPlayer().dwID))
+		if not LR_TeamGrid.IsLooter( GetClientPlayer().dwID) then
+			tinsert(menu[2],{szOption=_L["You have not the distribute right,you can not change the distribute level."],fnDisable = function() return true end})
+		end
+		PopupMenu(menu[2])
 	elseif szName == "Btn_WorldMark" then
 		if LR_TeamGrid.IsLeader( GetClientPlayer().dwID) then
 			Wnd.ToggleWindow("WorldMark")
@@ -2125,9 +2090,68 @@ function LR_TeamGrid.OnLButtonClick()
 	end
 end
 
+function LR_TeamGrid.OnCheckBoxCheck()
+	local szName = this:GetName()
+	if szName == "CheckBox_Fold" then
+		LR_TeamGrid.bMiniPanel = true
+		LR_TeamGrid.ReDrawAllMembers(true)
+		LR_TeamSkillMonitor.ShowSkillPanel()
+		LR_TeamGrid.UpdateRoleBodySize()
+	end
+end
+
+function LR_TeamGrid.OnCheckBoxUncheck()
+	local szName = this:GetName()
+	if szName == "CheckBox_Fold" then
+		LR_TeamGrid.bMiniPanel = false
+		LR_TeamGrid.ReDrawAllMembers(true)
+		LR_TeamSkillMonitor.ShowSkillPanel()
+		LR_TeamGrid.UpdateRoleBodySize()
+	end
+end
+
 function LR_TeamGrid.OnMouseEnter()
 	local szName = this:GetName()
-	if szName == "Btn_Mic" then
+	if szName == "Btn_Option" then
+		local nMouseX, nMouseY =  this:GetAbsPos()
+		local szTipInfo={}
+		szTipInfo[#szTipInfo+1] = GetFormatText(_L["Rclick to fold or expand panel"], 41,255,255,255)
+		OutputTip(tconcat(szTipInfo), 330, {nMouseX, nMouseY, 0, 0})
+	elseif szName == "Btn_LootMode" then
+		this:SetAlpha(255)
+		local nMouseX, nMouseY =  this:GetAbsPos()
+		local szTipInfo={}
+		local team=GetClientTeam()
+		szTipInfo[#szTipInfo+1] = GetFormatText(_L["Distribute Mode Now:"],41)
+		if team.nLootMode == 1 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Free Pick"]), 41,255,255,255)
+		elseif team.nLootMode == 2 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Distributor"]), 41,0,255,0)
+		elseif team.nLootMode == 3 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Team Pick"]), 41,0,128,255)
+		elseif team.nLootMode == 4 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Gold Team"]), 41,255,128,0)
+		end
+		szTipInfo[#szTipInfo+1] = GetFormatText(_L["Click to change distribute mode"],30)
+		OutputTip(tconcat(szTipInfo), 330, {nMouseX, nMouseY, 0, 0})
+	elseif szName == "Btn_LootLevel" then
+		this:SetAlpha(255)
+		local nMouseX, nMouseY =  this:GetAbsPos()
+		local szTipInfo={}
+		local team=GetClientTeam()
+		szTipInfo[#szTipInfo+1] = GetFormatText(_L["Distribute Level Now:"],41)
+		if team.nRollQuality == 2 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Green"]), 41,0,255,0)
+		elseif team.nRollQuality == 3 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Blue"]), 41,0,255,255)
+		elseif team.nRollQuality == 4 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Purple"]),41,255,89,255)
+		elseif team.nRollQuality == 5 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Orange"]),41,255,128,0)
+		end
+		szTipInfo[#szTipInfo+1] = GetFormatText(_L["Click to change distribute level"],30)
+		OutputTip(tconcat(szTipInfo), 330, {nMouseX, nMouseY, 0, 0})
+	elseif szName == "Btn_Mic" then
 		local tText = {
 			[MIC_STATE.NOT_AVIAL] = g_tStrings.GVOICE_MIC_UNAVIAL_STATE_TIP,
 			[MIC_STATE.CLOSE_NOT_IN_ROOM] = g_tStrings.GVOICE_MIC_JOIN_STATE_TIP,
@@ -2167,7 +2191,15 @@ end
 
 function LR_TeamGrid.OnMouseLeave()
 	local szName = this:GetName()
-	if szName == "Btn_Mic" then
+	if szName == "Btn_Option" then
+		HideTip()
+	elseif szName == "Btn_LootMode" then
+		this:SetAlpha(200)
+		HideTip()
+	elseif szName == "Btn_LootLevel" then
+		this:SetAlpha(200)
+		HideTip()
+	elseif szName == "Btn_Mic" then
 		HideTip()
 	elseif szName == "Btn_SpeakerAll" then
 		HideTip()
@@ -2232,6 +2264,21 @@ function LR_TeamGrid.UpdateRoleBodySize()
 	if not me then
 		return
 	end
+
+	if LR_TeamGrid.bMiniPanel then
+		LR_TeamGrid.Handle_Body:Lookup("Image_BodyBg"):SetSize(0, 0)
+		LR_TeamGrid.Handle_Body:SetSize(0, 0)
+		LR_TeamGrid.frameSelf:Lookup("Wnd_Body"):SetSize(0, 0)
+
+		LR_TeamGrid.Handle_TeamNumSub:Clear()
+		LR_TeamGrid.Handle_TeamNumSub:SetSize(0, 0)
+		LR_TeamGrid.Handle_BodySub:Lookup("Image_BodyBgSub"):SetSize(0, 0)
+		LR_TeamGrid.Handle_BodySub:SetSize(0, 0)
+		LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetSize(0, 0)
+
+		return
+	end
+
 	local UIConfig = LR_TeamGrid.UIConfig
 	local marginBody = UIConfig.marginBody
 	--主面板设置大小
@@ -2336,7 +2383,6 @@ function LR_TeamGrid.UpdateRoleBodySize()
 	else
 		LR_TeamGrid.frameSelf:SetSize(mmax(titleWidth, width), height + titleHeight)
 	end
-
 end
 
 function LR_TeamGrid.OpenPanel()
@@ -2366,9 +2412,10 @@ function LR_TeamGrid.SwitchPanel()
 		return
 	end
 	if LR_TeamGrid.bOn then
-		if LR.IsTreasureBattleFieldMap() then
-			LR_TeamGrid.ClosePanel()
-		elseif me.IsInRaid() then
+		--if LR.IsTreasureBattleFieldMap() then
+			--LR_TeamGrid.ClosePanel()
+		--elseif me.IsInRaid() then
+		if me.IsInRaid() then
 			LR_TeamGrid.OpenPanel()
 		elseif me.IsInParty() and not LR_TeamGrid.UsrData.CommonSettings.bShowOnlyInRaidMode then
 			LR_TeamGrid.OpenPanel()
@@ -2561,6 +2608,10 @@ function LR_TeamGrid.UpdateTeamMember()
 end
 
 function LR_TeamGrid.DrawAllMembers()
+	if LR_TeamGrid.bMiniPanel then
+		return
+	end
+
 	local tGroupMembers = LR_TeamGrid.tGroupMembers or {}
 	local nCol = 0
 	local count = 1
@@ -2800,32 +2851,42 @@ function LR_TeamGrid.DrawTeamNum()
 end
 
 function LR_TeamGrid.DrawImageLoot(nLootMode)
-	local Image_Loot = LR_TeamGrid.Handle_Title:Lookup("Image_Loot")
-	Image_Loot:Show()
-	Image_Loot:SetAlpha(186)
-	if nLootMode== 1 then	--自由拾取
-		Image_Loot:FromUITex("ui\\Image\\TargetPanel\\Target.UITex",60)
-	elseif nLootMode == 2 then	--分配者分配
-		Image_Loot:FromUITex("ui\\Image\\UICommon\\CommonPanel2.UITex",92)
-	elseif nLootMode == 3 then	--队伍拾取Roll点
-		Image_Loot:FromUITex("ui\\Image\\UICommon\\LoginCommon.UITex",29)
-	elseif nLootMode == 4 then	--拍卖分配
-		Image_Loot:FromUITex("ui\\Image\\Common\\Money.UITex",15)
+	local frame = LR_TeamGrid.frameSelf
+	local WndContainer_Title = frame:Lookup("Wnd_Title"):Lookup("WndContainer_Title")
+	local Btn_LootMode = WndContainer_Title:Lookup("Btn_LootMode")
+	if Btn_LootMode then
+		local Image_Loot = Btn_LootMode:Lookup("",""):Lookup("Image_LootMode")
+		Image_Loot:Show()
+		Image_Loot:SetAlpha(200)
+		if nLootMode== 1 then	--自由拾取
+			Image_Loot:FromUITex("ui\\Image\\TargetPanel\\Target.UITex",60)
+		elseif nLootMode == 2 then	--分配者分配
+			Image_Loot:FromUITex("ui\\Image\\UICommon\\CommonPanel2.UITex",92)
+		elseif nLootMode == 3 then	--队伍拾取Roll点
+			Image_Loot:FromUITex("ui\\Image\\UICommon\\LoginCommon.UITex",29)
+		elseif nLootMode == 4 then	--拍卖分配
+			Image_Loot:FromUITex("ui\\Image\\UICommon\\GoldTeam.UITex",7)
+		end
 	end
 end
 
 function LR_TeamGrid.DrawImageLootLevel(nRollQuality)
-	local Image_Level = LR_TeamGrid.Handle_Title:Lookup("Image_LootLevel")
-	Image_Level:Show()
-	Image_Level:SetAlpha(186)
-	if nRollQuality == 2 then
-		Image_Level:FromUITex("ui\\Image\\icon\\huodong_wabao_09.UITex",0)
-	elseif nRollQuality == 3 then
-		Image_Level:FromUITex("ui\\Image\\icon\\huodong_wabao_05.UITex",0)
-	elseif nRollQuality == 4 then
-		Image_Level:FromUITex("ui\\Image\\icon\\huodong_wabao_10.UITex",0)
-	elseif nRollQuality == 5 then
-		Image_Level:FromUITex("ui\\Image\\icon\\huodong_wabao_08.UITex",0)
+	local frame = LR_TeamGrid.frameSelf
+	local WndContainer_Title = frame:Lookup("Wnd_Title"):Lookup("WndContainer_Title")
+	local Btn_LootLevel = WndContainer_Title:Lookup("Btn_LootLevel")
+	if Btn_LootLevel then
+		local Image_Level = Btn_LootLevel:Lookup("",""):Lookup("Image_LootLevel")
+		Image_Level:Show()
+		Image_Level:SetAlpha(200)
+		if nRollQuality == 2 then
+			Image_Level:FromUITex("ui\\Image\\icon\\huodong_wabao_09.UITex",0)
+		elseif nRollQuality == 3 then
+			Image_Level:FromUITex("ui\\Image\\icon\\huodong_wabao_05.UITex",0)
+		elseif nRollQuality == 4 then
+			Image_Level:FromUITex("ui\\Image\\icon\\huodong_wabao_10.UITex",0)
+		elseif nRollQuality == 5 then
+			Image_Level:FromUITex("ui\\Image\\icon\\huodong_wabao_08.UITex",0)
+		end
 	end
 end
 
@@ -2868,6 +2929,67 @@ function LR_TeamGrid.ChangeSpeakerStatus()
 	GVoiceBase_SwitchSpeakerState()
 end
 
+function LR_TeamGrid.ListButtons()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local hFrame = LR_TeamGrid.frameSelf
+	local Wnd_Title = hFrame:Lookup("Wnd_Title")
+	local WndContainer_Title = Wnd_Title:Lookup("WndContainer_Title")
+	WndContainer_Title:Clear()
+	WndContainer_Title:SetSize(1000, 30)
+
+	local szIniFile = sformat("%s\\UI\\%s\\TitleButton.ini", AddonPath, LR_TeamGrid.UsrData.UI_Choose)
+	WndContainer_Title:AppendContentFromIni(szIniFile, "Btn_Option", "Btn_Option")
+
+	local team = GetClientTeam()
+	if LR_TeamGrid.UsrData.CommonSettings.TitleButton.ShowLootModeBtn then
+		WndContainer_Title:AppendContentFromIni(szIniFile, "Btn_LootMode", "Btn_LootMode")
+		if team then
+			LR_TeamGrid.DrawImageLoot(team.nLootMode)
+		end
+	end
+	if LR_TeamGrid.UsrData.CommonSettings.TitleButton.ShowLootLevelBtn then
+		WndContainer_Title:AppendContentFromIni(szIniFile, "Btn_LootLevel", "Btn_LootLevel")
+		if team then
+			LR_TeamGrid.DrawImageLootLevel(team.nRollQuality)
+		end
+	end
+	if LR_TeamGrid.UsrData.CommonSettings.TitleButton.ShowWorldMarkBtn then
+		WndContainer_Title:AppendContentFromIni(szIniFile, "Btn_WorldMark", "Btn_WorldMark")
+	end
+	if LR_TeamGrid.UsrData.CommonSettings.TitleButton.ShowGoldTeamBtn then
+		WndContainer_Title:AppendContentFromIni(szIniFile, "Btn_LR_GKP", "Btn_LR_GKP")
+	end
+	if LR_TeamGrid.UsrData.CommonSettings.TitleButton.ShowTeamNoticeBtn then
+		WndContainer_Title:AppendContentFromIni(szIniFile, "Btn_TeamNotice", "Btn_TeamNotice")
+	end
+	if LR_TeamGrid.UsrData.CommonSettings.TitleButton.ShowVoiceBtn then
+		WndContainer_Title:AppendContentFromIni(szIniFile, "Wnd_Speaker", "Wnd_Speaker")
+		WndContainer_Title:AppendContentFromIni(szIniFile, "Wnd_Mic", "Wnd_Mic")
+		hFrame:Lookup("Wnd_Title"):Lookup("WndContainer_Title"):Lookup("Wnd_Mic"):Lookup("Btn_Mic"):Lookup("",""):Lookup("Handle_HotKey"):Lookup("Text_HotKey"):SetFontScale(0.9)
+		hFrame:Lookup("Wnd_Title"):Lookup("WndContainer_Title"):Lookup("Wnd_Mic"):Lookup("Btn_Mic"):Lookup("",""):Lookup("Handle_Free_Mic"):Lookup("Text_Free"):SetFontScale(0.9)
+	end
+	WndContainer_Title:AppendContentFromIni(szIniFile, "Wnd_TitleText", "Wnd_TitleText")
+
+	if LR_TeamGrid.UsrData.CommonSettings.TitleButton.ShowMiniBtn then
+		WndContainer_Title:SetSize(1000, 30)
+		WndContainer_Title:AppendContentFromIni(szIniFile, "Wnd_Fold", "Wnd_Fold")
+		hFrame:Lookup("Wnd_Title"):Lookup("WndContainer_Title"):Lookup("Wnd_Fold"):Lookup("CheckBox_Fold"):Check(LR_TeamGrid.bMiniPanel)
+	end
+
+	LR_TeamGrid.SetTitleText("")
+	---因为会改1大小，所以放后面
+	if LR_TeamGrid.UsrData.CommonSettings.TitleButton.ShowVoiceBtn then
+		LR_TeamGrid.GVOICE_MIC_STATE_CHANGED()
+		LR_TeamGrid.GVOICE_SPEAKER_STATE_CHANGED()
+	end
+
+	WndContainer_Title:FormatAllContentPos()
+	LR_TeamGrid.ResizeTitle()
+end
+
 function LR_TeamGrid.ResizeTitle()
 	local me = GetClientPlayer()
 	if not me then
@@ -2875,23 +2997,31 @@ function LR_TeamGrid.ResizeTitle()
 	end
 	local hFrame = LR_TeamGrid.frameSelf
 	local Wnd_Title = hFrame:Lookup("Wnd_Title")
-	local Handle_Title = LR_TeamGrid.Handle_Title
+	local WndContainer_Title = Wnd_Title:Lookup("WndContainer_Title")
+	WndContainer_Title:SetSize(1000, 30)
+	WndContainer_Title:FormatAllContentPos()
+	local w1, h1 = WndContainer_Title:GetAllContentSize()
+
 	local Wnd_Body = hFrame:Lookup("Wnd_Body")
-	local Wnd_Skill_Box = hFrame:Lookup("Wnd_Skill_Box")
-	local w1, h1 = Handle_Title:GetSize()
 	local w2, h2 = Wnd_Body:GetSize()
+
+	local w = mmax(w1 + 5, w2)
+	--考虑技能面板
+	local Wnd_Skill_Box = hFrame:Lookup("Wnd_Skill_Box")
 	local w3, h3 = Wnd_Skill_Box:GetSize()
-	local w = mmax(w1, w2, 230)
 	local kungfu=me.GetKungfuMount()
 	local dwSkillID=kungfu.dwSkillID
 	if LR_TeamGrid.UsrData.CommonSettings.bShowSkillBox and (dwSkillID==10028 or dwSkillID==10080 or dwSkillID==10176 or dwSkillID==10448) then
 		if LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 1 then  --上下
-			w = mmax(w1, w2, w3, w)
+			w = mmax(w1 + 5, w2, w3)
 		elseif LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 3 or LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 4 then
-			w = mmax(w1, (w2 + w3), w)
+			w = mmax(w1 + 5, (w2 + w3))
 		end
 	end
+
 	Wnd_Title:SetSize(w, 30)
+	WndContainer_Title:SetSize(w, 30)
+	Handle_Title = Wnd_Title:Lookup("","")
 	Handle_Title:Lookup("Image_TitleBg"):SetSize(w, 30)
 	Handle_Title:Lookup("Image_Title"):SetSize(w, 30)
 	hFrame:SetDragArea(0, 0, w, 30)
@@ -2900,24 +3030,21 @@ end
 function LR_TeamGrid.SetTitleText(szText)
 	local hFrame = LR_TeamGrid.frameSelf
 	local Wnd_Title = hFrame:Lookup("Wnd_Title")
-	local Handle_Title = LR_TeamGrid.Handle_Title
-	local Handle_TitleText = Handle_Title:Lookup("Handle_TitleText")
-	Handle_TitleText:SetRelPos(230, 0)
-	local hText = Handle_TitleText:Lookup("Text_TitleText")
-	hText:SetSize(1000,30)
-	hText:SetText(szText)
-	local width, height = hText:GetTextExtent()
-	hText:SetSize(width, height)
-	Handle_TitleText:SetSizeByAllItemSize()
-	Handle_Title:Lookup("Image_Title"):SetSize(130, 30)
-	Handle_Title:Lookup("Image_TitleBg"):SetSize(130,30)
-	Handle_Title:FormatAllItemPos()
-	width, height = Handle_Title:GetAllItemSize()
---[[	if width < 80 then
-		width = 80
-	end]]
-	Handle_Title:SetSize(width, 30)
-	LR_TeamGrid.ResizeTitle()
+	local WndContainer_Title = Wnd_Title:Lookup("WndContainer_Title")
+	local Wnd_TitleText = WndContainer_Title:Lookup("Wnd_TitleText")
+	if Wnd_TitleText then
+		local Handle_TitleText = Wnd_TitleText:Lookup("","")
+		local Text_TitleText = Handle_TitleText:Lookup("Text_TitleText")
+		Text_TitleText:SetSize(1000,30)
+		Text_TitleText:SetText(szText)
+
+		local width, height = Text_TitleText:GetTextExtent()
+		Text_TitleText:SetSize(width, 24)
+		Handle_TitleText:SetSize(width, 24)
+		Wnd_TitleText:SetSize(width, 24)
+
+		LR_TeamGrid.ResizeTitle()
+	end
 end
 
 function LR_TeamGrid.CheckAllMemberMicStatus()
@@ -2930,13 +3057,16 @@ function LR_TeamGrid.CheckAllMemberMicStatus()
 		if dwID == GetClientPlayer().dwID then
 			v:DrawMicOpen(false)
 			local frame = LR_TeamGrid.frameSelf
-			local Btn_Mic = frame:Lookup("Wnd_Title"):Lookup("Btn_Mic")
-			local Handle_Status_Mic = Btn_Mic:Lookup("","")
-			local Animate_Input_Mic = Handle_Status_Mic:Lookup("Animate_Input_Mic")
-			if GVoiceBase_IsMemberSaying(dwID, sayingInfo) then
-				Animate_Input_Mic:Show()
-			else
-				Animate_Input_Mic:Hide()
+			local Wnd_Mic = frame:Lookup("Wnd_Title"):Lookup("Wnd_Mic")
+			if Wnd_Mic then
+				local Btn_Mic = Wnd_Mic:Lookup("Btn_Mic")
+				local Handle_Status_Mic = Btn_Mic:Lookup("","")
+				local Animate_Input_Mic = Handle_Status_Mic:Lookup("Animate_Input_Mic")
+				if GVoiceBase_IsMemberSaying(dwID, sayingInfo) then
+					Animate_Input_Mic:Show()
+				else
+					Animate_Input_Mic:Hide()
+				end
 			end
 		else
 			if GVoiceBase_IsMemberForbid(dwID) then
@@ -2949,7 +3079,6 @@ function LR_TeamGrid.CheckAllMemberMicStatus()
 		end
 	end
 end
-
 
 -----------------------------------------------------------------------
 function LR_TeamGrid.IfICanSelect()
@@ -3287,10 +3416,11 @@ function LR_TeamGrid.SwitchSystemRaidPanel()
 		return
 	end
 	--Output("s", scene.dwMapID == 74, me.IsInRaid(), not frame)
-	if LR.IsTreasureBattleFieldMap() and me.IsInRaid() then
+	--吃鸡地图开启系统面板
+--[[	if LR.IsTreasureBattleFieldMap() and me.IsInRaid() then
 		OpenRaidPanel()
 		return
-	end
+	end]]
 
 	if not LR_TeamGrid.UsrData.CommonSettings.bShowSystemGridPanel then
 		if frame then
@@ -3314,10 +3444,11 @@ function LR_TeamGrid.SwitchSystemTeamPanel()
 		return
 	end
 
-	if LR.IsTreasureBattleFieldMap() and me.IsInParty() and not me.IsInRaid() and not frame:IsVisible() then
+	--吃鸡地图开启系统面板
+--[[	if LR.IsTreasureBattleFieldMap() and me.IsInParty() and not me.IsInRaid() and not frame:IsVisible() then
 		frame:Show()
 		return
-	end
+	end]]
 
 	if me.IsInRaid() then
 		if frame then
@@ -3649,7 +3780,12 @@ end
 function LR_TeamGrid.GVOICE_MIC_STATE_CHANGED()
 	local nMicState = GVoiceBase_GetMicState()
 	local frame = LR_TeamGrid.frameSelf
-	local Btn_Mic = frame:Lookup("Wnd_Title"):Lookup("Btn_Mic")
+	local WndContainer_Title = frame:Lookup("Wnd_Title"):Lookup("WndContainer_Title")
+	local Wnd_Mic = WndContainer_Title:Lookup("Wnd_Mic")
+	if not Wnd_Mic then
+		return
+	end
+	local Btn_Mic = Wnd_Mic:Lookup("Btn_Mic")
 	local Handle_Status_Mic = Btn_Mic:Lookup("","")
 	local Image_Uninsert_Mic = Handle_Status_Mic:Lookup("Image_Uninsert_Mic")
 	local Image_Close_Mic = Handle_Status_Mic:Lookup("Image_Close_Mic")
@@ -3661,31 +3797,38 @@ function LR_TeamGrid.GVOICE_MIC_STATE_CHANGED()
 		Image_Close_Mic:Hide()
 		Handle_HotKey:Hide()
 		Handle_Free_Mic:Hide()
+		Wnd_Mic:SetSize(18, 24)
 	elseif nMicState == MIC_STATE.CLOSE_NOT_IN_ROOM then
 		Btn_Mic:Enable(true)
 		Image_Uninsert_Mic:Hide()
 		Image_Close_Mic:Show()
 		Handle_HotKey:Hide()
 		Handle_Free_Mic:Hide()
+		Wnd_Mic:SetSize(30, 24)
 	elseif nMicState == MIC_STATE.CLOSE_IN_ROOM then
 		Btn_Mic:Enable(true)
 		Image_Uninsert_Mic:Hide()
 		Image_Close_Mic:Show()
 		Handle_HotKey:Hide()
 		Handle_Free_Mic:Hide()
+		Wnd_Mic:SetSize(30, 24)
 	elseif nMicState == MIC_STATE.KEY then
 		Btn_Mic:Enable(true)
 		Image_Uninsert_Mic:Hide()
 		Image_Close_Mic:Hide()
 		Handle_HotKey:Show()
 		Handle_Free_Mic:Hide()
+		Wnd_Mic:SetSize(50, 24)
 	elseif nMicState == MIC_STATE.FREE then
 		Btn_Mic:Enable(true)
 		Image_Uninsert_Mic:Hide()
 		Image_Close_Mic:Hide()
 		Handle_HotKey:Hide()
 		Handle_Free_Mic:Show()
+		Wnd_Mic:SetSize(50, 24)
 	end
+	WndContainer_Title:FormatAllContentPos()
+	LR_TeamGrid.ResizeTitle()
 end
 
 function LR_TeamGrid.GVOICE_BASE_ON_FORBID_MEMBER()
@@ -3697,7 +3840,12 @@ end
 function LR_TeamGrid.GVOICE_SPEAKER_STATE_CHANGED()
 	local nSpeakerState = GVoiceBase_GetSpeakerState()
 	local frame = LR_TeamGrid.frameSelf
-	local Btn_SpeakerAll = frame:Lookup("Wnd_Title"):Lookup("Btn_SpeakerAll")
+	local Wnd_Speaker = frame:Lookup("Wnd_Title"):Lookup("WndContainer_Title"):Lookup("Wnd_Speaker")
+	if not Wnd_Speaker then
+		return
+	end
+
+	local Btn_SpeakerAll = Wnd_Speaker:Lookup("Btn_SpeakerAll")
 	local Handle_Status_Speaker = Btn_SpeakerAll:Lookup("","")
 	local Image_Close_Speaker = Handle_Status_Speaker:Lookup("Image_Close_Speaker")
 	local Image_Normal = Handle_Status_Speaker:Lookup("Image_Normal")

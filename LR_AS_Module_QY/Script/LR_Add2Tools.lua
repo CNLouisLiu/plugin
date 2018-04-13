@@ -84,6 +84,26 @@ local UI = {
 				szTip[#szTip + 1] = {szText = sformat(_L["Choose %d at most"], 9),}
 				return szTip
 			end,
+		},{	name = "LR_QY_History_CheckBox_01", type = "CheckBox", text = _L["Monitor and record qiyu world msg"], x = 0, y = 30, w = 200,
+			default = function ()
+ 				return LR_AS_QY.UsrData.RecordWorldMsg
+			end,
+			callback = function (enabled)
+				LR_AS_QY.UsrData.RecordWorldMsg = enabled
+				LR_AS_QY.SaveCommomUsrData()
+			end,
+		},{	name = "LR_QY_History_Button_01", type = "Button", x = 220, y = 30, text = _L["Open qy history panel"], w = 200, h = 40, font = 5,
+			callback = function()
+				QY_History_Panel:Open()
+			end,
+		},{	name = "LR_QY_History_CheckBox_02", type = "CheckBox", text = _L["Record pet pick"], x = 0, y = 60, w = 200,
+			default = function ()
+ 				return LR_AS_QY.UsrData.RecordSelfPet
+			end,
+			callback = function (enabled)
+				LR_AS_QY.UsrData.RecordSelfPet = enabled
+				LR_AS_QY.SaveCommomUsrData()
+			end,
 		},
 	},
 }

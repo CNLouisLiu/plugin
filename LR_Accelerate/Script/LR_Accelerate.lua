@@ -152,8 +152,8 @@ LR_Accelerate.YuShe = {
 	{szName=_L["NaiHuaChangZhen(QingLv)"],cd=2.75,jump=1,QiXue=1},
 	{szName=_L["NaiHuaChangZhen(Normal)"],cd=3,jump=1,QiXue=1},
 	{szName=_L["NaiHuaBiZhen"],cd=1.5,jump=1,QiXue=1},
-	{szName=_L["NaiHuaTiZhen(JieZe)"],cd=1.75,jump=1,QiXue=1},
-	{szName=_L["NaiHuaTiZhen(Normal)"],cd=2,jump=1,QiXue=1},
+	{szName=_L["NaiHuaTiZhen(JieZe)"],cd=1.25,jump=1,QiXue=1},
+	{szName=_L["NaiHuaTiZhen(Normal)"],cd=1.5,jump=1,QiXue=1},
 	--{szName=_L["NaiDuZuiWu(NaJing)"],cd=4.8125,jump=7,QiXue=1},	--°æ»’‘¬¡Ëø’°ø∫Õ–≥
 	{szName=_L["NaiDuZuiWu(NaJing)"],cd=4.875,jump=6,QiXue=1},
 	{szName=_L["NaiDuZuiWu(Normal)"],cd=5,jump=5,QiXue=1},

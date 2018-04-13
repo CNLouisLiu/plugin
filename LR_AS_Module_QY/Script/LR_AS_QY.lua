@@ -461,9 +461,8 @@ QIYU_MSG_NPC_NEARBY[QIYU.RONG_MA_BIAN] = {
 QIYU_ACHIEVEMENT[QIYU.RONG_MA_BIAN] = 6034
 
 --------------------------------------------------------------------
-local CustomVersion = "20170111"
 LR_AS_QY = {}
-LR_AS_QY.Default = {
+local Default = {
 	List = {
 		[QIYU_NAME[QIYU.SHENG_FU_JU]] = true,
 		[QIYU_NAME[QIYU.ZHUO_YAO_JI]] = true,
@@ -479,10 +478,12 @@ LR_AS_QY.Default = {
 		[QIYU_NAME[QIYU.ZHU_MA_QING]] = false,
 	},
 	bUseCommonData = true,
-	Version = CustomVersion,
+	VERSION = VERSION,
+	RecordWorldMsg = false,
+	RecordSelfPet = false,
 }
-LR_AS_QY.UsrData = clone(LR_AS_QY.Default)
-RegisterCustomData("LR_AS_QY.UsrData", CustomVersion)
+LR_AS_QY.UsrData = clone(Default)
+RegisterCustomData("LR_AS_QY.UsrData", VERSION)
 
 local _QY = {}
 _QY.SelfData = {}
@@ -494,28 +495,19 @@ _QY.QiYuName = clone(QIYU_NAME)
 
 
 function _QY.ResetUsrData()
-	LR_AS_QY.UsrData = clone(LR_AS_QY.Default)
+	LR_AS_QY.UsrData = clone(Default)
 end
 
 function _QY.CheckCommomUsrData()
-	local me = GetClientPlayer()
-	if not me then
-		return
-	end
-	local  path = sformat("%s\\UsrData\\QiYuCommonData.dat.jx3dat", SaveDataPath)
-	if not IsFileExist(path) then
-		local CommomMenuList = LR_AS_QY.Default
-		local path = sformat("%s\\UsrData\\QiYuCommonData.dat", SaveDataPath)
-		SaveLUAData (path, CommomMenuList)
+	local path = sformat("%s\\UsrData\\QiYuCommonData.dat", SaveDataPath)
+	local data = LoadLUAData(path) or {}
+	if not (data.VERSION and data.VERSION == VERSION) then
+		SaveLUAData (path, Default)
 	end
 end
 
 function _QY.SaveCommomUsrData()
 	if not LR_AS_QY.UsrData.bUseCommonData then
-		return
-	end
-	local me = GetClientPlayer()
-	if not me then
 		return
 	end
 	local path = sformat("%s\\UsrData\\QiYuCommonData.dat", SaveDataPath)
@@ -528,12 +520,8 @@ function _QY.LoadCommomUsrData()
 	if not LR_AS_QY.UsrData.bUseCommonData then
 		return
 	end
-	local me = GetClientPlayer()
-	if not me then
-		return
-	end
 	local path = sformat("%s\\UsrData\\QiYuCommonData.dat", SaveDataPath)
-	local UsrData = LoadLUAData (path)
+	local UsrData = LoadLUAData(path) or {}
 	LR_AS_QY.UsrData = clone(UsrData)
 end
 
@@ -562,6 +550,14 @@ function _QY.SaveData(DB)
 		return
 	end
 	_QY.GetSelfQiYuAchievementData()
+	local flag = false
+	local DB = DB
+	if not DB then
+		local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+		DB = SQLite3_Open(path)
+		DB:Execute("BEGIN TRANSACTION")
+		flag = true
+	end
 	local ServerInfo = {GetUserServer()}
 	local realArea, realServer = ServerInfo[5], ServerInfo[6]
 	local dwID = me.dwID
@@ -574,6 +570,10 @@ function _QY.SaveData(DB)
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(SelfData), LR.JsonEncode(_QY.SelfAchievementData or {}), 0})))
 	DB_REPLACE:Execute()
+	if flag then
+		DB:Execute("END TRANSACTION")
+		DB:Release()
+	end
 end
 
 function _QY.LoadAllUsrData(DB)
@@ -1083,7 +1083,7 @@ function _QY.AddPageButton()
 	end
 
 	LR_AS_Base.AddButton(page, "btn_5", _L["Show Group"], 340, 555, 110, 36, function() LR_AS_Group.PopupUIMenu() end)
-	LR_AS_Base.AddButton(page, "btn_4", _L["Reading Statistics"], 470, 555, 110, 36, function() LR_BookRd_Panel:Open() end)
+	LR_AS_Base.AddButton(page, "btn_4", _L["Open qy history panel"], 470, 555, 110, 36, function() QY_History_Panel:Open() end)
 	LR_AS_Base.AddButton(page, "btn_3", _L["QiYu Detail"], 600, 555, 110, 36, function() _QY.OpenQYDetail_Panel() end)
 	LR_AS_Base.AddButton(page, "btn_2", _L["Settings"], 730, 555, 110, 36, function() LR_AS_Base.SetOption() end)
 	LR_AS_Base.AddButton(page, "btn_1", _L["QiYu About"], 860, 555, 110, 36, nil, fnEnter, fnLeave)
@@ -1385,6 +1385,564 @@ function LR_ACS_QiYu_Panel:ReloadItemBox(realArea, realServer, dwID)
 	cc:UpdateList()
 end
 
+------------------------------------------
+---记录世界奇遇事件
+------------------------------------------
+local _History = {}
+function _History.MsgMonitor(szMsg)
+	local me = GetClientPlayer()
+	if not me or IsRemotePlayer(me.dwID) then
+		return
+	end
+	if not LR_AS_QY.UsrData.RecordWorldMsg then
+		return
+	end
+	if not StringLowerW(szMsg):find("ui/image/minimap/minimap.uitex") then
+		return
+	end
+
+	local msg = GetPureText(szMsg)
+	--Output(msg)
+	--msg = "“醉戈止战”侠士福缘非浅，触发奇遇【阴阳两界】，此千古奇缘将开启怎样的奇妙际遇，令人神往！"
+	local _s, _e, szName, szQiYuName = sfind(msg, _L["ADVENTURE_PATT"])
+	if _s then
+		local data = {}
+		data.szName = szName
+		data.szQYName = szQiYuName
+		local ServerInfo = {GetUserServer()}
+		local realArea, realServer = ServerInfo[5], ServerInfo[6]
+		data.realArea = realArea
+		data.realServer = realServer
+		data.nMethod = 1
+		data.bFinished = 0
+		data.nTime = GetCurrentTime()
+		data.hash = LR.md5(sformat("WQY_%s_%s_%s_%s_%d", szName, szQiYuName, realArea, realServer, data.nTime))
+		--延迟记录减少卡顿
+		LR.DelayCall(math.random(500, 3000), function() _History.SaveData(data) end)
+	end
+end
+
+------------------------------------------------
+function _History.SaveData(data)
+	if not LR_AS_QY.UsrData.RecordWorldMsg then
+		return
+	end
+	local v = data
+
+	local db_name = "qiyu_history.db"
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+
+	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_history ( szName, szQYName, realArea, realServer, nMethod, bFinished, nTime, hash ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )")
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(unpack(g2d({ v.szName, v.szQYName, v.realArea, v.realServer, v.nMethod, v.bFinished, v.nTime, v.hash })))
+	DB_REPLACE:Execute()
+
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+end
+
+function _History.LoadData()
+	local db_name = "qiyu_history.db"
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+
+	local szQYName = QY_History_Panel.szQYName
+	local realArea = QY_History_Panel.realArea
+	local realServer = QY_History_Panel.realServer
+
+	local sql_where = sformat("realArea = '%s' AND realServer = '%s'", g2d(realArea), g2d(realServer))
+	if szQYName ~= "" then
+		sql_where = sformat("%s AND szQYName = '%s'", sql_where, g2d(szQYName))
+	end
+
+	DB_SELECT = DB:Prepare(sformat("SELECT * FROM qiyu_history WHERE %s ORDER BY nTime DESC LIMIT 50 OFFSET 0", sql_where))
+	local data = d2g(DB_SELECT:GetAll())
+
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+	_History.data = clone(data)
+end
+
+------------------------------------------
+function _History.GetQYList()
+	local db_name = "qiyu_history.db"
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+	local realArea = QY_History_Panel.realArea
+	local realServer = QY_History_Panel.realServer
+	local sql_where = sformat("realArea = '%s' AND realServer = '%s'", g2d(realArea), g2d(realServer))
+	DB_SELECT = DB:Prepare(sformat("SELECT szQYName FROM qiyu_history WHERE %s AND szQYName IS NOT NULL GROUP BY szQYName", sql_where))
+	local data = d2g(DB_SELECT:GetAll())
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+
+	return data
+end
+
+function _History.GetServerList()
+	local db_name = "qiyu_history.db"
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+	DB_SELECT = DB:Prepare("SELECT realArea, realServer FROM qiyu_history GROUP BY realArea, realServer ORDER BY realArea ASC, realServer ASC")
+	local data = d2g(DB_SELECT:GetAll())
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+
+	return data
+end
+--------------------------------------------
+LR_AS_QY.MsgMonitor = _History.MsgMonitor
+RegisterMsgMonitor(LR_AS_QY.MsgMonitor,  {"MSG_SYS", "MSG_WORLD"})
+
+-------------------------------------------
+local _Pet = {}
+function _Pet.LOOT_ITEM()
+	local dwPlayerID = arg0
+	local dwItemID = arg1
+	local dwCount = arg2
+	if not LR_AS_QY.UsrData.RecordSelfPet then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me or me.dwID ~= dwPlayerID or IsRemotePlayer(me.dwID) then
+		return
+	end
+	local item = GetItem(dwItemID)
+	if not item then
+		return
+	end
+	if item.nGenre == ITEM_GENRE.EQUIPMENT and item.nSub == 19 then
+		local data = {}
+		data.szName = me.szName
+		data.szPetName = item.szName
+		data.nTime = GetCurrentTime()
+		local ServerInfo = {GetUserServer()}
+		local realArea, realServer = ServerInfo[5], ServerInfo[6]
+		data.realArea = realArea
+		data.realServer = realServer
+		data.hash = LR.md5(sformat("Pet_%s_%s_%s_%s_%d", me.szName, item.szName, realArea, realServer, data.nTime))
+		_Pet.SaveData(data)
+	end
+end
+
+function _Pet.SaveData(data)
+	if not LR_AS_QY.UsrData.RecordSelfPet then
+		return
+	end
+	local v = data
+	local db_name = "qiyu_history.db"
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+
+	DB_REPLACE = DB:Prepare("REPLACE INTO pet_history ( szName, szPetName, realArea, realServer, nTime, hash) VALUES ( ?, ?, ?, ?, ?, ? )")
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(unpack(g2d({ v.szName, v.szPetName, v.realArea, v.realServer, v.nTime, v.hash })))
+	DB_REPLACE:Execute()
+
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+end
+
+function _Pet.LoadData()
+	local db_name = "qiyu_history.db"
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+
+	local szPetName = QY_History_Panel.szPetName
+	local realArea = QY_History_Panel.realArea
+	local realServer = QY_History_Panel.realServer
+
+	local sql_where = sformat("realArea = '%s' AND realServer = '%s'", g2d(realArea), g2d(realServer))
+	if szPetName ~= "" then
+		sql_where = sformat("%s AND szQYName = '%s'", sql_where, g2d(szPetName))
+	end
+
+	DB_SELECT = DB:Prepare(sformat("SELECT * FROM pet_history WHERE %s ORDER BY nTime DESC LIMIT 50 OFFSET 0", sql_where))
+	local data = d2g(DB_SELECT:GetAll())
+
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+	_Pet.data = clone(data)
+end
+
+-------------------------------
+function _Pet.GetPetList()
+	local db_name = "qiyu_history.db"
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+	local realArea = QY_History_Panel.realArea
+	local realServer = QY_History_Panel.realServer
+	local sql_where = sformat("realArea = '%s' AND realServer = '%s'", g2d(realArea), g2d(realServer))
+	DB_SELECT = DB:Prepare(sformat("SELECT szPetName FROM pet_history WHERE %s AND szPetName IS NOT NULL GROUP BY szPetName", sql_where))
+	local data = d2g(DB_SELECT:GetAll())
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+	return data
+end
+
+function _Pet.GetServerList()
+	local db_name = "qiyu_history.db"
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+	DB_SELECT = DB:Prepare("SELECT realArea, realServer FROM pet_history GROUP BY realArea, realServer ORDER BY realArea ASC, realServer ASC")
+	local data = d2g(DB_SELECT:GetAll())
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+	return data
+end
+
+------------------------------------
+LR.RegisterEvent("LOOT_ITEM", function() _Pet.LOOT_ITEM() end)
+
+------------------------------------------
+---世界奇遇事件面板
+------------------------------------------
+QY_History_Panel = CreateAddon("QY_History_Panel")
+QY_History_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
+QY_History_Panel.UsrData = {
+	Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0},
+}
+QY_History_Panel.szQYName = ""
+QY_History_Panel.szPetName = ""
+QY_History_Panel.realArea = ""
+QY_History_Panel.realServer = ""
+
+function QY_History_Panel:OnCreate()
+	this:RegisterEvent("UI_SCALED")
+	QY_History_Panel.UpdateAnchor(this)
+
+	local ServerInfo = {GetUserServer()}
+	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	QY_History_Panel.szQYName = ""
+	QY_History_Panel.realArea = realArea
+	QY_History_Panel.realServer = realServer
+
+	RegisterGlobalEsc("QY_History_Panel", function () return true end , function() QY_History_Panel:Open() end)
+	PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
+end
+
+function QY_History_Panel:OnEvents(event)
+	if event == "UI_SCALED" then
+		QY_History_Panel.UpdateAnchor(this)
+	end
+end
+
+function QY_History_Panel.UpdateAnchor(frame)
+	frame:SetPoint(QY_History_Panel.UsrData.Anchor.s, 0, 0, QY_History_Panel.UsrData.Anchor.r, QY_History_Panel.UsrData.Anchor.x, QY_History_Panel.UsrData.Anchor.y)
+	frame:CorrectPos()
+end
+
+function QY_History_Panel:OnDestroy()
+	UnRegisterGlobalEsc("QY_History_Panel")
+	PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
+end
+
+function QY_History_Panel:OnDragEnd()
+	this:CorrectPos()
+	LR_ACS_QiYu_Panel.UsrData.Anchor = GetFrameAnchor(this)
+end
+
+function QY_History_Panel:Init()
+	local frame = self:Append("Frame", "QY_History_Panel", {title = _L["QY_History"], style = "NORMAL"})
+
+	local imgTab = LR.AppendUI("Image", frame, "TabImg", {w = 770, h = 33, x = 0, y = 50})
+    imgTab:SetImage("ui\\Image\\UICommon\\ActivePopularize2.UITex", 46)
+	imgTab:SetImageType(11)
+
+	local hPageSet = self:Append("PageSet", frame, "PageSet", {x = 0, y = 50, w = 770, h = 460})
+	local page = {"World_QY_History", "Pet_Pick_History"}
+	for k, v in pairs(page) do
+		local Window = self:Append("Window", hPageSet, sformat("Window_%s", v), {x = 0, y = 30, w = 770, h = 430})
+		local hBtn = LR.AppendUI("UICheckBox", hPageSet, sformat("Btn_%s", v), {x = 30 + (k - 1) * 120, y = 0, w = 120, h = 30, text = _L[v]})
+		hPageSet:AddPage(Window:GetSelf(), hBtn:GetSelf())
+
+		-------------初始界面物品
+		local hHandle = self:Append("Handle", Window, sformat("Handle_%s", v), {x = 15, y = 10, w = 740, h = 30})
+
+		local Image_Record_BG = LR.AppendUI("Image", hHandle, "Image_Record_BG", {x = 0, y = 0, w = 730, h = 390})
+		Image_Record_BG:FromUITex("ui\\Image\\Minimap\\MapMark.UITex", 50)
+		Image_Record_BG:SetImageType(10)
+
+		local Image_Record_BG1 = LR.AppendUI("Image", hHandle, "Image_Record_BG1", {x = 0, y = 30, w = 730, h = 360})
+		Image_Record_BG1:FromUITex("ui\\Image\\Minimap\\MapMark.UITex", 74)
+		Image_Record_BG1:SetImageType(10)
+		Image_Record_BG1:SetAlpha(110)
+
+		local Image_Record_Line1_0 = LR.AppendUI("Image", hHandle, "Image_Record_Line1_0", {x = 3, y = 28, w = 730, h = 3})
+		Image_Record_Line1_0:FromUITex("ui\\Image\\Minimap\\MapMark.UITex", 65)
+		Image_Record_Line1_0:SetImageType(11)
+		Image_Record_Line1_0:SetAlpha(115)
+
+		local hScroll = self:Append("Scroll", Window, sformat("Scroll_%s", v), {x = 15, y = 40, w = 745, h = 360})
+	end
+
+	QY_History_Panel:IniQYPage()
+	QY_History_Panel:IniPetPage()
+
+	QY_History_Panel:LoadQYHistory()
+	QY_History_Panel:LoadPetHistory()
+
+	----------关于
+	LR.AppendAbout(nil, frame)
+end
+
+function QY_History_Panel:IniQYPage()
+	local frame = self:Fetch("QY_History_Panel")
+	if not frame then
+		return
+	end
+	local hHandle = self:Fetch("Handle_World_QY_History")
+	local n = 0
+	local szBreak = {"", _L["szName"], "", _L["nTime"]}
+	local nWidth = {140, 140, 200, 240}
+	for k, v in pairs(szBreak) do
+		local Text_break = self:Append("Text", hHandle, sformat("Text_break_%d", k), {w = nWidth[k], h = 30, x  = n, y = 2, text = v, font = 18})
+		Text_break:SetHAlign(1)
+		Text_break:SetVAlign(1)
+
+		n = n + nWidth[k]
+		local Image_Record_Break = self:Append("Image", hHandle, sformat("Image_Record_Break_%d", k), {x = n, y = 2, w = 3, h = 386})
+		Image_Record_Break:FromUITex("ui\\Image\\Minimap\\MapMark.UITex", 48)
+		Image_Record_Break:SetImageType(11)
+		Image_Record_Break:SetAlpha(160)
+	end
+
+	local Window_QY_History = self:Fetch("Window_World_QY_History")
+	local hComboBox = self:Append("ComboBox", Window_QY_History, "hComboBox", {w = 140, x = 15, y = 12, text = _L["All QY"]})
+	hComboBox:Enable(true)
+	hComboBox.OnClick = function (m)
+		local QYList = _History.GetQYList()
+		for k, v in pairs(QYList) do
+			m[#m + 1] = {szOption = v.szQYName, fnAction = function()
+				hComboBox:SetText(v.szQYName)
+				QY_History_Panel.szQYName = v.szQYName
+				QY_History_Panel:LoadQYHistory()
+			end}
+		end
+		m[#m + 1] = {bDevide = true}
+		m[#m + 1] = {szOption = _L["All QY"], fnAction = function()
+			hComboBox:SetText(_L["All QY"])
+			QY_History_Panel.szQYName = ""
+			QY_History_Panel:LoadQYHistory()
+		end}
+		PopupMenu(m)
+	end
+
+	local hComboBox2 = self:Append("ComboBox", Window_QY_History, "hComboBox", {w = 200, x = 295, y = 12, text = _L["This server"]})
+	hComboBox2:Enable(true)
+	hComboBox2.OnClick = function (m)
+		local ServerList = _History.GetServerList()
+		for k, v in pairs(ServerList) do
+			m[#m + 1] = {szOption = sformat("%s-%s", v.realArea, v.realServer), fnAction = function()
+				hComboBox2:SetText(sformat("%s-%s", v.realArea, v.realServer))
+				QY_History_Panel.realArea = v.realArea
+				QY_History_Panel.realServer = v.realServer
+				QY_History_Panel:LoadQYHistory()
+			end}
+		end
+		m[#m + 1] = {bDevide = true}
+		m[#m + 1] = {szOption = _L["This server"], fnAction = function()
+			hComboBox2:SetText(_L["This server"])
+			local ServerInfo = {GetUserServer()}
+			local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+			QY_History_Panel.realArea = realArea
+			QY_History_Panel.realServer = realServer
+			QY_History_Panel:LoadQYHistory()
+		end}
+		PopupMenu(m)
+	end
+end
+
+function QY_History_Panel:IniPetPage()
+	local frame = self:Fetch("QY_History_Panel")
+	if not frame then
+		return
+	end
+	local hHandle = self:Fetch("Handle_Pet_Pick_History")
+	local n = 0
+	local szBreak = {"", _L["szName"], "", _L["nTime"]}
+	local nWidth = {140, 140, 200, 240}
+	for k, v in pairs(szBreak) do
+		local Text_break = self:Append("Text", hHandle, sformat("Text_break_%d", k), {w = nWidth[k], h = 30, x  = n, y = 2, text = v, font = 18})
+		Text_break:SetHAlign(1)
+		Text_break:SetVAlign(1)
+
+		n = n + nWidth[k]
+		local Image_Record_Break = self:Append("Image", hHandle, sformat("Image_Record_Break_%d", k), {x = n, y = 2, w = 3, h = 386})
+		Image_Record_Break:FromUITex("ui\\Image\\Minimap\\MapMark.UITex", 48)
+		Image_Record_Break:SetImageType(11)
+		Image_Record_Break:SetAlpha(160)
+	end
+
+	local Window_Pet_History = self:Fetch("Window_Pet_Pick_History")
+	local hComboBox = self:Append("ComboBox", Window_Pet_History, "hComboBox", {w = 140, x = 15, y = 12, text = _L["All Pet"]})
+	hComboBox:Enable(true)
+	hComboBox.OnClick = function (m)
+		local PetList = _Pet.GetPetList()
+		for k, v in pairs(PetList) do
+			m[#m + 1] = {szOption = v.szPetName, fnAction = function()
+				hComboBox:SetText(v.szPetName)
+				QY_History_Panel.szQYName = v.szPetName
+				QY_History_Panel:LoadPetHistory()
+			end}
+		end
+		m[#m + 1] = {bDevide = true}
+		m[#m + 1] = {szOption = _L["All Pet"], fnAction = function()
+			hComboBox:SetText(_L["All Pet"])
+			QY_History_Panel.szQYName = ""
+			QY_History_Panel:LoadPetHistory()
+		end}
+		PopupMenu(m)
+	end
+
+	local hComboBox2 = self:Append("ComboBox", Window_Pet_History, "hComboBox", {w = 200, x = 295, y = 12, text = _L["This server"]})
+	hComboBox2:Enable(true)
+	hComboBox2.OnClick = function (m)
+		local ServerList = _Pet.GetServerList()
+		for k, v in pairs(ServerList) do
+			m[#m + 1] = {szOption = sformat("%s-%s", v.realArea, v.realServer), fnAction = function()
+				hComboBox2:SetText(sformat("%s-%s", v.realArea, v.realServer))
+				QY_History_Panel.realArea = v.realArea
+				QY_History_Panel.realServer = v.realServer
+				QY_History_Panel:LoadPetHistory()
+			end}
+		end
+		m[#m + 1] = {bDevide = true}
+		m[#m + 1] = {szOption = _L["This server"], fnAction = function()
+			hComboBox2:SetText(_L["This server"])
+			local ServerInfo = {GetUserServer()}
+			local realArea, realServer = ServerInfo[5], ServerInfo[6]
+			QY_History_Panel.realArea = realArea
+			QY_History_Panel.realServer = realServer
+			QY_History_Panel:LoadPetHistory()
+		end}
+		PopupMenu(m)
+	end
+end
+
+function QY_History_Panel:Open()
+	local frame = self:Fetch("QY_History_Panel")
+	if frame then
+		self:Destroy(frame)
+	else
+		frame = self:Init()
+	end
+end
+
+function QY_History_Panel:LoadQYHistory()
+	local frame = Station.Lookup("Normal/QY_History_Panel")
+	if not frame then
+		return
+	end
+	local Scroll = self:Fetch("Scroll_World_QY_History")
+	self:ClearHandle(Scroll)
+
+	_History.LoadData()
+	local data = _History.data
+
+	local m = 1
+	for k, v in pairs(data) do
+		local hIconViewContent = LR.AppendUI("Handle", Scroll, sformat("IconViewContent_%d", m), {x = 0, y = 0, w = 730, h = 30})
+		local Image_Line = LR.AppendUI("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 0, y = 0, w = 730, h = 30})
+		Image_Line:FromUITex("ui\\Image\\button\\ShopButton.UITex", 75)
+		Image_Line:SetImageType(10)
+		Image_Line:SetAlpha(200)
+		if m % 2 ==  1 then
+			Image_Line:Hide()
+		end
+		--悬停框
+		local Image_Hover = LR.AppendUI("Image", hIconViewContent, sformat("Image_Hover_%d", m), {x = 2, y = 0, w = 730, h = 30})
+		Image_Hover:FromUITex("ui\\Image\\Common\\TempBox.UITex", 5)
+		Image_Hover:SetImageType(10)
+		Image_Hover:SetAlpha(200)
+		Image_Hover:Hide()
+
+		local nWidth = {140, 140, 200, 240}
+		local n = 0
+		local value = {v.szQYName, v.szName, sformat("%s_%s", v.realArea, v.realServer), LR.FormatTimeString(v.nTime)}
+
+		for k2, v2 in pairs(nWidth) do
+			local Text_break = LR.AppendUI("Text", hIconViewContent, sformat("Text_%d_%d", m, k2), {w = nWidth[k2], h = 30, x  = n, y = 2, text = value[k2] , font = 18, event = 0})
+			Text_break:SetHAlign(1)
+			Text_break:SetVAlign(1)
+
+			n = n + nWidth[k2]
+		end
+
+		hIconViewContent:RegisterEvent(304)
+		hIconViewContent.OnEnter = function()
+			Image_Hover:Show()
+		end
+		hIconViewContent.OnLeave = function()
+			Image_Hover:Hide()
+		end
+		m = m+1
+	end
+
+	Scroll:UpdateList()
+end
+
+function QY_History_Panel:LoadPetHistory()
+	local frame = Station.Lookup("Normal/QY_History_Panel")
+	if not frame then
+		return
+	end
+	local Scroll = self:Fetch("Scroll_Pet_Pick_History")
+	self:ClearHandle(Scroll)
+
+	_Pet.LoadData()
+	local data = _Pet.data
+
+	local m = 1
+	for k, v in pairs(data) do
+		local hIconViewContent = LR.AppendUI("Handle", Scroll, sformat("IconViewContent_%d", m), {x = 0, y = 0, w = 730, h = 30})
+		local Image_Line = self:Append("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 0, y = 0, w = 730, h = 30})
+		Image_Line:FromUITex("ui\\Image\\button\\ShopButton.UITex", 75)
+		Image_Line:SetImageType(10)
+		Image_Line:SetAlpha(200)
+		if m % 2 ==  1 then
+			Image_Line:Hide()
+		end
+		--悬停框
+		local Image_Hover = LR.AppendUI("Image", hIconViewContent, sformat("Image_Hover_%d", m), {x = 2, y = 0, w = 730, h = 30})
+		Image_Hover:FromUITex("ui\\Image\\Common\\TempBox.UITex", 5)
+		Image_Hover:SetImageType(10)
+		Image_Hover:SetAlpha(200)
+		Image_Hover:Hide()
+
+		local nWidth = {140, 140, 200, 240}
+		local n = 0
+		local value = {v.szPetName, v.szName, sformat("%s_%s", v.realArea, v.realServer), LR.FormatTimeString(v.nTime)}
+
+		for k2, v2 in pairs(nWidth) do
+			local Text_break = LR.AppendUI("Text", hIconViewContent, sformat("Text_%d_%d", m, k2), {w = nWidth[k2], h = 30, x  = n, y = 2, text = value[k2] , font = 18, event = 0})
+			Text_break:SetHAlign(1)
+			Text_break:SetVAlign(1)
+
+			n = n + nWidth[k2]
+		end
+
+		hIconViewContent:RegisterEvent(304)
+		hIconViewContent.OnEnter = function()
+			Image_Hover:Show()
+		end
+		hIconViewContent.OnLeave = function()
+			Image_Hover:Hide()
+		end
+		m = m+1
+	end
+
+	Scroll:UpdateList()
+end
 
 --------------------------------
 LR_AS_QY.QiYu = clone(QIYU)

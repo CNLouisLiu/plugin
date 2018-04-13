@@ -3214,11 +3214,11 @@ function LR_HeadName.LOGIN_GAME()
 end
 
 function LR_HeadName.LOADING_END()
-	FireEvent("PLAYER_ENTER_SCENE", GetClientPlayer().dwID)
+	LR_HeadName.AllList[GetClientPlayer().dwID] = {dwID = GetClientPlayer().dwID, nType = TARGET.PLAYER, Quest_List = {}, }
 	if not FIRST_LOADING_END then
 		return
 	end
-	local me = GetControlPlayer()
+	local me = GetClientPlayer()
 	if not me then
 		return
 	end

@@ -323,6 +323,9 @@ function LR_TeamSkillMonitor.ShowSkillPanel()
 	LR_TeamGrid.Handle_Skill_Box:Clear()
 	LR_TeamGrid.Handle_Skill_Box:GetParent():SetRelPos(-40, 30)
 	_hSkillBox = {}
+	if LR_TeamGrid.bMiniPanel then
+		return
+	end
 	if not LR_TeamGrid.UsrData.CommonSettings.bShowSkillBox then
 		LR_TeamGrid.UpdateRoleBodySize()
 		return
@@ -378,7 +381,6 @@ function LR_TeamSkillMonitor.GetSkillMonitorOrder(dwForceID, dwID)
 end
 
 ----------------------------------------------------------------------
-
 function LR_TeamSkillMonitor.LOGIN_GAME()
 	LR_TeamSkillMonitor.LoadCommonData()
 	Log("[LR] : Loaded LR_TeamSkillMonitor.CommonData")
@@ -466,7 +468,6 @@ function LR_TeamSkillMonitor.QiXueFreshCD(dwKungSkillID, dwQiXueSkillID, dwCastS
 		end
 	end
 end
-
 
 function LR_TeamSkillMonitor.ReFreshAllSkillLevel()
 	local me = GetClientPlayer()

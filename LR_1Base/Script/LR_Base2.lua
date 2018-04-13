@@ -400,7 +400,9 @@ function SQLITE3.UpdateTable(DB, table_config)
 			local sql3 = sformat("SELECT * FROM sqlite_master WHERE type = 'table' AND name ='%s' AND sql like '%% %s %%'", table_name, v.name)
 			local result2 = DB:Execute(sql3)
 			if result2 and next(result2) ~= nil then
-				column[#column+1] = v.name
+				--if v.name ~= "id" then
+					column[#column+1] = v.name
+				--end
 			end
 		end
 		DB:Execute(sformat("ALTER TABLE %s RENAME TO _%s_temp", table_name, table_name))

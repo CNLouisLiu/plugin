@@ -530,4 +530,14 @@ data={
 	["LClick image to change status.\n"]="点击前面的图片(勾/感叹号)切换允许/禁止状态。\n",
 	["RClick to delete group.\n"]="右击删除分组\n",
 
+	["Control Panel Set"]="控制条按钮设置",
+	["ShowLootModeBtn"]="显示分配模式按钮",
+	["ShowLootLevelBtn"]="显示分配等级按钮",
+	["ShowWorldMarkBtn"]="显示世界标记按钮",
+	["ShowGoldTeamBtn"]="显示金团记录按钮",
+	["ShowTeamNoticeBtn"]="显示团队告示按钮",
+	["ShowVoiceBtn"]="显示团队语音按钮",
+	["ShowMiniBtn"]="显示最小化按钮",
+	["Rclick to fold or expand panel"]="右键折叠/展开面板",
+
 }
