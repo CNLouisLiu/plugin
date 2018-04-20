@@ -302,6 +302,7 @@ data={
 	["Open [LR_FB_Detail] panel"]="打开【懒人副本明细】界面",
 	["Open [LR_Reading_Record] panel"]="打开【懒人阅读统计】界面",
 	["Open [LR_Trade_Record] panel"]="打开【懒人收支记录】界面",
+	["Open [LR_Equipment_Record] panel"]="打开【懒人装备统计】界面",
 
 
 	["Warning used in Internet cafes"]="网吧慎用！！！",
@@ -707,4 +708,10 @@ data={
 	["Record pet pick"]="记录自己的宠物拾取",
 	["World_QY_History"]="世界奇遇",
 	["Pet_Pick_History"]="宠物奇遇",
+
+	--20180420add--
+	["FP money show"]="浮动条金钱显示设置",
+	["Show all player money"]="显示所有玩家金钱总和",
+	["Show only my own money"]="只显示自己的金钱",
+
 }

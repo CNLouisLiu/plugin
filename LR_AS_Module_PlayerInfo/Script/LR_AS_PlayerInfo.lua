@@ -376,9 +376,10 @@ function _C.ShowItem(t_Table, Alpha, bCal, _num, _money)
 				szTipInfo[#szTipInfo+1] = GetFormatText(_L["Thew:"], 224)
 				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", v.nCurrentThew or ""), 18)
 			end
-			if v.remainJianBen then
+
+			if PlayerInfo.remainJianBen then
 				szTipInfo[#szTipInfo+1] = GetFormatText(_L["JianBen this week remain:"], 224)
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", v.remainJianBen), 18)
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.remainJianBen), 18)
 			end
 
 			if LR_AS_Group.AllUsrGroup[szKey] and LR_AS_Group.AllUsrGroup[szKey].groupID and LR_AS_Group.AllUsrGroup[szKey].groupID > 0 then

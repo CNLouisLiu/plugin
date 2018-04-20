@@ -85,7 +85,7 @@ local UI = {
 			callback = function (enabled)
 				LR_AS_Base.UsrData.bExitSave = enabled
 			end,
-		},{name = "LR_Acc_UI_FP", type = "CheckBox", text = _L["Enable floating bar"], x = 0, y = 120, w = 200,
+		},{name = "LR_FP_Checkbox_01", type = "CheckBox", text = _L["Enable floating bar"], x = 0, y = 120, w = 200,
 			enable = function()
 				return true
 			end,
@@ -95,6 +95,32 @@ local UI = {
 			callback = function (enabled)
 				LR_AS_Base.UsrData.FloatPanel = enabled
 				LR_AS_FP.OpenPanel()
+			end,
+			Tip = function()
+				local szTip = {}
+				szTip[#szTip + 1] = {szText = _L["Floating bar Instructions:\n"]}
+				szTip[#szTip + 1] = {szText = _L["Floating bar Instructions01\n"], r = 255, g = 255, b = 255}
+				szTip[#szTip + 1] = {szText = _L["Floating bar Instructions02\n"], r = 255, g = 255, b = 255}
+				szTip[#szTip + 1] = {szText = _L["Floating bar Instructions03\n"], r = 255, g = 255, b = 255}
+
+				return szTip
+			end
+		},{	name = "LR_FP_Combox_01", type = "ComboBox", x = 150, y = 120, w = 220, text = _L["FP money show"],
+			enable = function()
+				return LR_AS_Base.UsrData.FloatPanel
+			end,
+			callback = function(m)
+				local szOption = {_L["Show all player money"], _L["Show only my own money"]}
+				for k, v in pairs(szOption) do
+					m[#m + 1] = {szOption = v, bCheck = true, bMCheck = true, bChecked = function() return LR_AS_FP.UsrData.nShowType == k end,
+						fnAction = function()
+							LR_AS_FP.UsrData.nShowType = k
+							FireEvent("LR_ACS_REFRESH_FP")
+							LR_AS_FP.SaveCommonData()
+						end,
+					}
+				end
+				PopupMenu(m)
 			end,
 		},{	name = "LR_AS_Base_Button_01", type = "Button", x = 0, y = 180, text = _L["Open [LR_AccountStatistics] panel"], w = 200, h = 40, font = 5,
 			callback = function()
@@ -174,13 +200,13 @@ LR_AS_MENU = {
 	szOption = _L["LR_AccountStatistics"],
 	--rgb = {255, 255, 255},
 	fnAction = function()
-		LR_AccountStatistics.OpenPanel()
+		LR_AS_Panel.OpenPanel()
 	end,
 	bCheck = true,
 	bMCheck = false,
 	rgb = {255, 255, 255},
 	bChecked = function()
-		local Frame = Station.Lookup("Normal/LR_AccountStatistics")
+		local Frame = Station.Lookup("Normal/LR_AS_Panel")
 		if Frame then
 			return true
 		else
@@ -200,6 +226,9 @@ LR_AS_MENU = {
 
 tinsert(LR_TOOLS.menu, LR_AS_MENU)
 
-
+-----------------------------
+---¿ì½Ý¼ü
+-----------------------------
+LR.AddHotKey(_L["Open [LR_AccountStatistics] panel"], function() LR_AS_Panel.OpenPanel() end)
 
 

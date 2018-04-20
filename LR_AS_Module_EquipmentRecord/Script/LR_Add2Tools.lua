@@ -46,9 +46,13 @@ LR_TOOLS:RegisterPanel(LR_AccountStatistics_UI)
 ----×¢²áÍ·Ïñ¡¢°âÊÖ²Ëµ¥
 -----------------------------------
 tinsert(LR_AS_MENU, {
-	szOption = _L["Open [LR_Item_Statistics] panel"],
+	szOption = _L["Open [LR_Equipment_Record] panel"],
 	fnAction = function()
-		LR_AS_ItemRecord_Panel:Open()
+		LR_AS_Equip_Panel:Open()
 	end,
 })
 
+-----------------------------
+---¿ì½Ý¼ü
+-----------------------------
+LR.AddHotKey(_L["Open [LR_Equipment_Record] panel"], function() LR_AS_Equip_Panel:Open() end)

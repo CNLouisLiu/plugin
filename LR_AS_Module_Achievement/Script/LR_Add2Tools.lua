@@ -37,3 +37,7 @@ tinsert(LR_AS_MENU, {
 	end,
 })
 
+-----------------------------
+---¿ì½Ý¼ü
+-----------------------------
+LR.AddHotKey(_L["Open [LR_Achievement] panel"], function() LR_Acc_Achievement_Panel:Open() end)

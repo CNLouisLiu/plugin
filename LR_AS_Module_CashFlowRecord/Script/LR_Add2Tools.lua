@@ -48,3 +48,7 @@ tinsert(LR_AS_MENU, {
 	end,
 })
 
+-----------------------------
+---¿ì½Ý¼ü
+-----------------------------
+LR.AddHotKey(_L["Open [LR_Trade_Record] panel"], function() LR_Acc_Trade_Panel:Open() end)

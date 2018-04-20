@@ -71,3 +71,7 @@ tinsert(LR_AS_MENU, {
 	end,
 })
 
+-----------------------------
+---¿ì½Ý¼ü
+-----------------------------
+LR.AddHotKey(_L["Open [LR_Item_Statistics] panel"], function() LR_AS_ItemRecord_Panel:Open() end)

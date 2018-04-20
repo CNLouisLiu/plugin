@@ -2115,6 +2115,7 @@ end
 
 function LR_TeamGrid.OnMouseEnter()
 	local szName = this:GetName()
+	--Output("Enter", szName)
 	if szName == "Btn_Option" then
 		local nMouseX, nMouseY =  this:GetAbsPos()
 		local szTipInfo={}
@@ -2190,10 +2191,12 @@ function LR_TeamGrid.OnMouseEnter()
 		local nW, nH = this:GetSize()
 		OutputTip(GetFormatText(_L["Open LR TeamNotice"], 0), 300, {fx, fy, nW, nH})
 	end
+	LR_TeamGrid.ResizeTitle()
 end
 
 function LR_TeamGrid.OnMouseLeave()
 	local szName = this:GetName()
+	--Output("Leave", szName)
 	if szName == "Btn_Option" then
 		HideTip()
 	elseif szName == "Btn_LootMode" then
@@ -2224,6 +2227,7 @@ function LR_TeamGrid.OnMouseLeave()
 	elseif szName == "Btn_TeamNotice" then
 		HideTip()
 	end
+	LR_TeamGrid.ResizeTitle()
 end
 
 function LR_TeamGrid.OnFrameKeyDown()
@@ -3022,8 +3026,18 @@ function LR_TeamGrid.ResizeTitle()
 		end
 	end
 
+	--Output("c", {Cursor.GetPos(true)}, "w", {Wnd_Title:GetAbsPos()})
+	local cX, cY = Cursor.GetPos(true)
+	local wX, wY = Wnd_Title:GetAbsPos()
+	if cX >= wX and cX <= wX + w and cY >= wY and cY <= wY + 30 then
+		if w == w1 + 5 then
+			w = w + 30
+		end
+	end
+
 	Wnd_Title:SetSize(w, 30)
 	WndContainer_Title:SetSize(w, 30)
+	--WndContainer_Title:SetRelPos(3, 2)
 	Handle_Title = Wnd_Title:Lookup("","")
 	Handle_Title:Lookup("Image_TitleBg"):SetSize(w, 30)
 	Handle_Title:Lookup("Image_Title"):SetSize(w, 30)

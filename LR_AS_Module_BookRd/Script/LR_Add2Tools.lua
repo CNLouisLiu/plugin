@@ -37,3 +37,7 @@ tinsert(LR_AS_MENU, {
 	end,
 })
 
+-----------------------------
+---¿ì½Ý¼ü
+-----------------------------
+LR.AddHotKey(_L["Open [LR_Reading_Record] panel"], function() LR_BookRd_Panel:Open() end)
