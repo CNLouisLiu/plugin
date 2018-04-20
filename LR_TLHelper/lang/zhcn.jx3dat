@@ -35,7 +35,7 @@ data={
 	---20160511add--
 	["Show TargetLine"]="显示与目标的连线",
 	["Show MeLine"]="显示到自己的连线",
-	["Show Self"]="显示千机变的位置",
+	["Show Self"]="显示自己千机变的位置",
 	
 	--20170419add--
 	["Press Alt+Ctrl Move"]="按住Alt+Ctrl进行拖动、移动位置",

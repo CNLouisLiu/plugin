@@ -35,7 +35,7 @@ data={
 	---20160511add--
 	["Show TargetLine"]="顯示與目標的連線",
 	["Show MeLine"]="顯示到自己的連線",
-	["Show Self"]="顯示千機變的位置",
+	["Show Self"]="顯示自己千機變的位置",
 	
 	--20170419add--
 	["Press Alt+Ctrl Move"]="按住Alt+Ctrl進行拖動、移動位置",
