@@ -576,6 +576,28 @@ function _QY.SaveData(DB)
 	end
 end
 
+function _QY.LoadData(DB)
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local ServerInfo = {GetUserServer()}
+	local realArea, realServer = ServerInfo[5], ServerInfo[6]
+	local dwID = me.dwID
+	local szSelfKey = sformat("%s_%s_%d", realArea, realServer, dwID)
+	local DB_SELECT = DB:Prepare(sformat("SELECT * FROM qiyu_data WHERE bDel = 0 AND szKey = '%s'", g2d(szSelfKey)))
+	local Data = d2g(DB_SELECT:GetAll())
+	if next(Data) ~= nil then
+		local v = clone(Data[1])
+		local qiyu_data = {}
+		for k2, v2 in pairs (LR.JsonDecode(v.qiyu_data) or {}) do
+			qiyu_data[tonumber(k2)] = v2
+		end
+		_QY.SelfData = clone(qiyu_data)
+	end
+	_QY.GetSelfQiYuAchievementData()
+end
+
 function _QY.LoadAllUsrData(DB)
 	local me = GetClientPlayer()
 	if not me then
@@ -591,13 +613,13 @@ function _QY.LoadAllUsrData(DB)
 	for k, v in pairs (Data) do
 		AllUsrData[v.szKey] = clone(v)
 		local qiyu_data = {}
-		for k, v in pairs (LR.JsonDecode(v.qiyu_data) or {}) do
-			qiyu_data[tonumber(k)] = v
+		for k2, v2 in pairs (LR.JsonDecode(v.qiyu_data) or {}) do
+			qiyu_data[tonumber(k2)] = v2
 		end
 		AllUsrData[v.szKey].qiyu_data = clone(qiyu_data)
 		local achievement_data = {}
-		for k, v in pairs (LR.JsonDecode(v.qiyu_achievement) or {}) do
-			achievement_data[k] = v
+		for k2, v2 in pairs (LR.JsonDecode(v.qiyu_achievement) or {}) do
+			achievement_data[k2] = v2
 		end
 		AllUsrData[v.szKey].qiyu_achievement = clone(achievement_data)
 	end
@@ -1958,6 +1980,7 @@ LR_AS_Module.QY.LoadData = _QY.LoadAllUsrData
 LR_AS_Module.QY.ResetDataEveryDay = _QY.ResetDataEveryDay
 LR_AS_Module.QY.AddPage = _QY.AddPage
 LR_AS_Module.QY.RefreshPage = _QY.RefreshPage
+LR_AS_Module.QY.FIRST_LOADING_END = _QY.LoadData
 
 
 
