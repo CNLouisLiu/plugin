@@ -528,7 +528,7 @@ function LR.AppendAbout(Addon, frame)
 	Handle_About:SetSize(w, h)
 	Wnd_About:SetSize(w, h)
 	local w2, h2 = frame:GetSize()
-	Wnd_About:SetRelPos(w2-w-10, h2-h-10)
+	Wnd_About:SetRelPos(w2 - w - 10, h2 - h - 10)
 	Handle_About.OnEnter = function()
 		Text_About:SetFontScheme(168)
 		local x, y = this:GetAbsPos()
@@ -773,55 +773,6 @@ RegisterEvent("FIRST_LOADING_END", function()
 	LR.DelayCall(2000, function() LR_TOOLS.CHANGE_TONG_NOTIFY() end)
 	LR_TOOLS:RegisterPanel(LR_TOOLS_About)
 
-	--------无团队面板时显示
-	local _, _, szLang = GetVersion()
-	if szLang ==  "zhcn" then
-		LR_TOOLS.tAddonClass = LR_TOOLS.tAddonClass or {}
-		if not LR_TOOLS.Check_tAddonClass ("Normal") then
-			tinsert (LR_TOOLS.tAddonClass, {"Normal", _L["Plugins"], "2"})
-		end
-		LR_TeamGrid = LR_TeamGrid or {}
-		if  next(LR_TeamGrid) ==  nil  then
-			local RaidGridEx_UI  = {
-				szName = "LR_TeamGrid",
-				szTitle = _L["Team Grid"],
-				dwIcon = 6270,
-				szClass = "Normal",
-				tWidget = {
-					{
-					name = "RaidGridEx_UI_text1", type = "Text", x = 5, y = 25, w = 500, h = 200, text = _L["TIP1"], font = 23, IsRichText = true, AutoSize = true, IsMultiLine = true,
-					},
-				},
-			}
-			LR_TOOLS:RegisterPanel(RaidGridEx_UI)
-
-			--添加头像菜单
-			RaidGridEx_UI.menu = {
-				szOption  = _L["Team Grid"],
-				--rgb = {255, 255, 255},
-				fnAction = function()
-					LR.SysMsg(_L["TIP1"])
-					OutputWarningMessage("MSG_WARNING_YELLOW", _L["TIP1"], 10)
-				end,
-				bCheck = true,
-				bMCheck = false,
-				rgb = {255, 255, 255},
-				bChecked = function()
-					return false
-				end,
-				fnAutoClose = true,
-				szIcon = "ui\\Image\\UICommon\\CommonPanel2.UITex",
-				nFrame  = 105,
-				nMouseOverFrame = 106,
-				szLayer = "ICON_RIGHT",
-				fnAutoClose = true,
-				fnClickIcon = function ()
-					LR_TOOLS:OpenPanel(_L["Team Grid"])
-				end,
-			}
-			tinsert(LR_TOOLS.menu, RaidGridEx_UI.menu)
-		end
-	end
 	------------加载欢迎
 	LR.SysMsg(sformat("[%s] %s\n", _L["LR Plugins"], sformat(_L["Welcome %s to use LR Plugins"], me.szName)))
 end)

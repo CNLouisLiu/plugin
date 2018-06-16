@@ -284,8 +284,12 @@ function LR_AS_Base.ON_FRAME_CREATE()
 		end
 	elseif szName  ==  "OptionPanel" then
 		if LR_AS_Base.UsrData.bAutoSave and  LR_AS_Base.UsrData.bEscSave then
-			Log("[LR_AccountStatistics]:Esc save")
-			LR_AS_Base.AutoSave()
+			local _now = GetTickCount()
+			if _now - _auto_save_lasttime2 > 3 * 60 * 1000 then
+				_auto_save_lasttime2 = _now
+				Log("[LR_AccountStatistics]:Esc save")
+				LR_AS_Base.AutoSave()
+			end
 		end
 		FireEvent("LR_ACS_REFRESH_FP")
 	end

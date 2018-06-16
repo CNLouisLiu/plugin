@@ -266,7 +266,7 @@ function LR_PickupDead.BreatheCall()
 	if not LR_PickupDead.UsrData.bOn then
 		return
 	end
-	if LR.IsTreasureBattleFieldMap() then
+	if LR.IsMapBlockAddon() then
 		return
 	end
 

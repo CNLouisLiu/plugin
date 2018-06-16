@@ -17,6 +17,10 @@ LR.UsrData = {
 }
 local CustomVersion = "20170111"
 RegisterCustomData("LR.UsrData", CustomVersion)
+---------------------------------------------------------------------------------
+function LR.SaveLUAData(path, data, crc)
+	SaveLUAData(path, data, "\t", crc or false)
+end
 
 ---------------------------------------------------------------------------------
 -- ∂‡”Ô—‘¥¶¿Ì
@@ -57,6 +61,7 @@ function LR.LoadLangPack(szLangFolder)
 	return t0
 end
 local _L = LR.LoadLangPack(AddonPath)
+
 ---------------------------------------------------------------------------------
 ------------------------------------
 function LR.Trim(szText)
@@ -85,32 +90,40 @@ function LR.AscIIDecode(szText)
 end
 
 function LR.StrDB2Game(szText)
-	local szText = szText
+	local outText
 	if SZLANG == "zhcn" then
 		if type(szText) == "string" then
-			szText = UTF8ToAnsi(szText)
+			outText = UTF8ToAnsi(szText)
+		elseif type(szText) == "number" then
+			outText = szText
 		elseif type(szText) == "table" then
+			outText = {}
 			for k, v in pairs(szText) do
-				szText[k] = LR.StrDB2Game(v)
+				outText[k] = LR.StrDB2Game(v)
 			end
 		end
 	end
-	return szText
+	return outText
 end
 
 function LR.StrGame2DB(szText)
-	local szText = szText
+	local outText
 	if SZLANG == "zhcn" then
 		if type(szText) == "string" then
-			szText = AnsiToUTF8(szText)
+			outText = AnsiToUTF8(szText)
+		elseif type(szText) == "number" then
+			outText = szText
 		elseif type(szText) == "table" then
+			outText = {}
 			for k, v in pairs(szText) do
-				szText[k] = LR.StrGame2DB(v)
+				outText[k] = LR.StrGame2DB(v)
 			end
 		end
 	end
-	return szText
+	return outText
 end
+
+
 -----------------------------------------------------------------------
 LR.MapType = {}
 function LR.LoadDragonMapData()
@@ -164,17 +177,18 @@ function LR.LoadDragonMapData()
 end
 LR.LoadDragonMapData()
 
-function LR.IsTreasureBattleFieldMap()
+function LR.IsMapBlockAddon()
 	local me = GetClientPlayer()
 	if not me then
 		return true
 	end
-	--return me.GetMapID() == 296
-	return Table_IsTreasureBattleFieldMap(me.GetMapID())
-end
-
-function LR.isChiJi()
-	return LR.IsTreasureBattleFieldMap()
+	if Table_IsTreasureBattleFieldMap(me.GetMapID()) then
+		return true
+	end
+	if Table_IsZombieBattleFieldMap and Table_IsZombieBattleFieldMap(me.GetMapID()) then
+		return true
+	end
+	return false
 end
 
 --------------------------------------
@@ -320,6 +334,8 @@ function LR.AppendUI(__type, parent, szName, data)
 		__h = _G.CreateWindow(parent, szName, data)
 	elseif __type == "WndContainer" then
 		__h = _G.CreateWndContainer(parent, szName, data)
+	elseif __type == "WndContainerScroll" then
+		__h = _G.CreateWndContainerScroll(parent, szName, data)
 	elseif __type == "PageSet" then
 		__h = _G.CreatePageSet(parent, szName, data)
 	elseif __type == "Button" then
@@ -1502,8 +1518,41 @@ function LR.ParseNumberList(szNumberList)	-- 23, 544;234, 345, 342, 334;
 	return tNumberList
 end
 
-function LR.GetQuestPoint(szPointList)
-	local tPointList = {}
+function LR.GetQuestPoint(szText)
+	local tList = {}
+	for szType, szData in sgmatch(szText, "<(%a) ([%d,;|]+)>") do
+		if szType == "D" or szType == "N" then
+			if bOutput then
+				Output(szData)
+			end
+			for szData2 in sgmatch(szData, "([%d,]+);?") do
+				if bOutput then
+					Output(szData2)
+				end
+				local tNum = {}
+				for nNum in sgmatch(szData2, "(%d+),?") do
+					tNum[#tNum + 1] = tonumber(nNum)
+				end
+				local szName = ""
+				if szType == "N" then
+					szName = Table_GetNpcTemplateName(tNum[2])
+				else
+					szName = LR.TABLE_GetDoodadTemplateName(tNum[2])
+				end
+				tList[#tList + 1] = {nType = szType, dwMapID = tNum[1], dwTemplateID = tNum[2], szName = szName}
+			end
+		else
+			for szData2 in sgmatch(szData, "([%d,]+);?") do
+				local tNum = {}
+				for nNum in sgmatch(szData2, "(%d+),?") do
+					tNum[#tNum + 1] = tonumber(nNum)
+				end
+				tList[#tList + 1] = {nType = szType, dwMapID = tNum[1], nX = tNum[2], nY = tNum[3]}
+			end
+		end
+	end
+	return tList
+--[[
 	for szType, szData in sgmatch(szPointList, "<(%a) ([%d, ;|]+)>") do
 		local szFrame, szSource = smatch(szData, "([%d]+)|([%d, ;]+)")
 		local nFrame
@@ -1523,9 +1572,7 @@ function LR.GetQuestPoint(szPointList)
 					tQuestPos = g_tTable.QuestDoodad:Search(dwObject, dwMapID)
 				end
 				if tQuestPos and tQuestPos.szPositions ~= "" then
-					if not tPointList[dwMapID] then
-						tPointList[dwMapID] = {}
-					end
+					tPointList[dwMapID] = tPointList[dwMapID] or {}
 					local tPosList = LR.ParseNumberList(tQuestPos.szPositions)
 					for _, tPosition in ipairs(tPosList) do
 						tinsert(tPointList[dwMapID], {tPosition[1], tPosition[2], szType, dwObject, nFrame})
@@ -1545,7 +1592,7 @@ function LR.GetQuestPoint(szPointList)
 
 		end
 	end
-	return tPointList
+	return tPointList]]
 end
 
 function LR.Table_GetQuestStringInfo(dwQuestID)
@@ -1957,7 +2004,6 @@ function LR.UnBreatheCall(szKey)
 	LR.BreatheCall(szKey)
 end
 Wnd.OpenWindow("Interface\\LR_Plugin\\LR_1Base\\UI\\LR_1Base_None.ini", "LR_Breathe")
-
 ------------------------------------------------------------------------------------
 -------
 ------------------------------------------------------------------------------------

@@ -790,6 +790,13 @@ function _Equip.EQUIP_CHANGE()
 end
 
 ---更换装备
+--[[
+arg0:	INVENTORY_INDEX.EQUIP	类型
+arg1:	EQUIPMENT_INVENTORY.MELEE_WEAPON 更换的部位
+--
+local nBoxIndex = arg0
+local nItemIndex = arg1
+]]
 function _Equip.EQUIP_ITEM_UPDATE()
 	local me = GetClientPlayer()
 	if me.bFightState then
@@ -833,7 +840,7 @@ end
 
 LR.RegisterEvent("FIRST_LOADING_END", function() _Equip.FIRST_LOADING_END() end)
 LR.RegisterEvent("EQUIP_CHANGE", function() _Equip.EQUIP_CHANGE() end)
-LR.RegisterEvent("EQUIP_ITEM_UPDATE", function() _Equip.EQUIP_ITEM_UPDATE() end)
+--LR.RegisterEvent("EQUIP_ITEM_UPDATE", function() _Equip.EQUIP_ITEM_UPDATE() end)		--去除，装备耐久，受缴械等都会触发，不可控，会卡的
 LR.RegisterEvent("ON_FRAME_CREATE", function() _Equip.ON_FRAME_CREATE() end)
 --注册模块
 LR_AS_Module.EquipmentRecord = {}

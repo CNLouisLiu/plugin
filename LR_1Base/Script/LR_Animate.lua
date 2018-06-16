@@ -31,6 +31,7 @@ function Animate:ctor(ui, nTime)
 	return oo
 end
 
+
 function Animate:FadeIn(nTime, fnAction)
 	if ANI_QUEUE.FADEIN[self.ui] then
 		return self

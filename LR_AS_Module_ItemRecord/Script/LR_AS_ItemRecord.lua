@@ -1610,7 +1610,7 @@ function LR_AS_ItemRecord_Panel.LoadUserBankData(DB)
 			else
 				local DB_SELECT2 = DB:Prepare("SELECT bank_item_data.* FROM bank_item_data INNER JOIN player_list ON bank_item_data.belong = player_list.szKey WHERE bank_item_data.belong = ? AND bank_item_data.nStackNum > 0 AND bank_item_data.szKey IS NOT NULL AND bank_item_data.belong IS NOT NULL")
 				DB_SELECT2:ClearBindings()
-				DB_SELECT2:BindAll(belong)
+				DB_SELECT2:BindAll(g2d(belong))
 				local Data = d2g(DB_SELECT2:GetAll())
 				--Output(Data)
 				for k2, v2 in pairs (Data) do

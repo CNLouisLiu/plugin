@@ -6,6 +6,7 @@ local AddonPath = "Interface\\LR_Plugin\\LR_HeadName"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_HeadName"
 local _L = LR.LoadLangPack(AddonPath)
 local szIniFile = sformat("%s\\UI\\LR_HeadNameItem.ini", AddonPath)
+local DEBUG = false
 ---------------------------------------------------------
 local HEAD_CLIENTPLAYER = 0
 local HEAD_OTHERPLAYER = 1
@@ -17,23 +18,6 @@ local HEAD_TITLE = 2
 local HEAD_NAME = 3
 
 local freq_limit = 120	--
-
-local FORCE_TEXT = {
-	[0] = _L["Xia"],
-	[1] = _L["ShaoLin"],
-	[2] = _L["WanHua"],
-	[3] = _L["TianCe"],
-	[4] = _L["ChunYang"],
-	[5] = _L["QiXiu"],
-	[6] = _L["WuDu"],
-	[7] = _L["TangMen"],
-	[8] = _L["CangJian"],
-	[9] = _L["GaiBang"],
-	[10] = _L["MingJiao"],
-	[21] = _L["CangYun"],
-	[22] = _L["ChangGe"],
-	[23] = _L["BaDao"],
-}
 
 local ROLETYPE_TEXT = {
 	[1] = _L["ChengNan"],
@@ -63,6 +47,9 @@ LR_HeadName.DoodadList = {}
 LR_HeadName.CustomDoodad = {}
 LR_HeadName.BookCopyQuests = {}
 local MINIMAP_LIST = {}	--用于存放小地图显示的东西
+local NPC_QUEST_LIST = {}	--存放npc的任务，key为模版id
+local NPC_CAN_ACCEPT_QUEST = {}
+local NPC_CAN_FINISH_QUEST = {}
 
 LR_HeadName.default = {
 	DoodadKind = {
@@ -307,7 +294,6 @@ LR_HeadName.Mineral = clone(LR_HeadName.default.Mineral)
 
 local CustomVersion = "20170111"
 RegisterCustomData("LR_HeadName.bOn", CustomVersion)
-
 
 LR_HeadName.DoodadKindDescribe = {
 	[DOODAD_KIND.INVALID] = "INVALID",
@@ -1285,7 +1271,7 @@ function LR_HeadName.OpenFrame()
 	end
 
 	if LR_HeadName.bOn then
-		if LR.IsTreasureBattleFieldMap() then
+		if LR.IsMapBlockAddon() then
 			frame:Hide()
 			LR_HeadName.Convert2SysHead()
 		else
@@ -1302,7 +1288,7 @@ end
 function LR_HeadName.GetSysHeadSettings()
 	LR_HeadName.tSysSettings = {
 		["HEAD_NPC_NAME"] = GetGlobalTopHeadFlag(HEAD_NPC, HEAD_NAME ),
-		["HEAD_NPC_TITLE"         ] = GetGlobalTopHeadFlag(HEAD_NPC, HEAD_TITLE),
+		["HEAD_NPC_TITLE"] = GetGlobalTopHeadFlag(HEAD_NPC, HEAD_TITLE),
 		["HEAD_NPC_LEFE"] = GetGlobalTopHeadFlag(HEAD_NPC , HEAD_LEFE ),
 
 		["HEAD_OTHERPLAYER_NAME"] = GetGlobalTopHeadFlag(HEAD_OTHERPLAYER , HEAD_NAME ),
@@ -1509,7 +1495,13 @@ function LR_HeadName.Check(dwID, nType, bForced)
 				end
 			end
 
-			if szName~= ""
+			if nType == TARGET.NPC and not obj.CanSeeName() then
+				if szName == _L["Mission Point"] and not LR_HeadName.IsMissionObj({dwTemplateID = obj.dwTemplateID, dwMapID = LR_HeadName.dwMapID, nType = TARGET.NPC}) then
+					szName = ""
+				end
+			end
+
+			if szName ~= ""
 			and (	  (nType ==  TARGET.PLAYER and LR_HeadName.GetbShow(obj, TARGET.PLAYER, "bShow", nShip))
 					or  (nType ==  TARGET.NPC and LR_HeadName.GetbShow(obj, TARGET.NPC, "bShow", nShip) and not isChangGeShadow )
 					or  (nType ==  TARGET.NPC and LR_HeadName.GetbShow(obj, TARGET.NPC, "bShow", nShip) and isChangGeShadow and bShowChangGeShadow)
@@ -1615,12 +1607,12 @@ function LR_HeadName.Check(dwID, nType, bForced)
 						end
 					end
 					if nType ==  TARGET.PLAYER then
-						if FORCE_TEXT[obj.dwForceID] and LR_HeadName.GetbShow(obj, nType, "ForceID", nShip)
+						if g_tStrings.tForceTitle[obj.dwForceID] and LR_HeadName.GetbShow(obj, nType, "ForceID", nShip)
 						and not (LR_HeadName.UsrData.HideInDungeon.bOn and LR_HeadName.UsrData.HideInDungeon.ForceID and scene.nType ==  MAP_TYPE.DUNGEON) then
 							if line2Text ~=  "" then
-								line2Text = sformat("%s %s", FORCE_TEXT[obj.dwForceID], line2Text)
+								line2Text = sformat("%s %s", g_tStrings.tForceTitle[obj.dwForceID], line2Text)
 							else
-								line2Text = FORCE_TEXT[obj.dwForceID]
+								line2Text = g_tStrings.tForceTitle[obj.dwForceID]
 							end
 						end
 						if ROLETYPE_TEXT[obj.nRoleType] and LR_HeadName.GetbShow(obj, nType, "RoleType", nShip)
@@ -1996,7 +1988,19 @@ function LR_HeadName.Check(dwID, nType, bForced)
 					szName = LR.Trim(Table_GetNpcTemplateName(obj.dwTemplateID))
 				end
 			else
-				szName = ""
+				if DEBUG then
+					if LR.Trim(obj.szName) == "" then
+						szName = LR.Trim(Table_GetNpcTemplateName(obj.dwTemplateID))
+					end
+					szName = sformat("#%d%s",obj.dwTemplateID, szName)
+				else
+					--Output({dwTemplateID = obj.dwTemplateID, nType = TARGET.NPC, dwMapID = LR_HeadName.dwMapID})
+					if LR_HeadName.IsMissionObj({dwTemplateID = obj.dwTemplateID, nType = TARGET.NPC, dwMapID = LR_HeadName.dwMapID}) then
+						szName = _L["Mission Point"]
+					else
+						szName = ""
+					end
+				end
 			end
 			if LR_HeadName.NpcTemplateSee[obj.dwTemplateID] then
 				szName = LR.Trim(Table_GetNpcTemplateName(obj.dwTemplateID))
@@ -2155,7 +2159,7 @@ function LR_HeadName.GetTongName(player)
 		return LR_HeadName.tTongList[dwTongID].szName
 	else
 		local szName = LR.GetTongName(dwTongID)
-		if dwTongID>0 and szName~= "" then
+		if dwTongID>0 and szName ~= "" then
 			LR_HeadName.tTongList[dwTongID] = {szName = szName}
 		end
 		return szName
@@ -2246,11 +2250,20 @@ function LR_HeadName.NPC_ENTER_SCENE()
 		return
 	end
 	local dwID = arg0
-	LR.DelayCall(100, LR_HeadName.GetQuest(dwID))	------获取npc身上的任务列表
+	local npc = GetNpc(arg0)
+	if not npc then
+		return
+	end
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
+	--------获取npc身上的任务列表
+	LR_HeadName.RefreshOneNPCQuest(dwID)
+	if not npc.CanSeeName() and DEBUG then
+		Output(npc.dwTemplateID, Table_GetNpcTemplateName(npc.dwTemplateID))
+	end
+
 	LR.DelayCall(200, LR_HeadName.Check(dwID, TARGET.NPC, true))	------刷新强制刷新npc，一刷handle
 	LR.DelayCall(300, LR_HeadName.Check(dwID, TARGET.NPC, true))	------刷新强制刷新npc，二刷名字
 	LR.DelayCall(400, LR_HeadName.OnEventCheckMission(dwID))	------三设置npc的任务状态
@@ -2271,6 +2284,8 @@ function LR_HeadName.NPC_LEAVE_SCENE()
 	end
 	LR_HeadName.AllList[dwID] = nil
 	MINIMAP_LIST[arg0] = nil
+	NPC_CAN_ACCEPT_QUEST[dwID] = nil
+	NPC_CAN_FINISH_QUEST[dwID] = nil
 end
 
 function LR_HeadName.DOODAD_ENTER_SCENE()
@@ -2377,7 +2392,7 @@ function LR_HeadName.GetAllMissionNeed()
 	LR_HeadName.MissionNeed = {}
 	for i = 0, 24, 1 do
 		local dwQuestID = me.GetQuestID(i)
-		if dwQuestID>0 then
+		if dwQuestID > 0 then
 			LR_HeadName.GetSingleMissionNeed(dwQuestID)
 		end
 	end
@@ -2447,6 +2462,10 @@ function LR_HeadName.Get_need_item(dwQuestID)
 					MissionNeed[#MissionNeed + 1] = v2
 				end
 			end
+			local itemInfo = GetItemInfo(v.type, v.index)
+			if itemInfo then
+				MissionNeed[#MissionNeed + 1] = {dwTabType = v.type, dwIndex = v.index, szName = itemInfo.szName, nType = "I"}
+			end
 			if MissionPatch then
 				for k2, v2 in pairs (MissionPatch) do
 					if v2.dwQuestID == dwQuestID and v2.mode == "need_item" and v2.k == k then
@@ -2469,9 +2488,6 @@ function LR_HeadName.Get_need_item(dwQuestID)
 			end
 		end
 	end
-
-
-
 end
 
 function LR_HeadName.Get_kill_npc(dwQuestID)
@@ -2481,19 +2497,21 @@ function LR_HeadName.Get_kill_npc(dwQuestID)
 	local QuestInfo =  _QuestInfo[dwQuestID] or {}
 	local dbQuestInfo = _dbQuestInfo[dwQuestID] or {}
 	local szMissionName = LR_HeadName.szMissionName
-	local need_item = QuestTraceInfo.kill_npc or {}
-	if next(need_item) == nil then
+	local kill_npc = QuestTraceInfo.kill_npc or {}
+	if next(kill_npc) == nil then
 		return
 	end
 	local flag, finish_flag = {}, true
-	for k, v in pairs(need_item) do
+	for k, v in pairs(kill_npc) do
 		if v.have < v.need then
 			local dbInfo = dbQuestInfo[sformat("szKillNpc%d", v.i +1)]
 			if dbInfo and dbInfo ~= "" then
 				for k2, v2 in pairs(LR_HeadName.SpliteString(dbInfo)) do
 					MissionNeed[#MissionNeed + 1] = v2
+					MissionNeed[#MissionNeed + 1] = {dwTemplateID = v.template_id, dwMapID = v2.dwMapID, nType = "N"}
 				end
 			end
+
 		end
 		flag[v.i + 1] = true
 	end
@@ -2536,6 +2554,7 @@ function LR_HeadName.Get_quest_state(dwQuestID, bOutput)
 					MissionNeed[#MissionNeed + 1] = v2
 				end
 			end
+			finish_flag = false
 		end
 		flag[v.i + 1] = true
 	end
@@ -2559,7 +2578,7 @@ function LR_HeadName.GetQuestNeedTree()
 	local MissionNeed = LR_HeadName.MissionNeed
 	for dwQuestID, v in pairs (MissionNeed) do
 		for k1, v1 in pairs (v) do
-			MissionList[#MissionList+1] = v1
+			MissionList[#MissionList+1] = clone(v1)
 		end
 	end
 end
@@ -2591,13 +2610,16 @@ function LR_HeadName.GetQuestBaseInfo(dwQuestID)
 	end
 	local t = {szAccept = {}, szFinish = {}, }
 	local QuestInfo = LR.Table_GetQuestStringInfo(dwQuestID)
+	--Output("5", dwQuestID)
 	local szQuestName = QuestInfo.szName
 	local tQuest = g_tTable.Quest:Search(dwQuestID)
 	if not tQuest then
 		return t
 	end
+	--Output("6", tQuest)
 	local szAccept = LR.GetQuestPoint(tQuest.szAccept) or {}
 	local szFinish = LR.GetQuestPoint(tQuest.szFinish) or {}
+	--Output("7")
 	for k, v in pairs (szAccept) do
 		if (v[1][3] ==  "D" or v[1][3] ==  "N") and v[1][4] then
 			t.szAccept[#t.szAccept+1] = {dwMapID = k, dwTemplateID = v[1][4]}
@@ -2613,7 +2635,7 @@ function LR_HeadName.GetQuestBaseInfo(dwQuestID)
 	return t
 end
 
-function LR_HeadName.RefreshNPCQuest(dwQuestID)
+function LR_HeadName.RefreshAllNPCQuest()
 	local dwQuestID = dwQuestID
 	local me = GetControlPlayer()
 	if not me then
@@ -2621,60 +2643,36 @@ function LR_HeadName.RefreshNPCQuest(dwQuestID)
 	end
 	for dwID, v in pairs(LR_HeadName.AllList) do
 		if v and v.nType ==  TARGET.NPC then
-			local Quest_List = v.Quest_List or {}
-			if next(Quest_List)~= nil then
-				for dwQuestID, vQuest in pairs(Quest_List) do
-					if Quest_List[dwQuestID] then
-						local eQuestState = me.GetQuestState(dwQuestID)  ---0:完成	1：完成
-						local eQuestPhase = me.GetQuestPhase(dwQuestID)	----- -1：非法	0：任务不存在	1：任务进行中	2：任务完成但没交	3：任务完成；任务不存在：没接任务
-						local CanAccept = me.CanAcceptQuest(dwQuestID, TARGET.NPC, dwID)
-						local QuestInfo = LR.Table_GetQuestStringInfo(dwQuestID)
-						local szQuestName = LR.Trim(QuestInfo.szName)
-						local t = LR_HeadName.GetQuestBaseInfo(dwQuestID)
-						if (eQuestPhase ==  3 or CanAccept ==  57) then
-							Quest_List[dwQuestID] = nil
-						else
-							--if CanAccept ==  1 or eQuestPhase ==  3 or eQuestPhase ==  2 then
-								Quest_List[dwQuestID] = {dwQuestID = dwQuestID, state = eQuestState, eQuestPhase = eQuestPhase, szName = szQuestName, CanAccept = CanAccept, szAccept = clone(t.szAccept), szFinish = clone(t.szFinish)}
-							--end
-						end
-					end
-				end
-			end
+			LR_HeadName.RefreshOneNPCQuest(dwID)
 		end
 	end
 end
 
-function LR_HeadName.GetQuest(dwID)
-	local npc = GetNpc(dwID)
-	if not npc then
-		return
-	end
-	local me = GetControlPlayer()
+function LR_HeadName.RefreshOneNPCQuest(dwID)
+	local me = GetClientPlayer()
 	if not me then
 		return
 	end
-	local questids = npc.GetNpcQuest()
-	local t = {}
-	if #questids>0 then
-		for i = 1, #questids, 1 do
-			local dwQuestID = questids[i]
-			local QuestInfo = LR.Table_GetQuestStringInfo(dwQuestID)
-			if QuestInfo then
-				local eQuestState = me.GetQuestState(dwQuestID)  ---0:完成	1：完成
-				local eQuestPhase = me.GetQuestPhase(dwQuestID)	----- -1：非法	0：任务不存在	1：任务进行中	2：任务完成但没交	3：任务完成；任务不存在：没接任务
-				local CanAccept = me.CanAcceptQuest(dwQuestID, TARGET.NPC, npc.dwID)
-				local szQuestName = LR.Trim(QuestInfo.szName)
-				local tt = LR_HeadName.GetQuestBaseInfo(dwQuestID)
-				if eQuestPhase ==  3 or CanAccept == 57 then
-					t[dwQuestID] = nil
-				else
-					t[dwQuestID] = {dwQuestID = dwQuestID, state = eQuestState, eQuestPhase = eQuestPhase, szName = szQuestName, CanAccept = CanAccept, szAccept = clone(tt.szAccept), szFinish = clone(tt.szFinish), }
-				end
+	local npc = GetNpc(dwID)
+	if npc then
+		NPC_CAN_ACCEPT_QUEST[dwID] = nil
+		NPC_CAN_FINISH_QUEST[dwID] = nil
+		local tQuestIDs = npc.GetNpcQuest()
+		---接任务可能性
+		for k2, dwQuestID in pairs(tQuestIDs) do
+			if me.CanAcceptQuest(dwQuestID, TARGET.NPC, dwID) == 1 then
+				NPC_CAN_ACCEPT_QUEST[dwID] = true
+				break
+			end
+		end
+		--完成任务可能性
+		for k2, dwQuestID in pairs(tQuestIDs) do
+			if me.CanFinishQuest(dwQuestID, TARGET.NPC, dwID) == 1 then
+				NPC_CAN_FINISH_QUEST[dwID] = true
+				break
 			end
 		end
 	end
-	LR_HeadName.AllList[npc.dwID].Quest_List = clone(t)
 end
 
 function LR_HeadName.AddAllDoodad2AllList()
@@ -2797,7 +2795,7 @@ end
 
 function LR_HeadName.IsMissionObj(t)
 	if LR.Trim(t.szName) ==  "" then
-		return false
+		--return false
 	end
 	local me = GetClientPlayer()
 	if not me then
@@ -2834,72 +2832,14 @@ function LR_HeadName.CheckQuestAccept(obj)
 	if not obj then
 		return false
 	end
-	local me = GetControlPlayer()
-	if not me then
-		return false
-	end
-	local dwMapID = LR_HeadName.dwMapID
-	if not LR_HeadName.AllList[obj.dwID] then
-		return false
-	end
-	local Quest_List = LR_HeadName.AllList[obj.dwID].Quest_List or {}
-	if next(Quest_List)~= nil then
-		for dwQuestID, v in pairs (Quest_List) do
-			if v.CanAccept then
-				if v.CanAccept ==  1 then
-					if #v.szAccept>0 then
-						for k, v2 in pairs(v.szAccept) do
-							if dwMapID == v2.dwMapID and obj.dwTemplateID ==  v2.dwTemplateID then
-								return true
-							end
-						end
-					else
-						return true
-					end
-				end
-			end
-		end
-	else
-		return false
-	end
+	return NPC_CAN_ACCEPT_QUEST[obj.dwID] or false
 end
 
 function LR_HeadName.CheckQuestFinish(obj)
 	if not obj then
 		return false
 	end
-	local me = GetControlPlayer()
-	if not me then
-		return false
-	end
-	local dwMapID = LR_HeadName.dwMapID
-	if not LR_HeadName.AllList[obj.dwID] then
-		return false
-	end
-	local Quest_List = LR_HeadName.AllList[obj.dwID].Quest_List or {}
-	if next(Quest_List)~= nil then
-		for k, v in pairs (Quest_List) do
-			if v.eQuestPhase == 2 then
-				if #v.szFinish>0 then
-					for k, v2 in pairs(v.szFinish) do
-						if dwMapID == v2.dwMapID and obj.dwTemplateID ==  v2.dwTemplateID then
-							return true
-						end
-					end
-				else
-					if #v.szFinish == 0 and #v.szAccept == 0 and v.CanAccept ==  7 then
-						if LR_HeadName.MissionPatch2[k] and LR_HeadName.MissionPatch2[k].not_szFinish[obj.dwTemplateID] then
-							return false
-						else
-							return true
-						end
-					end
-				end
-			end
-		end
-	else
-		return false
-	end
+	return NPC_CAN_FINISH_QUEST[obj.dwID] or false
 end
 
 function LR_HeadName.QUEST_FINISHED()
@@ -2916,7 +2856,7 @@ function LR_HeadName.QUEST_FINISHED()
 		return
 	end
 
-	LR_HeadName.RefreshNPCQuest(dwQuestID)
+	LR_HeadName.RefreshAllNPCQuest(dwQuestID)
 	LR_HeadName.MissionNeed[dwQuestID] = nil
 	_QuestTraceInfo[dwQuestID] = nil
 	_QuestInfo[dwQuestID] = nil
@@ -2942,7 +2882,7 @@ function LR_HeadName.QUEST_FAILED()
 		return
 	end
 
-	LR_HeadName.RefreshNPCQuest(dwQuestID)
+	LR_HeadName.RefreshAllNPCQuest(dwQuestID)
 	LR_HeadName.MissionNeed[dwQuestID] = nil
 	_QuestTraceInfo[dwQuestID] = nil
 	_QuestInfo[dwQuestID] = nil
@@ -2971,10 +2911,13 @@ function LR_HeadName.QUEST_ACCEPTED()
 		return
 	end
 
-	LR_HeadName.RefreshNPCQuest(dwQuestID)
+	LR_HeadName.RefreshAllNPCQuest(dwQuestID)
 	LR_HeadName.GetSingleMissionNeed(dwQuestID)
+	LR_HeadName.Tree()
+	LR_HeadName.ReDrawNpc()
+	LR_HeadName.AddAllDoodad2AllList()
 
-	LR.DelayCall(150, function()
+--[[	LR.DelayCall(150, function()
 		----刷新NPC/Doodad上的任务标记
 		LR_HeadName.Tree()
 		----将Doodad加入显示列表
@@ -2982,7 +2925,7 @@ function LR_HeadName.QUEST_ACCEPTED()
 		----刷新当前目标
 		LR_HeadName.RefreshTarget()
 		LR_HeadName.ReDrawNpc()
-	end)
+	end)]]
 end
 
 function LR_HeadName.QUEST_CANCELED()
@@ -2998,7 +2941,7 @@ function LR_HeadName.QUEST_CANCELED()
 		return
 	end
 
-	LR_HeadName.RefreshNPCQuest(dwQuestID)
+	LR_HeadName.RefreshAllNPCQuest(dwQuestID)
 	LR_HeadName.MissionNeed[dwQuestID] = nil
 	_QuestTraceInfo[dwQuestID] = nil
 	_QuestInfo[dwQuestID] = nil
@@ -3034,9 +2977,14 @@ function LR_HeadName.QUEST_DATA_UPDATE()
 	end
 
 	LR_HeadName.GetSingleMissionNeed(dwQuestID)
-	LR_HeadName.RefreshNPCQuest(dwQuestID)
-
-	LR.DelayCall(150, function()
+	LR_HeadName.RefreshAllNPCQuest()
+	LR_HeadName.Tree()
+	----将Doodad加入显示列表
+	LR_HeadName.AddAllDoodad2AllList()
+	----刷新当前目标
+	--LR_HeadName.RefreshTarget()
+	LR_HeadName.ReDrawNpc()
+--[[	LR.DelayCall(150, function()
 		----刷新NPC/Doodad上的任务标记
 		LR_HeadName.Tree()
 		----将Doodad加入显示列表
@@ -3044,7 +2992,7 @@ function LR_HeadName.QUEST_DATA_UPDATE()
 		----刷新当前目标
 		LR_HeadName.RefreshTarget()
 		LR_HeadName.ReDrawNpc()
-	end)
+	end)]]
 end
 
 function LR_HeadName.RefreshTarget()
@@ -3223,18 +3171,18 @@ function LR_HeadName.LOADING_END()
 		return
 	end
 	local scene = me.GetScene()
-	if not scene then
-		return
-	end
 	LR_HeadName.dwMapID = scene.dwMapID
 	if not LR_HeadName.bOn then
 		return
 	end
 
+	LR_HeadName.GetAllMissionNeed()
+	LR_HeadName.Tree()
 	LR_HeadName.OpenFrame()
 	LR.DelayCall(500, function()
 		LR_HeadName.PARTY_SET_MARK()
 	end)
+	LR_HeadName.ReDrawNpc()
 end
 
 function LR_HeadName.FIRST_LOADING_END()
@@ -3252,8 +3200,7 @@ function LR_HeadName.FIRST_LOADING_END()
 	if not (LR_HeadName.bOn and LR_HeadName.UsrData.bShowQuestFlag) then
 		return
 	end
-	LR_HeadName.GetAllMissionNeed()
-	LR_HeadName.Tree()
+
 	LR_HeadName.AddAllDoodad2AllList()
 	LR_HeadName.ReDrawAll()
 end

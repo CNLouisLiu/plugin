@@ -648,7 +648,7 @@ function LR_TLHelper.OpenPanel()
 	if LR.GetXinFa() ~= Table_GetSkillName(10225,1) then
 		return
 	end
-	if LR.IsTreasureBattleFieldMap() then
+	if LR.IsMapBlockAddon() then
 		Wnd.CloseWindow("LR_TLHelper")
 	else
 		Wnd.OpenWindow("Interface\\LR_Plugin\\LR_TLHelper\\UI\\LR_TLHelper.ini", "LR_TLHelper")

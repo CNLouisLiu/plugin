@@ -72,7 +72,7 @@ function LR_TeamTools.DPS.FIGHT_HINT()
 	end
 end
 
-function LR_TeamTools.DPS.OutputDPSRecord (dwID,rc)
+function LR_TeamTools.DPS.OutputDPSRecord(dwID,rc)
 	local hTeam = GetClientTeam()
 	local tMemberInfo = hTeam.GetMemberInfo(dwID)
 	if not tMemberInfo then
@@ -121,111 +121,112 @@ LR_TeamTools.DeathRecord = {
 	tDamage = {},
 	tDeath = {}
 }
-function LR_TeamTools.DeathRecord.OnSkillEffectLog (dwCaster, dwTarget, bReact, nEffectType, dwID, dwLevel, bCriticalStrike, nCount, tResult)
-	local Caster,target,szSkillName
-	if nCount <= 2 then
-		return
-	end
-	if IsPlayer(dwCaster) then
-		Caster = GetPlayer(dwCaster)
-	else
-		Caster = GetNpc(dwCaster)
-	end
-	if not Caster then
-		return
-	end
-	if IsPlayer(dwTarget) then
-		target = GetPlayer(dwTarget)
-	else
-		return
-	end
-	if not target then
-		return
-	end
-	if nEffectType == SKILL_EFFECT_TYPE.SKILL then
-		szSkillName = Table_GetSkillName(dwID, dwLevel);
-	elseif nEffectType == SKILL_EFFECT_TYPE.BUFF then
-		szSkillName = Table_GetBuffName(dwID, dwLevel);
-	end
-	if not szSkillName then
-		return
-	end
-	local me = GetClientPlayer()
-	local team = GetClientTeam()
-	if IsPlayer(dwTarget) then
-		if me.IsPlayerInMyParty(dwTarget) or dwTarget == me.dwID then
-			LR_TeamTools.DeathRecord.tDamage[dwTarget] = LR_TeamTools.DeathRecord.tDamage[dwTarget] or {}
-			local szDamage = ""
-			local nValue = tResult[SKILL_RESULT_TYPE.PHYSICS_DAMAGE]
-			if nValue and nValue > 0 then
-				if szDamage ~= "" then
-					szDamage = sformat("%s%s", szDamage, g_tStrings.STR_COMMA)
-				end
-				szDamage = sformat("%s%s", szDamage, FormatString(g_tStrings.SKILL_DAMAGE, nValue, g_tStrings.STR_SKILL_PHYSICS_DAMAGE))
+local NPC_Cache = {}
+local Player_Cache = {}
+
+function LR_TeamTools.DeathRecord.NPC_ENTER_SCENE()
+	local dwID = arg0
+	if not NPC_Cache[dwID] then
+		local npc = GetNpc(dwID)
+		if npc then
+			local szName = LR.Trim(npc.szName)
+			if szName == "" then
+				szName = LR.Trim(Table_GetNpcTemplateName(npc.dwTemplateID))
 			end
-			local nValue = tResult[SKILL_RESULT_TYPE.SOLAR_MAGIC_DAMAGE]
-			if nValue and nValue > 0 then
-				if szDamage ~= "" then
-					szDamage = sformat("%s%s", szDamage, g_tStrings.STR_COMMA)
-				end
-				szDamage = sformat("%s%s", szDamage ,FormatString(g_tStrings.SKILL_DAMAGE, nValue, g_tStrings.STR_SKILL_SOLAR_MAGIC_DAMAGE))
+			if szName == "" then
+				szName = sformat("#%d", npc.dwTemplateID)
 			end
-			local nValue = tResult[SKILL_RESULT_TYPE.NEUTRAL_MAGIC_DAMAGE]
-			if nValue and nValue > 0 then
-				if szDamage ~= "" then
-					szDamage = sformat("%s%s", szDamage, g_tStrings.STR_COMMA)
-				end
-				szDamage = sformat("%s%s", szDamage, FormatString(g_tStrings.SKILL_DAMAGE, nValue, g_tStrings.STR_SKILL_NEUTRAL_MAGIC_DAMAGE))
-			end
-			local nValue = tResult[SKILL_RESULT_TYPE.LUNAR_MAGIC_DAMAGE]
-			if nValue and nValue > 0 then
-				if szDamage ~= "" then
-					szDamage = sformat("%s%s", szDamage, g_tStrings.STR_COMMA)
-				end
-				szDamage = sformat("%s%s", szDamage, FormatString(g_tStrings.SKILL_DAMAGE, nValue, g_tStrings.STR_SKILL_LUNAR_MAGIC_DAMAGE))
-			end
-			local nValue = tResult[SKILL_RESULT_TYPE.POISON_DAMAGE]
-			if nValue and nValue > 0 then
-				if szDamage ~= "" then
-					szDamage = sformat("%s%s", szDamage, g_tStrings.STR_COMMA)
-				end
-				szDamage = sformat("%s%s", szDamage, FormatString(g_tStrings.SKILL_DAMAGE, nValue, g_tStrings.STR_SKILL_POISON_DAMAGE))
-			end
-			if szDamage ~= "" then
-				tinsert(LR_TeamTools.DeathRecord.tDamage[dwTarget],{
-					szCaster = LR.GetTemplateName(Caster),
-					szTarget = LR.GetTemplateName(target),
-					szSkillName = szSkillName,
-					szValue = szDamage,
-					time = GetCurrentTime(),
-				})
-			end
-		end
-	end
-	if IsPlayer(dwCaster) and (me.IsPlayerInMyParty(dwCaster) or dwCaster == me.dwID) then
-		if not LR_TeamTools.DeathRecord.tDamage[dwCaster] then
-			LR_TeamTools.DeathRecord.tDamage[dwCaster] = {}
-		end
-		local szDamage = ""
-		local nValue = tResult[SKILL_RESULT_TYPE.REFLECTIED_DAMAGE]
-		if nValue and nValue > 0 then
-			if szDamage ~= "" then
-				szDamage = sformat("%s%s", szDamage, g_tStrings.STR_COMMA)
-			end
-			szDamage = sformat("%s%d%s", szDamage, nValue, _L["Points harm"])
-		end
-		if szDamage ~= "" then
-			tinsert(LR_TeamTools.DeathRecord.tDamage[dwCaster],{
-				szCaster = LR.GetTemplateName(target),
-				szTarget = LR.GetTemplateName(Caster),
-				szSkillName = sformat("%s(%s)", _L["Bounce"], szSkillName),
-				szValue = szDamage,
-			})
+			NPC_Cache[npc.dwID] = {szName = szName}
 		end
 	end
 end
 
-function LR_TeamTools.DeathRecord.OnCommonHealthLog (dwTarget, nDeltaLife)
+function LR_TeamTools.DeathRecord.PLAYER_ENTER_SCENE()
+	local dwID = arg0
+	if not Player_Cache[dwID] then
+		local player = GetPlayer(dwID)
+		if player then
+			Player_Cache[player.dwID] = {szName = player.szName}
+		end
+	end
+end
+
+function LR_TeamTools.DeathRecord.GetName(nType, dwID)
+	local szKillerName = ""
+	if nType == TARGET.NPC then
+		if NPC_Cache[dwID] then
+			szKillerName = NPC_Cache[dwID].szName
+		else
+			szKillerName = sformat("NPC#%d", dwID)
+		end
+	elseif nType == TARGET.PLAYER then
+		if Player_Cache[dwID] then
+			szKillerName = Player_Cache[dwID].szName
+		else
+			szKillerName = sformat("PLAYER#%d", dwID)
+		end
+	end
+	return szKillerName
+end
+
+function LR_TeamTools.DeathRecord.OnSkillEffectLog(dwCaster, dwTarget, bReact, nEffectType, dwID, dwLevel, bCriticalStrike, nCount, tResult)
+	if nCount <= 2 then			--无效数据
+		return
+	end
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	if not IsPlayer(dwTarget) or not me.IsPlayerInMyParty(dwTarget) then
+		return
+	end
+	----ss
+	local nCasterType = TARGET.NPC
+	--伤害源
+	if IsPlayer(dwCaster) then
+		nCasterType = TARGET.PLAYER
+	end
+	--技能名字
+	if nEffectType == SKILL_EFFECT_TYPE.SKILL then
+		szSkillName = Table_GetSkillName(dwID, dwLevel)
+	elseif nEffectType == SKILL_EFFECT_TYPE.BUFF then
+		szSkillName = Table_GetBuffName(dwID, dwLevel)
+	end
+	if not szSkillName then
+		return
+	end
+	----依次为外功、阳性、阴性、混元性、毒性
+	local DAMAGE_TYPE = {"PHYSICS_DAMAGE", "SOLAR_MAGIC_DAMAGE", "LUNAR_MAGIC_DAMAGE", "NEUTRAL_MAGIC_DAMAGE", "POISON_DAMAGE"}
+	local DAMAGE_STRING = {"STR_SKILL_PHYSICS_DAMAGE", "STR_SKILL_SOLAR_MAGIC_DAMAGE", "STR_SKILL_LUNAR_MAGIC_DAMAGE", "STR_SKILL_NEUTRAL_MAGIC_DAMAGE", "STR_SKILL_POISON_DAMAGE"}
+	local szDamage = ""
+	local nTotalDamage = 0
+	for k, v in pairs(DAMAGE_TYPE) do
+		local nValue = tResult[SKILL_RESULT_TYPE[v]]
+		if nValue and nValue > 0 then
+			if szDamage ~= "" then
+				szDamage = sformat("%s%s", szDamage, g_tStrings.STR_COMMA)
+			end
+			szDamage = sformat("%s%s", szDamage, FormatString(g_tStrings.SKILL_DAMAGE, nValue, g_tStrings[DAMAGE_STRING[k]]))
+			nTotalDamage = nTotalDamage + nValue
+		end
+	end
+	--Output(tResult, szDamage)
+	local nEffectDamage = tResult[SKILL_RESULT_TYPE.EFFECTIVE_DAMAGE] or 0
+	local data = {}
+	data.dwCasterID = dwCaster
+	data.nCasterType = nCasterType
+	data.dwTargetID = dwTarget
+	data.szDamage = szDamage
+	data.szSkillName = szSkillName
+	data.nEffectDamage = nEffectDamage
+	data.nTotalDamage = nTotalDamage
+	data.bCriticalStrike = bCriticalStrike
+	data.nTime = GetCurrentTime()
+	LR_TeamTools.DeathRecord.tDamage[dwTarget] = LR_TeamTools.DeathRecord.tDamage[dwTarget] or {}
+	tinsert(LR_TeamTools.DeathRecord.tDamage[dwTarget], data)
+end
+
+function LR_TeamTools.DeathRecord.OnCommonHealthLog(dwTarget, nDeltaLife)
 	local target
 	if IsPlayer(dwTarget) then
 		target = GetPlayer(dwTarget)
@@ -258,96 +259,94 @@ end
 	arg0:"UI_OME_SKILL_EFFECT_LOG" arg1:dwCaster arg2:dwTarget arg3:bReact arg4:nType  arg5:dwID  arg6:dwLevel  arg7:bCriticalStrike arg8:nResultCount
 	arg0:"UI_OME_COMMON_HEALTH_LOG" arg1:dwCharacterID arg2:nDeltaLife]]
 
-function LR_TeamTools.DeathRecord.OnDeath (dwTarget, dwCaster)
-	local szCasterName = ""
+function LR_TeamTools.DeathRecord.OnDeath(dwTarget, dwCaster)
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
-	if IsPlayer(dwTarget) then
-		target=GetPlayer(dwTarget)
-	else
+	if not (IsPlayer(dwTarget) and me.IsPlayerInMyParty(dwTarget)) then
 		return
 	end
 
+	LR_TeamTools.DeathRecord.tDeath[dwTarget] = LR_TeamTools.DeathRecord.tDeath[dwTarget] or {}
+	local data = {}
 	if IsPlayer(dwCaster) then
-		Caster = GetPlayer(dwCaster)
-		if Caster then
-			szCasterName = LR.Trim(Caster.szName)
-		else
-			szBossName = sformat(_L["Player id: %d"], dwCaster)
-		end
+		data.nKillerType = TARGET.PLAYER
 	else
-		Caster = GetNpc(dwCaster)
-		if Caster then
-			szCasterName = LR.Trim(Caster.szName)
-			if szCasterName == "" then
-				szCasterName = LR.Trim(Table_GetNpcTemplateName(Caster.dwTemplateID))
-			end
-			if szCasterName == "" then
-				szCasterName = _L["Extraterrestrials"]
-			end
-		else
-			szCasterName = _L["Extraterrestrials"]
-		end
+		data.nKillerType = TARGET.NPC
 	end
-
-	if me.IsPlayerInMyParty(dwTarget) or dwTarget == me.dwID then
-		LR_TeamTools.DeathRecord.tDeath[dwTarget] = LR_TeamTools.DeathRecord.tDeath[dwTarget] or {}
-		local tDeath = LR_TeamTools.DeathRecord.tDeath[dwTarget]
-		local deathData = {}
-		deathData.szCaster = szCasterName
-		deathData.time = GetCurrentTime()
-		deathData.last10Damage = {}
-		local tDamage = LR_TeamTools.DeathRecord.tDamage[dwTarget] or {}
-		for i=#tDamage, mmax(1, #tDamage - 10), -1 do
-			deathData.last10Damage[#deathData.last10Damage+1] = clone(tDamage[i])
-		end
-		tinsert(LR_TeamTools.DeathRecord.tDeath[dwTarget], deathData)
-		if #LR_TeamTools.DeathRecord.tDeath[dwTarget] > 6 then
-			tremove(LR_TeamTools.DeathRecord.tDeath[dwTarget],1)
-		end
-		LR_TeamTools.DeathRecord.tDamage[dwTarget] = nil
+	data.dwID = dwCaster
+	data.nTime = GetCurrentTime()
+	data.last10Damage = {}
+	local tDamage = LR_TeamTools.DeathRecord.tDamage[dwTarget] or {}
+	for i = #tDamage, mmax(1, #tDamage - 10), -1 do
+		data.last10Damage[#data.last10Damage + 1] = clone(tDamage[i])
+	end
+	tinsert(LR_TeamTools.DeathRecord.tDeath[dwTarget], data)
+	if #LR_TeamTools.DeathRecord.tDeath[dwTarget] > 6 then
+		tremove(LR_TeamTools.DeathRecord.tDeath[dwTarget],1)
 	end
 end
 
-function LR_TeamTools.DeathRecord.OutputDeathRecord(dwID,rc)
+function LR_TeamTools.DeathRecord.OutputDeathRecord(dwID, rc)
 	local hTeam = GetClientTeam()
 	local v = hTeam.GetMemberInfo(dwID)
 	if not v then
 		return
 	end
-	local szIcon,nFrame = GetForceImage(v.dwForceID)
-	local r,g,b =  LR.GetMenPaiColor(v.dwForceID)
+	local szIcon, nFrame = GetForceImage(v.dwForceID)
+	local r, g, b =  LR.GetMenPaiColor(v.dwForceID)
 	local szXml = {}
-	szXml[#szXml+1] = GetFormatImage(szIcon,nFrame,26,26)
+	szXml[#szXml+1] = GetFormatImage(szIcon, nFrame, 26, 26)
 	szXml[#szXml+1] = GetFormatText(sformat("%s:\n", v.szName),136,r,g,b)
-	szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["--Dead Record--"]),136,255,255,255)
+	szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["--Dead Record--"]), 136, 255, 255, 255)
 	if not LR_TeamTools.DeathRecord.tDeath[dwID] or #LR_TeamTools.DeathRecord.tDeath[dwID] == 0 then
-		szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["No Record"]),136,255,255,0)
+		szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["No Record"]), 136, 255, 255, 0)
 	else
 		for i = #LR_TeamTools.DeathRecord.tDeath[dwID] , 1 , -1 do
 			local a = LR_TeamTools.DeathRecord.tDeath[dwID][i]
-			szXml[#szXml+1] = GetFormatText(sformat("%s ", FormatTime("%Y-%m-%d %H:%M:%S", a.time)),136,255,255,0)
-			szXml[#szXml+1] = GetFormatText(sformat("%s killed %s\n", a.szCaster, v.szName ),136,255,128,0)
+			szXml[#szXml+1] = GetFormatText(sformat("%s ", FormatTime("%Y-%m-%d %H:%M:%S", a.nTime)), 136, 255, 255, 0)
+			local szKillerName = LR_TeamTools.DeathRecord.GetName(a.nKillerType, a.dwID)
+			szXml[#szXml+1] = GetFormatText(sformat(_L["%s killed %s\n"], szKillerName, v.szName ),136,255,128,0)
 			for k2, v2 in pairs(a.last10Damage) do
 				szXml[#szXml+1] = GetFormatText("-> ",136,255,128,0)
-				szXml[#szXml+1] = GetFormatText(sformat("%s ", FormatTime("%Y-%m-%d %H:%M:%S", v2.time)),136,255,255,0)
-				szXml[#szXml+1] = GetFormatText(v2.szCaster,136,255,128,0)
-				szXml[#szXml+1] = GetFormatText(" <",136,255,255,0)
-				szXml[#szXml+1] = GetFormatText(v2.szSkillName,136,255,128,0)
-				szXml[#szXml+1] = GetFormatText("> ",136,255,255,0)
-				szXml[#szXml+1] = GetFormatText(_L["Cause"],136,255,255,0)
-				szXml[#szXml+1] = GetFormatText(sformat("%s\n", v2.szValue),136,255,128,0)
+				szXml[#szXml+1] = GetFormatText(sformat("%s ", FormatTime("%Y-%m-%d %H:%M:%S", v2.nTime)), 136, 255, 255, 0)
+				local szMsg = ""
+				local szCasterName = LR_TeamTools.DeathRecord.GetName(v2.nCasterType, v2.dwCasterID)
+				local szTargetName = LR_TeamTools.DeathRecord.GetName(TARGET.PLAYER, v2.dwTargetID)
+				local szCriticalStrike = ""
+				if v2.bCriticalStrike then
+					szCriticalStrike = g_tStrings.STR_SKILL_CRITICALSTRIKE
+				end
+--[[				if v2.nTotalDamage == v2.nEffectDamage then
+					szMsg = FormatString("<D0> 的 [<D1>] <D2> 对 [<D3>] 造成了 <D4>", szCasterName, v2.szSkillName, szCriticalStrike, szTargetName, v2.szDamage)
+				else
+					szMsg = FormatString(g_tStrings.SKILL_EFFECT_DAMAGE_LOG, szCasterName, v2.szSkillName, szCriticalStrike, szTargetName, v2.szDamage, v2.nEffectDamage)
+				end]]
+				--szXml[#szXml+1] = GetFormatText(szMsg, 136, 255, 128, 0)
+				szXml[#szXml+1] = GetFormatText(szCasterName, 136, 255, 128, 0)
+				szXml[#szXml+1] = GetFormatText(" <", 136, 255, 255, 0)
+				szXml[#szXml+1] = GetFormatText(v2.szSkillName, 136, 255, 128, 0)
+				szXml[#szXml+1] = GetFormatText("> ", 136, 255, 255, 0)
+				szXml[#szXml+1] = GetFormatText(szCriticalStrike, 136, 255, 0, 0)
+				szXml[#szXml+1] = GetFormatText(_L["Cause"], 136, 255, 255, 0)
+				szXml[#szXml+1] = GetFormatText(v2.szDamage, 136, 255, 128, 0)
+				if v2.nTotalDamage ~= v2.nEffectDamage then
+					szXml[#szXml+1] = GetFormatText(sformat(_L[", effect damage %d point"], v2.nEffectDamage), 136, 255, 128, 0)
+				end
+				szXml[#szXml+1] = GetFormatText(sformat("\n"), 136, 255, 128, 0)
 			end
 			szXml[#szXml+1] = GetFormatText("\n",136,255,128,0)
 		end
 	end
-	OutputTip(tconcat(szXml),600,rc)
+	OutputTip(tconcat(szXml), 800, rc)
 end
 
+LR.RegisterEvent("NPC_ENTER_SCENE", function() LR_TeamTools.DeathRecord.NPC_ENTER_SCENE() end)
+LR.RegisterEvent("PLAYER_ENTER_SCENE", function() LR_TeamTools.DeathRecord.PLAYER_ENTER_SCENE() end)
+
 --------------------------------------------------------------------------------------------------------------------
------------重伤记录
+-----------门派人数
 --------------------------------------------------------------------------------------------------------------------
 LR_TeamTools.Menpai={
 	Count={}

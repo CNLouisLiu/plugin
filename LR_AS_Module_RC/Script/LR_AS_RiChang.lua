@@ -1582,9 +1582,15 @@ function LR_QuestTools:Init()
 
 	local hPageSet = self:Append("PageSet", frame, "PageSet", {x = 20, y = 120, w = 360, h = 360})
 	local hWinIconView = self:Append("Window", hPageSet, "WindowItemView", {x = 0, y = 0, w = 360, h = 360})
+
+	local Btn_Fresh = self:Append("Button", frame, "Btn_Fresh", {x = 20, y = 51, text = _L["Refresh"]})
+	Btn_Fresh.OnClick = function()
+		self:LoadItemBox()
+	end
+
 	local hScroll = self:Append("Scroll", hWinIconView, "Scroll", {x = 0, y = 0, w = 354, h = 360})
-	self:LoadItemBox(hScroll)
-	hScroll:UpdateList()
+	self:LoadItemBox()
+	--hScroll:UpdateList()
 
 	-------------初始界面物品
 	local hHandle = self:Append("Handle", frame, "Handle", {x = 18, y = 90, w = 340, h = 390})
@@ -1627,18 +1633,35 @@ function LR_QuestTools:Open()
 	end
 end
 
-function LR_QuestTools:LoadItemBox(hWin)
+function LR_QuestTools:LoadItemBox()
 	local me =  GetClientPlayer()
 	if not me then
+		return
+	end
+	local hWin = self:Fetch("Scroll")
+	if not hWin then
 		return
 	end
 
 	local m = 1
 	local Quest = {}
-	for i = 0, 24, 1 do
-		local dwQuestID = me.GetQuestID(i)
-		if dwQuestID>0 then
-			Quest[#Quest+1] = {dwQuestID = dwQuestID}
+	if IsCtrlKeyDown() then
+		local _type, _dwID = me.GetTarget()
+		if _type == TARGET.NPC then
+			local npc = GetNpc(_dwID)
+			if npc then
+				local questids = npc.GetNpcQuest()
+				for k, v in pairs(questids) do
+					Quest[#Quest+1] = {dwQuestID = v}
+				end
+			end
+		end
+	else
+		for i = 0, 24, 1 do
+			local dwQuestID = me.GetQuestID(i)
+			if dwQuestID>0 then
+				Quest[#Quest+1] = {dwQuestID = dwQuestID}
+			end
 		end
 	end
 
@@ -1649,6 +1672,7 @@ function LR_QuestTools:LoadItemBox(hWin)
 			return false
 		end
 	end)
+	hWin:ClearHandle()
 
 	for m = 1, #Quest, 1 do
 		local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", m), {x = 0, y = 0, w = 340, h = 30})
@@ -1668,9 +1692,12 @@ function LR_QuestTools:LoadItemBox(hWin)
 		Image_Hover:SetAlpha(200)
 		Image_Hover:Hide()
 
+		local TextPhase = {[0] = _L["Not exist"], [1] = _L["In progress"], [2] = _L["Complete but not hand it"], [3] = _L["Finished"], [-1] = _L["Invalid"]}
 		local dwQuestID = Quest[m].dwQuestID
 		local QuestInfo = LR.Table_GetQuestStringInfo(dwQuestID)
-		local szName = QuestInfo.szName
+		local szName = sformat("%s(%s)", QuestInfo.szName, TextPhase[me.GetQuestPhase(dwQuestID)])
+
+
 
 		local Text_break1 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_1", m), {w = 80, h = 30, x  = 0, y = 2, text = dwQuestID , font = 18})
 		Text_break1:SetHAlign(1)
@@ -1694,33 +1721,62 @@ function LR_QuestTools:LoadItemBox(hWin)
 
 		hIconViewContent.OnClick = function()
 			--------
-			---local dwQuestID = 1650
+			--local dwQuestID = 418
+			Output("-----------------------------------")
+			local tQuestStringInfo = LR.Table_GetQuestStringInfo(dwQuestID)
+			Output(sformat("%s%s", _L["Quest name:"], tQuestStringInfo.szName))
+			if IsCtrlKeyDown() then
+				Output(tQuestStringInfo)
+			end
 			local tQuest = g_tTable.Quest:Search(dwQuestID)
 			if tQuest then
-				Output("-----------------------------------")
-				Output("dbQuest", tQuest)
+				if IsCtrlKeyDown() then
+					Output("Quest", tQuest)
+				end
 				for k, v in pairs (LR_HeadName.SpliteString(tQuest.szAccept)) do
 					if v.nType == "D" or v.nType == "N" then
-						Output("接任务npc", "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName)
+						Output(_L["Accept npc"], "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName)
+						local eCanAccept = me.CanAcceptQuest(dwQuestID, v.dwTemplateID)
+						Output(_L["Can accept?"], eCanAccept, g_tStrings.tQuestResultString[eCanAccept])
 					end
 				end
 				for k, v in pairs (LR_HeadName.SpliteString(tQuest.szFinish)) do
 					if v.nType == "D" or v.nType == "N" then
-						Output("交任务npc", "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName)
+						Output(_L["Finish npc"], "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName)
 					end
 				end
-				--Output("QuestTraceInfo", me.GetQuestTraceInfo(dwQuestID))
-				--Output("QuestPoint", LR.Table_GetQuestPoint(dwQuestID, "quest_state", 0))
-				---Output("Table_GetQuestStringInfo", LR.Table_GetQuestStringInfo(dwQuestID))
-				--LR_HeadName.OutputSingleMissionNeed(dwQuestID)
-				--LR_HeadName.Get_quest_state(dwQuestID, true)
 			else
-				Output("QuestTraceInfo", me.GetQuestTraceInfo(dwQuestID))
-				Output("Table_GetQuestStringInfo", LR.Table_GetQuestStringInfo(dwQuestID))
-				LR.SysMsg(_L["Not Found\n"])
+				Output("g_tTable.Quest 无信息")
+			end
+
+			if IsCtrlKeyDown() then
+				local _nType, _dwID = me.GetTarget()
+				if _nType == TARGET.NPC then
+					local eCanAccept = me.CanAcceptQuest(dwQuestID, TARGET.NPC, _dwID)
+					local npc = GetNpc(_dwID)
+					Output(npc.szName, _L["Can accept?"], eCanAccept, g_tStrings.tQuestResultString[eCanAccept])
+					local eCanFinish = me.CanFinishQuest(dwQuestID, TARGET.NPC, _dwID)
+					Output(npc.szName, _L["Can Finish?"], eCanFinish, g_tStrings.tQuestResultString[eCanFinish])
+				end
+
+				--3: 表示已完成任务0: 表示任务不存在1: 表示任务正在进行中，2: 表示任务已完成但还没有交-1: 表示任务id非法
+				Output(sformat("%s%s", _L["quest status:"], TextPhase[me.GetQuestPhase(dwQuestID)]))
+
+				local tTraceInfo = me.GetQuestTraceInfo(dwQuestID)
+				Output("TraceInfo", tTraceInfo)
+				local key = {"kill_npc", "need_item", "quest_state"}
+				for k, v in pairs(key) do
+					local data = tTraceInfo[v]
+					Output(v, data)
+					for k2, v2 in pairs(data) do
+						Output(v2.i)
+						Output(LR.Table_GetQuestPoint(dwQuestID, v, v2.i))
+					end
+				end
 			end
 		end
 	end
+	hWin:UpdateList()
 end
 
 

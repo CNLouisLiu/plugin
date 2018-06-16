@@ -1256,6 +1256,44 @@ function WndContainer:ctor(__parent, __name, __data)
 	assert(__parent ~= nil, "parent can not be null.")
 	__data = __data or {}
 	local hwnd = _AppendWnd(__parent, "WndContainer", __name)
+	self.__this = hwnd
+	self:_SetSelf(self.__this)
+	self:_SetParent(__parent)
+	self:_SetType("WndContainer")
+	self:SetSize(__data.w or 100, __data.h or 100)
+	self:SetRelPos(__data.x or 0, __data.y or 0)
+	self.data = {parent = __parent, name = __name, data = __data}
+end
+
+function WndContainer:SetSize(...)
+	self.__this:SetSize(...)
+	return self
+end
+
+function WndContainer:ClearHandle()
+	self.__this:Clear()
+	return self
+end
+
+function WndContainer:GetAllContentCount()
+	return self.__this:GetAllContentCount()
+end
+
+function WndContainer:GetAllContentSize()
+	return self.__this:GetAllContentSize()
+end
+
+function WndContainer:FormatAllContentPos()
+	return self.__this:FormatAllContentPos()
+end
+
+
+-- WndContainerScroll Object
+local WndContainerScroll = class(WndBase)
+function WndContainerScroll:ctor(__parent, __name, __data)
+	assert(__parent ~= nil, "parent can not be null.")
+	__data = __data or {}
+	local hwnd = _AppendWnd(__parent, "WndContainerScroll", __name)
 	local hWndScroll = hwnd:Lookup("WndScroll")
 	local _WndContainer=hWndScroll:Lookup("_WndContainer")
 	local Scroll_List=hwnd:Lookup("New_ScrollBar")
@@ -1269,18 +1307,18 @@ function WndContainer:ctor(__parent, __name, __data)
 	self.__handle = hWndScroll:Lookup("", "")
 	self:_SetSelf(self.__this)
 	self:_SetParent(__parent)
-	self:_SetType("WndContainer")
+	self:_SetType("WndContainerScroll")
 
 
 	self:SetSize(__data.w or 500, __data.h or 345)
 	self:SetRelPos(__data.x or 0, __data.y or 0)
 end
 
-function WndContainer:GetSelf()
+function WndContainerScroll:GetSelf()
 	return self.__WndContainer
 end
 
-function WndContainer:SetSize(__w, __h)
+function WndContainerScroll:SetSize(__w, __h)
 	self.__this:SetSize(__w, __h)
 	self._hwnd:SetSize(__w, __h)
 	self._hWndScroll:SetSize(__w, __h)
@@ -1293,29 +1331,29 @@ function WndContainer:SetSize(__w, __h)
 	return self
 end
 
-function WndContainer:GetHandle()
+function WndContainerScroll:GetHandle()
 	return self.__this
 end
 
-function WndContainer:Clear()
+function WndContainerScroll:Clear()
 	self.__WndContainer:Clear()
 	return self.__WndContainer
 end
 
-function WndContainer:ClearHandle()
+function WndContainerScroll:ClearHandle()
 	self.__WndContainer:Clear()
 	return self.__WndContainer
 end
 
-function WndContainer:GetAllContentCount()
+function WndContainerScroll:GetAllContentCount()
 	return self.__WndContainer:GetAllContentCount()
 end
 
-function WndContainer:GetAllContentSize()
+function WndContainerScroll:GetAllContentSize()
 	return self.__WndContainer:GetAllContentSize()
 end
 
-function WndContainer:FormatAllContentPos()
+function WndContainerScroll:FormatAllContentPos()
 	self.__WndContainer:FormatAllContentPos()
 end
 
@@ -2868,6 +2906,8 @@ function CreateAddon:Append(__type, ...)
 		__h = WndWindow.new(...)
 	elseif __type == "WndContainer" then
 		__h = WndContainer.new(...)
+	elseif __type == "WndContainerScroll" then
+		__h = WndContainerScroll.new(...)
 	elseif __type == "PageSet" then
 		__h = WndPageSet.new(...)
 	elseif __type == "Button" then
@@ -2925,6 +2965,7 @@ end
 local _API = {
 	CreateFrame = WndFrame.new,
 	CreateWindow = WndWindow.new,
+	CreateWndContainerScroll = WndContainerScroll.new,
 	CreateWndContainer = WndContainer.new,
 	CreatePageSet = WndPageSet.new,
 	CreateButton = WndButton.new,

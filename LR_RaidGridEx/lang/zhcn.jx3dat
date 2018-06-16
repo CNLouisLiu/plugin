@@ -540,4 +540,9 @@ data={
 	["ShowMiniBtn"]="显示最小化按钮",
 	["Rclick to fold or expand panel"]="右键折叠/展开面板",
 
+	--20180616add--
+	[", effect damage %d point"]="，其中有效伤害%d点",
+	["%s killed %s\n"]="%s 杀害了 %s\n",
+	["Database below"]="以下为数据库搜索内容",
+
 }

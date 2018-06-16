@@ -123,4 +123,24 @@ data={
 	["Are you sure to pick up smalliron into bag of smalliron boss?"]="确定要一键分配材料给小铁老板？",
 
 	["[LR GKP]You entered a %d num limit dungeon and you are the distributor. \nCreate a new bill or load an exist one?"]="【懒人金团】你进入了%d人副本区域，并且你为团队的分配者。\n新建还是载入一个账单？",
+
+	--20180531add--
+	["qinfeng(.+).(.+)"]="秦风(.+)·(.+)",
+	["Armor"]="防具(散件)",
+	["Weapon"]="武器",
+	["ExchangeItem"]="套装兑换牌",
+	["Material"]="材料",
+	["Starting price:"]="起拍价格：",
+	["Last buyer:"]="上次购买者：",
+	["Left click to launch the auction.\n"]="左键开始拍卖。\n",
+	["Right click to cancel the auction.\n"]="右键取消拍卖。\n",
+	["Set as boss"]="同时设置为",
+	["Equipment boss"]="散件老板",
+	["MenPai boss"]="门派老板",
+	["Material boss"]="材料老板",
+	["Smalliron boss"]="小铁老板",
+	["If you want to set the boss, please press the 'OK' button after setting the boss type"]="如要设置老板，请在设置完老板类型后，再按【确定】按钮",
+	["Set boss"]="老板设置",
+	["Are you sure to pick up items into the bag of all boss?"]="确定要一键分配所有老板吗？",
+	["This item suits you."]="这件装备适合你。",
 }

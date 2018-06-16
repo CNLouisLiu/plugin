@@ -212,6 +212,9 @@ local _tPartyMark = {}	--存放标记
 local bDraged = false
 local _JCG = {}	--用于存放切了剑的长歌
 local _tBossFocusList = {}
+--存放npc,player缓存
+LR_TeamGrid.NPC_Cache = {}
+LR_TeamGrid.Player_Cache = {}
 ---------------------------------------------------------------
 LR_TeamGrid_Panel = {}
 
@@ -356,6 +359,7 @@ function _RoleGrid:Create()
 	----------------------------------------------
 	handle:GetHandle().OnItemMouseLeave=function()
 		if handle:Lookup("Image_Hover") then handle:Lookup("Image_Hover"):Hide() end
+		HideTip()
 	end
 
 	----------------------------------------------
@@ -405,7 +409,9 @@ function _RoleGrid:Create()
 	--鼠标左击
 	----------------------------------------------
 	handle:GetHandle().OnItemLButtonClick = function()
-		if IsCtrlKeyDown() then
+		if LR.IsMapBlockAddon() and GetClientPlayer() and GetClientPlayer().nMoveState == MOVE_STATE.ON_DEATH then
+			BattleField_MatchPlayer(dwID)
+		elseif IsCtrlKeyDown() then
 			LR_TeamGrid.EditBox_AppendLinkPlayer(_Members[dwID].szName)
 		else
 			local dwID = dwID
@@ -1958,6 +1964,8 @@ function LR_TeamGrid.OnEvent(szEvent)
 		LR_TeamGrid.NPC_ENTER_SCENE()
 	elseif szEvent == "NPC_LEAVE_SCENE" then
 		LR_TeamGrid.NPC_LEAVE_SCENE()
+	elseif szEvent == "PLAYER_ENTER_SCENE" then
+		LR_TeamGrid.PLAYER_ENTER_SCENE()
 	elseif szEvent == "ON_BOSS_FOCUS" then
 		LR_TeamGrid.ON_BOSS_FOCUS()
 	end
@@ -2419,7 +2427,7 @@ function LR_TeamGrid.SwitchPanel()
 		return
 	end
 	if LR_TeamGrid.bOn then
-		--if LR.IsTreasureBattleFieldMap() then
+		--if LR.IsMapBlockAddon() then
 			--LR_TeamGrid.ClosePanel()
 		--elseif me.IsInRaid() then
 		if me.IsInRaid() then
@@ -3434,7 +3442,7 @@ function LR_TeamGrid.SwitchSystemRaidPanel()
 	end
 	--Output("s", scene.dwMapID == 74, me.IsInRaid(), not frame)
 	--吃鸡地图开启系统面板
---[[	if LR.IsTreasureBattleFieldMap() and me.IsInRaid() then
+--[[	if LR.IsMapBlockAddon() and me.IsInRaid() then
 		OpenRaidPanel()
 		return
 	end]]
@@ -3462,7 +3470,7 @@ function LR_TeamGrid.SwitchSystemTeamPanel()
 	end
 
 	--吃鸡地图开启系统面板
---[[	if LR.IsTreasureBattleFieldMap() and me.IsInParty() and not me.IsInRaid() and not frame:IsVisible() then
+--[[	if LR.IsMapBlockAddon() and me.IsInParty() and not me.IsInRaid() and not frame:IsVisible() then
 		frame:Show()
 		return
 	end]]
@@ -3765,7 +3773,7 @@ function LR_TeamGrid.MONEY_UPDATE()
 		local handle = Station.Lookup("Topmost2/Announce", "")
 		if  handle then
 			local text = handle:Lookup(4)
-			local t=LR.Trim(text:GetText())
+			local t = LR.Trim(text:GetText())
 			if t==_L["End GoldTeam"] then
 				LR_TeamGrid.ClearVoteImage()
 			end
@@ -3879,6 +3887,7 @@ function LR_TeamGrid.NPC_ENTER_SCENE()
 	local dwID = arg0
 	local npc = GetNpc(dwID)
 	if npc then
+		--长歌切剑
 		if npc.dwTemplateID == 46140 then
 			if GetClientPlayer().IsPlayerInMyParty(npc.dwEmployer) then
 				_JCG[npc.dwEmployer] = dwID

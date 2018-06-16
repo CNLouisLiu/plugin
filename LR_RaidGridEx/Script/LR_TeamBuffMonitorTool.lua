@@ -28,7 +28,7 @@ local BUFF_CACHE = {}
 function LR_TeamBuffTool.SaveBuffCache()
 	local path = sformat("%s\\buffcache.dat", SaveDataPath)
 	local data = clone(BUFF_CACHE)
-	SaveLUAData(path, data)
+	LR.SaveLUAData(path, data)
 end
 
 function LR_TeamBuffTool.LoadBuffCache()
@@ -175,6 +175,7 @@ LR_TeamBuffTool_Panel.szChooseGroup = nil
 LR_TeamBuffTool_Panel.szChooseBuff = nil
 LR_TeamBuffTool_Panel.szChooseResultBuff = nil
 LR_TeamBuffTool_Panel.searchText = ""
+LR_TeamBuffTool_Panel.szCasterName = ""
 
 LR_TeamBuffTool_Panel.bDraged = false
 LR_TeamBuffTool_Panel.bAdd = false
@@ -193,6 +194,7 @@ function LR_TeamBuffTool_Panel:OnCreate()
 	LR_TeamBuffTool_Panel.szChooseGroup = nil
 	LR_TeamBuffTool_Panel.szChooseGroupName = ""
 	LR_TeamBuffTool_Panel.searchText = ""
+	LR_TeamBuffTool_Panel.szCasterName = ""
 
 	LR_TeamBuffTool.LoadBuffCache()
 	LR_TeamBuffTool.SaveBuffCache()
@@ -305,6 +307,31 @@ function LR_TeamBuffTool_Panel:Init()
 				LR_TeamBuffTool_Panel.bCollectOnlyFromNpc = not LR_TeamBuffTool_Panel.bCollectOnlyFromNpc
 			end,
 		}
+		local tCasterName = {}
+		local tTemp = {}
+		for k, v in pairs(BUFF_CACHE) do
+			local szCasterName = v.szCasterName or "unknow"
+			if not tTemp[szCasterName] then
+				tinsert(tCasterName, v.szCasterName)
+				tTemp[szCasterName] = true
+			end
+		end
+		if next(tCasterName) ~= nil then
+			menu[#menu + 1] = {bDevide = true}
+			for k, v in pairs(tCasterName) do
+				menu[#menu + 1] = {	szOption = v, bCheck = true, bMCheck = true, bChecked = function() return LR_TeamBuffTool_Panel.szCasterName == v end,
+					fnAction = function()
+						if LR_TeamBuffTool_Panel.szCasterName == v then
+							LR_TeamBuffTool_Panel.szCasterName = ""
+						else
+							LR_TeamBuffTool_Panel.szCasterName = v
+						end
+						self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
+						self:LoadSearchResultBox()
+					end,
+				}
+			end
+		end
 
 
 		local fx, fy = this:GetAbsPos()
@@ -411,6 +438,7 @@ function LR_TeamBuffTool_Panel:Init()
 		searchText = LR.Trim(searchText)
 		LR_TeamBuffTool_Panel.szSearchText = searchText
 
+		self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
 		self:LoadSearchResultBox()
 	end
 	self:LoadSearchResultBox()
@@ -724,6 +752,7 @@ function LR_TeamBuffTool_Panel:LoadOneGroupBox(GroupData, m)
 			if Image_Hover then
 				Image_Hover:Hide()
 			end
+			HideTip()
 		end
 
 		Image_Enable.OnEnter = function()
@@ -743,7 +772,7 @@ function LR_TeamBuffTool_Panel:LoadSearchResultBox()
 	if not me then
 		return
 	end
-	local i = 1
+
 	local m = 0
 	local hWin = self:Fetch("ScrollSearchBuffBox")
 	if not hWin then
@@ -755,10 +784,12 @@ function LR_TeamBuffTool_Panel:LoadSearchResultBox()
 	if szSearchText ==  "" then
 		for i = 1, 300, 1 do
 			if BUFF_CACHE[i] then
-				local szKey = sformat("%s_%d_%d", "h", BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
-				if BUFF_CACHE[i] and not _ResulUI[szKey] then
-					LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[i], m, "h")
-					m = m+1
+				if LR_TeamBuffTool_Panel.szCasterName == "" or LR_TeamBuffTool_Panel.szCasterName == BUFF_CACHE[i].szCasterName then
+					local szKey = sformat("%s_%d_%d", "h", BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
+					if BUFF_CACHE[i] and not _ResulUI[szKey] then
+						LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(false, BUFF_CACHE[i], m, "h")
+						m = m+1
+					end
 				end
 			end
 		end
@@ -769,22 +800,24 @@ function LR_TeamBuffTool_Panel:LoadSearchResultBox()
 	self:ClearHandle(hWin)
 	for i = 1, 300, 1 do
 		if BUFF_CACHE[i] then
-			if type(tonumber(szSearchText)) ==  "number" then
-				if tonumber(szSearchText) == BUFF_CACHE[i].dwID then
-					local szKey = sformat("%s_%d_%d", "h", BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
-					if not _ResulUI[szKey] then
-						LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[i], m, "h")
-						m = m+1
+			if LR_TeamBuffTool_Panel.szCasterName == "" or LR_TeamBuffTool_Panel.szCasterName == BUFF_CACHE[i].szCasterName then
+				if type(tonumber(szSearchText)) ==  "number" then
+					if tonumber(szSearchText) == BUFF_CACHE[i].dwID then
+						local szKey = sformat("%s_%d_%d", "h", BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
+						if not _ResulUI[szKey] then
+							LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[i], m, "h")
+							m = m+1
+						end
 					end
-				end
-			else
-				local szName = Table_GetBuffName(BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
-				local _s, _e = sfind(szName, szSearchText)
-				if _s then
-					local szKey = sformat("%s_%d_%d", "h", BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
-					if not _ResulUI[szKey] then
-						LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[i], m, "h")
-						m = m+1
+				else
+					local szName = Table_GetBuffName(BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
+					local _s, _e = sfind(szName, szSearchText)
+					if _s then
+						local szKey = sformat("%s_%d_%d", "h", BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
+						if not _ResulUI[szKey] then
+							LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[i], m, "h")
+							m = m + 1
+						end
 					end
 				end
 			end
@@ -794,7 +827,8 @@ function LR_TeamBuffTool_Panel:LoadSearchResultBox()
 	local _cache = {}
 	LR_TeamBuffTool_Panel:ResultBoxBreakLine(hWin)
 	local RowCount = g_tTable.Buff:GetRowCount()
-	while i <=  RowCount do
+	local i = 3
+	while i <= RowCount do
 		local t = g_tTable.Buff:GetRow(i)
 		local szName = t.szName or ""
 		local dwBuffID = t.dwBuffID
@@ -831,27 +865,29 @@ end
 
 function LR_TeamBuffTool_Panel:ResultBoxBreakLine(hWin)
 	-----背景条
-	local hBuffSearch = self:Append("Handle", hWin, "hBuffSearch_break", {x = 0, y = 0, w = 196, h = 20})
-	local Image_Line = self:Append("Image", hBuffSearch, "Image_BuffLine_break", {x = 0, y = 0, w = 196, h = 20})
+	local hBuffSearch = LR.AppendUI("Handle", hWin, "hBuffSearch_break", {x = 0, y = 0, w = 196, h = 30})
+	local Image_Line = LR.AppendUI("Image", hBuffSearch, "Image_BuffLine_break", {x = 0, y = 0, w = 196, h = 30})
 	Image_Line:FromUITex("ui\\Image\\UICommon\\CommonPanel2.UITex", 14)
 	Image_Line:SetImageType(10)
 	Image_Line:SetAlpha(200)
+	local Text = LR.AppendUI("Text", hBuffSearch, "Text_BuffLine_break", {x = 5, y = 0, w = 186, h = 30})
+	Text:SetText(_L["Database below"]):SetVAlign(1):SetHAlign(0)
 end
 
-function LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(flag, buff, m, head)
+function LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(bring2top, buff, m, head)
 	local hWin = self:Fetch("ScrollSearchBuffBox")
 	if not hWin then
 		return
 	end
 
-	local szSearchText = LR_TeamBuffTool_Panel.szSearchText or ""
+--[[	local szSearchText = LR_TeamBuffTool_Panel.szSearchText or ""
 	if szSearchText ~= "" then
 		local szBuffName = Table_GetBuffName(buff.dwID, buff.nLevel)
 		local _s, _e = sfind(szBuffName, szSearchText)
 		if not _s then
 			return
 		end
-	end
+	end]]
 
 	local szKey = sformat("%s_%d_%d", head, buff.dwID, buff.nLevel)
 	local hBuffSearch = self:Fetch(sformat("hBuffSearch_%s", szKey))
@@ -958,7 +994,7 @@ function LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(flag, buff, m, head)
 		end
 		_ResulUI[szKey] = true
 	end
-	if flag then
+	if bring2top then
 		hBuffSearch:SetIndex(0)
 	end
 	hWin:UpdateList()
@@ -1153,19 +1189,26 @@ function LR_TeamBuffTool.BUFF_UPDATE()
 		return
 	end
 	local dwPlayerID, bDelete, nIndex, bCanCancel, dwID, nStackNum, nEndFrame, bInit, nLevel, dwCaster, IsValid, nLeftFrame = arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11
-	if not Table_BuffIsVisible(dwID, nLevel) or dwID == 0 then --dwID == 0 then  --
+	if (not LR_TeamBuffTool_Panel.bCollectHideBuff and not Table_BuffIsVisible(dwID, nLevel)) or dwID == 0 then
 		return
 	end
 	if IsPlayer(dwCaster) and LR_TeamBuffTool_Panel.bCollectOnlyFromNpc then
 		return
 	end
-
-	tinsert(BUFF_CACHE, 1, {
+	local szCasterName = ""
+	if IsPlayer(dwCaster) then
+		szCasterName = LR_TeamTools.DeathRecord.GetName(TARGET.PLAYER, dwCaster)
+	else
+		szCasterName = LR_TeamTools.DeathRecord.GetName(TARGET.NPC, dwCaster)
+	end
+	local data = {
 		dwID = dwID,
 		nLevel = nLevel,
 		nStackNum = nStackNum,
-		dwCaster = dwCaster,
-	})
+		szCasterName = szCasterName,
+		nTotalFrame = nEndFrame - GetLogicFrameCount()
+	}
+	tinsert(BUFF_CACHE, 1, data)
 
 	LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[1], 1, "h")
 	--LR_TeamBuffTool_Panel:LoadSearchResultBox()
@@ -1175,9 +1218,9 @@ function LR_TeamBuffTool.LOGIN_GAME()
 	LR_TeamBuffTool.LoadData()
 	LR_TeamBuffTool.LoadBuffCache()
 end
+
 LR.RegisterEvent("BUFF_UPDATE", function() LR_TeamBuffTool.BUFF_UPDATE() end)
 LR.RegisterEvent("LOGIN_GAME", function() LR_TeamBuffTool.LOGIN_GAME() end)
-
 
 ---------------------------------------------------------------
 ---ini配置文件多重窗口 单BUFF设置

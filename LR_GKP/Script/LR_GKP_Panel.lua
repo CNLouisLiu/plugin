@@ -283,6 +283,16 @@ function LR_GKP_Panel:Init()
 		end
 	end
 
+	local Btn_SetBoss = self:Append("Button", frame, "Btn_SetBoss", {text = _L["Set boss"] , x = 840, y = 570, w = 90, h = 36})
+	Btn_SetBoss.OnClick = function()
+		local menu = {}
+		local x, y = Btn_SetBoss:GetAbsPos()
+		menu.minwidth = 90
+		menu.x, menu.y = x, y + 36
+		LR_GKP_Base.InsertSetBossMenu(menu)
+		PopupMenu(menu)
+	end
+
 	----------关于
 	LR.AppendAbout(LR_GKP_Panel, frame)
 end
@@ -460,6 +470,8 @@ function LR_GKP_Panel:LoadGKPItemBox()
 			Text_Item:SetFontColor(GetItemFontColorByQuality(itemInfo.nQuality))
 		end
 		Handle_Item:FormatAllItemPos()
+		local w_ItemName, h_ItemName = Text_Item:GetTextExtent()
+		Text_Item:SetSize(w_ItemName, 30):SetVAlign(1):SetHAlign(1)
 		nn = nn + nWidth[2]
 
 		--显示购买者
@@ -469,13 +481,20 @@ function LR_GKP_Panel:LoadGKPItemBox()
 		Image_PurchaserForce:FromUITex(GetForceImage(v.dwPurchaserForceID))
 		local Text_PurchaserName = LR.AppendUI("Text", Handle_Purchaser, "Text_PurchaserName" .. k, {h = 30, text = v.szPurchaserName})
 		Handle_Purchaser:FormatAllItemPos()
+		local w_PurchaserName, h_PurchaserName = Text_PurchaserName:GetTextExtent()
+		Text_PurchaserName:SetSize(w_PurchaserName, 30):SetVAlign(1):SetHAlign(1)
+
 		nn = nn + nWidth[3]
 
 		--显示金钱
-		local Handle_Money = LR.AppendUI("Handle", handleTradeList, "Handle_Money" .. k, {x = nn, h = 30, w = nWidth[4]})
+		local Handle_Money2 = LR.AppendUI("Handle", handleTradeList, "Handle_Money2_" .. k, {x = nn, h = 30, w = nWidth[4]})
+		local Handle_Money = LR.AppendUI("Handle", Handle_Money2, "Handle_Money" .. k, {x = 0, h = 30, w = nWidth[4]})
 		Handle_Money:SetHandleStyle(3)
 		Handle_Money:AppendItemFromString(LR_GKP_Loot.GetMoneyTipText(v.nGold))
 		Handle_Money:FormatAllItemPos()
+		local w_money, h_money = Handle_Money:GetAllItemSize()
+		Handle_Money:SetSize(w_money, h_money):SetRelPos(0, (30 - h_money) / 2)
+		Handle_Money2:FormatAllItemPos()
 		nn = nn + nWidth[4]
 		if not v.bDel then
 			nMoney = nMoney + v.nGold
@@ -653,10 +672,14 @@ function LR_GKP_Panel:LoadTradeItemBox()
 			nn = nn + nWidth[2]
 
 			--显示金钱
-			local Handle_Money = LR.AppendUI("Handle", handleTradeList, "Handle_Money" .. k, {x = nn, h = 30, w = nWidth[3]})
+			local Handle_Money2 = LR.AppendUI("Handle", handleTradeList, "Handle_Money2_" .. k, {x = nn, h = 30, w = nWidth[3]})
+			local Handle_Money = LR.AppendUI("Handle", Handle_Money2, "Handle_Money_" .. k, {h = 30, w = nWidth[3]})
 			Handle_Money:SetHandleStyle(3)
 			Handle_Money:AppendItemFromString(LR_GKP_Loot.GetMoneyTipText(v.nGold))
 			Handle_Money:FormatAllItemPos()
+			local w_money, h_money = Handle_Money:GetAllItemSize()
+			Handle_Money:SetSize(w_money, h_money):SetRelPos(0, (30 - h_money) / 2)
+			Handle_Money2:FormatAllItemPos()
 			nn = nn + nWidth[3]
 
 			--显示时间

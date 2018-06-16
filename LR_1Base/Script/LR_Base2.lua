@@ -1156,7 +1156,7 @@ function LR.ViewCharInfoToPlayer(dwID)
 end
 
 Target_AppendAddonMenu({ function(dwID, dwType)
-	if dwType == TARGET.PLAYER and dwID ~= UI_GetClientPlayerID() and not LR.isChiJi() then
+	if dwType == TARGET.PLAYER and dwID ~= UI_GetClientPlayerID() and not LR.IsMapBlockAddon() then
 		return {{szOption = _L["View attribute"], fnAction = function() LR.ViewCharInfoToPlayer(dwID) end,}}
 	else
 		return {}
@@ -1282,7 +1282,7 @@ function teamnotice.ON_BG_CHANNEL_MSG()
 	local dwTalkerID = arg2
 	local szTalkerName = arg3
 	local data = arg4
-	if LR.isChiJi() then
+	if LR.IsMapBlockAddon() then
 		return
 	end
 	if szKey ~= "LR_TeamNotice" then
@@ -1325,7 +1325,7 @@ function teamnotice.ON_BG_CHANNEL_MSG()
 end
 
 function teamnotice.Broadcast2Member(dwMemberID)
-	if LR.isChiJi() then
+	if LR.IsMapBlockAddon() then
 		return
 	end
 	local team = GetClientTeam()
@@ -1344,7 +1344,7 @@ function teamnotice.PARTY_ADD_MEMBER()
 	local dwTeamID = arg0
 	local dwMemberID = arg1
 	local nGroupIndex =arg2
-	if LR.isChiJi() then
+	if LR.IsMapBlockAddon() then
 		return
 	end
 	LR.DelayCall(1000, function() teamnotice.Broadcast2Member(dwMemberID) end)
@@ -1363,7 +1363,7 @@ function teamnotice.PARTY_DELETE_MEMBER()
 end
 
 function teamnotice.LOADING_END()
-	if LR.isChiJi() then
+	if LR.IsMapBlockAddon() then
 		return
 	end
 
