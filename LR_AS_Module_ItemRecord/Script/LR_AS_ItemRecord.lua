@@ -106,16 +106,16 @@ local _Bag = {}
 function _Bag.GetItemByGrid()
 	local me = GetClientPlayer()
 	local ItemInBag = {}
-	for i = 1, 6, 1 do
-		for j = 0, me.GetBoxSize(i) - 1, 1 do
-			local item = me.GetItem(i, j)
+	for _, dwBox in pairs(BAG_PACKAGE) do
+		for dwX = 0, me.GetBoxSize(dwBox) - 1, 1 do
+			local item = me.GetItem(dwBox, dwX)
 			if item then
 				local t_item = GetItemData(item)
 				local szKey = t_item.szKey
 				if ItemInBag[szKey] then
 					ItemInBag[szKey].nStackNum = ItemInBag[szKey].nStackNum + t_item.nStackNum
 				else
-					ItemInBag[szKey] = t_item
+					ItemInBag[szKey] = clone(t_item)
 				end
 			end
 		end
@@ -154,9 +154,9 @@ local _Bank = {}
 function _Bank.GetItemByGrid()
 	local me = GetClientPlayer()
 	local ItemInBank = {}
-	for i = 7, 12, 1 do
-		for j = 0, me.GetBoxSize(i) - 1, 1 do
-			local item = me.GetItem(i, j)
+	for _, dwBox in pairs(BANK_PACKAGE) do
+		for dwX = 0, me.GetBoxSize(dwBox) - 1, 1 do
+			local item = me.GetItem(dwBox, dwX)
 			if item then
 				local t_item = GetItemData(item)
 				local szKey = t_item.szKey
@@ -166,6 +166,7 @@ function _Bank.GetItemByGrid()
 					ItemInBank[szKey] = t_item
 				end
 			end
+
 		end
 	end
 	return ItemInBank
@@ -659,7 +660,7 @@ function LR_GuildBank.PhysicSortGuildBank()
 	end
 	--Output(tconcat(t, ","))
 	if not LR_GuildBank.ExchangeItem() then
-		LR.DelayCall(125, function() LR_GuildBank.PhysicSortGuildBank() end)
+		LR.DelayCall(500, function() LR_GuildBank.PhysicSortGuildBank() end)
 	else
 		local frame = Station.Lookup("Normal/GuildBankPanel")
 		if frame then
@@ -912,70 +913,20 @@ function LR_AS_ItemRecord_Panel:Init()
 	LR_AS_ItemRecord_Panel.LoadUserAllData()
 	self:LoadItemBox(hWinIconView)
 
+	local function fnAction(data)
+		local realArea = data.realArea
+		local realServer = data.realServer
+		local szName = data.szName
+		local dwID = data.dwID
+		LR_AS_ItemRecord_Panel:ReloadItemBox(realArea, realServer, dwID)
+	end
+	local all_option = {szOption = _L["(ALL CHARACTERS)"],
+		fnAction = function()
+			LR_AS_ItemRecord_Panel:ReloadItemBox("ALL", "ALL", -1)
+			hComboBox:SetText(_L["(ALL CHARACTERS)"])
+		end,}
 	hComboBox.OnClick = function (m)
-		local TempTable_Cal, TempTable_NotCal = LR_AS_Base.PutOutUsrList(), {}
-		tsort(TempTable_Cal, function(a, b)
-			if a.nLevel == b.nLevel then
-				return a.dwForceID < b.dwForceID
-			else
-				return a.nLevel > b.nLevel
-			end
-		end)
-
-		local all_option = {szOption = _L["(ALL CHARACTERS)"],
-			fnAction = function()
-				LR_AS_ItemRecord_Panel:ReloadItemBox("ALL", "ALL", -1)
-				hComboBox:SetText(_L["(ALL CHARACTERS)"])
-			end,}
-		local TempTable = {}
-		for i = 1, #TempTable_Cal, 1 do
-			TempTable[#TempTable+1] = TempTable_Cal[i]
-		end
-		for i = 1, #TempTable_NotCal, 1 do
-			TempTable[#TempTable+1] = TempTable_NotCal[i]
-		end
-
-		local page_num = mceil(#TempTable / 20)
-		local page = {}
-		for i = 0, page_num - 1, 1 do
-			page[i] = {}
-			for k = 1, 20, 1 do
-				if TempTable[i * 20 + k] ~= nil then
-					local szIcon, nFrame = GetForceImage(TempTable[i * 20 + k].dwForceID)
-					local r, g, b = LR.GetMenPaiColor(TempTable[i * 20 + k].dwForceID)
-					page[i][#page[i]+1] = {szOption = sformat("(%d)%s", TempTable[i * 20 + k].nLevel, TempTable[i * 20 + k].szName), bCheck = false, bChecked = false,
-						fnAction =  function ()
-							local realArea = TempTable[i * 20 + k].realArea
-							local realServer = TempTable[i * 20 + k].realServer
-							local szName = TempTable[i * 20 + k].szName
-							local dwID = TempTable[i * 20 + k].dwID
-							LR_AS_ItemRecord_Panel:ReloadItemBox(realArea, realServer, dwID)
-						end,
-						szIcon =  szIcon,
-						nFrame =  nFrame,
-						szLayer =  "ICON_RIGHT",
-						rgb =  {r, g, b},
-					}
-				end
-			end
-		end
-		for i = 0, page_num - 1, 1 do
-			page[i][#page[i] + 1] = {bDevide = true}
-			if i ~= page_num - 1 then
-				page[i][#page[i] + 1] = page[i+1]
-				page[i][#page[i]].szOption = _L["Next 20 Records"]
-			end
-			page[i][#page[i] + 1] = all_option
-		end
-
-		m = page[0]
-
-		local __x, __y = hComboBox:GetAbsPos()
-		local __w, __h = hComboBox:GetSize()
-		m.nMiniWidth = __w
-		m.x = __x
-		m.y = __y + __h
-		PopupMenu(m)
+		LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction, all_option)
 	end
 
 	----------ËÑË÷
@@ -1844,7 +1795,7 @@ function LR_AS_ItemRecord_Panel.FetchData2 (t_table)
 
 	for nUiId , v in pairs(t_table) do
 		local szName = LR.GetItemNameByItem(v)
-		local _start, _end = sfind(szName, LR_AS_ItemRecord_Panel.searchText)
+		local _start, _end = wstring.find(szName, LR_AS_ItemRecord_Panel.searchText)
 		if not _start then
 			t_table[nUiId] = nil
 		end

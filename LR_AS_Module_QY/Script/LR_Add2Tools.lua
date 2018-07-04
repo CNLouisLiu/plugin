@@ -46,17 +46,27 @@ local UI = {
 	tWidget = {
 		{	name = "LR_Acc_UI_QiYuBox1", type = "ComboBox", x = 0, y = 0, w = 220, text = _L["QiYu show in panel"],
 			callback = function(m)
-				local QiYu = LR_AS_QY.QiYu
-				local QiYuName = LR_AS_QY.QiYuName
+				local QiYu = LR_AS_QY.GetQYList()
 				for k, v in pairs(QiYu) do
-					m[#m+1] = {szOption = QiYuName[v], bCheck = true, bMCheck = false, bChecked = function() return LR_AS_QY.UsrData.List[QiYuName[v]] end,
+					local text = ""
+					local itemInfo = GetItemInfo(v.dwTabType, v.dwIndex)
+					if itemInfo then
+						local dwIcon = Table_GetItemIconID(itemInfo.nUiId)
+						text = text .. GetFormatText(itemInfo.szName, nil, r, g, b)
+					end
+					text = text .. GetFormatText(sformat(" (%s) ", Table_GetMapName(v.dwMapID))) .. GetFormatText(v.szName)
+
+					m[#m+1] = {
+						bRichText = true,
+						szOption = text,
+						bCheck = true, bMCheck = false, bChecked = function() return LR_AS_QY.UsrData.List[v.szName] end,
 						fnAction = function()
-							LR_AS_QY.UsrData.List[QiYuName[v]] = not LR_AS_QY.UsrData.List[QiYuName[v]]
+							LR_AS_QY.UsrData.List[v.szName] = not LR_AS_QY.UsrData.List[v.szName]
 							LR_AS_QY.SaveCommomUsrData()
 							LR_AS_Panel.RefreshUI()
 						end,
 						fnDisable = function()
-							return _CheckQiYuData(QiYuName[v])
+							return _CheckQiYuData(v.szName)
 						end,
 					}
 				end

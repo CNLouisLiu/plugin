@@ -129,19 +129,21 @@ function LR_CopyBook.GetSegmentName(dwBookID, dwSegmentID)
 end
 
 
-function LR_CopyBook.GetBookNum (dwBookID,dwSegmentID)
-	local player=GetClientPlayer()
-	local num=0
-	for i=1,6 do
-		for j=0,player.GetBoxSize(i)-1 do
-			local item=player.GetItem(i,j)
+function LR_CopyBook.GetBookNum(dwBookID, dwSegmentID)
+	local me = GetClientPlayer()
+	local num = 0
+	for _, dwBox in pairs(BAG_PACKAGE) do
+		local size = me.GetBoxSize(dwBox)
+		for dwX = 0, size - 1, 1 do
+			local item = me.GetItem(dwBox, dwX)
 			if item then
-				if LR.GetItemNameByItem(item)==LR_CopyBook.GetSegmentName(dwBookID,dwSegmentID) then
-					num= player.GetItemAmount(item.dwTabType,item.dwIndex,dwBookID,dwSegmentID)
+				if LR.GetItemNameByItem(item) == LR_CopyBook.GetSegmentName(dwBookID, dwSegmentID) then
+					num = me.GetItemAmount(item.dwTabType, item.dwIndex, dwBookID, dwSegmentID)
 				end
 			end
 		end
 	end
+
 	return num
 end
 

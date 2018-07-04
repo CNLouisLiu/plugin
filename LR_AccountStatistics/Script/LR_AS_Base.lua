@@ -560,6 +560,68 @@ function LR_AS_Base.SeparateUsrList()
 	return TempTable_Cal, TempTable_NotCal
 end
 
+function LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction, all_option)
+	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.PutOutUsrList(), {}
+	local TempTable = {}
+	for i = 1, #TempTable_Cal, 1 do
+		TempTable[#TempTable+1] = TempTable_Cal[i]
+	end
+	for i = 1, #TempTable_NotCal, 1 do
+		TempTable[#TempTable+1] = TempTable_NotCal[i]
+	end
+
+	local page_num = mceil(#TempTable / 20)
+	local page = {}
+	for i = 0, page_num - 1, 1 do
+		page[i] = {}
+		for k = 1, 20, 1 do
+			if TempTable[i * 20 + k] ~= nil then
+				local szPath, nFrame = GetForceImage(TempTable[i * 20 + k].dwForceID)
+				local r, g, b = LR.GetMenPaiColor(TempTable[i * 20 + k].dwForceID)
+				page[i][#page[i]+1] = {
+					bRichText = false, bCheck = false, bChecked = false,
+					szOption = sformat("(%d)%s", TempTable[i * 20 + k].nLevel, TempTable[i * 20 + k].szName),
+					fnAction = function ()
+						fnAction(TempTable[i * 20 + k])
+					end,
+					fnMouseEnter = function()
+						local szPath, nFrame = GetForceImage(TempTable[i * 20 + k].dwForceID)
+						local r, g, b = LR.GetMenPaiColor(TempTable[i * 20 + k].dwForceID)
+						local x, y = this:GetAbsPos()
+						local szXml = {}
+						szXml[#szXml + 1] = GetFormatImage(szPath, nFrame, 30, 30)
+						szXml[#szXml + 1] = GetFormatText(sformat("%s(%d)\n", TempTable[i * 20 + k].szName, TempTable[i * 20 + k].nLevel), nil, r, g, b)
+						szXml[#szXml + 1] = GetFormatText(sformat("%s@%s", TempTable[i * 20 + k].realArea, TempTable[i * 20 + k].realServer))
+						OutputTip(tconcat(szXml), 300, {x, y, 0, 0})
+					end,
+					szIcon = szPath,
+					nFrame = nFrame,
+					szLayer = "ICON_RIGHT",
+					rgb = {r, g, b},
+				}
+			end
+		end
+	end
+	for i = 0, page_num - 1, 1 do
+		if i ~= page_num - 1 then
+			page[i][#page[i] + 1] = {bDevide = true}
+			page[i][#page[i] + 1] = page[i+1]
+			page[i][#page[i]].szOption = _L["Next 20 Records"]
+			if all_option then
+				page[i][#page[i] + 1] = all_option
+			end
+		end
+	end
+
+	local m = page[0]
+	local __x, __y = hComboBox:GetAbsPos()
+	local __w, __h = hComboBox:GetSize()
+	m.nMiniWidth = __w
+	m.x = __x
+	m.y = __y + __h
+	PopupMenu(m)
+end
+
 ---------------------------------
 ---打开设置界面
 ---------------------------------

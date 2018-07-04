@@ -569,6 +569,9 @@ function WndUIButton:ctor(__parent, __name, __data)
 			self:_UpdateOver()
 		end
 	end
+	self.__this.OnRButtonClick = function()
+		self:_FireEvent("OnRClick")
+	end
 end
 
 function WndUIButton:SetFontColor(...)
@@ -900,6 +903,11 @@ function WndComboBox:SetSize(__w)
 	return self
 end
 
+function WndComboBox:SetRichText(...)
+	self.__text:SetRichText(...)
+	return self
+end
+
 function WndComboBox:SetText(...)
 	self.__text:SetText(...)
 	return self
@@ -912,6 +920,11 @@ end
 function WndComboBox:SprintfText(...)
 	return self.__text:SprintfText(...)
 end
+
+function WndComboBox:SetFontColor(...)
+	return self.__text:SetFontColor(...)
+end
+
 
 -- WndRadioBox Object
 local WndRadioBox = class(WndBase)

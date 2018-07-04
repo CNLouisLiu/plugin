@@ -265,9 +265,10 @@ function LR_EquipSearch.ExportDB()
 						--
 					else
 						FormatAttributeValue(v2)
-						szText = FormatString(Table_GetMagicAttributeInfo(v2.nID, false), v2.Param0, v2.Param1, v2.Param2, v2.Param3)
+						szText = FormatString(Table_GetMagicAttributeInfo(v2.nID, false), v2.Param0, v2.Param1, v2.Param2, v2.Param3) or ""
 					end
 					for k3, v3 in pairs (LR_ATTRIBUTE) do
+						--Output(itemInfo.szName, szText, v3)
 						if sfind(szText, LR_ATTRIBUTE_TEXT[v3]) then
 							LR_ATTRIBUTE_nID[v2.nID] = v3
 						end
@@ -885,6 +886,8 @@ function LR_EquipSearch_Panel:LoadItemBox(hWin)
 			handle:GetHandle().OnItemLButtonClick = function()	--µÈÐ§ÓÚ Handle:OnClick()
 				if IsCtrlKeyDown() then
 					EditBox_AppendLinkItemInfo(1, dwTabType, dwIndex, 0)
+				elseif IsAltKeyDown() then
+					Addon_ExteriorViewByItemInfo(dwTabType, dwIndex)
 				else
 					if LR_EquipSearch_Panel.hClicked then
 						LR_EquipSearch_Panel.hClicked:Hide()
@@ -905,7 +908,21 @@ function LR_EquipSearch_Panel:LoadItemBox(hWin)
 						OutputBookTipByID(dwBookID, dwSegmentID, {x, y, w, h,})
 					end
 				else
-					OutputItemTip(UI_OBJECT_ITEM_INFO, 1, dwTabType, dwIndex, {x, y, w, h,})
+					if IsCtrlKeyDown() and IsAltKeyDown() then
+						local tText = {}
+						tText[#tText + 1] = GetFormatText(sformat("dwTabType:%d\n", dwTabType))
+						tText[#tText + 1] = GetFormatText(sformat("dwIndex:%d\n", dwIndex))
+						tText[#tText + 1] = GetFormatText(sformat("nSub:%d (%s)\n", v.nSub, g_tStrings.tEquipTypeNameTable[v.nSub]))
+						tText[#tText + 1] = GetFormatText(sformat("nDetail:%d (%s)\n", v.nDetail, GetWeapenType(v.nDetail)))
+						tText[#tText + 1] = GetFormatText(sformat("nUiId:%d\n", itemInfo.nUiId))
+						tText[#tText + 1] = GetFormatText(sformat("nQuality:%d\n", v.nQuality))
+						tText[#tText + 1] = GetFormatText(sformat("nRequireLevel:%d\n", v.nRequireLevel))
+						tText[#tText + 1] = GetFormatText(sformat("nLevel:%d\n", v.nLevel))
+
+						OutputTip(tconcat(tText), 300, {x, y, w, h})
+					else
+						OutputItemTip(UI_OBJECT_ITEM_INFO, 1, dwTabType, dwIndex, {x, y, w, h,})
+					end
 				end
 				Bg_Hover:Show()
 			end

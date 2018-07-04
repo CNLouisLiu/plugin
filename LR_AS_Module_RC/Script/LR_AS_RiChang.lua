@@ -1573,9 +1573,6 @@ end
 function LR_QuestTools:Init()
 	local frame = self:Append("Frame", "LR_QuestTools", {title = _L["LR Quest Tool"], style = "SMALL"})
 
-	----------关于
-	LR.AppendAbout(LR_QuestTools, frame)
-
 	local imgTab = self:Append("Image", frame, "TabImg", {w = 381, h = 33, x = 0, y = 50})
     imgTab:SetImage("ui\\Image\\UICommon\\ActivePopularize2.UITex", 46)
 	imgTab:SetImageType(11)
@@ -1621,6 +1618,9 @@ function LR_QuestTools:Init()
 	local Text_break2 = self:Append("Text", hHandle, "Text_break1", {w = 260, h = 30, x  = 80, y = 2, text = _L["Quest Name"], font = 18})
 	Text_break2:SetHAlign(1)
 	Text_break2:SetVAlign(1)
+
+	----------关于
+	LR.AppendAbout(LR_QuestTools, frame)
 end
 
 function LR_QuestTools:Open()
@@ -1720,6 +1720,9 @@ function LR_QuestTools:LoadItemBox()
 		end
 
 		hIconViewContent.OnClick = function()
+			local nX, nY = this:GetAbsPos()
+			local nW, nH = this:GetSize()
+			OutputQuestTip(dwQuestID, {nX, nY, nW, nH}, true)
 			--------
 			--local dwQuestID = 418
 			Output("-----------------------------------")
@@ -1728,6 +1731,29 @@ function LR_QuestTools:LoadItemBox()
 			if IsCtrlKeyDown() then
 				Output(tQuestStringInfo)
 			end
+
+			local questInfo = GetQuestInfo(dwQuestID)
+			if questInfo then
+				for i = 1, 300 do
+					local tList = Table_GetQuestPoint(dwQuestID, "accept", 0, i)
+					if tList then
+						Output("ss", tList)
+					end
+				end
+
+
+
+				if questInfo.dwStartDoodadTemplateID ~= 0 then
+
+				elseif questInfo.dwStartNpcTemplateID ~= 0 then
+
+				end
+			end
+
+
+
+
+
 			local tQuest = g_tTable.Quest:Search(dwQuestID)
 			if tQuest then
 				if IsCtrlKeyDown() then
@@ -1735,14 +1761,14 @@ function LR_QuestTools:LoadItemBox()
 				end
 				for k, v in pairs (LR_HeadName.SpliteString(tQuest.szAccept)) do
 					if v.nType == "D" or v.nType == "N" then
-						Output(_L["Accept npc"], "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName)
+						Output(_L["Accept npc"], "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName, Table_GetQuestPoint(dwQuestID, "accept", k - 1, v.dwMapID))
 						local eCanAccept = me.CanAcceptQuest(dwQuestID, v.dwTemplateID)
 						Output(_L["Can accept?"], eCanAccept, g_tStrings.tQuestResultString[eCanAccept])
 					end
 				end
 				for k, v in pairs (LR_HeadName.SpliteString(tQuest.szFinish)) do
 					if v.nType == "D" or v.nType == "N" then
-						Output(_L["Finish npc"], "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName)
+						Output(_L["Finish npc"], "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName, Table_GetQuestPoint(dwQuestID, "finish", k - 1, v.dwMapID))
 					end
 				end
 			else

@@ -100,6 +100,34 @@ function _Equip.GetAllEquipBox() -- update boxes
 	end
 end
 
+function _Equip.GetEquiping()
+	local me = GetClientPlayer()
+	local Suits = {}
+	for k = 1, #_Equip.tEquipPos, 1 do
+		local nType = _Equip.tEquipPos[k].position
+		local szName = _Equip.tEquipPos[k].name
+		Suits[szName] = {}
+		local item = GetPlayerItem(me, INVENTORY_INDEX.EQUIP, nType)
+		if item then
+			local t_item = {}
+			t_item.dwID = item.dwID
+			t_item.szName = item.szName
+			t_item.nGenre = item.nGenre
+			t_item.dwTabType = item.dwTabType
+			t_item.dwIndex = item.dwIndex
+			t_item.nQuality = item.nQuality
+			t_item.nStackNum = 1
+			if item.bCanStack then
+				t_item.nStackNum = item.nStackNum
+			end
+			t_item.nVersion = item.nVersion
+			t_item.nUiId = item.nUiId
+			Suits[szName] = clone(t_item)
+		end
+	end
+	return Suits
+end
+
 -------------------------------------------------------------------------
 ----------获取装分
 --------------------------------------------------------------------------
@@ -271,65 +299,17 @@ function LR_AS_Equip_Panel:Init()
 	--------------人物选择
 	local hComboBox = self:Append("ComboBox", frame, "hComboBox", {w = 160, x = 105, y = 45, text = LR_AS_Equip_Panel.szName})
 	hComboBox:Enable(true)
+	local fnAction = function(data)
+		hComboBox:SetText(data.szName)
+		local realArea = data.realArea
+		local realServer = data.realServer
+		local szName = data.szName
+		local dwID = data.dwID
+		local dwForceID = data.dwForceID
+		LR_AS_Equip_Panel:ReLoadEquipSuit(szName, realArea, realServer, dwForceID, dwID)
+	end
 	hComboBox.OnClick = function (m)
-		local TempTable_Cal, TempTable_NotCal = LR_AS_Base.PutOutUsrList(), {}
-		tsort(TempTable_Cal, function(a, b)
-			if a.nLevel == b.nLevel then
-				return a.dwForceID < b.dwForceID
-			else
-				return a.nLevel > b.nLevel
-			end
-		end)
-
-		local TempTable = {}
-		for i = 1, #TempTable_Cal, 1 do
-			TempTable[#TempTable+1] = TempTable_Cal[i]
-		end
-		for i = 1, #TempTable_NotCal, 1 do
-			TempTable[#TempTable+1] = TempTable_NotCal[i]
-		end
-
-		local page_num = mceil(#TempTable / 20)
-		local page = {}
-		for i = 0, page_num - 1, 1 do
-			page[i] = {}
-			for k = 1, 20, 1 do
-				if TempTable[i * 20 + k] ~= nil then
-					local szIcon, nFrame = GetForceImage(TempTable[i * 20 + k].dwForceID)
-					local r, g, b = LR.GetMenPaiColor(TempTable[i * 20 + k].dwForceID)
-					page[i][#page[i]+1] = {szOption = sformat("(%d)%s", TempTable[i * 20 + k].nLevel, TempTable[i * 20 + k].szName), bCheck = false, bChecked = false,
-						fnAction = function ()
-							hComboBox:SetText(TempTable[i * 20 + k].szName)
-							local realArea = TempTable[i * 20 + k].realArea
-							local realServer = TempTable[i * 20 + k].realServer
-							local szName = TempTable[i * 20 + k].szName
-							local dwID = TempTable[i * 20 + k].dwID
-							local dwForceID = TempTable[i * 20 + k].dwForceID
-							LR_AS_Equip_Panel:ReLoadEquipSuit(szName, realArea, realServer, dwForceID, dwID)
-						end,
-						szIcon = szIcon,
-						nFrame = nFrame,
-						szLayer = "ICON_RIGHT",
-						rgb = {r, g, b},
-					}
-				end
-			end
-		end
-		for i = 0, page_num - 1, 1 do
-			if i ~= page_num - 1 then
-				page[i][#page[i] + 1] = {bDevide = true}
-				page[i][#page[i] + 1] = page[i+1]
-				page[i][#page[i]].szOption = _L["Next 20 Records"]
-			end
-		end
-
-		m = page[0]
-		local __x, __y = hComboBox:GetAbsPos()
-		local __w, __h = hComboBox:GetSize()
-		m.nMiniWidth = __w
-		m.x = __x
-		m.y = __y + __h
-		PopupMenu(m)
+		LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction)
 	end
 
 	local hIconViewContent = self:Append("Handle", frame, "IconViewContent", {x = 0, y = 12, w = 700, h = 300})

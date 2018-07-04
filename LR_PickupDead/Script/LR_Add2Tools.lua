@@ -107,9 +107,9 @@ local LR_PickupDead_UI  = {
 							return not LR_PickupDead.UsrData.bPickupItems
 						end,
 						fnAutoClose = true,
-						szIcon = "ui\\Image\\UICommon\\CommonPanel4.UITex",
-						nFrame  = 72,
-						nMouseOverFrame = 72,
+						szIcon = "ui\\Image\\UICommon\\feedanimials.UITex",
+						nFrame  = 86,
+						nMouseOverFrame = 87,
 						szLayer = "ICON_RIGHT",
 						fnAutoClose = true,
 						fnClickIcon = function ()
@@ -191,9 +191,9 @@ local LR_PickupDead_UI  = {
 							return not LR_PickupDead.UsrData.bnotPickupItems
 						end,
 						fnAutoClose = true,
-						szIcon = "ui\\Image\\UICommon\\CommonPanel4.UITex",
-						nFrame  = 72,
-						nMouseOverFrame = 72,
+						szIcon = "ui\\Image\\UICommon\\feedanimials.UITex",
+						nFrame  = 86,
+						nMouseOverFrame = 87,
 						szLayer = "ICON_RIGHT",
 						fnAutoClose = true,
 						fnClickIcon = function ()

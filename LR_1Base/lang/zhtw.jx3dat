@@ -159,7 +159,7 @@ data={
 	["(%d+)人(.+)"]="(%d+)人(.+)",
 
 	["BossZhuHu"]="阿獨鹿,烏素爾,可蒙,安雨,白陶,史思明",
-	
+
 	--20170720add--
 	["TEST HOTKEY"]="測試快捷鍵",
 
@@ -182,4 +182,5 @@ data={
 	["Not show when loading end"]="過圖時不顯示",
 
 	["Unknown quest"]="未知任務",
+	["This map can not use team notice\n"]="此地圖不能使用團隊告示\n",
 }

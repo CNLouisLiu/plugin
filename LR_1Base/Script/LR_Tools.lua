@@ -839,7 +839,6 @@ Tools_MenPaiColor.tWidget[#Tools_MenPaiColor.tWidget+1] = {
 	end
 }
 
-
 LR_TOOLS:RegisterPanel(Tools_MenPaiColor)
 
 ----------------------------------------
@@ -865,7 +864,7 @@ LR.AddHotKey(_L["Setting Panel"], function() LR_TOOLS:OpenPanel() end)
 --base
 ---------
 local teamnoticepanel_menu = {
-	szOption = _L["LR team notice"],
+	szOption = _L["LR team notice"], bCheck = true,
 	fnAction = function()
 		LR.OpenTeamNoticePanel()
 	end,

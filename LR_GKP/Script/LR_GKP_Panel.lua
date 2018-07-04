@@ -252,7 +252,7 @@ function LR_GKP_Panel:Init()
 			LR.SysMsg(_L["You must be in a team, and be distributor.\n"])
 			return
 		else
-			LR_GKP_Distribute_Panel:Open({szName = _L["Treasure Box"], dwIndex = 0, dwTabType = 0, bManual = true}, GetClientPlayer())
+			LR_GKP_Distribute_Panel:Open({szName = _L["Treasure Box"], szKey = sformat("ManualAdd_%d_%d", GetCurrentTime(), GetTickCount()), dwIndex = 0, dwTabType = 0, bManual = true}, GetClientPlayer())
 		end
 	end
 
@@ -276,11 +276,21 @@ function LR_GKP_Panel:Init()
 				szMessage = _L["Are you sure to sync record to others?"],
 				szName = "sync bill",
 				fnAutoClose = function() return false end,
-				{szOption = _L["Yes"], fnAction = function() LR_GKP_Base.SyncRecord() end, },
+				{szOption = _L["Yes"], fnAction = function() LR_GKP_Base.SyncRecord(); LR_GKP_Base.SyncBoss() end, },
 				{szOption = _L["No"], fnAction = function()  end,},
 			}
 			MessageBox(msg)
 		end
+	end
+
+	local Btn_SetPrice = self:Append("Button", frame, "Btn_SetPrice", {text = _L["Set price"], x = 740, y = 570, w = 90, h = 36})
+	Btn_SetPrice.OnClick = function()
+		local menu = {}
+		local x, y = Btn_SetPrice:GetAbsPos()
+		menu.minwidth = 90
+		menu.x, menu.y = x, y + 36
+		LR_GKP_Base.InsertSetPriceMenu(menu)
+		PopupMenu(menu)
 	end
 
 	local Btn_SetBoss = self:Append("Button", frame, "Btn_SetBoss", {text = _L["Set boss"] , x = 840, y = 570, w = 90, h = 36})
@@ -415,7 +425,7 @@ function LR_GKP_Panel:LoadGKPItemBox()
 	if not Scroll_GKP_List then
 		return
 	end
-	Scroll_GKP_List:ClearHandle()
+	self:ClearHandle(Scroll_GKP_List)
 	if next(LR_GKP_Base.GKP_Bill) == nil then
 		return
 	end
@@ -434,7 +444,7 @@ function LR_GKP_Panel:LoadGKPItemBox()
 		end
 
 		--悬停框
-		local Image_Hover = LR.AppendUI("Image", handleTradeList, sformat("Image_Hover_%d", k), {x = 2, y = 0, w = 920, h = 30})
+		local Image_Hover = self:Append("Image", handleTradeList, sformat("Image_Hover_%d", k), {x = 2, y = 0, w = 920, h = 30})
 		Image_Hover:FromUITex("ui\\Image\\Common\\TempBox.UITex", 5)
 		Image_Hover:SetImageType(10)
 		Image_Hover:SetAlpha(200)
@@ -454,10 +464,17 @@ function LR_GKP_Panel:LoadGKPItemBox()
 		Handle_Item:SetHandleStyle(3)
 
 		if v.dwTabType ~= 0 then
-			local box = LR.ItemBox:new(v)
+			local box = LR.AppendUI("Box", Handle_Item, sformat("Box_Item_%d_%d", v.dwTabType, v.dwIndex), {w = 30, h = 30})
+			UpdateBoxObject(box:GetSelf(), UI_OBJECT_ITEM_INFO, 1, v.dwTabType, v.dwIndex)
+			if v.nStackNum > 1 then
+				box:SetOverText(1, v.nStackNum)
+				box:SetOverTextFontScheme(1, 15)
+				box:SetOverTextPosition(1, ITEM_POSITION.RIGHT_BOTTOM)
+			end
+--[[			local box = LR.ItemBox:new(v)
 			box:Create(Handle_Item, {width = 30, height = 30})
 			box:OnItemMouseEnter(function() Image_Hover:Show()	end)
-			box:OnItemMouseLeave(function() Image_Hover:Hide() end)
+			box:OnItemMouseLeave(function() Image_Hover:Hide() end)]]
 		else
 			local box = LR.AppendUI("Image", Handle_Item, "Image_Item_Icon" .. k, {h = 30, w = 30, eventid = 0})
 			box:FromIconID(582)
@@ -544,6 +561,7 @@ function LR_GKP_Panel:LoadGKPItemBox()
 						DB:Execute("END TRANSACTION")
 						DB:Release()
 						--
+						LR_GKP_Panel:LoadGKPItemBox()
 						LR_GKP_Base.GKP_BgTalk("SYNC_BEGIN", {})
 						LR_GKP_Base.GKP_BgTalk("DEL", v)
 						LR_GKP_Base.GKP_BgTalk("SYNC_END", {})
@@ -554,17 +572,26 @@ function LR_GKP_Panel:LoadGKPItemBox()
 		end
 
 		handleTradeList.OnEnter = function()
-			Image_Hover:Show()
+			local Image_Hover = self:Fetch(sformat("Image_Hover_%d", k))
+			if Image_Hover then
+				Image_Hover:Show()
+			end
 		end
 		handleTradeList.OnLeave = function()
-			Image_Hover:Hide()
+			local Image_Hover = self:Fetch(sformat("Image_Hover_%d", k))
+			if Image_Hover then
+				Image_Hover:Hide()
+			end
 		end
 		handleTradeList.OnClick = function()
 			pm()
 		end
 
 		Handle_Item.OnEnter = function()
-			Image_Hover:Show()
+			local Image_Hover = self:Fetch(sformat("Image_Hover_%d", k))
+			if Image_Hover then
+				Image_Hover:Show()
+			end
 			if itemInfo then
 				local x, y = this:GetAbsPos()
 				local w, h = this:GetSize()
@@ -579,7 +606,10 @@ function LR_GKP_Panel:LoadGKPItemBox()
 			end
 		end
 		Handle_Item.OnLeave = function()
-			Image_Hover:Hide()
+			local Image_Hover = self:Fetch(sformat("Image_Hover_%d", k))
+			if Image_Hover then
+				Image_Hover:Hide()
+			end
 			HideTip()
 		end
 		Handle_Item.OnClick = function()
@@ -587,21 +617,32 @@ function LR_GKP_Panel:LoadGKPItemBox()
 		end
 
 		Handle_Purchaser.OnEnter = function()
-			Image_Hover:Show()
+			local Image_Hover = self:Fetch(sformat("Image_Hover_%d", k))
+			if Image_Hover then
+				Image_Hover:Show()
+			end
 		end
 		Handle_Purchaser.OnLeave = function()
-			Image_Hover:Hide()
+			local Image_Hover = self:Fetch(sformat("Image_Hover_%d", k))
+			if Image_Hover then
+				Image_Hover:Hide()
+			end
 		end
 		Handle_Purchaser.OnClick = function()
 			pm()
 		end
 
 		Handle_Money.OnEnter = function()
-			Image_Hover:Show()
-
+			local Image_Hover = self:Fetch(sformat("Image_Hover_%d", k))
+			if Image_Hover then
+				Image_Hover:Show()
+			end
 		end
 		Handle_Money.OnLeave = function()
-			Image_Hover:Hide()
+			local Image_Hover = self:Fetch(sformat("Image_Hover_%d", k))
+			if Image_Hover then
+				Image_Hover:Hide()
+			end
 		end
 		Handle_Money.OnClick = function()
 			pm()
@@ -717,7 +758,7 @@ function LR_GKP_NewBill_Panel:OnCreate()
 	this:RegisterEvent("UI_SCALED")
 
 	LR_GKP_NewBill_Panel.UpdateAnchor(this)
-	RegisterGlobalEsc("LR_GKP_Panel", function () return true end , function() LR_GKP_NewBill_Panel:Open() end)
+	RegisterGlobalEsc("LR_GKP_NewBill_Panel", function () return true end , function() LR_GKP_NewBill_Panel:Open() end)
 end
 
 function LR_GKP_NewBill_Panel:OnEvents(event)
@@ -732,7 +773,7 @@ function LR_GKP_NewBill_Panel.UpdateAnchor(frame)
 end
 
 function LR_GKP_NewBill_Panel:OnDestroy()
-	UnRegisterGlobalEsc("LR_GKP_Panel")
+	UnRegisterGlobalEsc("LR_GKP_NewBill_Panel")
 	PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
 end
 
@@ -861,6 +902,103 @@ end
 
 function LR_GKP_NewBill_Panel:Open()
 	local frame = self:Fetch("LR_GKP_NewBill_Panel")
+	if frame then
+		self:Destroy(frame)
+	else
+		--LR_Acc_Trade.LoadData(nil, true)
+		frame = self:Init()
+		PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
+	end
+end
+
+------------------------------------------------------
+---新建门派老板
+------------------------------------------------------
+LR_GKP_NewMenPaiBoss_Panel = CreateAddon("LR_GKP_NewMenPaiBoss_Panel")
+LR_GKP_NewMenPaiBoss_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
+
+LR_GKP_NewMenPaiBoss_Panel.UsrData = {
+	Anchor = {s = "CENTER", r = "CENTER", x = 0, y = 0},
+}
+LR_GKP_NewMenPaiBoss_Panel.data = {}
+
+function LR_GKP_NewMenPaiBoss_Panel:OnCreate()
+	this:RegisterEvent("UI_SCALED")
+
+	LR_GKP_NewMenPaiBoss_Panel.UpdateAnchor(this)
+	RegisterGlobalEsc("LR_GKP_NewMenPaiBoss_Panel", function () return true end , function() LR_GKP_NewMenPaiBoss_Panel:Open() end)
+	LR_GKP_NewMenPaiBoss_Panel.data = {}
+end
+
+function LR_GKP_NewMenPaiBoss_Panel:OnEvents(event)
+	if event ==  "UI_SCALED" then
+		LR_GKP_NewMenPaiBoss_Panel.UpdateAnchor(this)
+	end
+end
+
+function LR_GKP_NewMenPaiBoss_Panel.UpdateAnchor(frame)
+	frame:CorrectPos()
+	frame:SetPoint(LR_GKP_NewMenPaiBoss_Panel.UsrData.Anchor.s, 0, 0, LR_GKP_NewMenPaiBoss_Panel.UsrData.Anchor.r, LR_GKP_NewMenPaiBoss_Panel.UsrData.Anchor.x, LR_GKP_NewMenPaiBoss_Panel.UsrData.Anchor.y)
+end
+
+function LR_GKP_NewMenPaiBoss_Panel:OnDestroy()
+	UnRegisterGlobalEsc("LR_GKP_NewMenPaiBoss_Panel")
+	PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
+end
+
+function LR_GKP_NewMenPaiBoss_Panel:OnDragEnd()
+	this:CorrectPos()
+	LR_GKP_NewMenPaiBoss_Panel.UsrData.Anchor = GetFrameAnchor(this)
+end
+
+function LR_GKP_NewMenPaiBoss_Panel:Init()
+	local frame = self:Append("Frame", "LR_GKP_NewMenPaiBoss_Panel", {title = _L["New MenPai Boss"], path = sformat("%s\\UI\\Small.ini", AddonPath)})
+	local Image = self:Append("Image", frame, "Image", {x = 150, y = 60 , w = 30, h = 30})
+	local ComboBox = self:Append("ComboBox", frame, "ComboBox", {x = 30, y = 60, w = 120, h = 30, })
+	ComboBox:SetRichText(true):SetText(_L["Please Choose"])
+	ComboBox.OnClick = function(m)
+		local MemberList = LR_GKP_Base.GetTeamMemberList()
+		for k, v in pairs(MemberList) do
+			local dwMemberID = v.dwID
+			local szName = v.szName
+			local szPath, nFrame = GetForceImage(v.dwForceID)
+			local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+			m[#m + 1] = {	bRichText = true, szOption = GetFormatImage(szPath, nFrame, 24, 24) .. GetFormatText(szName, nil, r, g, b),
+				rgb = rgb,
+				fnAction = function()
+					ComboBox:SetText(szName):SetFontColor(r, g, b)
+					Image:FromUITex(szPath, nFrame)
+					LR_GKP_NewMenPaiBoss_Panel.data = clone(v)
+				end
+			}
+		end
+		PopupMenu(m)
+	end
+
+	local Btn_OK = self:Append("Button", frame, "Btn_OK", {text = _L["Add"] , x = 60, y = 110, w = 70, h = 36})
+	Btn_OK.OnClick = function()
+		if next(LR_GKP_NewMenPaiBoss_Panel.data) ~= nil then
+			local v = LR_GKP_NewMenPaiBoss_Panel.data
+			LR_GKP_Base.MenPaiBoss[v.dwForceID] = {dwID = v.dwID, szName = v.szName, dwForceID = v.dwForceID}
+			LR_GKP_Base.SaveBill()
+			--喊话
+			local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+			local msg = {}
+			msg[#msg + 1] = GetFormatText(_L["Successfully set"], 48)
+			msg[#msg + 1] = GetFormatText(g_tStrings.tForceTitle[v.dwForceID], 48, r, g, b)
+			msg[#msg + 1] = GetFormatText(_L["boss"], 48)
+			msg[#msg + 1] = GetFormatText(sformat("[%s]", v.szName), 48, r, g, b)
+			msg[#msg + 1] = GetFormatText("\n")
+			OutputMessage("MSG_SYS", tconcat(msg), true)
+		end
+	end
+
+	----------关于
+	LR.AppendAbout(nil, frame)
+end
+
+function LR_GKP_NewMenPaiBoss_Panel:Open()
+	local frame = self:Fetch("LR_GKP_NewMenPaiBoss_Panel")
 	if frame then
 		self:Destroy(frame)
 	else

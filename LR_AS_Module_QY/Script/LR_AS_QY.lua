@@ -56,18 +56,23 @@ local QIYU = {
 	YAN_HUA_XI_YUE = 27,
 	YI_NIAN_JIAN = 28,
 	RONG_MA_BIAN = 29,
+	GUI_AN_ZHI_AN = 30,		--天天8 22534
+	GUI_AN_ZHI_ZHI = 31,	--吉瑞8 22533
+	GUI_AN_ZHI_GUI = 32,
 }
 
 local QIYU_NAME = {}	--名字
 local QIYU_MNTP = {}	--监控类型
 local QIYU_MAP = {}	--奇遇地图
 local QIYU_NPC = {}	--奇遇NPC
+local QIYU_DOODAD = {}		--奇遇DOODAD
 local QIYU_ITEM = {} --监控物品
 local QIYU_ITEM_NUM = {}	--奇遇监控物品数量
 local QIYU_WINDOW_DIALOG = {}	--奇遇对话框
 local QIYU_MSG_NPC_NEARBY = {}	--奇遇NPC近聊
 local QIYU_WARNING_MSG = {}
 local QIYU_ACHIEVEMENT = {}	--奇遇成就
+local QIYU_PET = {}	--奇遇宠物
 
 --胜负局 1
 QIYU_NAME[QIYU.SHENG_FU_JU] = _L["SHENG_FU_JU"]
@@ -79,6 +84,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.SHENG_FU_JU] = {
 	{szText = _L["DIALOG_SHENG_FU_JU_02"], bFinish = false, },	--下了一次
 }
 QIYU_ACHIEVEMENT[QIYU.SHENG_FU_JU] = 5199
+QIYU_PET[QIYU.SHENG_FU_JU] = {dwTabType = 8, dwIndex = 13925}
 
 --捉妖记 2
 QIYU_NAME[QIYU.ZHUO_YAO_JI] = _L["ZHUO_YAO_JI"]
@@ -91,6 +97,7 @@ QIYU_WARNING_MSG[QIYU.ZHUO_YAO_JI] = {
 	{szText = _L["WARNING_ZHUO_YAO_JI_01"], bFinish = true, },
 }
 QIYU_ACHIEVEMENT[QIYU.ZHUO_YAO_JI] = 5197
+QIYU_PET[QIYU.ZHUO_YAO_JI] = {dwTabType = 8, dwIndex = 11781}
 
 --归乡路 3
 QIYU_NAME[QIYU.GUI_XIANG_LU] = _L["GUI_XIANG_LU"]
@@ -104,6 +111,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.GUI_XIANG_LU] = {
 	{szText = _L["DIALOG_GUI_XIANG_LU_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.GUI_XIANG_LU] = 5200
+QIYU_PET[QIYU.GUI_XIANG_LU] = {dwTabType = 8, dwIndex = 13924}
 
 --枫林酒 4
 QIYU_NAME[QIYU.FENG_LIN_JIU] = _L["FENG_LIN_JIU"]
@@ -117,6 +125,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.FENG_LIN_JIU] = {
 	{szText = _L["DIALOG_FENG_LIN_JIU_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.FENG_LIN_JIU] = 5194
+QIYU_PET[QIYU.FENG_LIN_JIU] = {dwTabType = 8, dwIndex = 13224}
 
 --红衣歌 5
 QIYU_NAME[QIYU.HONG_YI_GE] = _L["HONG_YI_GE"]
@@ -130,6 +139,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.HONG_YI_GE] = {
 	{szText = _L["DIALOG_HONG_YI_GE_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.HONG_YI_GE] = 5195
+QIYU_PET[QIYU.HONG_YI_GE] = {dwTabType = 8, dwIndex = 11780}
 
 --孩童书 6
 QIYU_NAME[QIYU.HAI_TONG_SHU] = _L["HAI_TONG_SHU"]
@@ -143,6 +153,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.HAI_TONG_SHU] = {
 	{szText = _L["DIALOG_HAI_TONG_SHU_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.HAI_TONG_SHU] = 5196
+QIYU_PET[QIYU.HAI_TONG_SHU] = {dwTabType = 8, dwIndex = 11107}
 
 --荆轲刺 7
 QIYU_NAME[QIYU.JING_KE_CI] = _L["JING_KE_CI"]
@@ -156,6 +167,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.JING_KE_CI] = {
 	{szText = _L["DIALOG_JING_KE_CI_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.JING_KE_CI] = 5328
+QIYU_PET[QIYU.JING_KE_CI] = {dwTabType = 8, dwIndex = 16877}
 
 --沙海谣 8
 QIYU_NAME[QIYU.SHA_HAI_YAO] = _L["SHA_HAI_YAO"]
@@ -169,6 +181,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.SHA_HAI_YAO] = {
 	{szText = _L["DIALOG_SHA_HAI_YAO_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.SHA_HAI_YAO] = 5329
+QIYU_PET[QIYU.SHA_HAI_YAO] = {dwTabType = 8, dwIndex = 16879}
 
 --石敢当 9
 QIYU_NAME[QIYU.SHI_GAN_DANG] = _L["SHI_GAN_DANG"]
@@ -185,6 +198,7 @@ QIYU_WARNING_MSG[QIYU.SHI_GAN_DANG] = {
 	{szText = _L["WARNING_SHI_GAN_DANG_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.SHI_GAN_DANG] = 5339
+QIYU_PET[QIYU.SHI_GAN_DANG] = {dwTabType = 8, dwIndex = 16878}
 
 --至尊宝 10
 QIYU_NAME[QIYU.ZHI_ZUN_BAO] = _L["ZHI_ZUN_BAO"]
@@ -201,6 +215,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.ZHI_ZUN_BAO] = {
 	{szText = _L["DIALOG_ZHI_ZUN_BAO_02"], bFinish = false, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.ZHI_ZUN_BAO] = 5443
+QIYU_PET[QIYU.ZHI_ZUN_BAO] = {dwTabType = 8, dwIndex = 18262}
 
 --破晓鸣 11
 QIYU_NAME[QIYU.PO_XIAO_MING] = _L["PO_XIAO_MING"]
@@ -216,6 +231,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.PO_XIAO_MING] = {
 	{szText = _L["DIALOG_PO_XIAO_MING_02"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.PO_XIAO_MING] = 5441
+QIYU_PET[QIYU.PO_XIAO_MING] = {dwTabType = 8, dwIndex = 18264}
 
 --竹马情 12
 QIYU_NAME[QIYU.ZHU_MA_QING] = _L["ZHU_MA_QING"]
@@ -228,6 +244,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.ZHU_MA_QING] = {
 	{szText = _L["DIALOG_ZHU_MA_QING_03"], bFinish = true, }, 		--成功
 }
 QIYU_ACHIEVEMENT[QIYU.ZHU_MA_QING] = 5442
+QIYU_PET[QIYU.ZHU_MA_QING] = {dwTabType = 8, dwIndex = 18263}
 
 --青草歌 13
 QIYU_NAME[QIYU.QING_CAO_GE] = _L["QING_CAO_GE"]
@@ -240,6 +257,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.QING_CAO_GE] = {
 	{szText = _L["DIALOG_QING_CAO_GE_03"], bFinish = true, }, 		--成功
 }
 QIYU_ACHIEVEMENT[QIYU.QING_CAO_GE] = 5658
+QIYU_PET[QIYU.QING_CAO_GE] = {dwTabType = 8, dwIndex = 18286}
 
 --滇南行 14
 QIYU_NAME[QIYU.DIAN_NAN_XING] = _L["DIAN_NAN_XING"]
@@ -254,6 +272,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.DIAN_NAN_XING] = {
 	{szText = _L["DIALOG_DIAN_NAN_XING_02"], bFinish = true, }, 		--成功
 }
 QIYU_ACHIEVEMENT[QIYU.DIAN_NAN_XING] = 5657
+QIYU_PET[QIYU.DIAN_NAN_XING] = {dwTabType = 8, dwIndex = 18284}
 
 --稚子心 15
 QIYU_NAME[QIYU.ZHI_ZI_XIN] = _L["ZHI_ZI_XIN"]
@@ -266,6 +285,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.ZHI_ZI_XIN] = {
 	{szText = _L["DIALOG_ZHI_ZI_XIN_03"], bFinish = true, }, 		--成功
 }
 QIYU_ACHIEVEMENT[QIYU.ZHI_ZI_XIN] = 5659
+QIYU_PET[QIYU.ZHI_ZI_XIN] = {dwTabType = 8, dwIndex = 18285}
 
 --关外商 16
 QIYU_NAME[QIYU.GUAN_WAI_SHANG] = _L["GUAN_WAI_SHANG"]
@@ -280,6 +300,7 @@ QIYU_WINDOW_DIALOG[QIYU.GUAN_WAI_SHANG] = {
 	{szText = _L["WINDOW_GUAN_WAI_SHANG_02"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.GUAN_WAI_SHANG] = 5812
+QIYU_PET[QIYU.GUAN_WAI_SHANG] = {dwTabType = 8, dwIndex = 18299}
 
 --北行镖 17
 QIYU_NAME[QIYU.BEI_XING_BIAO] = _L["BEI_XING_BIAO"]
@@ -290,6 +311,7 @@ QIYU_WINDOW_DIALOG[QIYU.BEI_XING_BIAO] = {
 	{szText = _L["DIALOG_BEI_XING_BIAO_01"], bFinish = false, }, 		--吃了一次
 }
 QIYU_ACHIEVEMENT[QIYU.BEI_XING_BIAO] = 5811
+QIYU_PET[QIYU.BEI_XING_BIAO] = {dwTabType = 8, dwIndex = 18300}
 
 --东海客 18
 QIYU_NAME[QIYU.DONG_HAI_KE] = _L["DONG_HAI_KE"]
@@ -303,6 +325,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.DONG_HAI_KE] = {
 	{szText = _L["DIALOG_DONG_HAI_KE_01"], bFinish = false, }, 		--失败
 }
 QIYU_ACHIEVEMENT[QIYU.DONG_HAI_KE] = 5813
+QIYU_PET[QIYU.DONG_HAI_KE] = {dwTabType = 8, dwIndex = 18298}
 
 --锋芒展 19
 QIYU_NAME[QIYU.FENG_MANG_ZHAN] = _L["FENG_MANG_ZHAN"]
@@ -316,6 +339,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.FENG_MANG_ZHAN] = {
 	{szText = _L["DIALOG_FENG_MANG_ZHAN_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.FENG_MANG_ZHAN] = 6018
+QIYU_PET[QIYU.FENG_MANG_ZHAN] = {dwTabType = 8, dwIndex = 21056}
 
 --烹调法 20
 QIYU_NAME[QIYU.PENG_TIAO_FA] = _L["PENG_TIAO_FA"]
@@ -329,6 +353,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.PENG_TIAO_FA] = {
 	{szText = _L["DIALOG_PENG_TIAO_FA_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.PENG_TIAO_FA] = 6019
+QIYU_PET[QIYU.PENG_TIAO_FA] = {dwTabType = 8, dwIndex = 21055}
 
 --儿女事 21
 QIYU_NAME[QIYU.ER_NV_SHI] = _L["ER_NV_SHI"]
@@ -342,6 +367,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.ER_NV_SHI] = {
 	{szText = _L["DIALOG_ER_NV_SHI_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.ER_NV_SHI] = 6020
+QIYU_PET[QIYU.ER_NV_SHI] = {dwTabType = 8, dwIndex = 21054}
 
 --白雪忆 22
 QIYU_NAME[QIYU.BAI_XUE_YI] = _L["BAI_XUE_YI"]
@@ -355,6 +381,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.BAI_XUE_YI] = {
 	{szText = _L["DIALOG_BAI_XUE_YI_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.BAI_XUE_YI] = 6033
+QIYU_PET[QIYU.BAI_XUE_YI] = {dwTabType = 8, dwIndex = 21064}
 
 --锻剑女 23
 QIYU_NAME[QIYU.DUAN_JIAN_NV] = _L["DUAN_JIAN_NV"]
@@ -368,19 +395,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.DUAN_JIAN_NV] = {
 	{szText = _L["DIALOG_DUAN_JIAN_NV_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.DUAN_JIAN_NV] = 6035
-
---锻剑女 23
-QIYU_NAME[QIYU.DUAN_JIAN_NV] = _L["DUAN_JIAN_NV"]
-QIYU_MNTP[QIYU.DUAN_JIAN_NV] = MONITOR_TYPE.MSG_NPC_NEARBY
-QIYU_MAP[QIYU.DUAN_JIAN_NV] = 13
-QIYU_NPC[QIYU.DUAN_JIAN_NV] = 59272
---[[QIYU_ITEM[QIYU.DUAN_JIAN_NV] = {
-	{dwTabType = 5, dwIndex = 29649, },
-}]]
-QIYU_MSG_NPC_NEARBY[QIYU.DUAN_JIAN_NV] = {
-	{szText = _L["DIALOG_DUAN_JIAN_NV_01"], bFinish = true, }, 		--满次数
-}
-QIYU_ACHIEVEMENT[QIYU.DUAN_JIAN_NV] = 6035
+QIYU_PET[QIYU.DUAN_JIAN_NV] = {dwTabType = 8, dwIndex = 21066}
 
 --烟花戏·春 24
 QIYU_NAME[QIYU.YAN_HUA_XI_CHUN] = _L["YAN_HUA_XI_CHUN"]
@@ -394,6 +409,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.YAN_HUA_XI_CHUN] = {
 	{szText = _L["DIALOG_YAN_HUA_XI_CHUN_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.YAN_HUA_XI_CHUN] = 6030
+QIYU_PET[QIYU.YAN_HUA_XI_CHUN] = {dwTabType = 8, dwIndex = 21063}
 
 --烟花戏·秋 25
 QIYU_NAME[QIYU.YAN_HUA_XI_QIU] = _L["YAN_HUA_XI_QIU"]
@@ -407,6 +423,7 @@ QIYU_WINDOW_DIALOG[QIYU.YAN_HUA_XI_QIU] = {
 	{szText = _L["DIALOG_YAN_HUA_XI_QIU_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.YAN_HUA_XI_QIU] = 6028
+QIYU_PET[QIYU.YAN_HUA_XI_QIU] = {dwTabType = 8, dwIndex = 22530}
 
 --烟花戏·风 26
 QIYU_NAME[QIYU.YAN_HUA_XI_FENG] = _L["YAN_HUA_XI_FENG"]
@@ -420,6 +437,7 @@ QIYU_WARNING_MSG[QIYU.YAN_HUA_XI_FENG] = {
 	{szText = _L["DIALOG_YAN_HUA_XI_FENG_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.YAN_HUA_XI_FENG] = 6031
+QIYU_PET[QIYU.YAN_HUA_XI_FENG] = {dwTabType = 8, dwIndex = 21065}
 
 --烟花戏·月 27
 QIYU_NAME[QIYU.YAN_HUA_XI_YUE] = _L["YAN_HUA_XI_YUE"]
@@ -433,6 +451,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.YAN_HUA_XI_YUE] = {
 	{szText = _L["DIALOG_YAN_HUA_XI_YUE_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.YAN_HUA_XI_YUE] = 6029
+QIYU_PET[QIYU.YAN_HUA_XI_YUE] = {dwTabType = 8, dwIndex = 21067}
 
 --一念间 28
 QIYU_NAME[QIYU.YI_NIAN_JIAN] = _L["YI_NIAN_JIAN"]
@@ -446,6 +465,7 @@ QIYU_MSG_NPC_NEARBY[QIYU.YI_NIAN_JIAN] = {
 	{szText = _L["DIALOG_YI_NIAN_JIAN_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.YI_NIAN_JIAN] = 6032
+QIYU_PET[QIYU.YI_NIAN_JIAN] = {dwTabType = 8, dwIndex = 21062}
 
 --戎马边 29
 QIYU_NAME[QIYU.RONG_MA_BIAN] = _L["RONG_MA_BIAN"]
@@ -459,6 +479,44 @@ QIYU_MSG_NPC_NEARBY[QIYU.RONG_MA_BIAN] = {
 	{szText = _L["DIALOG_RONG_MA_BIAN_01"], bFinish = true, }, 		--满次数
 }
 QIYU_ACHIEVEMENT[QIYU.RONG_MA_BIAN] = 6034
+QIYU_PET[QIYU.RONG_MA_BIAN] = {dwTabType = 8, dwIndex = 21068}
+
+--归安志·安
+QIYU_NAME[QIYU.GUI_AN_ZHI_AN] = _L["GUI_AN_ZHI_AN"]
+QIYU_MNTP[QIYU.GUI_AN_ZHI_AN] = MONITOR_TYPE.MSG_NPC_NEARBY
+QIYU_MAP[QIYU.GUI_AN_ZHI_AN] = 13
+QIYU_NPC[QIYU.GUI_AN_ZHI_AN] = 59794
+QIYU_WARNING_MSG[QIYU.GUI_AN_ZHI_AN] = {
+	{szText = _L["DIALOG_GUI_AN_ZHI_AN_01"], bFinish = false, }, 		--满次数
+	{szText = _L["DIALOG_GUI_AN_ZHI_AN_02"], bFinish = true, }, 		--满次数
+}
+QIYU_ACHIEVEMENT[QIYU.GUI_AN_ZHI_AN] = 6188
+QIYU_PET[QIYU.GUI_AN_ZHI_AN] = {dwTabType = 8, dwIndex = 22534}
+
+--归安志·志
+QIYU_NAME[QIYU.GUI_AN_ZHI_ZHI] = _L["GUI_AN_ZHI_ZHI"]
+QIYU_MNTP[QIYU.GUI_AN_ZHI_ZHI] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.GUI_AN_ZHI_ZHI] = 13
+QIYU_NPC[QIYU.GUI_AN_ZHI_ZHI] = 59796
+QIYU_WINDOW_DIALOG[QIYU.GUI_AN_ZHI_ZHI] = {
+	{szText = _L["DIALOG_GUI_AN_ZHI_ZHI_01"], bFinish = false, }, 		--满次数
+	{szText = _L["DIALOG_GUI_AN_ZHI_ZHI_02"], bFinish = true, }, 		--满次数
+}
+QIYU_ACHIEVEMENT[QIYU.GUI_AN_ZHI_ZHI] = 6189
+QIYU_PET[QIYU.GUI_AN_ZHI_ZHI] = {dwTabType = 8, dwIndex = 22533}
+
+--归安志·归
+QIYU_NAME[QIYU.GUI_AN_ZHI_GUI] = _L["GUI_AN_ZHI_GUI"]
+QIYU_MNTP[QIYU.GUI_AN_ZHI_GUI] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.GUI_AN_ZHI_GUI] = 13
+QIYU_DOODAD[QIYU.GUI_AN_ZHI_GUI] = 6985
+QIYU_WARNING_MSG[QIYU.GUI_AN_ZHI_GUI] = {
+	{szText = _L["DIALOG_GUI_AN_ZHI_GUI_01"], bFinish = false, }, 		--满次数
+	{szText = _L["DIALOG_GUI_AN_ZHI_GUI_02"], bFinish = true, }, 		--满次数
+}
+QIYU_ACHIEVEMENT[QIYU.GUI_AN_ZHI_GUI] = 6187
+QIYU_PET[QIYU.GUI_AN_ZHI_GUI] = {dwTabType = 8, dwIndex = 21060}
+
 
 --------------------------------------------------------------------
 LR_AS_QY = {}
@@ -653,6 +711,16 @@ function _QY.ResetDataEveryDay(DB)
 	_QY.ClearAllData(DB)
 end
 
+function _QY.GetQYList()
+	local tList = {}
+	for k, v in pairs(QIYU) do
+		tList[#tList + 1] = {k = v, dwAchievementID = QIYU_ACHIEVEMENT[v], szName = QIYU_NAME[v], dwMapID = QIYU_MAP[v], dwTabType = QIYU_PET[v].dwTabType, dwIndex = QIYU_PET[v].dwIndex}
+	end
+	tsort(tList, function(a, b) return a.dwAchievementID < b.dwAchievementID end)
+	return tList
+end
+
+--------
 local _tempTime = 0
 function _QY.CheckItemNum(dwTabType, dwIndex)
 	local now = GetLogicFrameCount()
@@ -783,7 +851,7 @@ function _QY.OPEN_WINDOW()
 				end
 				if bFound then
 					_QY.SelfData[v] = _QY.SelfData[v] or 0
-					_QY.SelfData[v] = _QY.SelfData[v]+1
+					_QY.SelfData[v] = _QY.SelfData[v] + 1
 					if bFinish then
 						_QY.SelfData[v] = 4
 					end
@@ -916,31 +984,53 @@ function _QY.ReFreshTitle()
 		return
 	end
 	local title_handle = frame:Lookup("PageSet_Menu"):Lookup("Page_QY"):Lookup("", "")
+
+	local tList = _QY.GetQYList()
 	local n = 1
-	for k, v in pairs (QIYU) do
-		if n<10 then
-			if LR_AS_QY.UsrData.List[QIYU_NAME[v]] then
+	for k, v in pairs (tList) do
+		if n < 10 then
+			if LR_AS_QY.UsrData.List[QIYU_NAME[v.k]] then
 				local text = title_handle:Lookup(sformat("Text_QY%d_Break", n))
-				text:SetText(QIYU_NAME[v])
+				local dwTabType = QIYU_PET[v.k].dwTabType
+				local dwIndex = QIYU_PET[v.k].dwIndex
+				local itemInfo = GetItemInfo(dwTabType, dwIndex)
+				local szName = ""
+				if itemInfo then
+					szName = itemInfo.szName
+				end
+				text:SetText(szName)
 				text:RegisterEvent(277)
 				text.OnItemLButtonClick = function ()
 					local nX, nY = text:GetAbsPos()
 					local nW, nH = text:GetSize()
-					OutputAchievementTip(QIYU_ACHIEVEMENT[v], {nX, nY, 0, -135})
+					OutputAchievementTip(QIYU_ACHIEVEMENT[v.k], {nX, nY, 0, -135})
 				end
 				text.OnItemMouseEnter = function ()
+					local x, y = this:GetAbsPos()
+					local rect = {x, y, 0, 0}
+					_QY.ShowTip(v.k, rect)
 					text:SetFontColor(255, 128, 0)
 				end
 				text.OnItemMouseLeave = function ()
 					text:SetFontColor(255, 255, 255)
+					HideTip()
 				end
-				n = n+1
+				n = n + 1
 			end
 		end
 	end
 	for i = n, 9, 1 do
 		local text = title_handle:Lookup(sformat("Text_QY%d_Break", i))
 		text:SetText("")
+		text.OnItemLButtonClick = function ()
+
+		end
+		text.OnItemMouseEnter = function ()
+
+		end
+		text.OnItemMouseLeave = function ()
+
+		end
 	end
 end
 
@@ -949,10 +1039,18 @@ function _QY.ListQY()
 	if not frame then
 		return
 	end
-	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
+
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+	_QY.LoadAllUsrData(DB)
+	DB:Execute("END TRANSACTION")
+	DB:Release()
 
 	_QY.Container = frame:Lookup("PageSet_Menu/Page_QY/WndScroll_QY/Wnd_QY")
 	_QY.Container:Clear()
+
+	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 	num = _QY.ShowItem(TempTable_Cal, 255, 1, 0)
 	num = _QY.ShowItem(TempTable_NotCal, 60, 1, num)
 	_QY.Container:FormatAllContentPos()
@@ -1008,15 +1106,16 @@ function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 		------输出日常
 		local n = 1
 		local List = _QY.List
-		for k, v in pairs(QIYU) do
-			if n<10 then
-				if LR_AS_QY.UsrData.List[QIYU_NAME[v]] then
+		local tList = _QY.GetQYList()
+		for k2, v2 in pairs(tList) do
+			if n < 10 then
+				if LR_AS_QY.UsrData.List[v2.szName] then
 					local Text_QY = handle:Lookup(sformat("Text_QY%d", n))
-					if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v])] then
+					if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v2.k])] then
 						Text_QY:SetText(_L["Achievement done"])
 						Text_QY:SetFontScheme(47)
 					else
-						local times = QY_Record[v] or 0
+						local times = QY_Record[v2.k] or 0
 						if times>= 3 then
 							Text_QY:SetText(_L["Done"])
 							Text_QY:SetFontScheme(47)
@@ -1027,7 +1126,7 @@ function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 							Text_QY:SetText("--")
 						end
 					end
-					n = n+1
+					n = n + 1
 				end
 			end
 		end
@@ -1046,13 +1145,14 @@ function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 			local szPath, nFrame = GetForceImage(v.dwForceID)
 			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
 			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s（%d）\n", v.szName, v.nLevel), 62, r, g, b)
-			szTipInfo[#szTipInfo+1] = GetFormatText(" ============== \t   \n", 62)
-			for k, v in pairs(QIYU) do
-				local times = QY_Record[v] or 0
+			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
+			local tList = _QY.GetQYList()
+			for k, v in pairs(tList) do
+				local times = QY_Record[v.k] or 0
 				local text = ""
 				local font = 17
-				if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v])] then
-					text = _L["Done"]
+				if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v.k])] then
+					text = _L["Achievement done"]
 					font = 47
 				else
 					if times>= 3 then
@@ -1066,11 +1166,22 @@ function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 						font = 17
 					end
 				end
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：", QIYU_NAME[v]), 224)
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", text), font)
+				local dwTabType = QIYU_PET[v.k].dwTabType
+				local dwIndex = QIYU_PET[v.k].dwIndex
+				local itemInfo = GetItemInfo(dwTabType, dwIndex)
+				if itemInfo then
+					local dwIconID = Table_GetItemIconID(itemInfo.nUiId)
+					local r, g, b = GetItemFontColorByQuality(itemInfo.nQuality)
+					szTipInfo[#szTipInfo+1] = LR.GetFormatImageByID(dwIconID, 24, 24)
+					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s", itemInfo.szName), nil, r, g, b)
+				end
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" (%s) ", Table_GetMapName(QIYU_MAP[v.k])))
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" %s:", QIYU_NAME[v.k]), 224)
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\t%s\n", text), font)
+
 			end
 			local szOutputTip = tconcat(szTipInfo)
-			OutputTip(szOutputTip, 200, {nMouseX, nMouseY, 0, 0})
+			OutputTip(szOutputTip, 330, {nMouseX, nMouseY, 0, 0})
 		end
 		handle.OnItemMouseLeave = function()
 			item_Select:Hide()
@@ -1085,6 +1196,27 @@ function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 		end
 	end
 	return num
+end
+
+function _QY.ShowTip(qiyu_id, rect)
+	local szXml = {}
+	local dwTabType = QIYU_PET[qiyu_id].dwTabType
+	local dwIndex = QIYU_PET[qiyu_id].dwIndex
+	local itemInfo = GetItemInfo(dwTabType, dwIndex)
+	if itemInfo then
+		local dwIconID = Table_GetItemIconID(itemInfo.nUiId)
+		local r, g, b = GetItemFontColorByQuality(itemInfo.nQuality)
+		szXml[#szXml + 1] = LR.GetFormatImageByID(dwIconID, 40, 40)
+		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", itemInfo.szName), 23, r, g, b)
+		szXml[#szXml + 1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
+		szXml[#szXml + 1] = GetFormatText(_L["Related map:"], 17, 233, 150, 122)
+		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", Table_GetMapName(QIYU_MAP[qiyu_id])), 17, 255, 255, 255)
+		szXml[#szXml + 1] = GetFormatText(_L["Related Npc/Doodad:"], 17, 233, 150, 122)
+		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", QIYU_NPC and Table_GetNpcTemplateName(QIYU_NPC[qiyu_id]) or QIYU_DOODAD and Table_GetDoodadTemplateName(QIYU_DOODAD[qiyu_id]) or ""), 17, 255, 255, 255)
+		szXml[#szXml + 1] = GetFormatText(_L["Related achievement:"], 17, 233, 150, 122)
+		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", QIYU_NAME[qiyu_id]), 17, 255, 255, 255)
+		OutputTip(tconcat(szXml), 330, rect)
+	end
 end
 
 function _QY.AddPageButton()
@@ -1224,63 +1356,14 @@ function LR_ACS_QiYu_Panel:Init()
 	--------------人物选择
 	local hComboBox = self:Append("ComboBox", frame, "hComboBox", {w = 160, x = 20, y = 51, text = ""})
 	hComboBox:Enable(true)
+	local fnAction = function(data)
+		local realArea = data.realArea
+		local realServer = data.realServer
+		local dwID = data.dwID
+		LR_ACS_QiYu_Panel:ReloadItemBox(realArea, realServer, dwID)
+	end
 	hComboBox.OnClick = function (m)
-		local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
-		tsort(TempTable_Cal, function(a, b)
-			if a.nLevel ==  b.nLevel then
-				return a.dwForceID < b.dwForceID
-			else
-				return a.nLevel > b.nLevel
-			end
-		end)
-
-		local TempTable = {}
-		for i = 1, #TempTable_Cal, 1 do
-			TempTable[#TempTable+1] = TempTable_Cal[i]
-		end
-		for i = 1, #TempTable_NotCal, 1 do
-			TempTable[#TempTable+1] = TempTable_NotCal[i]
-		end
-
-		local page_num = mceil(#TempTable / 20)
-		local page = {}
-		for i = 0, page_num - 1, 1 do
-			page[i] = {}
-			for k = 1, 20, 1 do
-				if TempTable[i * 20 + k] ~=  nil then
-					local szIcon, nFrame = GetForceImage(TempTable[i * 20 + k].dwForceID)
-					local r, g, b = LR.GetMenPaiColor(TempTable[i * 20 + k].dwForceID)
-					page[i][#page[i]+1] = {szOption = sformat("(%d)%s", TempTable[i * 20 + k].nLevel, TempTable[i * 20 + k].szName), bCheck = false, bChecked = false,
-						fnAction =  function ()
-							local realArea = TempTable[i * 20 + k].realArea
-							local realServer = TempTable[i * 20 + k].realServer
-							local dwID = TempTable[i * 20 + k].dwID
-							LR_ACS_QiYu_Panel:ReloadItemBox(realArea, realServer, dwID)
-						end,
-						szIcon =  szIcon,
-						nFrame =  nFrame,
-						szLayer =  "ICON_RIGHT",
-						rgb =  {r, g, b},
-					}
-				end
-			end
-		end
-		for i = 0, page_num - 1, 1 do
-			if i ~=  page_num - 1 then
-				page[i][#page[i] + 1] = {bDevide = true}
-				page[i][#page[i] + 1] = page[i+1]
-				page[i][#page[i]].szOption = _L["Next 20 Records"]
-			end
-		end
-
-		m = page[0]
-
-		local __x, __y = hComboBox:GetAbsPos()
-		local __w, __h = hComboBox:GetSize()
-		m.nMiniWidth = __w
-		m.x = __x
-		m.y = __y + __h
-		PopupMenu(m)
+		LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction)
 	end
 
 	self:LoadItemBox(hScroll)
@@ -1336,7 +1419,8 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 	end
 
 	local m = 1
-	for k, v in pairs(QIYU) do
+	local tList = _QY.GetQYList()
+	for k, v in pairs(tList) do
 		local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", m), {x = 0, y = 0, w = 340, h = 30})
 		local Image_Line = self:Append("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 0, y = 0, w = 340, h = 30})
 		Image_Line:FromUITex("ui\\Image\\button\\ShopButton.UITex", 75)
@@ -1354,9 +1438,16 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 		Image_Hover:SetAlpha(200)
 		Image_Hover:Hide()
 
-		local Text_break1 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_1", m), {w = 160, h = 30, x  = 36, y = 2, text = QIYU_NAME[v] , font = 18})
-		Text_break1:SetHAlign(0)
-		Text_break1:SetVAlign(1)
+		local dwTabType = QIYU_PET[v.k].dwTabType
+		local dwIndex = QIYU_PET[v.k].dwIndex
+		local itemInfo = GetItemInfo(dwTabType, dwIndex)
+
+		local box = LR.AppendUI("Box", hIconViewContent, sformat("Box_%d", m), {w = 28, h = 28, x = 30, y = 1})
+		UpdateBoxObject(box:GetSelf(), UI_OBJECT_ITEM_INFO, 1, dwTabType, dwIndex)
+		--box:SetObject(UI_OBJECT_ITEM_INFO, 1, dwTabType, dwIndex)
+
+		local Text_break1 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_1", m), {w = 140, h = 30, x  = 60, y = 2, text = itemInfo.szName , font = 18})
+		Text_break1:SetHAlign(0):SetVAlign(1):SetFontColor(GetItemFontColorByQuality(itemInfo.nQuality))
 
 		local times = QY_Record[v] or 0
 		local font = 18
@@ -1375,10 +1466,14 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 		Text_break2:SetVAlign(1)
 
 		hIconViewContent.OnEnter = function()
+			local x, y = Text_break2:GetAbsPos()
+			local rect = {x, y, 140, 0}
+			_QY.ShowTip(v.k, rect)
 			Image_Hover:Show()
 		end
 
 		hIconViewContent.OnLeave = function()
+			HideTip()
 			Image_Hover:Hide()
 		end
 
@@ -1522,6 +1617,8 @@ LR_AS_QY.MsgMonitor = _History.MsgMonitor
 RegisterMsgMonitor(LR_AS_QY.MsgMonitor,  {"MSG_SYS", "MSG_WORLD"})
 
 -------------------------------------------
+---捡宠物记录
+------------------------------------------
 local _Pet = {}
 function _Pet.LOOT_ITEM()
 	local dwPlayerID = arg0
@@ -1971,6 +2068,7 @@ LR_AS_QY.QiYu = clone(QIYU)
 LR_AS_QY.QiYuName = clone(QIYU_NAME)
 LR_AS_QY.SaveCommomUsrData = _QY.SaveCommomUsrData
 LR_AS_QY.LoadCommomUsrData = _QY.LoadCommomUsrData
+LR_AS_QY.GetQYList = _QY.GetQYList
 
 -------------------------------
 --注册模块

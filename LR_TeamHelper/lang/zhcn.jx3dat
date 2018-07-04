@@ -9,4 +9,12 @@ data = {
 	["LR TeamHelper"]="懒人组队助手",
 	["Enable LR TeamHelper"]="开启懒人组队助手",
 
+	["<SYMBOL_DONE>"]="★",
+	["<SYMBOL_NOT>"]="☆",
+
+	["Killed"]="已击杀",
+	["Waiting for kill"]="未击杀",
+	["Global"]="※全局※",
+	["Open LR_CDRP"]="团队击杀进度查看器",
+
 }

@@ -133,7 +133,7 @@ function LR_TeamRequestPanel.ini()
 	local frame = LR.AppendUI("Frame", "LR_TeamRequestPanel", {title = _L["Team request"], path = sformat("%s\\UI\\LR_TeamRequestPanel.ini", AddonPath)})
 
 	_ui = {}
-	_ui["WndContainer"] = LR.AppendUI("WndContainer", frame, "WndContainer", {x = 0, y = 30, w = 470, h = 100})
+	_ui["WndContainer"] = LR.AppendUI("WndContainer", frame, "WndContainer", {x = 0, y = 30, w = 550, h = 100})
 	_ui["frame"] = frame
 
 	LR_TeamRequestPanel.LoadQuest()
@@ -165,10 +165,10 @@ function LR_TeamRequestPanel.ReSize()
 	if _ui["WndContainer"]:GetAllContentCount() == 0 then
 		LR_TeamRequestPanel.ClosePanel()
 	else
-		_ui["WndContainer"]:SetSize(470, _ui["WndContainer"]:GetAllContentCount() * 40 + 2)
+		_ui["WndContainer"]:SetSize(550, _ui["WndContainer"]:GetAllContentCount() * 40 + 2)
 		_ui["WndContainer"]:FormatAllContentPos()
-		_ui["frame"]:Lookup("",""):Lookup("Image_Bg"):SetSize(470, _ui["WndContainer"]:GetAllContentCount() * 40 + 32)
-		_ui["frame"]:SetSize(470, _ui["WndContainer"]:GetAllContentCount() * 40 + 32)
+		_ui["frame"]:Lookup("",""):Lookup("Image_Bg"):SetSize(550, _ui["WndContainer"]:GetAllContentCount() * 40 + 32)
+		_ui["frame"]:SetSize(550, _ui["WndContainer"]:GetAllContentCount() * 40 + 32)
 	end
 end
 
@@ -184,9 +184,9 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 		return
 	end
 	if not _ui[sformat("WndWindow_%s", data.szName)] then
-		local WndWindow = LR.AppendUI("Window", _ui["WndContainer"], sformat("WndWindow_%s", data.szName), {w = 470, h = 40})
+		local WndWindow = LR.AppendUI("Window", _ui["WndContainer"], sformat("WndWindow_%s", data.szName), {w = 550, h = 40})
 
-		local Image_Bg = LR.AppendUI("Image", WndWindow, "Image_Bg", { x = 0, y = 0, w = 470, h = 40})
+		local Image_Bg = LR.AppendUI("Image", WndWindow, "Image_Bg", { x = 0, y = 0, w = 550, h = 40})
 		Image_Bg:FromUITex("ui/Image/UICommon/CommonPanel.UITex", 48):SetImageType(10)
 
 		local Image_Kungfu = LR.AppendUI("Image", WndWindow, sformat("Image_Kungfu_%s", data.szName), { x = 10, y = 5, w = 30, h = 30})
@@ -201,11 +201,12 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 		local Image_Camp = LR.AppendUI("Image", WndWindow, "Image_Camp", { x = 265, y = 5, w = 30, h = 30})
 		Image_Camp:FromUITex(LR.GetCampImage(data.nCamp))
 
-		local Btn_Apply = LR.AppendUI("Button", WndWindow, "Btn_Apply", {x = 305, y = 5, w = 70, h = 30, text = g_tStrings.STR_ACCEPT})
+		local Btn_View = LR.AppendUI("Button", WndWindow, sformat("Btn_View_%s", data.szName), {x = 308, y = 5, w = 70, h = 30, text = g_tStrings.STR_LOOKUP})
+		Btn_View:Enable(false)
+		local Btn_Apply = LR.AppendUI("Button", WndWindow, "Btn_Apply", {x = 385, y = 5, w = 70, h = 30, text = g_tStrings.STR_ACCEPT})
+		local Btn_Refuse = LR.AppendUI("Button", WndWindow, sformat("Btn_Refuse_%s", data.szName), {x = 465, y = 5, w = 70, h = 30, text = sformat("%s(%d)", g_tStrings.STR_REFUSE, 120)})
 
-		local Btn_Refuse = LR.AppendUI("Button", WndWindow, sformat("Btn_Refuse_%s", data.szName), {x = 385, y = 5, w = 70, h = 30, text = sformat("%s(%d)", g_tStrings.STR_REFUSE, 120)})
-
-		local Image_Hover = LR.AppendUI("Image", WndWindow, sformat("Image_Hover_%s", data.szName), { x = 0, y = 0, w = 470, h = 40})
+		local Image_Hover = LR.AppendUI("Image", WndWindow, sformat("Image_Hover_%s", data.szName), { x = 0, y = 0, w = 550, h = 40})
 		Image_Hover:FromUITex("ui/Image/Common/Box.UITex", 10):SetImageType(10):Hide()
 
 		_ui[sformat("WndWindow_%s", data.szName)] = WndWindow
@@ -213,6 +214,13 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 		_ui[sformat("Btn_Refuse_%s", data.szName)] = Btn_Refuse
 		_ui[sformat("Image_Kungfu_%s", data.szName)] = Image_Kungfu
 		_ui[sformat("Image_GongZhan_%s", data.szName)] = Image_GongZhan
+		_ui[sformat("Btn_View_%s", data.szName)] = Btn_View
+
+		Btn_View.OnClick = function()
+			if data.dwID then
+				LR.GetEquipmentMenu(data.dwID)[1].fnAction()
+			end
+		end
 
 		Btn_Apply.OnEnter = function()
 			if _ui[sformat("Image_Hover_%s", data.szName)] then
@@ -258,7 +266,7 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 		end
 		WndWindow:GetSelf().OnLButtonClick = function()
 			if IsCtrlKeyDown() then
-				EditBox_AppendLinkPlayer(data.szName)
+				LR.EditBox_AppendLinkPlayer(data.szName)
 			end
 		end
 		WndWindow:GetSelf().OnRButtonClick = function()
@@ -336,6 +344,10 @@ function LR_TeamRequest.ON_BG_CHANNEL_MSG()
 					_ui[sformat("Image_GongZhan_%s", v.szName)]:Show()
 				end
 			end
+			if _ui[sformat("Btn_View_%s", v.szName)] then
+				_ui[sformat("Btn_View_%s", v.szName)]:Enable(true)
+			end
+
 		end
 	end
 end

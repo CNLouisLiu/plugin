@@ -17,13 +17,14 @@ LR_GKP_DB = {}
 ]]
 local schema_bill_data = {
 	name = "bill_data",
-	version = "20171224",
+	version = "20180620",
 	data = {
 		{name = "szName", 	sql = "szName VARCHAR(100)"},		--主键
 		{name = "hash", 	sql = "hash VARCHAR(100)"},		--主键
 		{name = "szArea", 	sql = "szArea VARCHAR(40)"},
 		{name = "szServer", 	sql = "szServer VARCHAR(40)"},
 		{name = "nCreateTime", sql = "nCreateTime INTEGER DEFAULT(0)"},
+		{name = "szBossData", sql = "szBossData VARCHAR(9999)"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szName )"},
@@ -34,10 +35,10 @@ szKey：nTime_dwTabType_nIndex_dwItemID
 ]]
 local schema_trade_data = {
 	name = "trade_data",
-	version = "20171227",
+	version = "20180621",
 	data = {
-		{name = "szKey", sql = "szKey VARCHAR(60)"},		--主键
-		{name = "hash", 	sql = "hash VARCHAR(100)"},
+		{name = "szKey", sql = "szKey VARCHAR(150)"},		--主键
+		{name = "hash", 	sql = "hash VARCHAR(150)"},
 		{name = "szName", 	sql = "szName VARCHAR(60)"},
 		{name = "dwTabType", sql = "dwTabType INTEGER DEFAULT(0)"},
 		{name = "dwIndex", sql = "dwIndex INTEGER DEFAULT(0)"},
@@ -63,7 +64,7 @@ local schema_trade_data = {
 		{name = "szBelongBill", 	sql = "szBelongBill VARCHAR(100)"},
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
-	primary_key = {sql = "PRIMARY KEY ( szKey )"},
+	primary_key = {sql = "PRIMARY KEY ( hash )"},
 }
 
 local schema_cash_data = {

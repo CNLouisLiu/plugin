@@ -20,7 +20,19 @@ local LR_GKP_UI ={
 	dwIcon = 2490,
 	szClass = "Normal",
 	tWidget = {
-		{	name="LR_GKP_Button_01",type="Button",x=0,y=0,w=300,text=_L["Open LR_GKP Panel"],
+		{name = "LR_GKP_CheckBox_01",type = "CheckBox", x = 0, y = 0, w = 200, text = _L["Pop panel when drop"],
+			default = function ()
+				return LR_GKP_Base.UsrData.bLazy
+			end,
+			callback = function (enabled)
+				LR_GKP_Base.UsrData.bLazy = enabled
+			end,
+		},{ name = "LR_GKP_ComboBox_01",type = "ComboBox", x = 0, y = 40, w = 200, text = _L["Set price"],
+			callback = function(m)
+				LR_GKP_Base.InsertSetPriceMenu(m)
+				PopupMenu(m)
+			end
+		},{	name="LR_GKP_Button_01",type="Button", x = 0, y = 80, w = 200, text = _L["Open LR_GKP Panel"],
 			callback = function()
 				LR_GKP_Panel:Open()
 			end
@@ -53,7 +65,7 @@ LR_GKP_UI.menu = {
 	nFrame =105,
 	nMouseOverFrame = 106,
 	szLayer = "ICON_RIGHT",
-	fnAutoClose=true,
+	fnAutoClose = true,
 	fnClickIcon = function ()
 		LR_TOOLS:OpenPanel(_L["LR GKP"])
 	end,

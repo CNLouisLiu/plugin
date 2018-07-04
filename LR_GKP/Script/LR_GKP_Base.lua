@@ -2,13 +2,14 @@ local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = strin
 local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_GKP"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_GKP"
 local _L = LR.LoadLangPack(AddonPath)
 local DB_Name = "LR_GKP.db"
 local DB_Path = sformat("%s\\%s", SaveDataPath, DB_Name)
-local VERSION = "20180104"
+local VERSION = "20180620"
 ---------------------------------------------------------------
 local OPERATION_TYPE = {
 	ADD = 1,
@@ -40,6 +41,7 @@ LR_GKP_Base = {}
 local DefaultData = {
 	bOn = true,
 	lastLoadBill = "",
+	bLazy = false,
 }
 LR_GKP_Base.UsrData = clone(DefaultData)
 RegisterCustomData("LR_GKP_Base.UsrData", CustomVersion)
@@ -68,6 +70,36 @@ function _GKP.IsSmallIron(item)
 	return SMALL_IRON[szKey] or false
 end
 
+function _GKP.IsArmor(item)
+	if item.nGenre == ITEM_GENRE.EQUIPMENT then
+		if item.nSub >= 1 and item.nSub <= 11 then
+			return true
+		end
+	end
+	return false
+end
+
+function _GKP.IsWeapon(item)
+	if item.nGenre == ITEM_GENRE.EQUIPMENT then
+		if item.nSub == 0 then		--近身武器
+			return true
+		end
+	end
+	return false
+end
+
+function _GKP.IsExchangeItem(item)
+	if item.nGenre == ITEM_GENRE.MATERIAL and item.nSub == 6 then
+		return true
+	elseif item.nGenre == ITEM_GENRE.MATERIAL and item.nSub == 0 then	--秦风部分牌子
+		local _s, _e, m, n = sfind(item.szName, _L["qinfeng(.+).(.+)"])
+		if _s then
+			return true
+		end
+	end
+	return false
+end
+
 function _GKP.GroupItem(items)
 	local Grouped_Items = {}
 	Grouped_Items["Weapon"] = {}		--武器
@@ -76,7 +108,19 @@ function _GKP.GroupItem(items)
 	Grouped_Items["Material"] = {}	--材料
 	Grouped_Items["Other"] = {}	--其他
 	for k, item in pairs(items) do
-		if item.nGenre == ITEM_GENRE.EQUIPMENT then
+		if _GKP.IsArmor(item) then
+			Grouped_Items["Armor"][#Grouped_Items["Armor"] + 1] = clone(item)
+		elseif _GKP.IsWeapon(item) then
+			Grouped_Items["Weapon"][#Grouped_Items["Weapon"] + 1] = clone(item)
+		elseif _GKP.IsExchangeItem(item) then
+			Grouped_Items["ExchangeItem"][#Grouped_Items["ExchangeItem"] + 1] = clone(item)
+		elseif _GKP.IsMaterial(item) then
+			Grouped_Items["Material"][#Grouped_Items["Material"] + 1] = clone(item)
+		else
+			Grouped_Items["Other"][#Grouped_Items["Other"] + 1] = clone(item)
+		end
+
+--[[		if item.nGenre == ITEM_GENRE.EQUIPMENT then
 			if item.nSub == 0 then		--近身武器
 				Grouped_Items["Weapon"][#Grouped_Items["Weapon"] + 1] = clone(item)
 			elseif item.nSub >= 1 and item.nSub <= 11 then
@@ -91,7 +135,7 @@ function _GKP.GroupItem(items)
 		elseif _GKP.IsSmallIron(item) then
 			Grouped_Items["Other"][#Grouped_Items["Other"] + 1] = clone(item)
 		elseif item.nGenre == ITEM_GENRE.MATERIAL and item.nSub == 0 then	--秦风部分牌子
-			local _s, _e, m, n = sfind(itemInfo.szName, _L["qinfeng(.+).(.+)"])
+			local _s, _e, m, n = sfind(item.szName, _L["qinfeng(.+).(.+)"])
 			if _s then
 				Grouped_Items["ExchangeItem"][#Grouped_Items["ExchangeItem"] + 1] = clone(item)
 			else
@@ -99,7 +143,7 @@ function _GKP.GroupItem(items)
 			end
 		else
 			Grouped_Items["Other"][#Grouped_Items["Other"] + 1] = clone(item)
-		end
+		end]]
 	end
 	return Grouped_Items
 end
@@ -114,15 +158,49 @@ LR_GKP_Base.Last_Trade = {} --记录物品上一次的购买者
 _GKP.Sale_Item_History = {}
 
 LR_GKP_Base.SmallIronBoss = {dwID = 0, szName = "0", dwForceID = 0}
+LR_GKP_Base.SmallIronPrice = 1000
 LR_GKP_Base.MaterialBoss = {dwID = 0, szName = "0", dwForceID = 0}
 LR_GKP_Base.EquipmentBoss = {dwID = 0, szName = "0", dwForceID = 0}
 LR_GKP_Base.MenPaiBoss = {}
+
+local START_PRICE = {
+	Armor = 1000,
+	ExchangeItem = 3000,
+	Weapon = 5000,
+	Special = 5000,
+}
+local START_PRICE_SETS = {}
 
 _GKP.DoodadOriginalCount = {}
 _GKP.DoodadCount = {}
 
 _GKP.szSearchKey = "nCreateTime"
 _GKP.szOrderKey = "DESC"
+
+-----------------------------------------------------------------
+function _GKP.SaveStartPriceSets()
+	local path = sformat("%s\\START_PRICE_SETS.dat", SaveDataPath)
+	local data = clone(START_PRICE_SETS)
+	SaveLUAData(path, data)
+end
+
+function _GKP.LoadStartPriceSets()
+	local path = sformat("%s\\START_PRICE_SETS.dat", SaveDataPath)
+	local data = LoadLUAData(path) or {}
+	START_PRICE_SETS = clone(data)
+end
+
+function _GKP.SaveStartPrice()
+	local path = sformat("%s\\Script\\START_PRICE.dat", AddonPath)
+	local data = clone(START_PRICE)
+	SaveLUAData(path, data)
+end
+
+function _GKP.LoadStartPrice()
+	local path = sformat("%s\\Script\\START_PRICE.dat", AddonPath)
+	local data = LoadLUAData(path) or {}
+	START_PRICE = clone(data)
+end
 
 ------------------------------------------------------------------
 function _GKP.IsSpecialWeapon(item)
@@ -148,6 +226,74 @@ function _GKP.IsSpecialWeapon(item)
 	return false
 end
 
+function _GKP.IsSpecialItem(item)
+	local itemInfo = GetItemInfo(item.dwTabType, item.dwIndex)
+	if not itemInfo then
+		return false
+	end
+	local desc = Table_GetItemDesc(itemInfo.nUiId)
+	if sfind(ssub(desc, 1, 50), _L["Use:"]) then
+		return true
+	end
+	return false
+end
+
+function _GKP.InsertSetPriceMenu(menu)
+	local me = GetClientPlayer()
+	if not me then
+		return {}
+	end
+
+	local szKey = {"Armor", "ExchangeItem", "Weapon", "Special"}
+	for k, v in pairs(szKey) do
+		menu[#menu + 1] = {szOption = sformat("%s:%d", _L[v], START_PRICE[v] or 0)}
+		local m = menu[#menu]
+		m[#m + 1] = {szOption = _L["Set"],
+			fnAction = function()
+				GetUserInputNumber(START_PRICE[v] or 0, 99999, nil, function(arg0)
+					START_PRICE[v] = arg0,
+					_GKP.SaveStartPrice()
+				end)
+			end,
+		}
+	end
+	menu[#menu + 1] = {bDevide = true}
+	menu[#menu + 1] = {szOption = _L["Save as a set"],
+		fnAction = function()
+			GetUserInput(_L["Input name"], function(szText)
+				local szText =  string.gsub(szText, "^%s*%[?(.-)%]?%s*$", "%1")
+				if LR.Trim(szText) ~= "" then
+					START_PRICE_SETS[LR.Trim(szText)] = clone(START_PRICE)
+					_GKP.SaveStartPriceSets()
+				else
+					LR.SysMsg(_L["Error\n"])
+				end
+			end)
+		end,
+	}
+	if next(START_PRICE_SETS) ~= nil then
+		menu[#menu + 1] = {bDevide = true}
+		for k, v in pairs(START_PRICE_SETS) do
+			menu[#menu + 1] = {szOption = k}
+			local m = menu[#menu]
+			for k2, v2 in pairs(szKey) do
+				m[#m + 1] = {szOption = sformat("%s:%d", _L[v2], v[v2] or 0)}
+			end
+			m[#m + 1] = {bDevide = true}
+			m[#m + 1] = {szOption = sformat(_L["Load %s"], k),
+				fnAction = function()
+					START_PRICE = clone(v)
+				end,
+			}
+		end
+	end
+end
+
+
+function _GKP.DeleteMenPaiBoss(dwForceID)
+	LR_GKP_Base.MenPaiBoss[dwForceID] = nil
+end
+
 function _GKP.InsertSetBossMenu(menu)
 	local me = GetClientPlayer()
 	if not me then
@@ -171,7 +317,15 @@ function _GKP.InsertSetBossMenu(menu)
 			nFrame = nFrame,
 			szLayer = "ICON_RIGHT",
 			fnAction = function()
-				LR_GKP_Base.MaterialBoss = {dwID = v.dwID, szName = v.szName, dwForceID = v.dwForceID}
+				if _GKP.CheckIsDistributor(true) then
+					if _GKP.CheckBillExist() then
+						LR_GKP_Base.MaterialBoss = {dwID = v.dwID, szName = v.szName, dwForceID = v.dwForceID}
+						_GKP.SaveBill()
+					end
+				end
+			end,
+			fnDisable = function()
+				return not _GKP.IsDistributor()
 			end,
 		}
 	end
@@ -180,6 +334,16 @@ function _GKP.InsertSetBossMenu(menu)
 		szOption = _L["Set smalliron boss"],
 	}
 	local m = menu[#menu]
+	m[#m + 1] = {szOption = sformat(_L["Uint price:%d"], LR_GKP_Base.SmallIronPrice)}
+	mm = m[#m]
+	mm[#mm + 1] = {szOption = _L["Set"],
+		fnAction = function()
+			GetUserInputNumber(LR_GKP_Base.SmallIronPrice or 0, 99999, nil, function(arg0)
+				LR_GKP_Base.SmallIronPrice = arg0
+				_GKP.SaveBill()
+			end)
+		end}
+	m[#m + 1] = {bDevide = true}
 	for k, v in pairs(memberList) do
 		local szIcon, nFrame = GetForceImage(v.dwForceID)
 		m[#m + 1] = {
@@ -192,7 +356,15 @@ function _GKP.InsertSetBossMenu(menu)
 			nFrame = nFrame,
 			szLayer = "ICON_RIGHT",
 			fnAction = function()
-				LR_GKP_Base.SmallIronBoss = {dwID = v.dwID, szName = v.szName, dwForceID = v.dwForceID}
+				if _GKP.CheckIsDistributor(true) then
+					if _GKP.CheckBillExist() then
+						LR_GKP_Base.SmallIronBoss = {dwID = v.dwID, szName = v.szName, dwForceID = v.dwForceID}
+						_GKP.SaveBill()
+					end
+				end
+			end,
+			fnDisable = function()
+				return not _GKP.IsDistributor()
 			end,
 		}
 	end
@@ -213,11 +385,85 @@ function _GKP.InsertSetBossMenu(menu)
 			nFrame = nFrame,
 			szLayer = "ICON_RIGHT",
 			fnAction = function()
-				LR_GKP_Base.EquipmentBoss = {dwID = v.dwID, szName = v.szName, dwForceID = v.dwForceID}
+				if _GKP.CheckIsDistributor(true) then
+					if _GKP.CheckBillExist() then
+						LR_GKP_Base.EquipmentBoss = {dwID = v.dwID, szName = v.szName, dwForceID = v.dwForceID}
+						_GKP.SaveBill()
+					end
+				end
+			end,
+			fnDisable = function()
+				return not _GKP.IsDistributor()
 			end,
 		}
 	end
 
+	--门派老板
+	menu[#menu + 1] = {
+		szOption = _L["Set menpai boss"],
+	}
+	local m2 = menu[#menu]
+	for dwForceID, v in pairs(LR_GKP_Base.MenPaiBoss) do
+		local dwMemberID = v.dwID
+		local szName = v.szName
+		local szPath, nFrame = GetForceImage(dwForceID)
+		local r, g, b = LR.GetMenPaiColor(dwForceID)
+
+		m2[#m2 + 1] = {	bRichText = true, szOption = GetFormatImage(szPath, nFrame, 24, 24) .. GetFormatText(szName, nil, r, g, b),
+			rgb = {r, g, b},
+			szIcon = "ui\\Image\\UICommon\\feedanimials.UITex",
+			nFrame  = 86,
+			nMouseOverFrame = 87,
+			szLayer = "ICON_RIGHT",
+			fnAutoClose = true,
+			fnClickIcon = function ()
+				if _GKP.CheckIsDistributor(true) then
+					if _GKP.CheckBillExist() then
+						local msg = {
+							szMessage = sformat("%s %s?", _L["Sure to delete menpai Boss:"], szName),
+							szName = "delete",
+							fnAutoClose = function() return false end,
+							{szOption = g_tStrings.STR_HOTKEY_SURE,
+								fnAction = function()
+									_GKP.DeleteMenPaiBoss(dwForceID)
+									_GKP.SaveBill()
+									--喊话
+									local r, g, b = LR.GetMenPaiColor(dwForceID)
+									local msg = {}
+									msg[#msg + 1] = GetFormatText(_L["Successfully del"], 48)
+									msg[#msg + 1] = GetFormatText(g_tStrings.tForceTitle[dwForceID], 48, r, g, b)
+									msg[#msg + 1] = GetFormatText(_L["boss"], 48)
+									msg[#msg + 1] = GetFormatText(sformat("[%s]", szName), 48, r, g, b)
+									msg[#msg + 1] = GetFormatText("\n")
+									OutputMessage("MSG_SYS", tconcat(msg), true)
+								end,
+							},
+							{szOption = g_tStrings.STR_HOTKEY_CANCEL, fnAction = function() end, },
+						}
+						MessageBox(msg)
+					end
+				end
+			end,
+			fnDisable = function()
+				return not _GKP.IsDistributor()
+			end,
+		}
+	end
+	if next(LR_GKP_Base.MenPaiBoss) ~= nil then
+		m2[#m2 + 1] = {bDevide = true}
+	end
+	m2[#m2 + 1] = {	szOption = _L["Add menpai boss"],
+		fnAction = function()
+			if _GKP.CheckIsDistributor(true) then
+				if _GKP.CheckBillExist() then
+					LR_GKP_NewMenPaiBoss_Panel:Open()
+				end
+			end
+		end,
+		fnDisable = function()
+			return not _GKP.IsDistributor()
+		end,
+	}
 	return menu
 end
 
@@ -407,7 +653,7 @@ function _GKP.ConvertItem2TradeData(item)
 	local nTime = GetCurrentTime()
 	local data = {}
 	data.szKey = item.szKey or sformat("%d_%d_%d_%d", nTime, item.dwTabType or 0, item.dwIndex or 0, item.dwID or 0)
-	data.hash = item.hash or tostring(GetStringCRC(data.szKey))
+	data.hash = item.hash or LR.md5(sformat("%d_%d_%s", nTime, GetTickCount(), item.szKey))
 	data.szName = item.szName
 	data.dwTabType = item.dwTabType
 	data.dwIndex = item.dwIndex
@@ -581,6 +827,9 @@ function _GKP.ShoutDistributeItemToRaid(item, player)
 			data[#data + 1] = {type = "iteminfo", tabtype = item.dwTabType, index = item.dwIndex}
 		end
 	end
+	if item.nStackNum > 1 then
+		data[#data + 1] = {type = "text", text = sformat(_L["x%d"], item.nStackNum)}
+	end
 	data[#data + 1] = {type = "text", text = sformat(_L["for %d Gold dis to"], item.nGold)}
 	data[#data + 1] = {type = "name", name = player.szName}
 	me.Talk(PLAYER_TALK_CHANNEL.RAID, "", data)
@@ -613,6 +862,7 @@ function _GKP.BatchDistributeItem(items)
 		end
 	end
 	_GKP.GKP_BgTalk("SYNC_END", {})
+	LR_GKP_Panel:LoadGKPItemBox()
 end
 
 function _GKP.OneKey2Self(dwDoodadID)
@@ -676,6 +926,7 @@ function _GKP.GetSmallIronBossList(dwDoodadID, List)
 			item.szPurchaserName = Boss.szName
 			item.dwPurchaserForceID = Boss.dwForceID
 			item.dwPurchaserID = Boss.dwID
+			item.nGold = LR_GKP_Base.SmallIronPrice * item.nStackNum
 			List[#List + 1] = _GKP.ConvertItem2TradeData(item)
 		end
 	end
@@ -803,10 +1054,10 @@ end
 ----一键分所有老板
 function _GKP.OneKey2AllBoss(dwDoodadID)
 	local data2 = {}
-	_GKP.GetMaterialBossList(dwDoodadID, data2)
-	_GKP.GetSmallIronBossList(dwDoodadID, data2)
-	_GKP.GetEquipmentBossList(dwDoodadID, data2)
-	_GKP.GetMenPaiBossList(dwDoodadID, data2)
+	_GKP.GetMaterialBossList(dwDoodadID, data2)		--材料
+	_GKP.GetSmallIronBossList(dwDoodadID, data2)	--小铁
+	--_GKP.GetEquipmentBossList(dwDoodadID, data2)	--散件
+	_GKP.GetMenPaiBossList(dwDoodadID, data2)		--门派
 	if #data2 == 0 then
 		LR.SysMsg(_L["There is no eligible item.\n"])
 		return
@@ -822,9 +1073,76 @@ function _GKP.GetLastItemPrice(item)
 		return 0, nil
 	end
 end
+
+function _GKP.GetItemStartPrice(item)
+	local LastPrice = _GKP.GetLastItemPrice(item)
+	if _GKP.IsArmor(item) then
+		if _GKP.IsSpecialItem(item) then
+			return mmax(LastPrice, START_PRICE["Special"])
+		else
+			return mmax(LastPrice, START_PRICE["Armor"])
+		end
+	elseif _GKP.IsExchangeItem(item) then
+		return mmax(LastPrice, START_PRICE["ExchangeItem"])
+	elseif _GKP.IsWeapon(item) then
+		if _GKP.IsSpecialWeapon(item) then
+			return mmax(LastPrice, START_PRICE["Special"])
+		else
+			return mmax(LastPrice, START_PRICE["Weapon"])
+		end
+	else
+		return LastPrice
+	end
+end
+
 --------------------------------------------------
 ---数据保存读取
 --------------------------------------------------
+function _GKP.BossDataG2D()
+	local data = {}
+	data.SmallIronBoss = clone(LR_GKP_Base.SmallIronBoss)
+	data.SmallIronPrice = LR_GKP_Base.SmallIronPrice
+	data.MaterialBoss = clone(LR_GKP_Base.MaterialBoss)
+	data.EquipmentBoss = clone(LR_GKP_Base.EquipmentBoss)
+	local MenPaiBoss = {}
+	for dwForceID, v in pairs(LR_GKP_Base.MenPaiBoss) do
+		MenPaiBoss[tostring(dwForceID)] = clone(v)
+	end
+	data.MenPaiBoss = clone(MenPaiBoss)
+	return data
+end
+
+function _GKP.BossDataD2G(db_data)
+	local db_data = LR.JsonDecode(db_data) or {}
+	--小铁
+	if db_data.SmallIronBoss then
+		LR_GKP_Base.SmallIronBoss = clone(db_data.SmallIronBoss)
+	else
+		LR_GKP_Base.SmallIronBoss = {dwID = 0, szName = "0", dwForceID = 0}
+	end
+	LR_GKP_Base.SmallIronPrice = db_data.SmallIronPrice or 0
+
+	--材料
+	if db_data.MaterialBoss then
+		LR_GKP_Base.MaterialBoss = clone(db_data.MaterialBoss)
+	else
+		LR_GKP_Base.MaterialBoss = {dwID = 0, szName = "0", dwForceID = 0}
+	end
+
+	--散件
+	if db_data.EquipmentBoss then
+		LR_GKP_Base.EquipmentBoss = clone(db_data.EquipmentBoss)
+	else
+		LR_GKP_Base.EquipmentBoss = {dwID = 0, szName = "0", dwForceID = 0}
+	end
+
+	local data = {}
+	for dwForceID, v in pairs(db_data.MenPaiBoss or {}) do
+		data[tonumber(dwForceID)] = clone(v)
+	end
+	LR_GKP_Base.MenPaiBoss = clone(data)
+end
+
 function _GKP.LoadGKPList(szBillName)
 	local me = GetClientPlayer()
 	if not me then
@@ -832,19 +1150,21 @@ function _GKP.LoadGKPList(szBillName)
 	end
 	local DB = SQLite3_Open(DB_Path)
 	DB:Execute("BEGIN TRANSACTION")
-	local szName = LR.StrGame2DB(szBillName)
+	local szName = szBillName
 	local DB_SELECT = DB:Prepare("SELECT * FROM bill_data WHERE szName = ? AND bDel = 0")
 	DB_SELECT:ClearBindings()
-	DB_SELECT:BindAll(szName)
-	local result = DB_SELECT:GetAll() or {}
+	DB_SELECT:BindAll(g2d(szName))
+	local result = d2g(DB_SELECT:GetAll())
 	if next(result) ~= nil then
 		LR_GKP_Base.GKP_Bill = {
-			szName = LR.StrDB2Game(result[1].szName),
+			szName = result[1].szName,
 			hash = result[1].hash,
-			szArea = LR.StrDB2Game(result[1].szArea),
-			szServer = LR.StrDB2Game(result[1].szServer),
+			szArea = result[1].szArea,
+			szServer = result[1].szServer,
 			nCreateTime = result[1].nCreateTime,
 		}
+		_GKP.BossDataD2G(result[1].szBossData)
+
 		LR_GKP_Base.GKP_TradeList = {}	--GKP的记录内容
 		LR_GKP_Base.GKP_Person_Trade = {}	--个人消费总金额
 		LR_GKP_Base.GKP_Person_Debt = {}		--个人欠账
@@ -855,8 +1175,8 @@ function _GKP.LoadGKPList(szBillName)
 		local szOrderKey = _GKP.szOrderKey
 		local DB_SELECT2 = DB:Prepare(sformat("SELECT * FROM trade_data WHERE szBelongBill = ? ORDER BY %s %s", szSearchKey, szOrderKey))
 		DB_SELECT2:ClearBindings()
-		DB_SELECT2:BindAll(szName)
-		local result2 = LR.StrDB2Game(DB_SELECT2:GetAll())
+		DB_SELECT2:BindAll(g2d(szName))
+		local result2 = d2g(DB_SELECT2:GetAll())
 		for k, v in pairs(result2) do
 			local trade_data = clone(v)
 			trade_data.bDel = (v.bDel == 1)
@@ -870,40 +1190,41 @@ function _GKP.LoadGKPList(szBillName)
 				LR_GKP_Base.GKP_Person_Trade[v.dwPurchaserID].nGold = LR_GKP_Base.GKP_Person_Trade[v.dwPurchaserID].nGold + trade_data.nGold
 
 				local szKey = sformat("%d_%d", v.dwTabType, v.dwIndex)
+				local dd = {nGold = trade_data.nGold, dwID = trade_data.dwPurchaserForceID, szName = trade_data.szPurchaserName, dwForceID = trade_data.dwPurchaserForceID, nCreateTime = trade_data.nCreateTime}
 				if _GKP.Sale_Item_History[szKey] then
-					if _GKP.Sale_Item_History[szKey].nGold < v.nGold then
-						_GKP.Sale_Item_History[szKey] = clone(trade_data)
-					elseif _GKP.Sale_Item_History[szKey].nGold == v.nGold and v.nCreateTime > _GKP.Sale_Item_History[szKey].nCreateTime then
-						_GKP.Sale_Item_History[szKey] = clone(trade_data)
+					if _GKP.Sale_Item_History[szKey].nGold < dd.nGold then
+						_GKP.Sale_Item_History[szKey] = clone(dd)
+					elseif _GKP.Sale_Item_History[szKey].nGold == dd.nGold and dd.nCreateTime > _GKP.Sale_Item_History[szKey].nCreateTime then
+						_GKP.Sale_Item_History[szKey] = clone(dd)
 					end
 				else
-					_GKP.Sale_Item_History[szKey] = clone(trade_data)
+					_GKP.Sale_Item_History[szKey] = clone(dd)
 				end
 			end
 		end
 
 		local DB_SELECT3 = DB:Prepare("SELECT * FROM cash_data WHERE szBelongBill = ? AND bDel = 0 ORDER BY nCreateTime DESC")
 		DB_SELECT3:ClearBindings()
-		DB_SELECT3:BindAll(szName)
-		local result3 = DB_SELECT3:GetAll() or {}
+		DB_SELECT3:BindAll(g2d(szName))
+		local result3 = d2g(DB_SELECT3:GetAll())
 		local GKP_Person_Cash = LR_GKP_Base.GKP_Person_Cash
 		for k, v in pairs(result3) do
 			GKP_Person_Cash[#GKP_Person_Cash + 1] = {
-				szKey = LR.StrDB2Game(v.szKey),
-				szName = LR.StrDB2Game(v.szName),
+				szKey = v.szKey,
+				szName = v.szName,
 				dwID = v.dwID,
 				dwForceID = v.dwForceID,
-				my_szName = LR.StrDB2Game(v.my_szName),
+				my_szName = v.my_szName,
 				my_dwID = v.my_dwID,
 				my_dwForceID = v.my_dwForceID,
 				hash = v.hash,
-				szArea = LR.StrDB2Game(v.szArea),
-				szServer = LR.StrDB2Game(v.szServer),
+				szArea = v.szArea,
+				szServer = v.szServer,
 				dwMapID = v.dwMapID,
 				nCopyIndex = v.nCopyIndex,
 				nGold = v.nGold,
 				nCreateTime = v.nCreateTime,
-				szBelongBill = LR.StrDB2Game(v.szBelongBill),
+				szBelongBill = v.szBelongBill,
 			}
 
 			--先放入缓存
@@ -980,15 +1301,16 @@ function _GKP.SaveSingleData(DB, data, bDel)
 	DB_REPLACE:Execute()
 
 	--记录物品价格
+	local dd = {nGold = data.nGold, dwID = data.dwPurchaserForceID, szName = data.szPurchaserName, dwForceID = data.dwPurchaserForceID, nCreateTime = data.nCreateTime}
 	local szKey = sformat("%d_%d", data.dwTabType, data.dwIndex)
 	if _GKP.Sale_Item_History[szKey] then
-		if _GKP.Sale_Item_History[szKey].nGold < data.nGold then
-			_GKP.Sale_Item_History[szKey] = clone(data)
-		elseif _GKP.Sale_Item_History[szKey].nGold == data.nGold and _GKP.Sale_Item_History[szKey].nCreateTime < data.nCreateTime then
-			_GKP.Sale_Item_History[szKey] = clone(data)
+		if _GKP.Sale_Item_History[szKey].nGold < dd.nGold then
+			_GKP.Sale_Item_History[szKey] = clone(dd)
+		elseif _GKP.Sale_Item_History[szKey].nGold == dd.nGold and _GKP.Sale_Item_History[szKey].nCreateTime < dd.nCreateTime then
+			_GKP.Sale_Item_History[szKey] = clone(dd)
 		end
 	else
-		_GKP.Sale_Item_History[szKey] = clone(data)
+		_GKP.Sale_Item_History[szKey] = clone(dd)
 	end
 end
 
@@ -1010,7 +1332,7 @@ function _GKP.SaveCashRecord(DB, data)
 	v.my_szName = LR.StrGame2DB(me.szName)
 	v.my_dwID = me.dwID
 	v.my_dwForceID = me.dwForceID
-	v.hash = tostring(GetStringCRC(v.szKey)) or ""
+	v.hash = LR.md5(v.szKey)
 	v.szArea = LR.StrGame2DB(realArea)
 	v.szServer = LR.StrGame2DB(realServer)
 	v.dwMapID = scene.dwMapID
@@ -1041,9 +1363,10 @@ function _GKP.CreateNewBill(DB, szBillName)
 	local bill_data = {
 		szName = LR.StrGame2DB(szBillName),
 		nCreateTime = nTime,
-		hash = tostring(GetStringCRC(LR.StrGame2DB(szBillName))),
+		hash = LR.md5(LR.StrGame2DB(szBillName)),
 		szArea = LR.StrGame2DB(realArea),
 		szServer = LR.StrGame2DB(realServer),
+		szBossData = g2d(LR.JsonEncode(_GKP.BossDataG2D()))
 	}
 	LR_GKP_Base.GKP_Bill = {
 		szName = szBillName,
@@ -1053,14 +1376,62 @@ function _GKP.CreateNewBill(DB, szBillName)
 		szServer = realServer,
 	}
 
-	local DB_REPLACE = DB:Prepare("REPLACE INTO bill_data ( szName, hash, szArea, szServer, nCreateTime, bDel ) VALUES ( ?, ?, ?, ?, ?, 0 )")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO bill_data ( szName, hash, szArea, szServer, nCreateTime, szBossData, bDel ) VALUES ( ?, ?, ?, ?, ?, ?, 0 )")
 	DB_REPLACE:ClearBindings()
-	DB_REPLACE:BindAll(bill_data.szName, bill_data.hash, bill_data.szArea, bill_data.szServer, bill_data.nCreateTime)
+	DB_REPLACE:BindAll(bill_data.szName, bill_data.hash, bill_data.szArea, bill_data.szServer, bill_data.nCreateTime, bill_data.szBossData)
 	DB_REPLACE:Execute()
 
 	LR_GKP_Base.UsrData.lastLoadBill = szBillName
 	LR_GKP_Panel:RefreshBillName()
 end
+
+function _GKP.SaveBill()
+	if not _GKP.CheckBillExist() then
+		return
+	end
+	local bill_data = g2d(clone(LR_GKP_Base.GKP_Bill))
+	local szBossData = g2d(LR.JsonEncode(_GKP.BossDataG2D()))
+
+	local DB = SQLite3_Open(DB_Path)
+	DB:Execute("BEGIN TRANSACTION")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO bill_data ( szName, hash, szArea, szServer, nCreateTime, szBossData, bDel ) VALUES ( ?, ?, ?, ?, ?, ?, 0 )")
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(bill_data.szName, bill_data.hash, bill_data.szArea, bill_data.szServer, bill_data.nCreateTime, szBossData)
+	DB_REPLACE:Execute()
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+
+	--同步BOSS信息
+	_GKP.SyncBoss()
+	LR_GKP_Base.UsrData.lastLoadBill = szBillName
+	LR_GKP_Panel:RefreshBillName()
+end
+
+function _GKP.SaveBoss(szBelongBill)
+	--先保存账单信息
+	local DB = SQLite3_Open(DB_Path)
+	DB:Execute("BEGIN TRANSACTION")
+	local DB_SELECT = DB:Prepare("SELECT * FROM bill_data WHERE szName = ? AND bDel = 0")
+	DB_SELECT:ClearBindings()
+	DB_SELECT:BindAll(g2d(szBelongBill))
+	local result = DB_SELECT:GetAll() or {}
+	if next(result) == nil then
+		_GKP.CreateNewBill(DB, szBelongBill)
+	else
+		LR_GKP_Base.GKP_Bill = {
+			szName = LR.StrDB2Game(result[1].szName),
+			hash = result[1].hash,
+			szArea = LR.StrDB2Game(result[1].szArea),
+			szServer = LR.StrDB2Game(result[1].szServer),
+			nCreateTime = result[1].nCreateTime,
+		}
+		LR_GKP_Panel:RefreshBillName()
+	end
+	DB:Execute("END TRANSACTION")
+	DB:Release()
+	_GKP.SaveBill()
+end
+
 
 function _GKP.GKP_BgTalk(nType, data)
 	LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_GKP", nType, data)
@@ -1069,7 +1440,9 @@ end
 --[[
 1、只有发布者是分配者才相应，队长都不行。
 ]]
-local BG_DB = nil
+local ADD_LIST = nil
+local DEL_LIST = nil
+local BOSS_LIST = nil
 function _GKP.ON_BG_CHANNEL_MSG()
 	local szKey = arg0
 	local nChannel = arg1
@@ -1090,41 +1463,59 @@ function _GKP.ON_BG_CHANNEL_MSG()
 		return
 	end
 	local dwDistributorID = team.GetAuthorityInfo(TEAM_AUTHORITY_TYPE.DISTRIBUTE)
-	if dwDistributorID ~= dwTalkerID then
+	if dwDistributorID ~= dwTalkerID or dwDistributorID == me.dwID then
 		return
 	end
 
 	if szKey == "LR_GKP" then
 		if data[1] == "SYNC_BEGIN" then
-			if not BG_DB then
-				BG_DB = SQLite3_Open(DB_Path)
-				BG_DB:Execute("BEGIN TRANSACTION")
-			end
+			ADD_LIST = {}
+			DEL_LIST = {}
 		elseif data[1] == "SYNC" then
-			if not BG_DB then
-				BG_DB = SQLite3_Open(DB_Path)
-				BG_DB:Execute("BEGIN TRANSACTION")
-			end
-			local trade_data = data[2]
-			_GKP.SaveSingleData(BG_DB, trade_data)
-		elseif data[1] == "SYNC_END" then
-			if BG_DB then
-				BG_DB:Execute("END TRANSACTION")
-				BG_DB:Release()
-				BG_DB = nil
-				LR.DelayCall(500, function() LR_GKP_Panel:LoadGKPItemBox() end)
-			end
+			ADD_LIST = ADD_LIST or {}
+			ADD_LIST[#ADD_LIST + 1] = clone(data[2])
 		elseif data[1] == "DEL" then
-			if not BG_DB then
-				BG_DB = SQLite3_Open(DB_Path)
-				BG_DB:Execute("BEGIN TRANSACTION")
+			DEL_LIST = DEL_LIST or {}
+			DEL_LIST[#DEL_LIST + 1] = clone(data[2])
+		elseif data[1] == "SYNC_END" then
+			local BG_DB = SQLite3_Open(DB_Path)
+			BG_DB:Execute("BEGIN TRANSACTION")
+			for k, v in pairs(ADD_LIST) do
+				_GKP.SaveSingleData(BG_DB, v)
 			end
-			local trade_data = data[2]
-			_GKP.DelSingleData(DB, trade_data)
+			for k, v in pairs(DEL_LIST) do
+				_GKP.DelSingleData(BG_DB, v)
+			end
+			BG_DB:Execute("END TRANSACTION")
+			BG_DB:Release()
+			ADD_LIST = nil
+			DEL_LIST = nil
+			LR.DelayCall(100, function() LR_GKP_Panel:LoadGKPItemBox() end)
 		elseif data[1] =="BEGIN_AUCTION" then
 			FireEvent("LR_GKP_Loot_Sale", data[2].dwDoodadID, data[2].dwID, true)
 		elseif data[1] == "CANCEL_AUCTION" then
 			FireEvent("LR_GKP_Loot_Sale", data[2].dwDoodadID, data[2].dwID, false)
+		elseif data[1] == "BOSS_LIST_BEGIN" then
+			--清空原BOSS列表
+			LR_GKP_Base.SmallIronBoss = {dwID = 0, szName = "0", dwForceID = 0}
+			LR_GKP_Base.SmallIronPrice = 1000
+			LR_GKP_Base.MaterialBoss = {dwID = 0, szName = "0", dwForceID = 0}
+			LR_GKP_Base.EquipmentBoss = {dwID = 0, szName = "0", dwForceID = 0}
+			LR_GKP_Base.MenPaiBoss = {}
+		elseif data[1] == "BOSS_LIST_SYNC" then
+			if data[2].nType == "SmallIronBoss" then
+				LR_GKP_Base.SmallIronBoss = clone(data[2].data)
+			elseif data[2].nType == "SmallIronPrice" then
+				LR_GKP_Base.SmallIronPrice = data[2].data
+			elseif data[2].nType == "MaterialBoss" then
+				LR_GKP_Base.MaterialBoss = clone(data[2].data)
+			elseif data[2].nType == "EquipmentBoss" then
+				LR_GKP_Base.EquipmentBoss = clone(data[2].data)
+			elseif data[2].nType == "MenPaiBoss" then
+				LR_GKP_Base.MenPaiBoss[data[2].dwForceID] = clone(data[2].data)
+			end
+		elseif data[1] == "BOSS_LIST_END" then
+			_GKP.SaveBoss(data[2].szBelongBill)
 		end
 	end
 
@@ -1146,7 +1537,7 @@ function _GKP.ON_BG_CHANNEL_MSG()
 		end
 
 		local trade_data = {
-			szKey = sformat("%d_%d_%d_%d", data[2].nTime, data[2].dwTabType, data[2].dwIndex, GetTickCount()),
+			szKey = sformat("%d_%d_%s", data[2].dwTabType, data[2].dwIndex, data[2].key),
 			hash = data[2].key,
 			szName = data[2].szName,
 			dwTabType = data[2].dwTabType,
@@ -1349,8 +1740,6 @@ function _GKP.OutputDebtList()
 end
 
 function _GKP.SyncRecord()
-	DB = SQLite3_Open(DB_Path)
-	DB:Execute("BEGIN TRANSACTION")
 	_GKP.GKP_BgTalk("SYNC_BEGIN", {})
 	LR.SysMsg(_L["Sync begin\n"])
 	for k, v in pairs(LR_GKP_Base.GKP_TradeList) do
@@ -1358,14 +1747,30 @@ function _GKP.SyncRecord()
 	end
 	_GKP.GKP_BgTalk("SYNC_END", {})
 	LR.SysMsg(_L["Sync end\n"])
-	DB:Execute("END TRANSACTION")
-	DB:Release()
 end
+
+function _GKP.SyncBoss()
+	if not _GKP.CheckBillExist() then
+		return
+	end
+	_GKP.GKP_BgTalk("BOSS_LIST_BEGIN", {})
+	_GKP.GKP_BgTalk("BOSS_LIST_SYNC", {nType = "SmallIronBoss", data = clone(LR_GKP_Base.SmallIronBoss)})
+	_GKP.GKP_BgTalk("BOSS_LIST_SYNC", {nType = "SmallIronPrice", data = LR_GKP_Base.SmallIronPrice})
+	_GKP.GKP_BgTalk("BOSS_LIST_SYNC", {nType = "MaterialBoss", data = clone(LR_GKP_Base.MaterialBoss)})
+	_GKP.GKP_BgTalk("BOSS_LIST_SYNC", {nType = "EquipmentBoss", data = clone(LR_GKP_Base.EquipmentBoss)})
+	for dwForceID, v in pairs(LR_GKP_Base.MenPaiBoss or {}) do
+		_GKP.GKP_BgTalk("BOSS_LIST_SYNC", {nType = "MenPaiBoss", data = clone(LR_GKP_Base.MenPaiBoss[dwForceID]), dwForceID = dwForceID})
+	end
+	_GKP.GKP_BgTalk("BOSS_LIST_END", {szBelongBill = LR_GKP_Base.GKP_Bill.szName})
+end
+
 
 -----------------------------------------
 ---事件处理
 -----------------------------------------
 function _GKP.LOADING_END()
+	_GKP.LoadStartPrice()
+	_GKP.LoadStartPriceSets()
 	local me = GetClientPlayer()
 	local scene = me.GetScene()
 	if scene.nType ==  MAP_TYPE.DUNGEON then
@@ -1497,9 +1902,9 @@ end
 local Open_Shield_Function = {
 	"GetItemInDoodad", "GetItemData", "GetDistributorInfo", "IsDistributor", "CheckIsDistributor", "CheckBillExist", "GetTeamMemberList", "GetLooterList",
 	"CheckIsEquipmentEquiped", "IsSmallIron", "GroupItem", "GetCount", "GKP_BgTalk", "SaveSingleData", "DelSingleData",
-	"GetLastItemPrice", "GetMoneyCol", "DistributeItem", "ShoutDistributeItemToRaid",
-	"OutputTradeList", "OutputDebtList",
-	"LoadGKPList", "CreateNewBill", "InsertSetBossMenu",
+	"GetLastItemPrice", "GetItemStartPrice", "GetMoneyCol", "DistributeItem", "ShoutDistributeItemToRaid",
+	"OutputTradeList", "OutputDebtList", "SyncRecord", "SyncBoss", "SaveBill",
+	"LoadGKPList", "CreateNewBill", "InsertSetBossMenu", "InsertSetPriceMenu",
 	"OneKey2Self", "OneKey2EquipmentBoss", "OneKey2MaterialBoss", "OneKey2SmallIronBoss", "Onekey2MenPaiBoss", "OneKey2AllBoss",
 }
 for k, v in pairs(Open_Shield_Function) do

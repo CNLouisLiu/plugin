@@ -20,13 +20,16 @@ local LR_TeamHelper_UI ={
 	dwIcon = 6641,
 	szClass = "SmallHelpers",
 	tWidget = {
-		{
-			name="LR_TeamHelper_UI_check_box",type="CheckBox",text=_L["Enable LR TeamHelper"],x=0,y=0,w=200,
+		{	name="LR_TeamHelper_UI_check_box",type="CheckBox",text=_L["Enable LR TeamHelper"],x=0,y=0,w=200,
 			default = function ()
 				return LR_TeamRequest.UsrData.bOn
 			end,
 			callback = function (enabled)
 				LR_TeamRequest.UsrData.bOn = enabled
+			end
+		},{	name="LR_TeamHelper_UI_Button_01", type="Button", text = _L["Open LR_CDRP"], x = 0, y = 40, w = 200,
+			callback = function ()
+				LR_CDRP.OpenFrame()
 			end
 		},
 	}
@@ -64,4 +67,28 @@ LR_TeamHelper_UI.menu = {
 	rgb = {255, 255, 255},
 	fnAutoClose=true,
 }
+LR_TeamHelper_UI.menu2 = {
+	szOption =_L["Open LR_CDRP"],
+	fnAction = function()
+		LR_CDRP.OpenFrame()
+	end,
+	bCheck=true,
+	bMCheck=false,
+	rgb = {255, 255, 255},
+	bChecked = function()
+		return false
+	end,
+	fnAutoClose=true,
+	szIcon = "ui\\Image\\UICommon\\CommonPanel2.UITex",
+	nFrame =105,
+	nMouseOverFrame = 106,
+	szLayer = "ICON_RIGHT",
+	fnAutoClose=true,
+	fnClickIcon = function ()
+		LR_TOOLS:OpenPanel(_L["LR TeamHelper"])
+	end,
+	rgb = {255, 255, 255},
+	fnAutoClose=true,
+}
 table.insert(LR_TOOLS.menu,LR_TeamHelper_UI.menu)
+table.insert(LR_TOOLS.menu,LR_TeamHelper_UI.menu2)

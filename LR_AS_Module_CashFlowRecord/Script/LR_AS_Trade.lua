@@ -2085,9 +2085,10 @@ function LR_AS_Trade.Mail_GetItemInBag()
 	local Money = me.GetMoney()
 	data.nMoney = Money.nCopper+Money.nSilver*100+Money.nGold*10000
 
-	for i = 1, 6, 1 do
-		for j = 0, me.GetBoxSize(i)-1, 1 do
-			local item = me.GetItem(i, j)
+	for _, dwBox in pairs(BAG_PACKAGE) do
+		local size = me.GetBoxSize(dwBox)
+		for dwX = 0, size - 1 do
+			local item = me.GetItem(dwBox, dwX)
 			if item then
 				local t_item = {}
 				t_item.nVersion = item.nVersion
@@ -2475,10 +2476,11 @@ function LR_AS_Trade.GetItemInBag()
 	if not me then
 		return
 	end
+
 	_Bag_item = {}
-	for i = 1, 6, 1 do
-		local size = me.GetBoxSize(i)
-		for n = 0, size-1, 1 do
+	for _, dwBox in pairs(BAG_PACKAGE) do
+		local size = me.GetBoxSize(dwBox)
+		for dwX = 0, size - 1, 1 do
 			local item = me.GetItem(i, n)
 			if item then
 				local nStackNum = 1
@@ -3050,7 +3052,7 @@ function LR_Acc_Trade_Panel:LoadItemBox(hWin)
 				local dwID = Source.dwID
 				local szName = Source.szName
 				if IsCtrlKeyDown() then
-					self:EditBox_AppendLinkPlayer(szName)
+					LR.EditBox_AppendLinkPlayer(szName)
 				else
 					InsertPlayerCommonMenu(menu, dwID, szName)
 					if menu then
@@ -3192,7 +3194,7 @@ function LR_Acc_Trade_Panel:LoadItemBox(hWin)
 						local dwID = Distributor.dwID
 						local szName = Distributor.szName
 						if IsCtrlKeyDown() then
-							self:EditBox_AppendLinkPlayer(szName)
+							LR.EditBox_AppendLinkPlayer(szName)
 						else
 							InsertPlayerCommonMenu(menu, dwID, szName)
 							if menu then
@@ -3490,17 +3492,6 @@ function LR_Acc_Trade_Panel:Refresh()
 		self:LoadItemBox(cc)
 		cc:UpdateList()
 	end
-end
-
-function LR_Acc_Trade_Panel:EditBox_AppendLinkPlayer(szPlayerName)
-	local frame = Station.Lookup("Lowest2/EditBox")
-	if not frame or not frame:IsVisible() then
-		return false
-	end
-	local edit = Station.Lookup("Lowest2/EditBox/Edit_Input")
-	edit:InsertObj(sformat("[%s]", szPlayerName), {type = "name", text = sformat("[%s]", szPlayerName), name = szPlayerName})
-	Station.SetFocusWindow(edit)
-	return true
 end
 
 function LR_Acc_Trade_Panel:RefreshBTN_PAGE()

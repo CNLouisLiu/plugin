@@ -714,4 +714,26 @@ data={
 	["Show all player money"]="显示所有玩家金钱总和",
 	["Show only my own money"]="只显示自己的金钱",
 
+	--20180619ADD--
+	["<SYMBOL_DONE>"]="★",
+	["<SYMBOL_NOT>"]="☆",
+	["\tKill status：%s \n"]="\t击杀状态：%s \n",
+	["\tID:%6d \n"]="\tID：%6d \n",
+
+	["GUI_AN_ZHI_AN"]="归安志·安",
+	["DIALOG_GUI_AN_ZHI_AN_01"]="犹豫了一下又转了回去",
+	["DIALOG_GUI_AN_ZHI_AN_02"]="意思是希望你不要再去打扰她了",
+
+	["GUI_AN_ZHI_ZHI"]="归安志·志",
+	["DIALOG_GUI_AN_ZHI_ZHI_01"]="我一个人来就好",
+	["DIALOG_GUI_AN_ZHI_ZHI_02"]="你为何还纠缠不休",
+
+	["GUI_AN_ZHI_GUI"]="归安志·归",
+	["DIALOG_GUI_AN_ZHI_GUI_01"]="但你觉得再仔细些或许会发现什么",
+	["DIALOG_GUI_AN_ZHI_GUI_02"]="并没有发现什么异常",
+
+	["Related map:"]="相关地图：",
+	["Related Npc/Doodad:"]="相关NPC/物件：",
+	["Related achievement:"]="相关成就：",
+
 }

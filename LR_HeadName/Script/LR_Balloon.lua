@@ -147,9 +147,10 @@ function _Balloon:SetPos()
 	local xScreen=self.xScreen
 	local yScreen=self.yScreen
 	local handle=self.handle
+	local nTopOffset = LR_HeadName.UsrData.nBallonTopOffset or 0
 
 	xScreen = xScreen - self.xOffset
-	yScreen = yScreen - self.yOffset
+	yScreen = yScreen - self.yOffset + nTopOffset
 
 	handle:SetAbsPos(xScreen,yScreen)
 	return self
@@ -203,7 +204,7 @@ function _Balloon:DrawContent()
 
 	-----…Ë÷√∆´“∆¡ø
 	local cxLR_Balloon, cyLR_Balloon = handle:GetSize()
-	local nTopOffset=30
+	local nTopOffset = LR_HeadName.UsrData.nBallonTopOffset or 0
 	local dwID = self.dwID
 	if LR_HeadName._Role[dwID] then
 		if LR_HeadName._Role[dwID]:GetHandle() then
@@ -211,7 +212,7 @@ function _Balloon:DrawContent()
 		end
 	end
 	self.xOffset = cxLR_Balloon * 0.5
-	self.yOffset = cyLR_Balloon + nTopOffset
+	self.yOffset = cyLR_Balloon + 30 + nTopOffset
 
 	return self
 end

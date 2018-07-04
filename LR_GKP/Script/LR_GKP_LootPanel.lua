@@ -2,6 +2,7 @@ local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch = string.format
 local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
+local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
 ---------------------------------------------------------------
 local AddonPath = "Interface\\LR_Plugin\\LR_GKP"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_GKP\\"
@@ -43,7 +44,9 @@ function LR_GKP_Loot_Base.OnFrameDragEnd()
 end
 
 function LR_GKP_Loot_Base.OnFrameDestroy()
-
+	local _, _, dwDoodadID = sfind(this:GetName(), "LR_GKP_Loot_(%d+)")
+	dwDoodadID = tonumber(dwDoodadID)
+	_UI[dwDoodadID] = nil
 end
 
 function LR_GKP_Loot_Base.OnMouseEnter()
@@ -154,6 +157,7 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 	end
 
 	local Btn_OneKeyBoss = LR.AppendUI("UIButton", frame, "Btn_OneKeyBoss" , {x = 172 , y = 4 , w = 26 , h = 26, ani = {"ui\\Image\\UICommon\\YiRong15.UITex", 19, 20, 21}, })
+	--Btn_OneKeyBoss:RegisterEvent(304)	--包含左键单击，右键单击，鼠标进出
 	Btn_OneKeyBoss.OnClick = function()
 		if not LR_GKP_Base.CheckIsDistributor(true) then
 			return
@@ -221,21 +225,28 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 
 		PopupMenu(menu)
 	end
+
 	Btn_OneKeyBoss.OnRClick = function()
-		local msg = {
-			szMessage = _L["Are you sure to pick up items into the bag of all boss?"],
-			szName = "one key",
-			fnAutoClose = function() return false end,
-			{szOption = _L["Yes"], fnAction = function() LR_GKP_Base.OneKey2AllBoss(dwDoodadID) end, },
-			{szOption = _L["No"], fnAction = function()  end,},
-		}
-		MessageBox(msg)
+		if IsCtrlKeyDown() then
+			LR_GKP_Base.OneKey2AllBoss(dwDoodadID)
+		else
+			local msg = {
+				szMessage = _L["Are you sure to pick up items into the bag of all boss?"],
+				szName = "one key",
+				fnAutoClose = function() return false end,
+				{szOption = _L["Yes"], fnAction = function() LR_GKP_Base.OneKey2AllBoss(dwDoodadID) end, },
+				{szOption = _L["No"], fnAction = function()  end,},
+			}
+			MessageBox(msg)
+		end
 	end
 	Btn_OneKeyBoss.OnEnter = function()
 		local x, y =  this:GetAbsPos()
 		local w, h = this:GetSize()
 		local szXml = {}
-		szXml[#szXml + 1] = GetFormatText(_L["Pick up everything into the bag of  the boss."])
+		szXml[#szXml + 1] = GetFormatText(_L["Pick up everything into the bag of the boss.\n"])
+		szXml[#szXml + 1] = GetFormatText(_L["Leftclick for settings and single onekey\n"])
+		szXml[#szXml + 1] = GetFormatText(_L["Rightclick for all boss. Ctrl + RightClick for no warning.\n"])
 		OutputTip(tconcat(szXml), 350, {x, y, 0, 0})
 	end
 	Btn_OneKeyBoss.OnLeave = function()
@@ -244,7 +255,6 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 
 	LR_GKP_Loot:LoadItemBox(dwDoodadID, items)
 	LR.AppendAbout(LR_GKP_Loot, frame:Lookup("Wnd_Button"))
-
 	if next(ANIMATE_SALE) ~= nil then
 		FireEvent("LR_GKP_Loot_Sale", ANIMATE_SALE.dwDoodadID, ANIMATE_SALE.dwID, true)
 	end
@@ -285,6 +295,58 @@ function LR_GKP_Loot:LoadGroupWindow(parent, items, dwDoodadID, key)
 	local Window_Group = LR.AppendUI("Window", parent, sformat("Window_%s", key), {w = 230, h = 40})
 	local Handle_Group = LR.AppendUI("Handle", Window_Group, sformat("Handle_%s", key), {x = 0, y = 0, w = 230, h = 33})
 	local WndContainer_Group = LR.AppendUI("WndContainer", Window_Group, sformat("WndContainer_%s", key), {x = 5, y = 30, w = 220, h = 1000})
+
+	if key == "Armor" then
+		local Btn_OneKeyEquipmentBoss = LR.AppendUI("UIButton", Window_Group, "Btn_OneKeyEquipmentBoss" , {x = 190 , y = 2 , w = 26 , h = 26, ani = {"ui\\Image\\UICommon\\YiRong15.UITex", 19, 20, 21}, })
+		Btn_OneKeyEquipmentBoss.OnEnter = function()
+			local x, y =  this:GetAbsPos()
+			local w, h = this:GetSize()
+			local szXml = {}
+			szXml[#szXml + 1] = GetFormatText(sformat("%s\n", _L["OneKey to equipment boss"]))
+			OutputTip(tconcat(szXml), 350, {x, y, 0, 0})
+		end
+		Btn_OneKeyEquipmentBoss.OnLeave = function()
+			HideTip()
+		end
+		Btn_OneKeyEquipmentBoss.OnRClick = function()
+			if LR_GKP_Base.EquipmentBoss.dwID == 0 then
+				LR.SysMsg(_L["Please set equipment boss first.\n"])
+				return
+			else
+				if IsCtrlKeyDown() then
+					LR_GKP_Base.OneKey2EquipmentBoss(dwDoodadID)
+				else
+					local msg = {
+						szMessage = _L["Are you sure to pick up equipment into bag of equipment boss?"],
+						szName = "one key",
+						fnAutoClose = function() return false end,
+						{szOption = _L["Yes"], fnAction = function() LR_GKP_Base.OneKey2EquipmentBoss(dwDoodadID) end, },
+						{szOption = _L["No"], fnAction = function()  end,},
+					}
+					MessageBox(msg)
+				end
+			end
+		end
+		Btn_OneKeyEquipmentBoss.OnClick = function()
+			if LR_GKP_Base.EquipmentBoss.dwID == 0 then
+				LR.SysMsg(_L["Please set equipment boss first.\n"])
+				return
+			else
+				if IsCtrlKeyDown() then
+					LR_GKP_Base.OneKey2EquipmentBoss(dwDoodadID)
+				else
+					local msg = {
+						szMessage = _L["Are you sure to pick up equipment into bag of equipment boss?"],
+						szName = "one key",
+						fnAutoClose = function() return false end,
+						{szOption = _L["Yes"], fnAction = function() LR_GKP_Base.OneKey2EquipmentBoss(dwDoodadID) end, },
+						{szOption = _L["No"], fnAction = function()  end,},
+					}
+					MessageBox(msg)
+				end
+			end
+		end
+	end
 
 	local imgTab = LR.AppendUI("Image", Handle_Group, "TabImg", {w = 230, h = 30, x = 0, y = 0})
     imgTab:SetImage("ui\\Image\\UICommon\\ActivePopularize2.UITex", 46)
@@ -449,16 +511,18 @@ function LR_GKP_Loot:LoadOneItem(parent, item, dwDoodadID)
 				_UI[dwDoodadID]["imageSale_Item_".. v.dwID]:FromUITex("ui\\Image\\UICommon\\GoldTeam.UITex", 7)
 			end
 			local last_price, data = LR_GKP_Base.GetLastItemPrice(v)
+			local start_price = LR_GKP_Base.GetItemStartPrice(v)
 
 			local x, y = imageSale:GetAbsPos()
 			local szXml = {}
 			szXml[#szXml + 1] = GetFormatText(_L["Starting price:"], 224)
-			szXml[#szXml + 1] = GetFormatText(sformat("%d\n", last_price))
+			szXml[#szXml + 1] = GetFormatText(sformat("%d\n", start_price))
 			if data and last_price > 0 then
 				szXml[#szXml + 1] = GetFormatText(_L["Last buyer:"], 224)
 				local szPath, nFrame = GetForceImage(data.dwForceID)
 				szXml[#szXml + 1] = GetFormatImage(szPath, nFrame, 24, 24)
-				szXml[#szXml + 1] = GetFormatText(sformat("%s\n", data.szPurchaserName))
+				local r, g, b = LR.GetMenPaiColor(data.dwForceID)
+				szXml[#szXml + 1] = GetFormatText(sformat("%s\n", data.szName), nil, r, g, b)
 			end
 			szXml[#szXml + 1] = GetFormatText(_L["Left click to launch the auction.\n"], 132)
 			szXml[#szXml + 1] = GetFormatText(_L["Right click to cancel the auction.\n"], 132)
@@ -471,6 +535,22 @@ function LR_GKP_Loot:LoadOneItem(parent, item, dwDoodadID)
 			HideTip()
 		end
 		imageSale.OnClick = function()
+			local start_price = LR_GKP_Base.GetItemStartPrice(v)
+			local me = GetClientPlayer()
+			local data = {}
+			data[#data + 1] = {type = "text", text = _L["--Start bidding->"]}
+			if LR_GKP_Distribute_Panel.data.dwTabType == 0 then
+				data[#data + 1] = {type = "text", text = sformat("[%s]", v.szName)}
+			else
+				if item.nGenre == ITEM_GENRE.BOOK then
+					data[#data + 1] = {type = "book", tabtype = v.dwTabType, index = v.dwIndex, bookinfo = v.nBookID}
+				else
+					data[#data + 1] = {type = "iteminfo", tabtype = item.dwTabType, index = item.dwIndex}
+				end
+			end
+			data[#data + 1] = {type = "text", text = sformat(_L["Start price:%d"], start_price)}
+			me.Talk(PLAYER_TALK_CHANNEL.RAID, "", data)
+
 			FireEvent("LR_GKP_Loot_Sale",dwDoodadID, v.dwID, true)
 			LR_GKP_Base.GKP_BgTalk("BEGIN_AUCTION", {dwDoodadID = dwDoodadID, dwID = v.dwID})
 		end
@@ -485,12 +565,12 @@ function LR_GKP_Loot:LoadOneItem(parent, item, dwDoodadID)
 			local imageWarning = LR.AppendUI("Image", warningHandle, "imageWarning_Item_" .. v.dwID, {x = 0, y = 0, w = 22, h = 22, eventid = 373})
 			imageWarning:FromUITex("ui\\Image\\GmPanel\\Gm2.UITex", 9):SetImageType(10):SetAlpha(180)
 			_UI[dwDoodadID]["imageWarning_Item_".. v.dwID] = imageWarning
-			imageSale.OnEnter = function()
+			imageWarning.OnEnter = function()
 				if _UI[dwDoodadID]["imageWarning_Item_".. v.dwID] then
 					_UI[dwDoodadID]["imageWarning_Item_".. v.dwID]:SetAlpha(255)
 				end
 				local last_price, data = LR_GKP_Base.GetLastItemPrice(v)
-				local x, y = imageSale:GetAbsPos()
+				local x, y = imageWarning:GetAbsPos()
 				local szXml = {}
 				szXml[#szXml + 1] = GetFormatText(_L["Starting price:"], 224)
 				szXml[#szXml + 1] = GetFormatText(sformat("%d\n", last_price))
@@ -498,13 +578,14 @@ function LR_GKP_Loot:LoadOneItem(parent, item, dwDoodadID)
 					szXml[#szXml + 1] = GetFormatText(_L["Last buyer:"], 224)
 					local szPath, nFrame = GetForceImage(data.dwForceID)
 					szXml[#szXml + 1] = GetFormatImage(szPath, nFrame, 24, 24)
-					szXml[#szXml + 1] = GetFormatText(sformat("%s\n", data.szPurchaserName))
+					local r, g, b = LR.GetMenPaiColor(data.dwForceID)
+					szXml[#szXml + 1] = GetFormatText(sformat("%s\n", data.szName), nil, r, g, b)
 				end
 				OutputTip(tconcat(szXml), 350, {x, y, 0, 0})
 			end
-			imageSale.OnLeave = function()
-				if _UI[dwDoodadID]["imageSale_Item_".. v.dwID] then
-					_UI[dwDoodadID]["imageSale_Item_".. v.dwID]:SetAlpha(180)
+			imageWarning.OnLeave = function()
+				if _UI[dwDoodadID]["imageWarning_Item_".. v.dwID] then
+					_UI[dwDoodadID]["imageWarning_Item_".. v.dwID]:SetAlpha(180)
 				end
 				HideTip()
 			end
@@ -734,6 +815,8 @@ end
 function LR_GKP_Distribute_Panel:OnDestroy()
 	UnRegisterGlobalEsc("LR_GKP_Panel")
 	PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
+	LR_GKP_Panel:LoadGKPItemBox()
+	LR_GKP_Panel:LoadTradeItemBox()
 end
 
 function LR_GKP_Distribute_Panel:OnDragEnd()
@@ -753,8 +836,8 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 	local distributorInfo = LR_GKP_Base.GetDistributorInfo()
 	if not bModify then
 		LR_GKP_Distribute_Panel.data = {
-			szKey = sformat("%d_%d_%d_%d", nTime, item.dwTabType or 0, item.dwIndex or 0, item.dwID or 0),
-			hash = tostring(GetStringCRC(LR.StrGame2DB(sformat("%d_%d_%d_%d", nTime, item.dwTabType or 0, item.dwIndex or 0, item.dwID or 0)))),
+			szKey = item.szKey,
+			hash = item.hash or LR.md5(sformat("%d_%d_%s", nTime, GetTickCount(), item.szKey)),
 			szName = item.szName or "some one",
 			dwTabType = item.dwTabType or 0,
 			dwIndex = item.dwIndex or 0,
@@ -835,7 +918,7 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 					local nTime = GetCurrentTime()
 					Edit_ItemName:SetText(v)
 					LR_GKP_Distribute_Panel.data.szKey = sformat("%d_0_0_0", nTime)
-					LR_GKP_Distribute_Panel.data.hash = tostring(GetStringCRC(LR.StrGame2DB(sformat("%d_0_0_0", nTime))))
+					LR_GKP_Distribute_Panel.data.hash = LR.md5(LR.StrGame2DB(sformat("%d_0_0_0", nTime)))
 					LR_GKP_Distribute_Panel.data.dwTabType = 0
 					LR_GKP_Distribute_Panel.data.dwIndex = 0
 					LR_GKP_Distribute_Panel.data.szName = v
@@ -1001,11 +1084,12 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 					LR_GKP_Base.MaterialBoss = {dwID = data.dwPurchaserID, szName = data.szPurchaserName, dwForceID = data.dwPurchaserForceID}
 				elseif nBossType == 3 then
 					LR_GKP_Base.SmallIronBoss = {dwID = data.dwPurchaserID, szName = data.szPurchaserName, dwForceID = data.dwPurchaserForceID}
+					LR_GKP_Base.SmallIronPrice = data.nGold
 				elseif nBossType == 4 then
 					LR_GKP_Base.MenPaiBoss[data.dwPurchaserForceID] = {dwID = data.dwPurchaserID, szName = data.szPurchaserName, dwForceID = data.dwPurchaserForceID}
 				end
+				LR_GKP_Base.SaveBill()
 			end
-
 			self:Close()
 		end
 	end
@@ -1333,7 +1417,7 @@ local _SYNCED_LOOT_NUM = {}
 function LR_GKP_Loot.SYNC_LOOT_LIST()
 	local dwDoodadID = arg0
 	local frame = Station.Lookup(sformat("Normal/LR_GKP_Loot_%d", dwDoodadID))
-	if frame  then
+	if frame or (not _SYNCED_LOOT_LIST[dwDoodadID] and LR_GKP_Base.UsrData.bLazy) then
 		local szDoodadName, items = LR_GKP_Base.GetItemInDoodad(dwDoodadID)
 		if #items > 0 then
 			if not (_SYNCED_LOOT_NUM[dwDoodadID] and #items == _SYNCED_LOOT_NUM[dwDoodadID]) then

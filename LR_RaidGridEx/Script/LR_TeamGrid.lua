@@ -332,8 +332,8 @@ function _RoleGrid:Create()
 					if not me then
 						return
 					end
-					local kungfu=me.GetKungfuMount()
-					local dwSkillID=kungfu.dwSkillID
+					local kungfu = me.GetKungfuMount()
+					local dwSkillID = kungfu.dwSkillID
 					if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
 						if LR_TeamGrid.UsrData.CommonSettings.cureMode == 1 then
 							LR_TeamGrid.timeCache = GetLogicFrameCount()
@@ -412,7 +412,7 @@ function _RoleGrid:Create()
 		if LR.IsMapBlockAddon() and GetClientPlayer() and GetClientPlayer().nMoveState == MOVE_STATE.ON_DEATH then
 			BattleField_MatchPlayer(dwID)
 		elseif IsCtrlKeyDown() then
-			LR_TeamGrid.EditBox_AppendLinkPlayer(_Members[dwID].szName)
+			LR.EditBox_AppendLinkPlayer(_Members[dwID].szName)
 		else
 			local dwID = dwID
 			if _JCG[dwID] then
@@ -2095,7 +2095,11 @@ function LR_TeamGrid.OnLButtonClick()
 			LR_GKP_Panel:Open()
 		end
 	elseif szName == "Btn_TeamNotice" then
-		LR.OpenTeamNoticePanel()
+		if Table_IsZombieBattleFieldMap and Table_IsZombieBattleFieldMap(GetClientPlayer().GetMapID()) then
+			LR.SysMsg(_L["This map can not use team notice\n"])
+		else
+			LR.OpenTeamNoticePanel()
+		end
 	end
 end
 
@@ -2427,9 +2431,9 @@ function LR_TeamGrid.SwitchPanel()
 		return
 	end
 	if LR_TeamGrid.bOn then
-		--if LR.IsMapBlockAddon() then
-			--LR_TeamGrid.ClosePanel()
-		--elseif me.IsInRaid() then
+--[[		if LR.IsMapBlockAddon() then
+			LR_TeamGrid.ClosePanel()
+		elseif me.IsInRaid() then]]
 		if me.IsInRaid() then
 			LR_TeamGrid.OpenPanel()
 		elseif me.IsInParty() and not LR_TeamGrid.UsrData.CommonSettings.bShowOnlyInRaidMode then
@@ -3251,10 +3255,7 @@ function LR_TeamGrid.CheckIsbOpenPanel()
 	end
 	local scene = me.GetScene()
 
-	if me.IsInParty() then
-		return true
-	end
-	if me.IsInRaid() then
+	if me.IsInParty() or me.IsInRaid() then
 		return true
 	end
 	return false
@@ -3415,18 +3416,6 @@ function LR_TeamGrid.GetRoleHandle(dwMemberID)
 	return nil
 end
 
-function LR_TeamGrid.EditBox_AppendLinkPlayer(szPlayerName)
-	local frame = Station.Lookup("Lowest2/EditBox")
-	if not frame or not frame:IsVisible() then
-		return false
-	end
-
-	local edit = Station.Lookup("Lowest2/EditBox/Edit_Input")
-	edit:InsertObj(sformat("[%s]", szPlayerName) , {type = "name", text = sformat("[%s]", szPlayerName), name = szPlayerName})
-	Station.SetFocusWindow(edit)
-	return true
-end
-
 function LR_TeamGrid.SwitchSystemRaidPanel()
 	local frame = Station.Lookup("Normal/RaidPanel_Main")
 	local me = GetClientPlayer()
@@ -3562,7 +3551,9 @@ function LR_TeamGrid.PARTY_DELETE_MEMBER()
 	local nGroupIndex = arg3
 
 	if LR_TeamGrid.CheckIsbOpenPanel() then
-		_tRoleGrids[dwMemberID]:Remove()
+		if _tRoleGrids[dwMemberID] then
+			_tRoleGrids[dwMemberID]:Remove()
+		end
 		_tRoleGrids[dwMemberID]=nil
 		LR_TeamGrid.UpdateTeamMember()
 		LR_TeamGrid.DrawAllMembers()
@@ -3938,6 +3929,8 @@ function LR_TeamGrid.LOADING_END()
 	LR_TeamBuffMonitor.ClearAllCache()
 	if LR_TeamGrid.CheckIsbOpenPanel() then
 		LR_TeamGrid.SwitchPanel()
+	else
+		LR_TeamGrid.ClosePanel()
 	end
 	LR_TeamBuffSettingPanel.TeamMember = {}
 end

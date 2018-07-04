@@ -115,9 +115,9 @@ function LR_AutoSell.SHOP_OPENSHOP()
 		return
 	end
 
-	for i = 1, 6, 1 do
-		for j = 0, me.GetBoxSize(i)-1, 1 do
-			local item = me.GetItem(i, j)
+	for _, dwBox in pairs(BAG_PACKAGE) do
+		for dwX = 0, me.GetBoxSize(dwBox) - 1, 1 do
+			local item = me.GetItem(dwBox, dwX)
 			if item then
 				local bSell = false
 				if LR_AutoSell.UsrData.bAutoSellGreyItem then
@@ -174,7 +174,7 @@ function LR_AutoSell.SHOP_OPENSHOP()
 							nCount = item.nStackNum
 						end
 						LR.SysMsg(sformat("%s [%s] x%d\n", _L["LR: Sell item:"], LR.GetItemNameByItem(item), nCount))
-						SellItem(dwNpcID, dwShopID, i, j, nCount)
+						SellItem(dwNpcID, dwShopID, dwBox, dwX, nCount)
 					else
 						LR.SysMsg(_L["LR:You are locked\n"])
 						return

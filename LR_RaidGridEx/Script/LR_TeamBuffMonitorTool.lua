@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local VERSION = "20180120"
+local VERSION = "20180704"
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
@@ -106,7 +106,7 @@ function LR_TeamBuffTool.Export()
 		local data = clone(LR_TeamBuffTool.tBuffList)
 		data.VERSION = nil
 		data.nType = "LR_TeamBuffTool.DataExport"
-		SaveLUAData(path, data)
+		LR.SaveLUAData(path, data)
 		LR.SysMsg(sformat(_L["File location: %s.jx3dat\n"], path))
 	end
 

@@ -9,25 +9,31 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20180403"
+local VERSION = "20180619"
 -------------------------------------------------------------
 --[[
 因为获取副本信息是异步操作
 上线马上获取一次副本信息，当副本进度变化时更新副本信息
 副本信息的保存在异步获得副本信息后
 ]]
+--独立cd的map
+local INDEPENDENT_MAP = {
+	[298] = true,
+	[300] = true,
+}
 
 LR_AS_FBList = {}
 local DefaultUsrData = {
 	On = true,
 	CommonSetting = true,
 	bShowMapID = {
+		{dwMapID = 298},
 		{dwMapID = 289},
 		{dwMapID = 288},
 		{dwMapID = 287},
 		{dwMapID = 286},
 		{dwMapID = 284},
-		{dwMapID = 283},
+		--{dwMapID = 283},
 	},
 	VERSION = VERSION,
 }
@@ -165,6 +171,9 @@ end
 
 ------↓↓↓获取副本CD（异步）
 function _FBList.GetFBList()
+	for dwMapID, v in pairs(INDEPENDENT_MAP) do
+		ApplyDungeonRoleProgress(dwMapID, GetClientPlayer().dwID)
+	end
 	ApplyMapSaveCopy()
 end
 
@@ -228,6 +237,28 @@ arg0 = {
 ]]
 function _FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
 	local FB_Record = arg0
+	--添加独立CD
+	for dwMapID, v in pairs(INDEPENDENT_MAP) do
+		local flag = false
+		local data = {}
+		local tBossList = Table_GetCDProcessBoss and Table_GetCDProcessBoss(dwMapID) or {}
+		for k2, v2 in pairs(tBossList) do
+			if GetDungeonRoleProgress(dwMapID, GetClientPlayer().dwID, v2.dwProgressID) then
+				data[tostring(v2.dwProgressID)] = true
+				flag = true
+			else
+				data[tostring(v2.dwProgressID)] = false
+			end
+		end
+		if false then
+			data = {["1"] = true, ["2"] = true, ["3"] = false, ["4"] = true, ["5"] = false, }
+			flag = true
+		end
+		if flag then
+			FB_Record[dwMapID] = clone(data)
+		end
+	end
+
 	---讲数据添加进数据库
 	local ServerInfo = {GetUserServer()}
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
@@ -252,6 +283,7 @@ end
 
 function _FBList.FIRST_LOADING_END()
 	_FBList.LoadCommonSetting()
+	_FBList.GetFBList()
 	LR.DelayCall(300, function()
 		_FBList.GetFBList()
 	end)
@@ -400,13 +432,39 @@ function _FBList.ShowItem(t_Table, Alpha, bCal, _num)
 
 		for i = 1, #LR_AS_FBList.UsrData.bShowMapID, 1 do
 			local Text_FB = handle:Lookup(sformat("Text_FB%d", i))
-			local FB_ID = _FBList.GetFBIDByMapID(FB_Record, LR_AS_FBList.UsrData.bShowMapID[i].dwMapID)
-			if FB_ID ==  nil then
-				Text_FB:SetText("--")
-				Text_FB:SetFontScheme(80)
+			local dwMapID = LR_AS_FBList.UsrData.bShowMapID[i].dwMapID
+			if INDEPENDENT_MAP[dwMapID] then
+				local data = {}
+				if FB_Record[dwMapID] then
+					local tBossList = Table_GetCDProcessBoss and Table_GetCDProcessBoss(dwMapID) or {}
+					if false then
+						tBossList = {{dwProgressID = 1}, {dwProgressID = 2}, {dwProgressID = 3}, {dwProgressID = 4}, {dwProgressID = 5}, }
+						Output(FB_Record[dwMapID])
+					end
+					tsort(tBossList, function(a, b) return a.dwProgressID < b.dwProgressID end)
+					local szText = ""
+					for k2, v2 in pairs(tBossList) do
+						if FB_Record[dwMapID][tostring(v2.dwProgressID)] then
+							szText = sformat("%s%s", szText, _L["<SYMBOL_DONE>"])
+						else
+							szText = sformat("%s%s", szText, _L["<SYMBOL_NOT>"])
+						end
+					end
+					Text_FB:SetText(szText)
+					Text_FB:SetFontScheme(2)
+				else
+					Text_FB:SetText("--")
+					Text_FB:SetFontScheme(80)
+				end
 			else
-				Text_FB:SprintfText("ID: %d", FB_ID)
-				Text_FB:SetFontScheme(41)
+				local FB_ID = _FBList.GetFBIDByMapID(FB_Record, dwMapID)
+				if FB_ID ==  nil then
+					Text_FB:SetText("--")
+					Text_FB:SetFontScheme(80)
+				else
+					Text_FB:SprintfText("ID: %d", FB_ID)
+					Text_FB:SetFontScheme(41)
+				end
 			end
 		end
 
@@ -442,8 +500,26 @@ function _FBList.ShowItem(t_Table, Alpha, bCal, _num)
 			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
 			szTipInfo[#szTipInfo+1] = GetFormatText("\n", 41)
 			for dwMapID, v in pairs (FB_Record) do
-				local str = sformat("\tID：%6d \n", v[1] or -1)
 				szTipInfo[#szTipInfo+1] = GetFormatText(Table_GetMapName(dwMapID), 224)
+				local str = ""
+				if INDEPENDENT_MAP[dwMapID] then
+					local tBossList = Table_GetCDProcessBoss and Table_GetCDProcessBoss(dwMapID) or {}
+					if false then
+						tBossList = {{dwProgressID = 1}, {dwProgressID = 2}, {dwProgressID = 3}, {dwProgressID = 4}, {dwProgressID = 5}, }
+					end
+					tsort(tBossList, function(a, b) return a.dwProgressID < b.dwProgressID end)
+					local szText = ""
+					for k2, v2 in pairs(tBossList) do
+						if FB_Record[dwMapID][tostring(v2.dwProgressID)] then
+							szText = sformat("%s%s", szText, _L["<SYMBOL_DONE>"])
+						else
+							szText = sformat("%s%s", szText, _L["<SYMBOL_NOT>"])
+						end
+					end
+					str = sformat(_L["\tKill status：%s \n"], szText)
+				else
+					str = sformat(_L["\tID:%6d \n"], v[1] or -1)
+				end
 				szTipInfo[#szTipInfo+1] = GetFormatText(str, 27)
 			end
 			--szTipInfo = szTipInfo .. GetFormatText("〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓\n", 41)
@@ -597,64 +673,14 @@ function LR_AS_FB_Detail_Panel:Init()
 	Text_break2:SetHAlign(1)
 	Text_break2:SetVAlign(1)
 
-
+	local fnAction = function(data)
+		local realArea = data.realArea
+		local realServer = data.realServer
+		local dwID = data.dwID
+		LR_AS_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
+	end
 	hComboBox.OnClick = function (m)
-		local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
-		tsort(TempTable_Cal, function(a, b)
-			if a.nLevel ==  b.nLevel then
-				return a.dwForceID < b.dwForceID
-			else
-				return a.nLevel > b.nLevel
-			end
-		end)
-
-		local TempTable = {}
-		for i = 1, #TempTable_Cal, 1 do
-			TempTable[#TempTable+1] = TempTable_Cal[i]
-		end
-		for i = 1, #TempTable_NotCal, 1 do
-			TempTable[#TempTable+1] = TempTable_NotCal[i]
-		end
-
-		local page_num = mceil(#TempTable / 20)
-		local page = {}
-		for i = 0, page_num - 1, 1 do
-			page[i] = {}
-			for k = 1, 20, 1 do
-				if TempTable[i * 20 + k] ~=  nil then
-					local szIcon, nFrame = GetForceImage(TempTable[i * 20 + k].dwForceID)
-					local r, g, b = LR.GetMenPaiColor(TempTable[i * 20 + k].dwForceID)
-					page[i][#page[i]+1] = {szOption = sformat("(%d)%s", TempTable[i * 20 + k].nLevel, TempTable[i * 20 + k].szName), bCheck = false, bChecked = false,
-						fnAction =  function ()
-							local realArea = TempTable[i * 20 + k].realArea
-							local realServer = TempTable[i * 20 + k].realServer
-							local dwID = TempTable[i * 20 + k].dwID
-							LR_AS_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
-						end,
-						szIcon =  szIcon,
-						nFrame =  nFrame,
-						szLayer =  "ICON_RIGHT",
-						rgb =  {r, g, b},
-					}
-				end
-			end
-		end
-		for i = 0, page_num - 1, 1 do
-			if i ~=  page_num - 1 then
-				page[i][#page[i] + 1] = {bDevide = true}
-				page[i][#page[i] + 1] = page[i+1]
-				page[i][#page[i]].szOption = _L["Next 20 Records"]
-			end
-		end
-
-		m = page[0]
-
-		local __x, __y = hComboBox:GetAbsPos()
-		local __w, __h = hComboBox:GetSize()
-		m.nMiniWidth = __w
-		m.x = __x
-		m.y = __y + __h
-		PopupMenu(m)
+		LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction)
 	end
 	----------关于
 	LR.AppendAbout(LR_AS_FB_Detail_Panel, frame)
@@ -817,7 +843,7 @@ function LR_FB_Tips.LOADING_END()
 	end
 	LR_FB_Tips.FirstCheck = false
 	LR_FB_Tips.SecondCheck = false
-	--LR.DelayCall(500, function() _FBList.GetFBList() end)
+	LR.DelayCall(500, function() _FBList.GetFBList() end)
 	LR.DelayCall(3000, function() LR_FB_Tips.OutBlackCD() end)
 end
 

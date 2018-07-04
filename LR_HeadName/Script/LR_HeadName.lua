@@ -7,6 +7,7 @@ local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_HeadName"
 local _L = LR.LoadLangPack(AddonPath)
 local szIniFile = sformat("%s\\UI\\LR_HeadNameItem.ini", AddonPath)
 local DEBUG = false
+local CustomVersion = "20180704"
 ---------------------------------------------------------
 local HEAD_CLIENTPLAYER = 0
 local HEAD_OTHERPLAYER = 1
@@ -40,6 +41,7 @@ LR_HeadName = LR_HeadName or {
 	MissionNeed = {},
 	bOn = false,
 }
+
 local FIRST_LOADING_END = false
 LR_HeadName.szMissionName = ""
 LR_HeadName.DoodadCache = {}
@@ -50,6 +52,7 @@ local MINIMAP_LIST = {}	--用于存放小地图显示的东西
 local NPC_QUEST_LIST = {}	--存放npc的任务，key为模版id
 local NPC_CAN_ACCEPT_QUEST = {}
 local NPC_CAN_FINISH_QUEST = {}
+local SCENE_QUEST_CACHE = {}
 
 LR_HeadName.default = {
 	DoodadKind = {
@@ -60,7 +63,7 @@ LR_HeadName.default = {
 		[DOODAD_KIND.READ] = false,
 		[DOODAD_KIND.DIALOG] = false,
 		[DOODAD_KIND.ACCEPT_QUEST] = true,
-		[DOODAD_KIND.TREASURE] = true,
+		[DOODAD_KIND.TREASURE] = false,
 		[DOODAD_KIND.ORNAMENT] = false,
 		[DOODAD_KIND.CRAFT_TARGET] = true,
 		[DOODAD_KIND.CLIENT_ONLY] = false,
@@ -71,7 +74,7 @@ LR_HeadName.default = {
 	},
 	UsrData = {
 		font = 17,
-		nFontScale = 1,
+		nFontScale = 1.2,
 		Height = 16, 		--行间距
 		SeeMax = 250,
 		distanceMax = 65,
@@ -82,11 +85,13 @@ LR_HeadName.default = {
 		bSeeLimit = false, 	--是否限制个数
 		bShowDoodadKind = false, 	--是否显示Doodad的类型
 		bShowTeamMark = true, 	--是否显示队伍标记
-		nShowTeamMarkType = 3, 	----1:显示文字，2：显示图标
+		nShowTeamMarkType = 2, 	----1:显示文字，2：显示图标
+		nMarkOffset = 14,	--图标偏移
 		nOffset = 0, 	--头顶相对高度
 		nLifeBarOffset = 0, 		--血条高度偏移量
 		bShowBalloon = false, 		--是否显示泡泡
 		nBallonType = 5,	---气泡样式
+		nBallonTopOffset = 45,	--气泡偏移
 		bEnhanceGuDing = true,		--增强蛊鼎显示
 		bMiniMapAgriculture = true,	--神农小地图显示
 		bMiniMapMine = true,	--矿藏小地图显示
@@ -279,7 +284,7 @@ LR_HeadName.default = {
 		{szName = _L["BaiZhu"], bShow = true, },
 		{szName = _L["ZiSu"], bShow = true, },
 	},
-	Version = "20170906",
+	Version = CustomVersion,
 	CustomDoodad = {
 		[_L["LiangCaoDui"]] = true,
 		[_L["SanLuoDeBiaoYin"]] = true,
@@ -292,7 +297,6 @@ LR_HeadName.DoodadKind = clone(LR_HeadName.default.DoodadKind)
 LR_HeadName.Agriculture = clone(LR_HeadName.default.Agriculture)
 LR_HeadName.Mineral = clone(LR_HeadName.default.Mineral)
 
-local CustomVersion = "20170111"
 RegisterCustomData("LR_HeadName.bOn", CustomVersion)
 
 LR_HeadName.DoodadKindDescribe = {
@@ -309,8 +313,9 @@ LR_HeadName.DoodadKindDescribe = {
 	[DOODAD_KIND.CLIENT_ONLY] = "CLIENT_ONLY",
 	[DOODAD_KIND.CHAIR] = "CHAIR",
 	[DOODAD_KIND.GUIDE] = "GUIDE",
-	[DOODAD_KIND.DOOR] = _L["DOODAD_KIND_DOOR"],
+	[DOODAD_KIND.DOOR] = "DOOR",
 	[DOODAD_KIND.NPCDROP] = "NPCDROP",
+	[15] = "UNKNOWN",
 }
 
 LR_HeadName.DefaultHighLightColor = {
@@ -492,7 +497,11 @@ function _HandleRole:DrawName()
 			hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, ( - (nHight-2) *  tText[i].lenth), (-30- del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
 		else
 			del_height = del_height+mceil(nHight*(LR_HeadName.UsrData.nFontScale))
-			hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30- del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
+			if self.nTeamMark and LR_HeadName.UsrData.bShowTeamMark then
+				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30- del_height -nOffset)}, 207 , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
+			else
+				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30- del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
+			end
 		end
 	end
 	self.nTopOffset =  25 + nOffset +(nHight + 5) * (#tText) * LR_HeadName.UsrData.nFontScale
@@ -758,7 +767,7 @@ function _HandleRole:ShowTeamMarkImage()
 	if self.nTeamMark and LR_HeadName.UsrData.bShowTeamMark and LR_HeadName.UsrData.nShowTeamMarkType ==  2 then
 		if tMarkerTextList[self.nTeamMark] then
 			Image_TeamMark:SetFrame(tMarkerImageList[self.nTeamMark])
-			Image_TeamMark:SetSize(60, 60)
+			Image_TeamMark:SetSize(44, 44)
 			Image_TeamMark:SetAlpha(255)
 			Image_TeamMark:Show()
 		else
@@ -809,8 +818,8 @@ function _HandleRole:TeamMarkImageSetPos()
 
 	if Image_TeamMark then
 		--local Image_TeamMark = Handle_Dummy:Lookup("Image_TeamMark")
-		xScreen = xScreen - 30
-		yScreen = yScreen - self.nTopOffset - 80
+		xScreen = xScreen - 22
+		yScreen = yScreen - self.nTopOffset - 44 + LR_HeadName.UsrData.nMarkOffset or 0
 		if self.dwID ==  8471036 then
 			--Output("s")
 		end
@@ -1009,12 +1018,13 @@ function LR_HeadName.OnFrameBreathe()
 	if not LR_HeadName.bOn then
 		return
 	end
+	LR_HeadName.SetTeamMarkPos()
 	local me = GetControlPlayer()
 	if not me then
 		return
 	end
 
-	if GetLogicFrameCount()%1 ==  0 then
+	if GetLogicFrameCount() % 1 ==  0 then
 		local r, g, b, r1, g1, b1 = unpack(LR_HeadName.RandomRGB)
 		r, r1 = LR_HeadName.Random(r, r1)
 		g, g1 = LR_HeadName.Random(g, g1)
@@ -1027,7 +1037,7 @@ function LR_HeadName.OnFrameBreathe()
 		m = m+1
 	end]]
 
-	if GetLogicFrameCount()%4 ==  0 then
+	if GetLogicFrameCount() % 4 ==  0 then
 		LR_HeadName.SortHandle()
 	end
 
@@ -1110,7 +1120,7 @@ function LR_HeadName.OnFrameBreathe()
 		if LR_HeadName.old_dwTargetID then
 			LR_HeadName.Check(LR_HeadName.old_dwTargetID, LR_HeadName.old_nTargetType, true)
 		end
-	elseif _dwTargetID~=  LR_HeadName.old_dwTargetID then
+	elseif _dwTargetID ~= LR_HeadName.old_dwTargetID then
 		LR_HeadName.Check(LR_HeadName.old_dwTargetID, LR_HeadName.old_nTargetType, true)
 		LR_HeadName.Check(_dwTargetID, _nType, true)
 	end
@@ -1799,7 +1809,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 					LR_HeadName._Role[dwID]:SetHandle(nil)
 				end
 			end
-		elseif nType ==  TARGET.DOODAD then
+		elseif nType == TARGET.DOODAD then
 			local bShow = false
 			local bFresh = false
 			local _Role = LR_HeadName._Role[dwID]
@@ -1812,14 +1822,23 @@ function LR_HeadName.Check(dwID, nType, bForced)
 				bFresh = true
 			end
 
-			if szName ~=  ""then
+			if szName ~= "" then
 				local IsMissionObj = _Role:GetIsMissionObj()
 				local isMineral = false
 				local isAgriculture = false
 				local isBeiMing = false
+				local HasQuest = false
+				if next(LR_HeadName.GetDoodadQuest(obj.dwTemplateID)) ~= nil then
+					HasQuest = true
+				end
+				local CanAcceptQuest = LR_HeadName.CheckDoodadCanAcceptQuest(obj)
+				local AllQuestFinished = LR_HeadName.CheckDoodadAllQuestFinished(obj)
 				if bForced then
 					bFresh = true
 					bShow = true
+				elseif HasQuest or CanAcceptQuest then
+					bShow = true
+					bFresh = true
 				elseif IsMissionObj then
 					if LR_HeadName.UsrData.bShowQuestDoodad then
 						if LR_HeadName.UsrData.bShowQMode ==  2  and LR_HeadName.UsrData.bShowQuestFlag then
@@ -1853,6 +1872,8 @@ function LR_HeadName.Check(dwID, nType, bForced)
 					else
 						bShow = true
 					end
+				elseif LR_HeadName.DoodadTemplateSee[obj.dwTemplateID] then
+					bShow = true
 				end
 
 				if not bShow and obj.nKind ==  DOODAD_KIND.QUEST and LR_HeadName.UsrData.bShowQuestDoodad then
@@ -1953,7 +1974,29 @@ function LR_HeadName.Check(dwID, nType, bForced)
 								tinsert(szText, {szText = temp, rgb = rgb , font = font, })
 							end
 						else
-							tinsert(szText, {szText = temp, rgb = rgb , font = font, })
+							if CanAcceptQuest then
+								if LR_HeadName.UsrData.bShowQMode ==  2 and LR_HeadName.UsrData.bShowQuestFlag then
+									local rgb2 = LR_HeadName.RandomRGB
+									local temp2 = LR_HeadName.UsrData.CustomText or _L["<SYMBOL_ACCEPT>"]
+									tinsert(szText, {szText = temp, rgb = rgb , font = font, })
+									tinsert(szText, {szText = temp2, rgb = rgb2 , font = font, })
+								elseif LR_HeadName.UsrData.bShowQMode ==  1 and LR_HeadName.UsrData.bShowQuestFlag then
+									temp = sformat("%s %s   ", _L["<SYMBOL_ACCEPT>"], temp)
+									tinsert(szText, {szText = temp, rgb = rgb , font = font, })
+								else
+									tinsert(szText, {szText = temp, rgb = rgb , font = font, })
+								end
+							else
+								if HasQuest then
+									if AllQuestFinished then
+										tinsert(szText, {szText = temp, rgb = rgb , font = font, })
+									else
+										tinsert(szText, {szText = sformat("? %s", temp), rgb = rgb , font = font, })
+									end
+								else
+									tinsert(szText, {szText = temp, rgb = rgb , font = font, })
+								end
+							end
 						end
 						handle:DrawDoodad(szText)
 						handle:HideHandle()
@@ -2014,7 +2057,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 		end
 		if nType == TARGET.DOODAD then
 			if LR_HeadName.DoodadTemplateSee[obj.dwTemplateID] then
-				szName = LR.Trim(Table_GetNpcTemplateName(obj.dwTemplateID))
+				szName = LR.Trim(Table_GetDoodadTemplateName(obj.dwTemplateID))
 			end
 		end
 		if szName ~= "" then
@@ -2696,6 +2739,11 @@ function LR_HeadName.AddSingleDoodad2AllList(dwID)
 		local bAdd = false
 		local szName = LR.Trim(obj.szName)
 		local IsMissionObj = LR_HeadName.IsMissionObj({dwTemplateID = obj.dwTemplateID, nType = TARGET.DOODAD, szName = LR.Trim(obj.szName)})
+		local HasQuest = false
+		if next(LR_HeadName.GetDoodadQuest(obj.dwTemplateID)) ~= nil then
+			HasQuest = true
+		end
+		local CanAcceptQuest = LR_HeadName.CheckDoodadCanAcceptQuest(obj)
 		if obj.nKind ==  DOODAD_KIND.QUEST and LR_HeadName.UsrData.bShowQuestDoodad then
 			if obj.HaveQuest(me.dwID) then
 				bAdd = true
@@ -2708,7 +2756,9 @@ function LR_HeadName.AddSingleDoodad2AllList(dwID)
 				end
 			end
 		end
-		if LR_HeadName.CustomDoodad[szName] then
+		if (HasQuest or CanAcceptQuest) and obj.nKind ~= DOODAD_KIND.CORPSE then
+			bAdd = true
+		elseif LR_HeadName.CustomDoodad[szName] then
 			bAdd = true
 		elseif LR_HeadName.DoodadBeShow[szName] then
 			bAdd = true
@@ -2726,6 +2776,9 @@ function LR_HeadName.AddSingleDoodad2AllList(dwID)
 				bAdd = true
 			end
 		elseif IsMissionObj and LR_HeadName.UsrData.bShowQuestDoodad then
+			bAdd = true
+		end
+		if LR_HeadName.DoodadTemplateSee[obj.dwTemplateID] then
 			bAdd = true
 		end
 		if not bAdd and obj.nKind ==  DOODAD_KIND.QUEST and LR_HeadName.UsrData.bShowQuestDoodad then
@@ -2788,6 +2841,9 @@ function LR_HeadName.AddSingleDoodad2AllList(dwID)
 				if obj.HaveQuest(me.dwID) then
 					MINIMAP_LIST[dwID] = {nType = 5, obj = obj, nFrame1 = 199, nFrame2 = 48}
 				end
+			end
+			if HasQuest then
+				MINIMAP_LIST[dwID] = {nType = 5, obj = obj, nFrame1 = 199, nFrame2 = 48}
 			end
 		end
 	end
@@ -2861,7 +2917,11 @@ function LR_HeadName.QUEST_FINISHED()
 	_QuestTraceInfo[dwQuestID] = nil
 	_QuestInfo[dwQuestID] = nil
 
-	LR.DelayCall(150, function()
+	LR_HeadName.Tree()
+	LR_HeadName.RefreshTarget()
+	LR_HeadName.ReDrawNpc()
+
+--[[	LR.DelayCall(150, function()
 		----刷新NPC/Doodad上的任务标记
 		LR_HeadName.Tree()
 		----将Doodad加入显示列表
@@ -2869,7 +2929,7 @@ function LR_HeadName.QUEST_FINISHED()
 		----刷新当前目标
 		LR_HeadName.RefreshTarget()
 		LR_HeadName.ReDrawNpc()
-	end)
+	end)]]
 end
 
 function LR_HeadName.QUEST_FAILED()
@@ -2887,7 +2947,11 @@ function LR_HeadName.QUEST_FAILED()
 	_QuestTraceInfo[dwQuestID] = nil
 	_QuestInfo[dwQuestID] = nil
 
-	LR.DelayCall(150, function()
+
+	LR_HeadName.Tree()
+	LR_HeadName.RefreshTarget()
+	LR_HeadName.ReDrawNpc()
+--[[	LR.DelayCall(150, function()
 		----刷新NPC/Doodad上的任务标记
 		LR_HeadName.Tree()
 		----将Doodad加入显示列表
@@ -2895,7 +2959,7 @@ function LR_HeadName.QUEST_FAILED()
 		----刷新当前目标
 		LR_HeadName.RefreshTarget()
 		LR_HeadName.ReDrawNpc()
-	end)
+	end)]]
 end
 
 function LR_HeadName.QUEST_ACCEPTED()
@@ -2945,6 +3009,10 @@ function LR_HeadName.QUEST_CANCELED()
 	LR_HeadName.MissionNeed[dwQuestID] = nil
 	_QuestTraceInfo[dwQuestID] = nil
 	_QuestInfo[dwQuestID] = nil
+
+	LR_HeadName.Tree()
+	LR_HeadName.RefreshTarget()
+	LR_HeadName.ReDrawNpc()
 
 	LR.DelayCall(150, function()
 		----刷新NPC/Doodad上的任务标记
@@ -3075,6 +3143,10 @@ function LR_HeadName.LoadPatch3()
 	local path = sformat("%s\\Script\\LR_HeadNamePatch3.dat", AddonPath)
 	local data = LoadLUAData(path) or {}
 	LR_HeadName.NpcTemplateSee = clone(data)
+
+	local path2 = sformat("%s\\Script\\LR_HeadNamePatch4.dat", AddonPath)
+	local data2 = LoadLUAData(path2) or {}
+	LR_HeadName.DoodadTemplateSee = clone(data2)
 end
 
 function LR_HeadName.LoadCommonSettings()
@@ -3118,6 +3190,42 @@ function LR_HeadName.CheckCommonSettings()
 end
 
 -------------------------------------------------------------------
+function LR_HeadName.GetDoodadQuest(dwTemplateID)		--检查doodad上有没有任务，和官方的不同，官方的是这个doodad是否是任务中需求的物品，这里是这个doodad有没有可以接的任务
+	local t = SCENE_QUEST_CACHE[sformat("D_%d", dwTemplateID)] or {}
+	local t2 = LR.tAllUnknownAccept[sformat("D_%d", dwTemplateID)] or {}
+	for k, v in pairs(t2) do
+		tinsert(t, v)
+	end
+	return t
+end
+
+function LR_HeadName.CheckDoodadCanAcceptQuest(doodad)
+	local me = GetClientPlayer()
+	if not me then
+		return false
+	end
+	local tQuest = LR_HeadName.GetDoodadQuest(doodad.dwTemplateID)
+	for k, dwQuestID in pairs(tQuest) do
+		if me.CanAcceptQuest(dwQuestID, TARGET.DOODAD, doodad.dwID) == 1 then
+			return true
+		end
+	end
+	return false
+end
+
+function LR_HeadName.CheckDoodadAllQuestFinished(doodad)
+	local me = GetClientPlayer()
+	if not me then
+		return true
+	end
+	local tQuest = LR_HeadName.GetDoodadQuest(doodad.dwTemplateID)
+	for k, dwQuestID in pairs(tQuest) do
+		if not (me.CanAcceptQuest(dwQuestID, TARGET.DOODAD, doodad.dwID) == 8 or me.CanAcceptQuest(dwQuestID, TARGET.DOODAD, doodad.dwID) == 7) then
+			return false
+		end
+	end
+	return true
+end
 
 function LR_HeadName.CheckAgriculture(szName)
 	if not szName then
@@ -3172,16 +3280,17 @@ function LR_HeadName.LOADING_END()
 	end
 	local scene = me.GetScene()
 	LR_HeadName.dwMapID = scene.dwMapID
+	SCENE_QUEST_CACHE = clone(LR.tAllSceneQuest[scene.dwMapID] or {})
 	if not LR_HeadName.bOn then
 		return
 	end
-
 	LR_HeadName.GetAllMissionNeed()
 	LR_HeadName.Tree()
 	LR_HeadName.OpenFrame()
 	LR.DelayCall(500, function()
 		LR_HeadName.PARTY_SET_MARK()
 	end)
+	LR_HeadName.AddAllDoodad2AllList()
 	LR_HeadName.ReDrawNpc()
 end
 

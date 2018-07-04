@@ -210,20 +210,23 @@ function LR_TeamTools.DeathRecord.OnSkillEffectLog(dwCaster, dwTarget, bReact, n
 			nTotalDamage = nTotalDamage + nValue
 		end
 	end
-	--Output(tResult, szDamage)
-	local nEffectDamage = tResult[SKILL_RESULT_TYPE.EFFECTIVE_DAMAGE] or 0
-	local data = {}
-	data.dwCasterID = dwCaster
-	data.nCasterType = nCasterType
-	data.dwTargetID = dwTarget
-	data.szDamage = szDamage
-	data.szSkillName = szSkillName
-	data.nEffectDamage = nEffectDamage
-	data.nTotalDamage = nTotalDamage
-	data.bCriticalStrike = bCriticalStrike
-	data.nTime = GetCurrentTime()
-	LR_TeamTools.DeathRecord.tDamage[dwTarget] = LR_TeamTools.DeathRecord.tDamage[dwTarget] or {}
-	tinsert(LR_TeamTools.DeathRecord.tDamage[dwTarget], data)
+
+	if szDamage ~= "" then
+		--Output(tResult, szDamage)
+		local nEffectDamage = tResult[SKILL_RESULT_TYPE.EFFECTIVE_DAMAGE] or 0
+		local data = {}
+		data.dwCasterID = dwCaster
+		data.nCasterType = nCasterType
+		data.dwTargetID = dwTarget
+		data.szDamage = szDamage
+		data.szSkillName = szSkillName
+		data.nEffectDamage = nEffectDamage
+		data.nTotalDamage = nTotalDamage
+		data.bCriticalStrike = bCriticalStrike
+		data.nTime = GetCurrentTime()
+		LR_TeamTools.DeathRecord.tDamage[dwTarget] = LR_TeamTools.DeathRecord.tDamage[dwTarget] or {}
+		tinsert(LR_TeamTools.DeathRecord.tDamage[dwTarget], data)
+	end
 end
 
 function LR_TeamTools.DeathRecord.OnCommonHealthLog(dwTarget, nDeltaLife)

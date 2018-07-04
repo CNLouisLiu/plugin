@@ -78,6 +78,100 @@ function LR_PickupDead.CloseLootListPanel()
 	end
 end
 
+function LR_PickupDead.GetEquipItemEquiped(nEqSubType, nDetailType)
+	local nPos = 0
+	if nEqSubType == EQUIPMENT_SUB.MELEE_WEAPON then
+		nPos = EQUIPMENT_INVENTORY.MELEE_WEAPON
+		if nDetailType == WEAPON_DETAIL.BIG_SWORD then
+			nPos = EQUIPMENT_INVENTORY.BIG_SWORD
+		end
+	elseif nEqSubType == EQUIPMENT_SUB.RANGE_WEAPON then
+		nPos = EQUIPMENT_INVENTORY.RANGE_WEAPON
+	elseif nEqSubType == EQUIPMENT_SUB.ARROW then
+		nPos = EQUIPMENT_INVENTORY.ARROW
+	elseif nEqSubType == EQUIPMENT_SUB.CHEST then
+		nPos = EQUIPMENT_INVENTORY.CHEST
+	elseif nEqSubType == EQUIPMENT_SUB.HELM then
+		nPos = EQUIPMENT_INVENTORY.HELM
+	elseif nEqSubType == EQUIPMENT_SUB.AMULET then
+		nPos = EQUIPMENT_INVENTORY.AMULET
+	elseif nEqSubType == EQUIPMENT_SUB.RING then
+		nPos = EQUIPMENT_INVENTORY.RIGHT_RING
+		return INVENTORY_INDEX.EQUIP, nPos, EQUIPMENT_INVENTORY.LEFT_RING
+	elseif nEqSubType == EQUIPMENT_SUB.WAIST then
+		nPos = EQUIPMENT_INVENTORY.WAIST
+	elseif nEqSubType == EQUIPMENT_SUB.PENDANT then
+		nPos = EQUIPMENT_INVENTORY.PENDANT
+	elseif nEqSubType == EQUIPMENT_SUB.PANTS then
+		nPos = EQUIPMENT_INVENTORY.PANTS
+	elseif nEqSubType == EQUIPMENT_SUB.BOOTS then
+		nPos = EQUIPMENT_INVENTORY.BOOTS
+	elseif nEqSubType == EQUIPMENT_SUB.BANGLE then
+		nPos = EQUIPMENT_INVENTORY.BANGLE
+	elseif nEqSubType == EQUIPMENT_SUB.WAIST_EXTEND then
+		nPos = EQUIPMENT_INVENTORY.WAIST_EXTEND
+	elseif nEqSubType == EQUIPMENT_SUB.BACK_EXTEND then
+		nPos = EQUIPMENT_INVENTORY.BACK_EXTEND
+	elseif nEqSubType == EQUIPMENT_SUB.HORSE then
+		nPos = EQUIPMENT_INVENTORY.HORSE
+	end
+
+	return INVENTORY_INDEX.EQUIP, nPos
+end
+
+function LR_PickupDead.CheckHorse(item)
+	if LR.GetItemNumInLimitedBag(item.dwTabType, item.dwIndex, item.nBookID) > 0 then
+		return false
+	end
+	if LR.GetItemNumInHorseBag(item.dwTabType, item.dwIndex, item.nBookID) > 0 then
+		return false
+	end
+	return true
+end
+
+local function GetItemScore(item)
+	if not item then
+		return 0
+	end
+	return item.nBaseScore + item.nMountsScore + item.nStrengthScore
+end
+
+function LR_PickupDead.CheckEquip(item)
+	local flag = true
+	local me = GetClientPlayer()
+	if not me then
+		return false
+	end
+	if LR.GetItemNumInLimitedBag(item.dwTabType, item.dwIndex, item.nBookID) > 0 then
+		if item.nQuality < 4 then
+			return false	--包里有，低于紫品的直接不捡
+		end
+	end
+	local dwBox, nPos, nPos2 = LR_PickupDead.GetEquipItemEquiped(item.nSub, item.nDetail)
+
+	if item.nSub == EQUIPMENT_SUB.RING then
+		local item2, item3 = me.GetItem(dwBox, nPos), me.GetItem(dwBox, nPos2)
+		if item2 and item3 then
+			if not (item2 and (GetItemScore(item2) < GetItemScore(item)) or item3 and (GetItemScore(item3) < GetItemScore(item))) then
+				if item.nQuality < 4 then
+					return false	--装备的物品品质高，且物品不是紫的直接不捡
+				end
+			end
+		end
+	else
+		local item2 = me.GetItem(dwBox, nPos)
+		if item2 then
+			if GetItemScore(item2) >= GetItemScore(item) then
+				if item.nQuality < 4 then
+					return false	--装备的物品品质高，且物品不是紫的直接不捡
+				end
+			end
+		end
+	end
+
+	return true
+end
+
 --------------------------------------------------------------
 ---事件操作
 --------------------------------------------------------------
@@ -184,6 +278,21 @@ function LR_PickupDead.PickItem(dwDoodadID)
 				if not (LR_PickupDead.UsrData.bPickupItems and LR_PickupDead.UsrData.bOnlyPickupItems) then
 					if item.nQuality >=  LR_PickupDead.UsrData.pickUpLevel then
 						pickFlag = true
+					end
+
+					---如果在吃鸡地图
+					if Table_IsTreasureBattleFieldMap(me.GetMapID()) then
+						if item.nGenre == ITEM_GENRE.EQUIPMENT then
+							if item.nSub == EQUIPMENT_SUB.HORSE then
+								if not LR_PickupDead.CheckHorse(item) then
+									pickFlag = false
+								end
+							else
+								if not LR_PickupDead.CheckEquip(item) then
+									pickFlag = false
+								end
+							end
+						end
 					end
 				end
 

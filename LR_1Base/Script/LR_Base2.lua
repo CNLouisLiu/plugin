@@ -1260,6 +1260,10 @@ function teamnotice.UpdateEdit(data)
 end
 
 function teamnotice.Open()
+	if Table_IsZombieBattleFieldMap and Table_IsZombieBattleFieldMap(GetClientPlayer().GetMapID()) then
+		LR.SysMsg(_L["This map can not use team notice\n"])
+		return
+	end
 	local frame = Station.Lookup("Normal/teamnotice")
 	if not frame then
 		teamnotice.ini(teamnotice.temp)

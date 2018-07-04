@@ -907,6 +907,15 @@ function LR_TeamMenu.PopOptions()
 		LR_TeamBuffMonitor.ClearAllCache()
 		LR_TeamGrid.ReDrawAllMembers(true)
 	end}
+	tOptions[#tOptions+1] = {szOption = _L["Check role progress"],
+		fnAction = function()
+			if LR_CDRP then
+				LR_CDRP.OpenFrame()
+			else
+				LR.SysMsg(_L["Please install lr cdrp\n"])
+			end
+		end,
+	}
 	if LR_TeamGrid.IsLeader(GetClientPlayer().dwID) then
 		--мех╥
 		tOptions[#tOptions+1]={bDevide = true}

@@ -545,4 +545,7 @@ data={
 	["%s killed %s\n"]="%s 杀害了 %s\n",
 	["Database below"]="以下为数据库搜索内容",
 
+	["This map can not use team notice\n"]="此地图不能使用团队告示。\n",
+	["Please install lr cdrp\n"]="请安装懒人团队助手",
+	["Check role progress"]="检查团队个人副本击杀(新副本)",
 }

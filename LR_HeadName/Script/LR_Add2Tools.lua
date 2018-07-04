@@ -60,13 +60,14 @@ LR_HeadName_UI = {
 							LR_HeadName.SaveCommonSettings()
 							LR_HeadName.ReDrawAll()
 						end,
-					}, {szOption = _L["Big"], bCheck = true, bMCheck = true, bChecked = function() return LR_HeadName.UsrData.font == 23 end,
+					},
+--[[					{szOption = _L["Big"], bCheck = true, bMCheck = true, bChecked = function() return LR_HeadName.UsrData.font == 23 end,
 						fnAction = function()
 							LR_HeadName.UsrData.font = 23
 							LR_HeadName.SaveCommonSettings()
 							LR_HeadName.ReDrawAll()
 						end,
-					},
+					},]]
 				}
 				menu[#menu+1] = {bDevide = true}
 				menu[#menu+1] = {szOption = _L["Scale"],
@@ -145,9 +146,19 @@ LR_HeadName_UI = {
 				m[#m+1] = {szOption = _L["Show npc balloon"], bCheck = true, bMCheck = false, bChecked = function() return LR_Balloon.UsrData.bShowNpcMsg end, fnAction = function() LR_Balloon.UsrData.bShowNpcMsg = not LR_Balloon.UsrData.bShowNpcMsg end, }
 				m[#m+1] = {bDevide = true, }
 				m[#m+1] = {szOption = _L["Enable shield"], bCheck = true, bMCheck = false, bChecked = function() return LR_Balloon.UsrData.bBlock end,
-				fnAction = function()
-					LR_Balloon.UsrData.bBlock = not LR_Balloon.UsrData.bBlock
-				end, }
+					fnAction = function()
+						LR_Balloon.UsrData.bBlock = not LR_Balloon.UsrData.bBlock
+					end, }
+				m[#m+1] = {
+					szOption = _L["Set lifeper text offsetY"] .. sformat(": %d", LR_HeadName.UsrData.nBallonTopOffset or 0),
+					fnAction = function()
+						GetUserInputNumber(LR_HeadName.UsrData.nBallonTopOffset or 0, 1000, nil, function(arg0)
+							LR_HeadName.UsrData.nBallonTopOffset = arg0,
+							--LR_HeadName.ReDrawAll()
+							LR_HeadName.SaveCommonSettings()
+						end)
+					end,
+				}
 				m[#m+1] = {bDevide = true}
 				m[#m+1] = {szOption = _L["Balloon style"], bDisable = true}
 				local szOption = {_L["System type"], _L["Style 1"], _L["Style 2"], _L["Style 3"], _L["Style 4"]}
@@ -527,6 +538,17 @@ LR_HeadName_UI = {
 						end,
 					}
 				end
+				local mm = m[#m]
+				mm[#mm + 1] = {
+					szOption = _L["Set lifeper text offsetY"] .. sformat(": %d", LR_HeadName.UsrData.nMarkOffset or 0),
+					fnAction = function()
+						GetUserInputNumber(LR_HeadName.UsrData.nMarkOffset or 0, 1000, nil, function(arg0)
+							LR_HeadName.UsrData.nMarkOffset = arg0,
+							--LR_HeadName.ReDrawAll()
+							LR_HeadName.SaveCommonSettings()
+						end)
+					end,
+				}
 				PopupMenu(m)
 			end,
 			Tip = function()
@@ -577,7 +599,7 @@ LR_HeadName_UI = {
 					[DOODAD_KIND.CORPSE] = true, --"尸体"
 					[DOODAD_KIND.QUEST] = true, --"任务物品"
 					--[DOODAD_KIND.READ], --"写字台"
-					--[DOODAD_KIND.DIALOG], --"DIALOG"
+					--[DOODAD_KIND.DIALOG] = true, --"DIALOG"
 					[DOODAD_KIND.ACCEPT_QUEST] = true, --"宴席"
 					[DOODAD_KIND.TREASURE] = true, --"拾取物品"
 					[DOODAD_KIND.ORNAMENT] = true, --"装饰"
@@ -585,7 +607,7 @@ LR_HeadName_UI = {
 					--[DOODAD_KIND.CLIENT_ONLY], --"CLIENT_ONLY"
 					--[DOODAD_KIND.CHAIR], --"CHAIR"
 					--[DOODAD_KIND.GUIDE], --"GUIDE"
-					--[DOODAD_KIND.DOOR], --"桌子"
+					--[DOODAD_KIND.DOOR] = true, --"桌子"
 					--[DOODAD_KIND.NPCDROP], --"NPCDROP"
 				}
 				for k, v in pairs (DoodadKind) do

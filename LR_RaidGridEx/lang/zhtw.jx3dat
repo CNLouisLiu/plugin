@@ -540,4 +540,12 @@ data={
 	["ShowMiniBtn"]="顯示最小化按鈕",
 	["Rclick to fold or expand panel"]="右鍵摺疊/展開面板",
 
+	--20180616add--
+	[", effect damage %d point"]="，其中有效傷害%d點",
+	["%s killed %s\n"]="%s 殺害了 %s\n",
+	["Database below"]="以下為數據庫搜索內容",
+
+	["This map can not use team notice\n"]="此地圖不能使用團隊告示。\n",
+	["Please install lr cdrp\n"]="請安裝懶人團隊助手",
+	["Check role progress"]="檢查團隊個人副本擊殺(新副本)",
 }

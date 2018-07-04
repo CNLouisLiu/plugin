@@ -6,6 +6,23 @@ local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, tabl
 local AddonPath = "Interface\\LR_Plugin\\LR_1Base"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_1Base"
 ---------------------------------------------------------------
+BAG_PACKAGE = {
+	INVENTORY_INDEX.PACKAGE,	--1
+	INVENTORY_INDEX.PACKAGE1,	--2
+	INVENTORY_INDEX.PACKAGE2,	--3
+	INVENTORY_INDEX.PACKAGE3,	--4
+	INVENTORY_INDEX.PACKAGE4,	--5
+	INVENTORY_INDEX.PACKAGE_MIBAO,	--6
+}
+BANK_PACKAGE = {
+	INVENTORY_INDEX.BANK,
+	INVENTORY_INDEX.BANK_PACKAGE1,
+	INVENTORY_INDEX.BANK_PACKAGE2,
+	INVENTORY_INDEX.BANK_PACKAGE3,
+	INVENTORY_INDEX.BANK_PACKAGE4,
+	INVENTORY_INDEX.BANK_PACKAGE5,
+}
+-----------------------------------------------------------
 LR = LR or {
 	tDelayCall = {},
 	tEvent = {},
@@ -256,10 +273,10 @@ end
 function LR.GetItemNumInBag(dwTabType, dwIndex, nBookID)
 	local me = GetClientPlayer()
 	if not me then
-		return
+		return 0
 	end
 	local num = 0
-	for dBox = 1, 6, 1 do
+	for _, dBox in pairs(BAG_PACKAGE) do
 		for dX = 0, me.GetBoxSize(dBox) - 1, 1 do
 			local item = me.GetItem(dBox, dX)
 			if item then
@@ -286,10 +303,10 @@ end
 function LR.GetItemNumInBank(dwTabType, dwIndex, nBookID)
 	local me = GetClientPlayer()
 	if not me then
-		return
+		return 0
 	end
 	local num = 0
-	for dBox = 7, 12, 1 do
+	for _, dBox in pairs(BANK_PACKAGE) do
 		for dX = 0, me.GetBoxSize(dBox) - 1, 1 do
 			local item = me.GetItem(dBox, dX)
 			if item then
@@ -313,6 +330,59 @@ function LR.GetItemNumInBank(dwTabType, dwIndex, nBookID)
 	return num
 end
 
+function LR.GetItemNumInLimitedBag(dwTabType, dwIndex, nBookID)
+	local me = GetClientPlayer()
+	if not me then
+		return 0
+	end
+	local num = 0
+	local dBox = INVENTORY_INDEX.LIMITED_PACKAGE
+	for dX = 0, me.GetBoxSize(dBox) - 1, 1 do
+		local item = me.GetItem(dBox, dX)
+		if item then
+			if item.dwTabType == dwTabType and item.dwIndex == dwIndex then
+				local nStackNum = 1
+				if item.nGenre == ITEM_GENRE.BOOK then
+					if item.nBookID ~= nBookID then
+						nStackNum = 0
+					end
+				else
+					if item.bCanStack then
+						nStackNum = item.nStackNum
+					end
+				end
+				num = num + nStackNum
+			end
+		end
+	end
+
+	return num
+end
+
+function LR.GetItemNumInHorseBag(dwTabType, dwIndex, nBookID)
+	local num = 0
+	local me = GetClientPlayer()
+	if not me then
+		return num
+	end
+	local itemInfo = GetItemInfo(dwTabType, dwIndex)
+	if not itemInfo then
+		return num
+	end
+	if itemInfo.nGenre == ITEM_GENRE.EQUIPMENT and itemInfo.nSub == EQUIPMENT_SUB.HORSE then
+		local dwBox = INVENTORY_INDEX.HORSE
+		for dwX = 0, me.GetBoxSize() - 1, 1 do
+			local item = me.GetItem(dwBox, dwX)
+			if item then
+				if item.dwTabType == dwTabType and item.dwIndex == dwIndex then
+					num = num + 1
+				end
+			end
+		end
+	end
+	return num
+end
+
 function LR.GetItemNumInBagAndBank(dwTabType, dwIndex, nBookID)
 	local bagNum = LR.GetItemNumInBag(dwTabType, dwIndex, nBookID)
 	local bankNum = LR.GetItemNumInBank(dwTabType, dwIndex, nBookID)
@@ -322,6 +392,14 @@ end
 function LR.FormatTimeString(nTime)
 	local t = TimeToDate(nTime)
 	return string.format("%d-%02d-%02d %02d:%02d:%02d", t.year, t.month, t.day, t.hour, t.minute, t.second)
+end
+
+function LR.GetFormatImageByID(dwIconID, width, height)
+	return sformat("<image>path=\"fromiconid\" frame=%s w=%d h=%d postype=0 lockshowhide=0 eventid=0 </image>", dwIconID or 0, width or 30, height or 30)
+end
+
+function LR.GetFormatText(szText, font, r, g, b, nEvent, valign, halign, w, h)
+	return sformat("<text>text=\"%s\" font=%d h=%d lockshowhide=0 eventid=0 valign=1 halign=1 r=%d g=%d b=%d</text>", szText or "", font or 162, height or 60, r or 255, g or 255, b or 255)
 end
 ------------------------------------------------------------------
 ------UI
@@ -1390,6 +1468,18 @@ function LR.EditBox_AppendLinkItem(item)
 	return true
 end
 
+function LR.EditBox_AppendLinkPlayer(szPlayerName)
+	local frame = Station.Lookup("Lowest2/EditBox")
+	if not frame or not frame:IsVisible() then
+		return false
+	end
+
+	local edit = Station.Lookup("Lowest2/EditBox/Edit_Input")
+	edit:InsertObj(sformat("[%s]", szPlayerName) , {type = "name", text = sformat("[%s]", szPlayerName), name = szPlayerName})
+	Station.SetFocusWindow(edit)
+	return true
+end
+
 -----------------------------------------------------------
 function LR.GetTemplateName(tar, bEmployer)
 	if not tar then
@@ -1428,6 +1518,8 @@ end
 -------------------------------------------------------------------------------
 
 LR.tAllSceneQuest = {}  ---------------存放所有任务
+LR.tAllUnknownAccept = {}
+LR.tAllUnknownFinish = {}
 --------LR.tAllSceneQuest[地图ID][任务ID] =
 --[[	Quest  =
 	{
@@ -1464,6 +1556,17 @@ function LR.GetQuestName(dwQuestID)
 	end
 	local szQuestName = QuestInfo.szName
 	return szQuestName
+end
+
+function LR.Table_GetQuestClass(dwClassID)
+	local szClass = ""
+	local tQuestClass = g_tTable.QuestClass:Search(dwClassID)
+
+	if tQuestClass then
+		szClass = tQuestClass.szClass
+	end
+
+	return szClass
 end
 
 
@@ -1552,47 +1655,6 @@ function LR.GetQuestPoint(szText)
 		end
 	end
 	return tList
---[[
-	for szType, szData in sgmatch(szPointList, "<(%a) ([%d, ;|]+)>") do
-		local szFrame, szSource = smatch(szData, "([%d]+)|([%d, ;]+)")
-		local nFrame
-		if szFrame and szFrame ~= "" and szSource and szSource ~= "" then
-			szData = szSource
-			nFrame = tonumber(szFrame)
-		end
-		if szType == "N" or szType == "D" then	-- npc
-			local tData = LR.ParseNumberList(szData)
-			for _, tInfo in ipairs(tData) do
-				local dwMapID = tInfo[1]
-				local dwObject = tInfo[2]
-				local tQuestPos = nil
-				if szType == "N" then
-					tQuestPos = g_tTable.QuestNpc:Search(dwObject, dwMapID)
-				else
-					tQuestPos = g_tTable.QuestDoodad:Search(dwObject, dwMapID)
-				end
-				if tQuestPos and tQuestPos.szPositions ~= "" then
-					tPointList[dwMapID] = tPointList[dwMapID] or {}
-					local tPosList = LR.ParseNumberList(tQuestPos.szPositions)
-					for _, tPosition in ipairs(tPosList) do
-						tinsert(tPointList[dwMapID], {tPosition[1], tPosition[2], szType, dwObject, nFrame})
-					end
-				end
-			end
-		elseif szType == "P" then	-- postion
-			local tData = LR.ParseNumberList(szData)
-			for _, tPosition in ipairs(tData) do
-				local dwMapID = tPosition[1]
-				if not tPointList[dwMapID] then
-					tPointList[dwMapID] = {}
-				end
-				tinsert(tPointList[dwMapID], {tPosition[2], tPosition[3], szType, nil, nFrame})
-			end
-		else
-
-		end
-	end
-	return tPointList]]
 end
 
 function LR.Table_GetQuestStringInfo(dwQuestID)
@@ -1620,42 +1682,50 @@ end
 
 function LR.Table_LoadSceneQuest()
 	local nRow = g_tTable.Quest:GetRowCount()
-
-	-- Row 1 for default Row
-	for i = 2, nRow  do
-		local tQuestPosInfo = g_tTable.Quest:GetRow(i)
-		dwQuestID = tQuestPosInfo.dwQuestID
-		local tQuestStringInfo = LR.Table_GetQuestStringInfo(dwQuestID)
-		if tQuestStringInfo then
--- 			local tShield = g_tTable.ShieldQuest:Search(dwQuestID)
--- 			local bQuestNameShield = LR.IsQuestNameShield(tQuestStringInfo.szName)
--- 			if not bQuestNameShield and not tShield then
-				local szPosInfo = tQuestPosInfo.szAccept
-				for szType, szData in sgmatch(szPosInfo, "<(%a) ([%d, ;|]+)>") do
-					local szFrame, szSource = smatch(szData, "([%d]+)|([%d, ;]+)")
-					local nFrame
-					if szFrame and szFrame ~= "" and szSource and szSource ~= "" then
-						szData = szSource
-						nFrame = tonumber(szFrame)
-					end
-					if szType == "N" or szType == "D" then	-- npc
-						local tData = LR.ParseNumberList(szData)
-						for _, tInfo in ipairs(tData) do
-							local dwQuestMapID = tInfo[1]
-							local dwObject = tInfo[2]
-							if not LR.tAllSceneQuest[dwQuestMapID] then
-								LR.tAllSceneQuest[dwQuestMapID] = {}
-							end
-							if not LR.tAllSceneQuest[dwQuestMapID][dwQuestID] then
-								LR.tAllSceneQuest[dwQuestMapID][dwQuestID] = {}
-							end
-							tinsert(LR.tAllSceneQuest[dwQuestMapID][dwQuestID], {szType, dwObject})
-						end
-					end
+	for i = 2, nRow, 1 do
+		local tQuest = g_tTable.Quest:GetRow(i)
+		if tQuest then
+			local dwQuestID = tQuest.dwQuestID
+			local szAccept = tQuest.szAccept
+			local tAccept = LR.GetQuestPoint(szAccept)
+			for k, v in pairs(tAccept) do
+				if (v.nType == "N" or v.nType == "D") and v.dwTemplateID and v.dwMapID then
+					LR.tAllSceneQuest[v.dwMapID] = LR.tAllSceneQuest[v.dwMapID] or {}
+					local szKey = sformat("%s_%d", v.nType, v.dwTemplateID)
+					LR.tAllSceneQuest[v.dwMapID][szKey] = LR.tAllSceneQuest[v.dwMapID][szKey] or {}
+					tinsert(LR.tAllSceneQuest[v.dwMapID][szKey], dwQuestID)
 				end
-			--end
+			end
 		end
 	end
+	local tStart, tFinish = {}, {}
+	for i = 1, 18500, 1 do
+		local questInfo = GetQuestInfo(i)
+		if questInfo then
+			local tt = g_tTable.Quest:Search(i)
+			if not tt then
+				if questInfo.dwStartDoodadTemplateID ~= 0 then
+					local szKey = sformat("D_%d", questInfo.dwStartDoodadTemplateID)
+					tStart[szKey] = tStart[szKey] or {}
+					tinsert(tStart[szKey], i)
+
+					local szKey2 = sformat("D_%d", questInfo.dwEndNpcTemplateID)
+					tFinish[szKey2] = tFinish[szKey] or {}
+					tinsert(tFinish[szKey2], i)
+				elseif questInfo.dwStartNpcTemplateID ~= 0 then
+					local szKey = sformat("N_%d", questInfo.dwStartNpcTemplateID)
+					tStart[szKey] = tStart[szKey] or {}
+					tinsert(tStart[szKey], i)
+
+					local szKey2 = sformat("N_%d", questInfo.dwEndNpcTemplateID)
+					tFinish[szKey2] = tFinish[szKey] or {}
+					tinsert(tFinish[szKey2], i)
+				end
+			end
+		end
+	end
+	LR.tAllUnknownAccept = clone(tStart)
+	LR.tAllUnknownFinish = clone(tFinish)
 end
 
 RegisterEvent("FIRST_LOADING_END", LR.Table_LoadSceneQuest)
@@ -1783,17 +1853,16 @@ end
 
 ----------------------------------------------
 function LR.GetPlayerBagFreeBoxList()
-	local player = GetClientPlayer()
+	local me = GetClientPlayer()
 	local tBoxTable = {}
-	for nIndex = 6, 1, -1 do
-		local dwBox = INVENTORY_INDEX.PACKAGE + nIndex - 1
-		local dwSize = player.GetBoxSize(dwBox)
+	for _, dwBox in pairs(BAG_PACKAGE) do
+		local dwSize = me.GetBoxSize(dwBox)
 		if dwSize > 0 then
 			for dwX = dwSize, 1, -1 do
-				local item = player.GetItem(dwBox, dwX - 1)
+				local item = me.GetItem(dwBox, dwX - 1)
 				if not item then
 					local i, j = dwBox, dwX - 1
-					tinsert(tBoxTable, {i, j})
+					tinsert(tBoxTable, 1, {i, j})
 				end
 			end
 		end

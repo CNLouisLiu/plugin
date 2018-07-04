@@ -70,9 +70,9 @@ local LR_ShopHelper_UI  = {
 							return not LR_AutoSell.UsrData.bAutoSellItemInList
 						end,
 						fnAutoClose = true,
-						szIcon = "ui\\Image\\UICommon\\CommonPanel4.UITex",
-						nFrame  = 72,
-						nMouseOverFrame = 72,
+						szIcon = "ui\\Image\\UICommon\\feedanimials.UITex",
+						nFrame  = 86,
+						nMouseOverFrame = 87,
 						szLayer = "ICON_RIGHT",
 						fnAutoClose = true,
 						fnClickIcon = function ()
@@ -153,9 +153,9 @@ local LR_ShopHelper_UI  = {
 							return not LR_AutoSell.UsrData.enableBlackList
 						end,
 						fnAutoClose = true,
-						szIcon = "ui\\Image\\UICommon\\CommonPanel4.UITex",
-						nFrame  = 72,
-						nMouseOverFrame = 72,
+						szIcon = "ui\\Image\\UICommon\\feedanimials.UITex",
+						nFrame  = 86,
+						nMouseOverFrame = 87,
 						szLayer = "ICON_RIGHT",
 						fnAutoClose = true,
 						fnClickIcon = function ()

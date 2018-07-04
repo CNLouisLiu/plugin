@@ -336,6 +336,6 @@ data={
 	["<SYMBOL_FINISH>"]="●",
 	["<SYMBOL_MISSIONOBJ1>"]="▼",
 	["<SYMBOL_MISSIONOBJ2>"]="★",
-
+	["Mission Point"]="任務點",
 
 }
