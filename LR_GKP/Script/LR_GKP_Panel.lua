@@ -130,7 +130,7 @@ function LR_GKP_Panel:Init()
 				LR_GKP_Base.szSearchKey = _key[k]
 			end
 			if next(LR_GKP_Base.GKP_Bill) ~= nil then
-				LR_GKP_Base.LoadGKPList(LR_GKP_Base.GKP_Bill.szName)
+				--LR_GKP_Base.LoadGKPList(LR_GKP_Base.GKP_Bill.szName)
 				LR_GKP_Panel:RefreshBillName()
 				LR_GKP_Panel:LoadGKPItemBox()
 			end
@@ -374,10 +374,7 @@ function LR_GKP_Panel:CreateBillMenu()
 		mm[#mm + 1] = {
 			szOption = LR.StrDB2Game(v.szName),
 			fnAction = function()
-				LR_GKP_Base.LoadGKPList(LR.StrDB2Game(v.szName))
-				LR_GKP_Panel:RefreshBillName()
-				LR_GKP_Panel:LoadGKPItemBox()
-				LR_GKP_Panel:LoadTradeItemBox()
+				LR_GKP_Base.LoadBill(LR.StrDB2Game(v.szName))
 			end
 		}
 	end
@@ -435,7 +432,7 @@ function LR_GKP_Panel:LoadGKPItemBox()
 	for k, v in pairs(LR_GKP_Base.GKP_TradeList) do
 		local handleTradeList = LR.AppendUI("Handle", Scroll_GKP_List, "handleTradeList" .. k, {w = 920, h = 30})
 
-		local Image_Line = LR.AppendUI("Image", handleTradeList, sformat("Image_Line1_%d", k), {x = 0, y = 0, w = 920, h = 30})
+		local Image_Line = LR.AppendUI("Image", handleTradeList, sformat("Image_Line1_%d", k), {x = 0, y = 0, w = 920, h = 30, eventid = 0})
 		Image_Line:FromUITex("ui\\Image\\button\\ShopButton.UITex", 75)
 		Image_Line:SetImageType(10)
 		Image_Line:SetAlpha(220)
@@ -444,7 +441,7 @@ function LR_GKP_Panel:LoadGKPItemBox()
 		end
 
 		--悬停框
-		local Image_Hover = self:Append("Image", handleTradeList, sformat("Image_Hover_%d", k), {x = 2, y = 0, w = 920, h = 30})
+		local Image_Hover = self:Append("Image", handleTradeList, sformat("Image_Hover_%d", k), {x = 2, y = 0, w = 920, h = 30, eventid = 0})
 		Image_Hover:FromUITex("ui\\Image\\Common\\TempBox.UITex", 5)
 		Image_Hover:SetImageType(10)
 		Image_Hover:SetAlpha(200)
@@ -452,7 +449,7 @@ function LR_GKP_Panel:LoadGKPItemBox()
 
 		local nWidth = {80, 150, 160, 140, 140, 245}
 		local nn = 0
-		local Text_Order = LR.AppendUI("Text", handleTradeList, "Text_Order" .. k, {h = 30, text = k , w = nWidth[1]})
+		local Text_Order = LR.AppendUI("Text", handleTradeList, "Text_Order" .. k, {h = 30, text = k , w = nWidth[1], eventid = 0})
 		Text_Order:SetHAlign(1)
 		Text_Order:SetVAlign(1)
 		nn = nn + nWidth[1]
@@ -460,7 +457,7 @@ function LR_GKP_Panel:LoadGKPItemBox()
 		--显示物品
 		local dwTabType, dwIndex = v.dwTabType, v.dwIndex
 		local itemInfo = GetItemInfo(dwTabType, dwIndex)
-		local Handle_Item = LR.AppendUI("Handle", handleTradeList, "Handle_Item" .. k, {x = nn, h = 30, w = nWidth[2]})
+		local Handle_Item = LR.AppendUI("Handle", handleTradeList, "Handle_Item" .. k, {x = nn, h = 30, w = nWidth[2], eventid = 0})
 		Handle_Item:SetHandleStyle(3)
 
 		if v.dwTabType ~= 0 then
@@ -480,7 +477,7 @@ function LR_GKP_Panel:LoadGKPItemBox()
 			box:FromIconID(582)
 		end
 
-		local Text_Item = LR.AppendUI("Text", Handle_Item, "Text_Item" .. k, {h = 30, w = 40, text = v.szName})
+		local Text_Item = LR.AppendUI("Text", Handle_Item, "Text_Item" .. k, {h = 30, w = 40, text = v.szName, eventid = 0})
 		Text_Item:SetHAlign(1)
 		Text_Item:SetVAlign(0)
 		if itemInfo then
@@ -492,11 +489,11 @@ function LR_GKP_Panel:LoadGKPItemBox()
 		nn = nn + nWidth[2]
 
 		--显示购买者
-		local Handle_Purchaser = LR.AppendUI("Handle", handleTradeList, "Handle_Purchaser" .. k, {x = nn, h = 30, w = nWidth[3]})
+		local Handle_Purchaser = LR.AppendUI("Handle", handleTradeList, "Handle_Purchaser" .. k, {x = nn, h = 30, w = nWidth[3], eventid = 0})
 		Handle_Purchaser:SetHandleStyle(3)
 		local Image_PurchaserForce = LR.AppendUI("Image", Handle_Purchaser, "Image_PurchaserForce" .. k, {h = 30, w = 30, eventid = 0})
 		Image_PurchaserForce:FromUITex(GetForceImage(v.dwPurchaserForceID))
-		local Text_PurchaserName = LR.AppendUI("Text", Handle_Purchaser, "Text_PurchaserName" .. k, {h = 30, text = v.szPurchaserName})
+		local Text_PurchaserName = LR.AppendUI("Text", Handle_Purchaser, "Text_PurchaserName" .. k, {h = 30, text = v.szPurchaserName, eventid = 0})
 		Handle_Purchaser:FormatAllItemPos()
 		local w_PurchaserName, h_PurchaserName = Text_PurchaserName:GetTextExtent()
 		Text_PurchaserName:SetSize(w_PurchaserName, 30):SetVAlign(1):SetHAlign(1)
@@ -504,8 +501,8 @@ function LR_GKP_Panel:LoadGKPItemBox()
 		nn = nn + nWidth[3]
 
 		--显示金钱
-		local Handle_Money2 = LR.AppendUI("Handle", handleTradeList, "Handle_Money2_" .. k, {x = nn, h = 30, w = nWidth[4]})
-		local Handle_Money = LR.AppendUI("Handle", Handle_Money2, "Handle_Money" .. k, {x = 0, h = 30, w = nWidth[4]})
+		local Handle_Money2 = LR.AppendUI("Handle", handleTradeList, "Handle_Money2_" .. k, {x = nn, h = 30, w = nWidth[4], eventid = 0})
+		local Handle_Money = LR.AppendUI("Handle", Handle_Money2, "Handle_Money" .. k, {x = 0, h = 30, w = nWidth[4], eventid = 0})
 		Handle_Money:SetHandleStyle(3)
 		Handle_Money:AppendItemFromString(LR_GKP_Loot.GetMoneyTipText(v.nGold))
 		Handle_Money:FormatAllItemPos()
@@ -518,14 +515,14 @@ function LR_GKP_Panel:LoadGKPItemBox()
 		end
 
 		--显示来源
-		local Text_Source = LR.AppendUI("Text", handleTradeList, "Text_Source_" .. k, {x = nn, h = 30, w = nWidth[5]})
+		local Text_Source = LR.AppendUI("Text", handleTradeList, "Text_Source_" .. k, {x = nn, h = 30, w = nWidth[5], eventid = 0})
 		Text_Source:SetText(v.szSourceName)
 		Text_Source:SetHAlign(1)
 		Text_Source:SetVAlign(1)
 		nn = nn + nWidth[5]
 
 		--显示时间
-		local Text_Time = LR.AppendUI("Text", handleTradeList, "Text_Time_" .. k, {x = nn, h = 30, w = nWidth[6]})
+		local Text_Time = LR.AppendUI("Text", handleTradeList, "Text_Time_" .. k, {x = nn, h = 30, w = nWidth[6], eventid = 0})
 		local _date = TimeToDate(v.nCreateTime)
 		Text_Time:SetText(sformat(_L["%04dy%02dm%02dd %02d:%02d:%02d"], _date.year, _date.month, _date.day, _date.hour, _date.minute, _date.second))
 		Text_Time:SetHAlign(1)

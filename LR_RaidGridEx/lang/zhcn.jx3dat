@@ -548,4 +548,14 @@ data={
 	["This map can not use team notice\n"]="此地图不能使用团队告示。\n",
 	["Please install lr cdrp\n"]="请安装懒人团队助手",
 	["Check role progress"]="检查团队个人副本击杀(新副本)",
+
+	["Only from myself"]="仅监控来源于我的BUFF",
+	["Only monitor self"]="仅监控作用于我的BUFF",
+	["Enable color mask"]="启用颜色蒙版",
+	["Effect choose"]="特效选择",
+	["No effect"]="无特效",
+	["Effect type %d"]="特效样式%d",
+	["Sound settings"]="音效设置",
+	["No sound"]="无音效",
+	["Sound type %d"]="音效%d",
 }

@@ -40,7 +40,6 @@ local _GKP = {}
 LR_GKP_Base = {}
 local DefaultData = {
 	bOn = true,
-	lastLoadBill = "",
 	bLazy = false,
 }
 LR_GKP_Base.UsrData = clone(DefaultData)
@@ -119,31 +118,6 @@ function _GKP.GroupItem(items)
 		else
 			Grouped_Items["Other"][#Grouped_Items["Other"] + 1] = clone(item)
 		end
-
---[[		if item.nGenre == ITEM_GENRE.EQUIPMENT then
-			if item.nSub == 0 then		--近身武器
-				Grouped_Items["Weapon"][#Grouped_Items["Weapon"] + 1] = clone(item)
-			elseif item.nSub >= 1 and item.nSub <= 11 then
-				Grouped_Items["Armor"][#Grouped_Items["Armor"] + 1] = clone(item)
-			else
-				Grouped_Items["Other"][#Grouped_Items["Other"] + 1] = clone(item)
-			end
-		elseif item.nGenre == ITEM_GENRE.MATERIAL and item.nSub == 6 then
-			Grouped_Items["ExchangeItem"][#Grouped_Items["ExchangeItem"] + 1] = clone(item)
-		elseif _GKP.IsMaterial(item) then
-			Grouped_Items["Material"][#Grouped_Items["Material"] + 1] = clone(item)
-		elseif _GKP.IsSmallIron(item) then
-			Grouped_Items["Other"][#Grouped_Items["Other"] + 1] = clone(item)
-		elseif item.nGenre == ITEM_GENRE.MATERIAL and item.nSub == 0 then	--秦风部分牌子
-			local _s, _e, m, n = sfind(item.szName, _L["qinfeng(.+).(.+)"])
-			if _s then
-				Grouped_Items["ExchangeItem"][#Grouped_Items["ExchangeItem"] + 1] = clone(item)
-			else
-				Grouped_Items["Other"][#Grouped_Items["Other"] + 1] = clone(item)
-			end
-		else
-			Grouped_Items["Other"][#Grouped_Items["Other"] + 1] = clone(item)
-		end]]
 	end
 	return Grouped_Items
 end
@@ -174,8 +148,8 @@ local START_PRICE_SETS = {}
 _GKP.DoodadOriginalCount = {}
 _GKP.DoodadCount = {}
 
-_GKP.szSearchKey = "nCreateTime"
-_GKP.szOrderKey = "DESC"
+LR_GKP_Base.szSearchKey = "nCreateTime"
+LR_GKP_Base.szOrderKey = "DESC"
 
 -----------------------------------------------------------------
 function _GKP.SaveStartPriceSets()
@@ -795,12 +769,12 @@ function _GKP.DistributeItem(item, player)
 	end
 	local doodad = GetDoodad(item.nBelongDoodadID)
 	if not doodad then
-		LR.SysMsg(_L["Error: Doodad is not exesit.\n"])
+		LR.SysMsg(_L["Error: Doodad is not exist.\n"])
 		return false
 	end
 	local _item = GetItem(item.dwID)
 	if not _item then
-		LR.SysMsg(_L["Error: Item is not exesit.\n"])
+		LR.SysMsg(_L["Error: Item is not exist.\n"])
 		return false
 	end
 	if not _GKP.CheckPlayerStatus(player, item.nBelongDoodadID) then
@@ -1164,6 +1138,8 @@ function _GKP.LoadGKPList(szBillName)
 			nCreateTime = result[1].nCreateTime,
 		}
 		_GKP.BossDataD2G(result[1].szBossData)
+		_GKP.Save_MY_GKP(result[1].szName)
+		_GKP.LastLoadBill = result[1].szName
 
 		LR_GKP_Base.GKP_TradeList = {}	--GKP的记录内容
 		LR_GKP_Base.GKP_Person_Trade = {}	--个人消费总金额
@@ -1171,9 +1147,13 @@ function _GKP.LoadGKPList(szBillName)
 		LR_GKP_Base.GKP_Person_Cash = {}		--个人交易金钱记录
 		_GKP.Sale_Item_History = {}		--记录单个物品的价格
 		local GKP_TradeList = LR_GKP_Base.GKP_TradeList
-		local szSearchKey = _GKP.szSearchKey
-		local szOrderKey = _GKP.szOrderKey
-		local DB_SELECT2 = DB:Prepare(sformat("SELECT * FROM trade_data WHERE szBelongBill = ? ORDER BY %s %s", szSearchKey, szOrderKey))
+		local szSearchKey = LR_GKP_Base.szSearchKey
+		local szOrderKey = LR_GKP_Base.szOrderKey
+		local sql = sformat("SELECT * FROM trade_data WHERE szBelongBill = ? ORDER BY %s %s, nCreateTime DESC", szSearchKey, szOrderKey)
+		if szSearchKey == "nCreateTime" then
+			sql = sformat("SELECT * FROM trade_data WHERE szBelongBill = ? ORDER BY %s %s", szSearchKey, szOrderKey)
+		end
+		local DB_SELECT2 = DB:Prepare(sql)
 		DB_SELECT2:ClearBindings()
 		DB_SELECT2:BindAll(g2d(szName))
 		local result2 = d2g(DB_SELECT2:GetAll())
@@ -1381,7 +1361,7 @@ function _GKP.CreateNewBill(DB, szBillName)
 	DB_REPLACE:BindAll(bill_data.szName, bill_data.hash, bill_data.szArea, bill_data.szServer, bill_data.nCreateTime, bill_data.szBossData)
 	DB_REPLACE:Execute()
 
-	LR_GKP_Base.UsrData.lastLoadBill = szBillName
+	_GKP.LastLoadBill = szBillName
 	LR_GKP_Panel:RefreshBillName()
 end
 
@@ -1403,8 +1383,15 @@ function _GKP.SaveBill()
 
 	--同步BOSS信息
 	_GKP.SyncBoss()
-	LR_GKP_Base.UsrData.lastLoadBill = szBillName
+	_GKP.LastLoadBill = szBillName
 	LR_GKP_Panel:RefreshBillName()
+end
+
+function _GKP.LoadBill(szName)
+	_GKP.LoadGKPList(szName)
+	LR_GKP_Panel:RefreshBillName()
+	LR_GKP_Panel:LoadGKPItemBox()
+	LR_GKP_Panel:LoadTradeItemBox()
 end
 
 function _GKP.SaveBoss(szBelongBill)
@@ -1524,7 +1511,7 @@ function _GKP.ON_BG_CHANNEL_MSG()
 		local serverInfo = {GetUserServer()}
 		local realArea, realServer = serverInfo[5], serverInfo[6]
 		if next(LR_GKP_Base.GKP_Bill) == nil then
-			if sfind(_GKP.UsrData.lastLoadBill or "", "MY_GKP") then
+			if sfind(_GKP.LastLoadBill or "", "MY_GKP") then
 
 			else
 				local szBillName = LR_GKP_NewBill_Panel:CreateMainName() .. "_MY_GKP"
@@ -1533,6 +1520,7 @@ function _GKP.ON_BG_CHANNEL_MSG()
 				_GKP.CreateNewBill(DB, szBillName)
 				DB:Execute("END TRANSACTION")
 				DB:Release()
+				_GKP.Save_MY_GKP(szBillName)
 			end
 		end
 
@@ -1561,7 +1549,7 @@ function _GKP.ON_BG_CHANNEL_MSG()
 			szSourceName = data[2].szNpcName,
 			nCreateTime = data[2].nTime,
 			nSaveTime = GetCurrentTime(),
-			szBelongBill = _GKP.UsrData.lastLoadBill,
+			szBelongBill = _GKP.LastLoadBill,
 		}
 
 		if data[1] == "add" or data[1] == "edit" then
@@ -1578,6 +1566,44 @@ function _GKP.ON_BG_CHANNEL_MSG()
 			DB:Execute("END TRANSACTION")
 			DB:Release()
 			LR.DelayCall(500, function() LR_GKP_Panel:LoadGKPItemBox() end)
+		end
+	end
+end
+
+function _GKP.Clear_MY_GKP()
+	_GKP.LastLoadBill = ""
+	_GKP.Save_MY_GKP("")
+	LR_GKP_Base.GKP_Bill = {}
+end
+
+function _GKP.Save_MY_GKP(szName)
+	local path = sformat("%s\\MY_GKP_DATA.dat", SaveDataPath)
+	local data = {}
+	data.LastLoadBill = szName
+	SaveLUAData(path, data)
+end
+
+function _GKP.Check_MY_GKP()
+	local path = sformat("%s\\MY_GKP_DATA.dat", SaveDataPath)
+	local data = LoadLUAData(path) or {}
+	if data.LastLoadBill and data.LastLoadBill ~= "" then
+		if sfind(data.LastLoadBill, "MY_GKP") then
+			local msg = {
+				szMessage = _L["[LR GKP]System detects that the recent GKP record came from MY_GKP. \nLoad record or clear record?\nYou can also load the recent record from main panel."],
+				szName = "check bill",
+				fnAutoClose = function() return false end,
+				{szOption = _L["Load MY_GKP"],
+					fnAction = function()
+						_GKP.LoadBill(data.LastLoadBill)
+					end,
+				},
+				{szOption = _L["Unload MY_GKP"],
+					fnAction = function()
+						_GKP.Clear_MY_GKP()
+					end,
+				},
+			}
+			MessageBox(msg)
 		end
 	end
 end
@@ -1788,6 +1814,8 @@ function _GKP.LOADING_END()
 					}
 					MessageBox(msg)
 				end
+				--检测茗伊金团记录
+				_GKP.Check_MY_GKP()
 			end
 		end
 	end
@@ -1904,7 +1932,7 @@ local Open_Shield_Function = {
 	"CheckIsEquipmentEquiped", "IsSmallIron", "GroupItem", "GetCount", "GKP_BgTalk", "SaveSingleData", "DelSingleData",
 	"GetLastItemPrice", "GetItemStartPrice", "GetMoneyCol", "DistributeItem", "ShoutDistributeItemToRaid",
 	"OutputTradeList", "OutputDebtList", "SyncRecord", "SyncBoss", "SaveBill",
-	"LoadGKPList", "CreateNewBill", "InsertSetBossMenu", "InsertSetPriceMenu",
+	"LoadGKPList", "CreateNewBill", "InsertSetBossMenu", "InsertSetPriceMenu", "LoadBill",
 	"OneKey2Self", "OneKey2EquipmentBoss", "OneKey2MaterialBoss", "OneKey2SmallIronBoss", "Onekey2MenPaiBoss", "OneKey2AllBoss",
 }
 for k, v in pairs(Open_Shield_Function) do

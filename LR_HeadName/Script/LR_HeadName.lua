@@ -998,7 +998,6 @@ end
 
 ---------------------------------------------------
 ---------------------------------------------------
-
 function LR_HeadName.OnFrameCreate()
 	this:RegisterEvent("RENDER_FRAME_UPDATE")
 
@@ -1663,14 +1662,14 @@ function LR_HeadName.Check(dwID, nType, bForced)
 								end
 							end
 						end
-						if --(obj.bFightState and nShip ==  "Enemy" ) or
-						 (nShip ==  "Ally" and obj.nCurrentLife<obj.nMaxLife and nType ==  TARGET.NPC)
+						if (obj.bFightState and nShip ==  "Enemy" ) or
+						 (nShip ==  "Ally" and obj.nCurrentLife < obj.nMaxLife and nType ==  TARGET.NPC)
 						then
 							local LifePer = obj.nCurrentLife/obj.nMaxLife
 							if not LifePer or  LifePer>1 then
 								LifePer = 1
 							end
-							temp = sformat("%s (%0.1f%%)", temp, LifePer*100)
+							temp = sformat("%s (%0.1f%%)", temp, LifePer * 100)
 						end
 						local _, _dwID = me.GetTarget()
 						if _dwID ~= me.dwID and _dwID == obj.dwID and LR_HeadName.UsrData.bShowTargetDis or obj.bFightState and nShip == "Enemy" and LR_HeadName.UsrData.bShowFightingEnemyDis then

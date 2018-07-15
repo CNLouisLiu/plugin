@@ -1681,6 +1681,22 @@ function LR.Table_GetAllSceneQuest(dwMapID)
 end
 
 function LR.Table_LoadSceneQuest()
+	local path = sformat("%s\\QuestStartFinish.dat", SaveDataPath)
+	local data = LoadLUAData(path) or {}
+	local flag = false
+	if data.SaveTime then
+		local TimeNow, TimeRecord = GetCurrentTime(), data.SaveTime
+		local DateNow, DateRecord = TimeToDate(TimeNow), TimeToDate(TimeRecord)
+		if DateNow.year == DateRecord.year and DateNow.month == DateRecord.month and DateNow.day == DateRecord.day then
+			flag = true
+		end
+	end
+	if flag then
+		LR.tAllUnknownAccept = clone(data.tStart)
+		LR.tAllUnknownFinish = clone(data.tFinish)
+		return
+	end
+
 	local nRow = g_tTable.Quest:GetRowCount()
 	for i = 2, nRow, 1 do
 		local tQuest = g_tTable.Quest:GetRow(i)
@@ -1726,6 +1742,12 @@ function LR.Table_LoadSceneQuest()
 	end
 	LR.tAllUnknownAccept = clone(tStart)
 	LR.tAllUnknownFinish = clone(tFinish)
+
+	local data2 = {}
+	data2.SaveTime = GetCurrentTime()
+	data2.tStart = clone(tStart)
+	data2.tFinish = clone(tFinish)
+	LR.SaveLUAData(path, data2)
 end
 
 RegisterEvent("FIRST_LOADING_END", LR.Table_LoadSceneQuest)

@@ -607,9 +607,9 @@ function LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction, all_option)
 			page[i][#page[i] + 1] = {bDevide = true}
 			page[i][#page[i] + 1] = page[i+1]
 			page[i][#page[i]].szOption = _L["Next 20 Records"]
-			if all_option then
-				page[i][#page[i] + 1] = all_option
-			end
+		end
+		if all_option then
+			page[i][#page[i] + 1] = all_option
 		end
 	end
 

@@ -265,6 +265,8 @@ function _RoleGrid:AppendRoleGrid()
 		elseif v.nType == "Animate" then
 			self.UI[v.name] = LR.AppendUI("Animate", Parent, v.name, {w = v.w, h = v.h, x = v.x, y = v.y, eventid = 0})
 			self.UI[v.name]:SetAnimate(v.Image, v.Group, v.LoopCount)
+		elseif v.nType == "PSS" then
+			self.UI[v.name] = Parent:AppendItemFromIni(v.path, v.section, v.name)
 		end
 		if v.LockShowAndHide and v.LockShowAndHide == 1 then self.UI[v.name]:Hide() end
 		if v.Alpha then self.UI[v.name]:SetAlpha(v.Alpha) end
@@ -576,8 +578,15 @@ function _RoleGrid:SetRoleBodySize()
 	handle:Lookup("Image_BG_EmptyGrid"):SetRelPos(-1, -1)
 	handle:Lookup("Image_Hover"):SetSize(width+2,height+2)
 	handle:Lookup("Image_Hover"):SetRelPos(-1, -1)
-	handle:Lookup("Image_BossFocus"):SetSize(width+2,height+2)
-	handle:Lookup("Image_BossFocus"):SetRelPos(-1, -1)
+	--handle:Lookup("Image_BossFocus"):SetSize(width+2,height+2)
+	--handle:Lookup("Image_BossFocus"):SetRelPos(-1, -1)
+
+	local w, h = handle:Lookup("Handle_BossFocus"):Lookup("Handle_BossFocus_Fixed"):GetSize()	--SFX原始大小
+	local fSFXX, fSFXY = width / w, height / h
+	handle:Lookup("Handle_BossFocus"):Lookup("SFX_BossFocus"):Get3DModel():SetScaling(fSFXX, fSFXY, fSFXX)
+	handle:Lookup("Handle_BossFocus"):Lookup("SFX_BossFocus"):SetRelPos(width/2, height/2)
+	handle:Lookup("Handle_BossFocus"):FormatAllItemPos()
+
 	handle:Lookup("Image_ReadyCheck"):SetSize(width, height)
 	handle:Lookup("Image_ReadyCheck"):SetRelPos(0, 0)
 	handle:FormatAllItemPos()
@@ -1781,13 +1790,13 @@ end
 
 function _RoleGrid:BossFocus(bShow)
 	local handle = self.handle
-	local Image_BossFocus = handle:Lookup("Image_BossFocus")
-	if Image_BossFocus then
-		Image_BossFocus:SetAlpha(LR_TeamGrid.UsrData.CommonSettings.nBossFocusAlpha or 120)
+	local Handle_BossFocus = handle:Lookup("Handle_BossFocus")
+	if Handle_BossFocus then
+		Handle_BossFocus:SetAlpha(LR_TeamGrid.UsrData.CommonSettings.nBossFocusAlpha or 120)
 		if bShow then
-			Image_BossFocus:Show()
+			Handle_BossFocus:Show()
 		else
-			Image_BossFocus:Hide()
+			Handle_BossFocus:Hide()
 		end
 	end
 	return self
@@ -1820,6 +1829,7 @@ function LR_TeamGrid.OnFrameCreate()
 		frame:EnableDrag(true)
 	end
 
+	this:RegisterEvent("UI_SCALED")
 	this:RegisterEvent("PARTY_ADD_MEMBER")
 	this:RegisterEvent("PARTY_DELETE_MEMBER")
 	this:RegisterEvent("TEAM_CHANGE_MEMBER_GROUP")
@@ -1891,6 +1901,8 @@ end
 
 function LR_TeamGrid.OnEvent(szEvent)
 	if szEvent == "UI_SCALED" then
+		LR_TeamGrid.ReDrawAllMembers(true)
+		--LR_TeamGrid.UpdateRoleBodySize()
 		LR_TeamGrid.UpdateAnchor(this)
 	elseif szEvent == "PARTY_ADD_MEMBER" then
 		LR_TeamGrid.PARTY_ADD_MEMBER()

@@ -51,9 +51,71 @@ end
 --------------------------------------------------------------------
 ---公共BUFF配置文件
 --------------------------------------------------------------------
+local ORDER = {}
+function LR_TeamBuffTool.GetORDER(num)
+	if ORDER[num] then
+		return LR_TeamBuffTool.GetORDER(num + 1)
+	else
+		ORDER[num] = true
+		return num
+	end
+end
+
+function LR_TeamBuffTool.FormatBuff(v2)
+	local buff = {
+		dwID = v2.dwID or 0,
+		enable = v2.enable or false,
+		nLevel = v2.nLevel or 1,
+		bOnlySelf = v2.bOnlySelf or false,	--仅来源于我
+		bOnlyMonitorSelf = v2.bOnlyMonitorSelf or false,	--仅监控我
+		bOnlyInKungfu = v2.bOnlyInKungfu or {},	--限制心法
+		bOnlyShowInTeamRights = v2.bOnlyShowInTeamRights or {},	--限制团队成员显示，例如团长
+		nMonitorLevel = v2.nMonitorLevel or 0,	--0：不区分等级
+		nStackNum = v2.nStackNum or 1,
+		nMonitorStack = v2.nMonitorStack or 0,	--0：不区分层数
+		nIconID = v2.nIconID or 0,	--0：使用原来的ICON
+		col = v2.col or {},
+		--醒目BUFF，醒目BUFF会有单独Handle放大，且只有醒目BUFF才有颜色模版，如果某些BUFF叠上X层后要重点显示，请用醒目BUFF，设置后开可以设置在X层下也显示
+		bSpecialBuff = v2.bSpecialBuff or false,	--BUFF放大
+		bShowMask = v2.bShowMask or false,
+		bShowUnderStack = v2.bShowUnderStack or false,
+		--
+		nEffectsType = v2.nEffectsType or 0,	--BUFF效果，普通BUFF也可以设置效果，也可以起到醒目的作用
+		nSoundType = v2.nSoundType or 0,	--声音报警
+		bShowInTopHead = v2.bShowInTopHead or false,	--头顶显示
+	}
+	return buff
+end
+
+function LR_TeamBuffTool.FormatData(data)
+	local tBuffList = {}
+	local temp = {}
+	for k, v in pairs(data) do
+		if type(v) == "table" and v.szGroupName then
+			v.order = v.order or k
+			tinsert(temp, v)
+		end
+	end
+	tsort(temp, function(a, b) return a.order < b.order end)
+	--Output(temp)
+
+	ORDER = {}
+	for k, v in pairs(temp) do
+		if type(v) == "table" and v.szGroupName then
+			local tGroup = {enable = v.enable or false, szGroupName = v.szGroupName or sformat("default%d", k), data = {}, order = LR_TeamBuffTool.GetORDER(1)}
+			for k2, v2 in pairs(v.data) do
+				local buff = LR_TeamBuffTool.FormatBuff(v2)
+				tinsert(tGroup.data, buff)
+			end
+			tinsert(tBuffList, tGroup)
+		end
+	end
+	return tBuffList
+end
+
 function LR_TeamBuffTool.SaveData()
 	local path = sformat("%s\\BuffMonitorData.dat", SaveDataPath)
-	local data = clone(LR_TeamBuffTool.tBuffList)
+	local data = LR_TeamBuffTool.FormatData(LR_TeamBuffTool.tBuffList)
 	data.VERSION = VERSION
 	SaveLUAData(path, data)
 	LR_TeamBuffSettingPanel.FormatDebuffNameList()
@@ -65,7 +127,7 @@ function LR_TeamBuffTool.LoadData()
 	if next(data) == nil or not data.VERSION or data.VERSION ~= VERSION then
 		LR_TeamBuffTool.ResetData()
 	else
-		LR_TeamBuffTool.tBuffList = clone(data)
+		LR_TeamBuffTool.tBuffList = LR_TeamBuffTool.FormatData(data)
 	end
 	LR_TeamBuffSettingPanel.FormatDebuffNameList()
 end
@@ -103,7 +165,7 @@ end
 function LR_TeamBuffTool.Export()
 	local fExport = function(szName)
 		local path = sformat("%s\\Export\\%s", SaveDataPath, szName)
-		local data = clone(LR_TeamBuffTool.tBuffList)
+		local data = LR_TeamBuffTool.FormatData(LR_TeamBuffTool.tBuffList)
 		data.VERSION = nil
 		data.nType = "LR_TeamBuffTool.DataExport"
 		LR.SaveLUAData(path, data)
@@ -126,7 +188,7 @@ function LR_TeamBuffTool.Import()
 	if data.nType ~= "LR_TeamBuffTool.DataExport" then
 		return
 	end
-	LR_TeamBuffTool.tBuffList = clone(data)
+	LR_TeamBuffTool.tBuffList = LR_TeamBuffTool.FormatData(data)
 	LR_TeamBuffTool.tBuffList.nType = nil
 
 	LR_TeamBuffTool.SaveData()
@@ -558,7 +620,8 @@ function LR_TeamBuffTool_Panel:addBuff()
 		self:LoadBuffListBox()
 		return
 	end
-	local buff = {dwID = bAddBuff.dwID, enable = true, col = {}, bOnlySelf = false, nIconID = 0, nMonitorLevel = 0, nMonitorStack = 0, bSpecialBuff = false, nLevel = bAddBuff.nLevel, nStackNum = bAddBuff.nStackNum, bShowUnderStack = false,}
+	bAddBuff.enable = true
+	local buff = LR_TeamBuffTool.FormatBuff(bAddBuff)
 	tinsert(LR_TeamBuffTool.tBuffList[k].data, buff)
 	self:LoadBuffListBox()
 	LR_TeamBuffTool.SaveData()
@@ -611,6 +674,7 @@ function LR_TeamBuffTool_Panel:LoadGroupBox()
 
 	local m = 1
 	local List = LR_TeamBuffTool.tBuffList or {}
+	tsort(List, function(a, b) return a.order < b.order end)
 
 	for k, v in pairs (List) do
 		if type(v) == "table" then
@@ -1028,7 +1092,8 @@ function LR_TeamBuffTool_Panel:LoadBuffListBox()
 	local tBuffList = LR_TeamBuffTool_Panel:GetGroupData(LR_TeamBuffTool_Panel.szChooseGroupName)
 	local szChooseGroupName = LR_TeamBuffTool_Panel.szChooseGroupName
 	local t = tBuffList.data
-	for k, v in pairs(tBuffList.data) do
+
+	for k, v in pairs(t) do
 		---BUFF框架
 		LR_TeamBuffTool_Panel:DrawOneBuffBox(szChooseGroupName, v)
 	end
@@ -1054,7 +1119,7 @@ function LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
 		Image_Line:FromUITex("ui\\Image\\UICommon\\CommonPanel.UITex", 48):SetImageType(10):SetAlpha(200)
 
 		local Shadow_Special = LR.AppendUI("Shadow", hBuffList, "Shadow_Special" .. szKey, {x = 5, y = 5, w = 150, h = 90})
-		if buff.bSpecialBuff and next(buff.col) ~= nil then
+		if buff.bSpecialBuff and next(buff.col) ~= nil and buff.bShowMask then
 			Shadow_Special:SetColorRGB(unpack(buff.col))
 			Shadow_Special:Show()
 		else
@@ -1099,6 +1164,33 @@ function LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
 			Image_BuffIcon:FromIconID(Table_GetBuffIconID(buff.dwID, buff.nLevel))
 		end
 		Image_BuffIcon:SetImageType(10):SetAlpha(255):Show()
+
+		--特效Handle
+		local Handle_Effect = LR.AppendUI("Handle", hBuffList, sformat("Handle_Effect_%s", szKey), {x = 50, y = 8, w = 60, h = 60, eventid = 0})
+		local function Add_Effect()
+			if Handle_Effect then
+				local handle = Handle_Effect
+				handle:Clear()
+				local nEffectsType = buff.nEffectsType
+				if nEffectsType > 0 then
+					handle:AppendItemFromIni(sformat("%s\\UI\\PSS.ini", AddonPath), sformat("Handle_SpecialBuff%d", nEffectsType), "Handle_SpecialBuff")
+					handle:Lookup("Handle_SpecialBuff"):Lookup(sformat("Handle_SpecialBuff%d_Fixed", nEffectsType)):SetName("Handle_SpecialBuff_Fixed")
+					handle:Lookup("Handle_SpecialBuff"):Lookup(sformat("SFX_SpecialBuff%d", nEffectsType)):SetName("SFX_SpecialBuff")
+					--设置大小
+					local w, h = handle:Lookup("Handle_SpecialBuff"):Lookup("Handle_SpecialBuff_Fixed"):GetSize()	--SFX原始大小
+					local width, height = 60, 60
+					local fSFXX, fSFXY = width / w, height / h
+					handle:SetSize(width, height)
+					handle:Lookup("Handle_SpecialBuff"):SetSize(width, height)
+					handle:Lookup("Handle_SpecialBuff"):Lookup("SFX_SpecialBuff"):Get3DModel():SetScaling(fSFXX, fSFXY, fSFXX)
+					handle:Lookup("Handle_SpecialBuff"):Lookup("SFX_SpecialBuff"):SetRelPos(width / 2, height / 2)
+					handle:Lookup("Handle_SpecialBuff"):FormatAllItemPos()
+					handle:FormatAllItemPos()
+					handle:Show()
+				end
+			end
+		end
+		Add_Effect()
 
 		--BUFF名字
 		local TextBuffName = LR.AppendUI("Text", hBuffList, "TextBuffName".. szKey .."_2", {w = 160, h = 30, x  = 0, y = 70, text = Table_GetBuffName(buff.dwID, buff.nLevel), font = 18})
@@ -1308,13 +1400,41 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 	end
 	_UI[szKey]["Image_Buff_Icon"] = Image_Buff_Icon
 
+	local function Add_Effect()
+		if _UI[szKey]["Handle_Effect"] then
+			local handle = _UI[szKey]["Handle_Effect"]
+			handle:Clear()
+			local nEffectsType = buff.nEffectsType
+			if nEffectsType > 0 then
+				handle:AppendItemFromIni(sformat("%s\\UI\\PSS.ini", AddonPath), sformat("Handle_SpecialBuff%d", nEffectsType), "Handle_SpecialBuff")
+				handle:Lookup("Handle_SpecialBuff"):Lookup(sformat("Handle_SpecialBuff%d_Fixed", nEffectsType)):SetName("Handle_SpecialBuff_Fixed")
+				handle:Lookup("Handle_SpecialBuff"):Lookup(sformat("SFX_SpecialBuff%d", nEffectsType)):SetName("SFX_SpecialBuff")
+				--设置大小
+				local w, h = handle:Lookup("Handle_SpecialBuff"):Lookup("Handle_SpecialBuff_Fixed"):GetSize()	--SFX原始大小
+				local width, height = 50, 50
+				local fSFXX, fSFXY = width / w, height / h
+				handle:SetSize(width, height)
+				handle:Lookup("Handle_SpecialBuff"):SetSize(width, height)
+				handle:Lookup("Handle_SpecialBuff"):Lookup("SFX_SpecialBuff"):Get3DModel():SetScaling(fSFXX, fSFXY, fSFXX)
+				handle:Lookup("Handle_SpecialBuff"):Lookup("SFX_SpecialBuff"):SetRelPos(width / 2, height / 2)
+				handle:Lookup("Handle_SpecialBuff"):FormatAllItemPos()
+				handle:FormatAllItemPos()
+				handle:Show()
+			end
+		end
+	end
+
+	local Handle_Effect = LR.AppendUI("Handle", frame, "Handle_Effect", {w= 50, h = 50, x = 155, y = 35, eventid = 0})
+	_UI[szKey]["Handle_Effect"] = Handle_Effect
+	Add_Effect()
+
 	local CheckBox_Enable = LR.AppendUI("CheckBox", frame, "CheckBox_Enable", {x = 10, y = 35, text = _L["Enable"]})
 	CheckBox_Enable:Enable(true)
 	CheckBox_Enable:Check(buff.enable)
 	CheckBox_Enable.OnCheck = function(arg0)
 		buff.enable = arg0
 		for k, v in pairs(_UI[szKey]) do
-			if k ~= "CheckBox_Enable" and k ~= "Image_Buff_Icon" then
+			if v.Enable and k ~= "CheckBox_Enable" then
 				v:Enable(arg0)
 			end
 		end
@@ -1324,7 +1444,34 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 	end
 	_UI[szKey]["CheckBox_Enable"] = CheckBox_Enable
 
-	local CheckBox_Not_By_Level = LR.AppendUI("CheckBox", frame, "CheckBox_Not_By_Level", {x = 40, y = 100, text = _L["Not by level"]})
+	local ComboBox_Effect = LR.AppendUI("ComboBox", frame, "ComboBox_Effect", {x = 220, y = 60, w = 120, text = _L["Effect choose"]})
+	ComboBox_Effect:Enable(true)
+	ComboBox_Effect.OnClick = function(m)
+		m[#m + 1] = {szOption = _L["No effect"], bCheck = true, bMCheck = true, bChecked = function() return buff.nEffectsType == 0 end,
+			fnAction = function()
+				buff.nEffectsType = 0
+				LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
+				LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
+				Add_Effect()
+			end,
+		}
+
+		for nType = 1, 8, 1 do
+			m[#m + 1] = {szOption = sformat(_L["Effect type %d"], nType), bCheck = true, bMCheck = true, bChecked = function() return buff.nEffectsType == nType end,
+				fnAction = function()
+					buff.nEffectsType = nType
+					LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
+					LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
+					Add_Effect()
+				end,
+			}
+		end
+
+		PopupMenu(m)
+	end
+	_UI[szKey]["CheckBox_Enable"] = CheckBox_Enable
+
+	local CheckBox_Not_By_Level = LR.AppendUI("CheckBox", frame, "CheckBox_Not_By_Level", {x = 40, y = 85, text = _L["Not by level"]})
 	CheckBox_Not_By_Level:Enable(buff.enable)
 	CheckBox_Not_By_Level:Check(buff.nMonitorLevel == 0)
 	CheckBox_Not_By_Level.OnCheck = function(arg0)
@@ -1339,8 +1486,8 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 	end
 	_UI[szKey]["CheckBox_Not_By_Level"] = CheckBox_Not_By_Level
 
-	LR.AppendUI("Text", frame, "Text_By_Stacknum", {x = 180, y = 100, text = _L["By stacknum"]})
-	local Edit_By_Stacknum = LR.AppendUI("Edit", frame, "Edit_By_Stacknum", {w = 40, h = 24, x = 250, y = 100, text = buff.nMonitorStack})
+	LR.AppendUI("Text", frame, "Text_By_Stacknum", {x = 155, y = 85, text = _L["By stacknum"]})
+	local Edit_By_Stacknum = LR.AppendUI("Edit", frame, "Edit_By_Stacknum", {w = 40, h = 24, x = 225, y = 85, text = buff.nMonitorStack})
 	Edit_By_Stacknum:Enable(buff.enable)
 	Edit_By_Stacknum.OnChange = function(arg0)
 		local szText = LR.Trim(arg0)
@@ -1353,25 +1500,40 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 	end
 	_UI[szKey]["Edit_By_Stacknum"] = Edit_By_Stacknum
 
-
-	local CheckBox_Only_Self = LR.AppendUI("CheckBox", frame, "CheckBox_Only_Self", {x = 40, y = 140, text = _L["Only self"]})
-	CheckBox_Only_Self:Enable(buff.enable)
-	CheckBox_Only_Self:Check(buff.bOnlySelf)
-	CheckBox_Only_Self.OnCheck = function(arg0)
+	--仅监控来自于我的BUFF
+	local CheckBox_Only_From_Myself = LR.AppendUI("CheckBox", frame, "CheckBox_Only_From_Myself", {x = 40, y = 105, text = _L["Only from myself"]})
+	CheckBox_Only_From_Myself:Enable(buff.enable)
+	CheckBox_Only_From_Myself:Check(buff.bOnlySelf)
+	CheckBox_Only_From_Myself.OnCheck = function(arg0)
 		buff.bOnlySelf = arg0
 
 		LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
 		LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
 	end
-	_UI[szKey]["CheckBox_Only_Self"] = CheckBox_Only_Self
+	_UI[szKey]["CheckBox_Only_From_Myself"] = CheckBox_Only_From_Myself
 
-	local CheckBox_Striking_Display = LR.AppendUI("CheckBox", frame, "CheckBox_Striking_Display", {x = 40, y = 180, text = _L["Striking display"]})
+	--仅监控我的BUFF
+	local CheckBox_Only_Monitor_Self = LR.AppendUI("CheckBox", frame, "CheckBox_Only_Monitor_Self", {x = 40, y = 125, text = _L["Only monitor self"]})
+	CheckBox_Only_Monitor_Self:Enable(buff.enable)
+	CheckBox_Only_Monitor_Self:Check(buff.bOnlyMonitorSelf)
+	CheckBox_Only_Monitor_Self.OnCheck = function(arg0)
+		buff.bOnlyMonitorSelf = arg0
+
+		LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
+		LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
+	end
+	_UI[szKey]["CheckBox_Only_Monitor_Self"] = CheckBox_Only_Monitor_Self
+
+	local CheckBox_Striking_Display = LR.AppendUI("CheckBox", frame, "CheckBox_Striking_Display", {x = 40, y = 160, text = _L["Striking display"]})
 	CheckBox_Striking_Display:Enable(buff.enable)
 	CheckBox_Striking_Display:Check(buff.bSpecialBuff)
 	CheckBox_Striking_Display.OnCheck = function(arg0)
 		buff.bSpecialBuff = arg0
-		if _UI[szKey]["CheckBox_UnderStack"] then
-			_UI[szKey]["CheckBox_UnderStack"]:Enable(buff.enable and buff.bSpecialBuff)
+		local group = {"CheckBox_EnableMask", "CheckBox_UnderStack"}
+		for k, v in pairs(group) do
+			if _UI[szKey][v] and _UI[szKey][v].Enable then
+				_UI[szKey][v]:Enable(arg0)
+			end
 		end
 
 		LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
@@ -1379,7 +1541,18 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 	end
 	_UI[szKey]["CheckBox_Striking_Display"] = CheckBox_Striking_Display
 
-	local Shadow_Striking_Display = LR.AppendUI("ColorBox", frame, "Shadow_Striking_Display", {x = 140, y = 180, w = 20, h = 20, eventid = 272})
+	local CheckBox_EnableMask = LR.AppendUI("CheckBox", frame, "CheckBox_EnableMask", {x = 40, y = 180, text = _L["Enable color mask"]})
+	CheckBox_EnableMask:Enable(buff.enable and buff.bSpecialBuff)
+	CheckBox_EnableMask:Check(buff.bShowMask)
+	CheckBox_EnableMask.OnCheck = function(arg0)
+		buff.bShowMask = arg0
+
+		LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
+		LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
+	end
+	_UI[szKey]["CheckBox_EnableMask"] = CheckBox_EnableMask
+
+	local Shadow_Striking_Display = LR.AppendUI("ColorBox", frame, "Shadow_Striking_Display", {x = 165, y = 180, w = 20, h = 20, eventid = 272})
 	if next(buff.col) ~= nil then
 		Shadow_Striking_Display:SetColor(unpack(buff.col))
 	else
@@ -1393,18 +1566,7 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 	end
 	_UI[szKey]["Shadow_Striking_Display"] = Shadow_Striking_Display
 
-	local CheckBox_UnderStack = LR.AppendUI("CheckBox", frame, "CheckBox_UnderStack", {x = 170, y = 180, text = _L["Still show when under stacknum"]})
-	CheckBox_UnderStack:Enable(buff.enable and buff.bSpecialBuff)
-	CheckBox_UnderStack:Check(buff.bShowUnderStack)
-	CheckBox_UnderStack.OnCheck = function(arg0)
-		buff.bShowUnderStack = arg0
-
-		LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
-		LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
-	end
-	_UI[szKey]["CheckBox_UnderStack"] = CheckBox_UnderStack
-
-	local Btn_ClearColor = LR.AppendUI("Button", frame, "Btn_ClearColor", {x = 140, y = 210, text = _L["Clear color"], w = 100})
+	local Btn_ClearColor = LR.AppendUI("Button", frame, "Btn_ClearColor", {x = 195, y = 180, text = _L["Clear color"], w = 100})
 	Btn_ClearColor:Enable(buff.enable)
 	Btn_ClearColor.OnClick = function(arg0)
 		buff.col = {}
@@ -1419,6 +1581,75 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 		LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
 		LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
 	end
+
+	local CheckBox_UnderStack = LR.AppendUI("CheckBox", frame, "CheckBox_UnderStack", {x = 40, y = 200, text = _L["Still show when under stacknum"]})
+	CheckBox_UnderStack:Enable(buff.enable and buff.bSpecialBuff)
+	CheckBox_UnderStack:Check(buff.bShowUnderStack)
+	CheckBox_UnderStack.OnCheck = function(arg0)
+		buff.bShowUnderStack = arg0
+
+		LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
+		LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
+	end
+	_UI[szKey]["CheckBox_UnderStack"] = CheckBox_UnderStack
+
+	local ComboBox_Effect = LR.AppendUI("ComboBox", frame, "ComboBox_Effect", {x = 220, y = 60, w = 120, text = _L["Effect choose"]})
+	ComboBox_Effect:Enable(buff.enable)
+	ComboBox_Effect.OnClick = function(m)
+		m[#m + 1] = {szOption = _L["No effect"], bCheck = true, bMCheck = true, bChecked = function() return buff.nEffectsType == 0 end,
+			fnAction = function()
+				buff.nEffectsType = 0
+				LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
+				LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
+				Add_Effect()
+			end,
+		}
+		for nType = 1, 8, 1 do
+			m[#m + 1] = {szOption = sformat(_L["Effect type %d"], nType), bCheck = true, bMCheck = true, bChecked = function() return buff.nEffectsType == nType end,
+				fnAction = function()
+					buff.nEffectsType = nType
+					LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
+					LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
+					Add_Effect()
+				end,
+			}
+		end
+		PopupMenu(m)
+	end
+	_UI[szKey]["ComboBox_Effect"] = ComboBox_Effect
+
+	local ComboBox_Sound = LR.AppendUI("ComboBox", frame, "ComboBox_Sound", {x = 40, y = 235, w = 120, text = _L["Sound settings"]})
+	ComboBox_Sound:Enable(buff.enable)
+	ComboBox_Sound.OnClick = function(m)
+		m[#m + 1] = {szOption = _L["No sound"], bCheck = true, bMCheck = true, bChecked = function() return buff.nSoundType == 0 end,
+			fnAction = function()
+				buff.nSoundType = 0
+				LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
+				LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
+				Add_Effect()
+			end,
+		}
+		for nSoundType = 1, 5, 1 do
+			m[#m + 1] = {szOption = sformat(_L["Sound type %d"], nSoundType), bCheck = true, bMCheck = true, bChecked = function() return buff.nSoundType == nSoundType end,
+				fnAction = function()
+					buff.nSoundType = nSoundType
+					LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
+					LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
+					Add_Effect()
+					local SOUND_TYPE = {
+						g_sound.OpenAuction,
+						g_sound.CloseAuction,
+						g_sound.FinishAchievement,
+						g_sound.PickupRing,
+						g_sound.PickupWater,
+					}
+					PlaySound(SOUND.UI_SOUND, SOUND_TYPE[nSoundType])
+				end,
+			}
+		end
+		PopupMenu(m)
+	end
+	_UI[szKey]["ComboBox_Sound"] = ComboBox_Sound
 end
 
 function LR_Team_Buff_Setting_Panel:Open(szGroupName, buff)

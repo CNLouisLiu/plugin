@@ -466,8 +466,9 @@ LR_TeamGrid_UI.menu = {
 		return LR_TeamGrid.bOn
 	end,
 	fnAutoClose=true,
+	--szIcon = "fromiconid",
 	szIcon = "ui\\Image\\UICommon\\CommonPanel2.UITex",
-	nFrame =105,
+	nFrame = 105,
 	nMouseOverFrame = 106,
 	szLayer = "ICON_RIGHT",
 	fnAutoClose=true,

@@ -44,6 +44,30 @@ function _BuffBox:Create()
 	self.handle = handle
 	handle:Lookup("Text_LeftTime"):SetText("")
 	handle:Lookup("Text_BuffStacks"):SetText("")
+	local Box2 = handle:Lookup("Box")
+	Box2:RegisterEvent(272)
+	Box2.OnItemMouseEnter = function()
+		local x, y = this:GetAbsPos()
+		local nTime = math.floor(self.tBuff.nEndFrame - GetLogicFrameCount()) / 16 + 1
+		OutputBuffTip(self.dwMemberID, self.tBuff.dwID, self.tBuff.nLevel, self.tBuff.nBuffStack, false, 0, {x, y, 0, 0})
+	end
+	Box2.OnItemMouseLeave = function()
+		HideTip()
+	end
+	Box2.OnItemLButtonClick = function()
+		local x = Box2:GetParent():GetParent():GetParent()
+		x.OnItemLButtonClick()
+	end
+
+	local Handle_SFX = handle:Lookup("Handle_SFX")
+	local nEffectsType = self.tBuff.nEffectsType or 0
+	Handle_SFX:Clear()
+	if nEffectsType > 0 then
+		Handle_SFX:AppendItemFromIni(sformat("%s\\UI\\PSS.ini", AddonPath), sformat("Handle_SpecialBuff%d", nEffectsType), "Handle_SpecialBuff")
+		Handle_SFX:Lookup("Handle_SpecialBuff"):Lookup(sformat("Handle_SpecialBuff%d_Fixed", nEffectsType)):SetName("Handle_SpecialBuff_Fixed")
+		Handle_SFX:Lookup("Handle_SpecialBuff"):Lookup(sformat("SFX_SpecialBuff%d", nEffectsType)):SetName("SFX_SpecialBuff")
+	end
+
 	return self
 end
 
@@ -103,7 +127,22 @@ function _BuffBox:SetSize()
 	handle:Lookup("Text_BuffStacks"):SetSize(width, height)
 	handle:Lookup("Text_LeftTime"):SetSize(width, height)
 	handle:SetSize(width, height)
+
+	local style = self.tBuff.nEffectsType or 0
+	if style > 0 then
+		local w, h = handle:Lookup("Handle_SFX"):Lookup("Handle_SpecialBuff"):Lookup("Handle_SpecialBuff_Fixed"):GetSize()	--SFX原始大小
+		local fSFXX, fSFXY = width / w, height / h
+		handle:Lookup("Handle_SFX"):SetSize(width, height)
+		handle:Lookup("Handle_SFX"):Lookup("Handle_SpecialBuff"):SetSize(width, height)
+		handle:Lookup("Handle_SFX"):Lookup("Handle_SpecialBuff"):Lookup("SFX_SpecialBuff"):Get3DModel():SetScaling(fSFXX, fSFXY, fSFXX)
+		handle:Lookup("Handle_SFX"):Lookup("Handle_SpecialBuff"):Lookup("SFX_SpecialBuff"):SetRelPos(width/2, height/2)
+		handle:Lookup("Handle_SFX"):Lookup("Handle_SpecialBuff"):FormatAllItemPos()
+		handle:Lookup("Handle_SFX"):FormatAllItemPos()
+		handle:Lookup("Handle_SFX"):Show()
+	end
+
 	handle:FormatAllItemPos()
+
 	return self
 end
 
@@ -211,7 +250,7 @@ function _BuffBox:Draw()
 	local box = handle:Lookup("Box")
 	local box2 = handle:Lookup("Box2")
 	local sha = handle:Lookup("Shadow_Color")
-	if nLeftFrame < 16*3 then
+	if nLeftFrame < 16 * 3 then
 		box:SetObjectStaring(true)
 	else
 		box:SetObjectStaring(false)
@@ -222,6 +261,7 @@ function _BuffBox:Draw()
 		box:SetObjectSparking(false)
 	end
 	if fp > 0.1 and fp < 0.99 and LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bShowDebuffCDAni then
+		box2:SetAlpha(LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.debuffCDAniAlpha)
 		box2:SetObjectCoolDown(true)
 		box2:SetCoolDownPercentage(fp)
 		box2:Show()
@@ -239,25 +279,27 @@ function _BuffBox:Draw()
 	end
 
 	local Text_LeftTime = handle:Lookup("Text_LeftTime")
-	Text_LeftTime:SetFontScheme(7)
-	Text_LeftTime:SetAlpha(180)
+	Text_LeftTime:SetFontScheme(15)
+	Text_LeftTime:SetAlpha(255)
 	Text_LeftTime:SetFontScale(UIConfig.handleBuff.fontscale or 0.9)
-	Text_LeftTime:SetHAlign(2)
-	Text_LeftTime:SetVAlign(2)
+	Text_LeftTime:SetHAlign(0)
+	Text_LeftTime:SetVAlign(0)
 	Text_LeftTime:SetFontColor(255, 255, 0)
 
 	local w, h = box:GetSize()
+	local ff = w * 1.0 / 30
 	if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bShowLeftTime then
 		if nLeftFrame / 16 < 10 then
-			Text_LeftTime:SprintfText("%0.0f", mfloor(nLeftFrame / 16) )
-			Text_LeftTime:Show()
-			if nLeftFrame / 16 <=3 then
-				Text_LeftTime:SetFontColor(237, 168, 168)
-			elseif nLeftFrame / 16 < 6 then
-				Text_LeftTime:SetFontColor(255, 255, 128)
+			if nLeftFrame / 16 <= 4 then
+				Text_LeftTime:SetFontScheme(17)
+			elseif nLeftFrame / 16 <= 7 then
+				Text_LeftTime:SetFontScheme(16)
 			else
-				Text_LeftTime:SetFontColor(255, 255, 255)
+				Text_LeftTime:SetFontScheme(15)
 			end
+			Text_LeftTime:SprintfText("%0.0f\"", mfloor(nLeftFrame / 16) )
+			Text_LeftTime:SetFontScale(ff)
+			Text_LeftTime:Show()
 		else
 			Text_LeftTime:Hide()
 		end
@@ -266,12 +308,13 @@ function _BuffBox:Draw()
 	end
 
 	local Text_BuffStacks = handle:Lookup("Text_BuffStacks")
-	Text_BuffStacks:SetFontScheme(7)
-	Text_BuffStacks:SetAlpha(180)
+	Text_BuffStacks:SetFontScheme(15)
+	Text_BuffStacks:SetAlpha(255)
 	Text_BuffStacks:SetFontScale(UIConfig.handleBuff.fontscale or 0.9)
-	Text_BuffStacks:SetHAlign(0)
-	Text_BuffStacks:SetVAlign(0)
+	Text_BuffStacks:SetHAlign(2)
+	Text_BuffStacks:SetVAlign(2)
 	Text_BuffStacks:SetFontColor(255, 255, 0)
+
 	if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bShowStack then
 		if self.tBuff.nStackNum and self.tBuff.nStackNum > 1 then
 			Text_BuffStacks:SetText(self.tBuff.nStackNum)
@@ -279,10 +322,15 @@ function _BuffBox:Draw()
 		else
 			Text_BuffStacks:SetText("")
 		end
+		Text_LeftTime:SetFontScale(ff)
 		Text_BuffStacks:Show()
 	else
 		Text_BuffStacks:Hide()
 	end
+
+--[[	box:SetOverText(1, "附")
+	box:SetOverTextFontScheme(1, 15)
+	box:SetOverTextPosition(1, ITEM_POSITION.LEFT_BOTTOM)]]
 
 	if self.tBuff.bSpecialBuff then
 		sha:SetColorRGB(0, 0, 0)
@@ -291,12 +339,15 @@ function _BuffBox:Draw()
 			color = {127, 18, 127}
 		end
 		local parentHandle = self.parentHandle
-		parentHandle:Lookup("Shadow_SpecialBuffBg"):SetColorRGB(unpack(color))
-		parentHandle:Lookup("Shadow_SpecialBuffBg"):Show()
-		parentHandle:Lookup("Shadow_SpecialBuffBg"):SetAlpha(LR_TeamGrid.UsrData.CommonSettings.nSpecialBuffAlpha or 120)
+		if self.tBuff.bShowMask then
+			parentHandle:Lookup("Shadow_SpecialBuffBg"):SetColorRGB(unpack(color))
+			parentHandle:Lookup("Shadow_SpecialBuffBg"):Show()
+			parentHandle:Lookup("Shadow_SpecialBuffBg"):SetAlpha(LR_TeamGrid.UsrData.CommonSettings.nSpecialBuffAlpha or 120)
+		end
 		if self.tBuff.dwPlayerID == GetClientPlayer().dwID then
 			parentHandle:Lookup("Image_SpecialMe"):Show()
 		end
+
 	end
 
 	return self
@@ -324,7 +375,8 @@ for i = 1, RowCount, 1 do
 	local x = x3:GetRow(i)
 	_BossFocus[x.nBuffID] = {dwID = x.nBuffID, nLevel = x.nBuffLevel, nStackNum = x.nBuffStack}
 end
---_BossFocus[631] = {dwID = 631, nLevel = 29, nStackNum = 1}
+--_BossFocus[208] = {dwID = 208, nLevel = 11, nStackNum = 1}	--扶摇
+--_BossFocus[680] = {dwID = 680, nLevel = 29, nStackNum = 1}	--翔舞
 
 
 ----------------------------------------------------------------
@@ -394,14 +446,18 @@ function LR_TeamEdgeIndicator.add2bufflist()
 						MonitorList[sformat("%d", dwID)].bOnlySelf = LR_TeamEdgeIndicator.UsrData[v].buff.bOnlySelf
 					end
 				else
-					local buff = {dwID = nil, szName = nil, bOnlySelf = false, bEdgeIndicator = true, col = {}, nIconID = 0, nMonitorLevel = 0, edge = v, nMonitorStack = 0, bSpecialBuff = false,}
+					local buff = LR_TeamBuffSettingPanel.FormatMonitorBuff({})
 					buff.dwID = LR_TeamEdgeIndicator.UsrData[v].buff.dwID
+					buff.bEdgeIndicator = true
+					buff.edge = v
 					buff.bOnlySelf = LR_TeamEdgeIndicator.UsrData[v].buff.bOnlySelf
 					MonitorList[sformat("%d", dwID)] = clone(buff)
 				end
 			else
-				local buff = {dwID = nil, szName = nil, bOnlySelf = false, bEdgeIndicator = true, col = {}, nIconID = 0, nMonitorLevel = 0, edge = v, nMonitorStack = 0, bSpecialBuff = false,}
+				local buff = LR_TeamBuffSettingPanel.FormatMonitorBuff({})
 				buff.szName = LR_TeamEdgeIndicator.UsrData[v].buff.szName
+				buff.bEdgeIndicator = true
+				buff.edge = v
 				buff.bOnlySelf = LR_TeamEdgeIndicator.UsrData[v].buff.bOnlySelf
 				MonitorList[buff.szName] = clone(buff)
 			end
@@ -452,16 +508,19 @@ function LR_TeamEdgeIndicator.FIRST_LOADING_END()
 	LR_TeamEdgeIndicator.LoadDefaultData()
 	LR_TeamEdgeIndicator.add2bufflist()
 end
-
-
-
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_TeamEdgeIndicator.FIRST_LOADING_END() end)
-
 ----------------------------------------------------------------
 ----Debuff设置
 ----------------------------------------------------------------
 LR_TeamBuffSettingPanel = {}
 LR_TeamBuffSettingPanel.BuffList = {}
+
+function LR_TeamBuffSettingPanel.FormatMonitorBuff(buff)
+	local tBuff = LR_TeamBuffTool.FormatBuff(buff)
+	tBuff.bEdgeIndicator = false
+	tBuff.edge = ""
+	return tBuff
+end
 
 function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 	local tBuff = {}
@@ -472,10 +531,10 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 					if buff.enable then
 						if buff.nMonitorLevel > 0 then
 							local szKey = sformat("%d_L%d", buff.dwID, buff.nMonitorLevel)
-							tBuff[szKey] = clone(buff)
+							tBuff[szKey] = LR_TeamBuffSettingPanel.FormatMonitorBuff(buff)
 						else
 							local szKey = sformat("%d", buff.dwID)
-							tBuff[szKey] = clone(buff)
+							tBuff[szKey] = LR_TeamBuffSettingPanel.FormatMonitorBuff(buff)
 						end
 					end
 				end
@@ -494,8 +553,6 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 	end
 end
 
-
-
 local JH_DBM_BUFF_LIST = {}	---用于存放DBM过来的BUFF数据
 ----------------------------------------------------------------
 ----一般BUFF
@@ -509,6 +566,17 @@ local _NORMAL_BUFF_SHOW = {}		----用于存放显示中的成员的普通BUFF，缓存
 local _SPECIAL_BUFF_CACHE = {}	--用于存放所有特殊BUFF缓存
 local _SPECIAL_BUFF_HANDLE_CACHE = {}	----用于存放监控特殊BUFF的handleUI，缓存
 local _SPECIAL_BUFF_SHOW = {}		----用于存放显示中的成员的特殊BUFF，缓存
+----------------------------------------------------------------
+----声音缓存
+----------------------------------------------------------------
+local _SOUND_CACHE = {}
+local SOUND_TYPE = {
+	g_sound.OpenAuction,
+	g_sound.CloseAuction,
+	g_sound.FinishAchievement,
+	g_sound.PickupRing,
+	g_sound.PickupWater,
+}
 ----------------------------------------------------------------
 ----Debuff监控
 ----------------------------------------------------------------
@@ -767,7 +835,7 @@ function LR_TeamBuffMonitor.UI_OME_BUFF_LOG(dwTarget, bCanCancel, dwID, bAddOrDe
 	end
 	--Output("1", szKey, BUFF_REFRESH_LIST[szKey])
 
-	local buff = {}
+	local buff = clone(MonitorBuff)
 	buff.dwPlayerID = dwTarget
 	buff.bDelete = (bAddOrDel == 0)
 	buff.bCanCancel = bCanCancel
@@ -777,15 +845,6 @@ function LR_TeamBuffMonitor.UI_OME_BUFF_LOG(dwTarget, bCanCancel, dwID, bAddOrDe
 	buff.DelayCallKey = sformat("%s_%d", szKey, nTime)
 	buff.nTime = nTime
 	buff.szKey = szKey
-
-	buff.bOnlySelf = MonitorBuff.bOnlySelf or false
-	buff.nMonitorLevel = MonitorBuff.nMonitorLevel or 0
-	buff.col = MonitorBuff.col or {}
-	buff.nIconID = MonitorBuff.nIconID or 0
-	buff.bEdgeIndicator = MonitorBuff.bEdgeIndicator or false
-	buff.edge = MonitorBuff.edge or ""
-	buff.bSpecialBuff = MonitorBuff.bSpecialBuff or false
-	tBuff.bShowUnderStack = MonitorBuff.bSpecialBuff or false
 
 	if not tBuff[n] then
 		tinsert(tBuff, buff)
@@ -807,6 +866,7 @@ dwSkillSrcID = arg9,
 isValid= arg10,
 nLeftFrame = arg11,
 ]]
+
 function LR_TeamBuffMonitor.BUFF_UPDATE2()
 	local me = GetClientPlayer()
 	if not me then
@@ -829,7 +889,6 @@ function LR_TeamBuffMonitor.BUFF_UPDATE2()
 		if _BossFocus[dwID].nLevel == nLevel then
 			if bDelete then
 				FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
-				return
 			end
 			if  nStackNum >= _BossFocus[dwID].nStackNum then
 				FireEvent("ON_BOSS_FOCUS", dwPlayerID, true)
@@ -868,35 +927,55 @@ function LR_TeamBuffMonitor.BUFF_UPDATE2()
 		tremove(tBuffFreshList, 1)
 	end
 	--Output("xx2", tBuffFreshList)
-	--如果只监控自己而不是自己的返回
+	--如果只监控来源是自己的BUFF而BUFF不是来源于自己的返回
 	if MonitorBuff.bOnlySelf and dwCaster ~= me.dwID then
 		return
 	end
 
-	local tBuff = {
-		dwPlayerID = dwPlayerID,
-		bDelete = bDelete,
-		nIndex = nIndex,
-		bCanCancel = bCanCancel,
-		dwID = dwID,
-		nStackNum = nStackNum,
-		nEndFrame = nEndFrame,
-		bInit = bInit,
-		nLevel = nLevel,
-		dwCaster = dwCaster,
-		IsValid = IsValid,
-		nLeftFrame = nLeftFrame,
-	}
-	tBuff.bOnlySelf = MonitorBuff.bOnlySelf or false
-	tBuff.col = MonitorBuff.col or {}
-	tBuff.nIconID = MonitorBuff.nIconID or 0
-	tBuff.nMonitorLevel = MonitorBuff.nMonitorLevel or 0
-	tBuff.nMonitorStack = MonitorBuff.nMonitorStack or 0
-	tBuff.bEdgeIndicator = MonitorBuff.bEdgeIndicator or false
-	tBuff.edge = MonitorBuff.edge or ""
-	tBuff.bSpecialBuff = MonitorBuff.bSpecialBuff or false
-	tBuff.bShowUnderStack = MonitorBuff.bSpecialBuff or false
+	--如果只监控作用于自己的BUFF，而BUFF不是自己的则返回
+	if MonitorBuff.bOnlyMonitorSelf and dwPlayerID ~= me.dwID then
+		return
+	end
 
+	local tBuff = clone(MonitorBuff)
+	tBuff.dwPlayerID = dwPlayerID
+	tBuff.bDelete = bDelete
+	tBuff.nIndex = nIndex
+	tBuff.bCanCancel = bCanCancel
+	tBuff.dwID = dwID
+	tBuff.nStackNum = nStackNum
+	tBuff.nEndFrame = nEndFrame
+	tBuff.bInit = bInit
+	tBuff.nLevel = nLevel
+	tBuff.dwCaster = dwCaster
+	tBuff.IsValid = IsValid
+	tBuff.nLeftFrame = nLeftFrame
+
+	local nSoundType = tBuff.nSoundType or 0
+	if nSoundType > 0 then
+		if dwPlayerID == me.dwID then
+			_SOUND_CACHE[dwPlayerID] = _SOUND_CACHE[dwPlayerID] or {}
+			_SOUND_CACHE[dwPlayerID][dwID] = _SOUND_CACHE[dwPlayerID][dwID] or {}
+			for nIndex, v in pairs(_SOUND_CACHE[dwPlayerID][dwID]) do
+				if v.nEndFrame < GetLogicFrameCount() then
+					_SOUND_CACHE[dwPlayerID][dwID][nIndex] = nil
+				end
+			end
+			if next(_SOUND_CACHE[dwPlayerID][dwID]) == nil and not bDelete and SOUND_TYPE[nSoundType] then
+				PlaySound(SOUND.UI_SOUND, SOUND_TYPE[nSoundType])
+			end
+			if bDelete then
+				_SOUND_CACHE[dwPlayerID][dwID][nIndex] = nil
+			else
+				_SOUND_CACHE[dwPlayerID][dwID][nIndex] = {nEndFrame = nEndFrame}
+			end
+		else
+			_SOUND_CACHE[dwPlayerID] = _SOUND_CACHE[dwPlayerID] or {}
+			_SOUND_CACHE[dwPlayerID][dwID] = nil
+		end
+	end
+
+	--如果是醒目BUFF且即使没到监控层数也显示且监控层数没到醒目层数
 	if tBuff.bSpecialBuff and tBuff.bShowUnderStack and tBuff.nStackNum < tBuff.nMonitorStack then
 		tBuff.bSpecialBuff = false
 		tBuff.nMonitorStack = 0

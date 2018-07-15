@@ -364,7 +364,9 @@ function LR_PickupDead.PickItem(dwDoodadID)
 		end
 	end
 
-	LR.DelayCall(250, function() LR_PickupDead.CloseLootListPanel() end)
+	if not Table_IsTreasureBattleFieldMap(me.GetMapID()) then
+		LR.DelayCall(250, function() LR_PickupDead.CloseLootListPanel() end)
+	end
 end
 
 function LR_PickupDead.BreatheCall()
