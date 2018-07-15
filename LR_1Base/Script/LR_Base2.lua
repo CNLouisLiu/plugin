@@ -376,6 +376,35 @@ local schema_table_info = {
 }
 
 local SQLITE3 = {}
+
+local _nStartTime = {}
+function SQLITE3.OpenDB(path, hash)
+	_nStartTime.nStartTime = GetTickCount()
+	_nStartTime[hash] = _nStartTime.nStartTime
+
+	local path = path
+	local DB = SQLite3_Open(path)
+	DB:Execute("BEGIN TRANSACTION")
+	Log(sformat("[LR DB]OpenDB(%s)(%s)\n", path, hash))
+	if not DB then
+		Log(sformat("[LR DB]No such database(%s)\n", path))
+	end
+	return DB
+end
+
+function SQLITE3.CloseDB(DB, hash)
+	DB:Execute("END TRANSACTION")
+	local nStartTime = _nStartTime.nStartTime or 0
+	if hash then
+		nStartTime = _nStartTime[hash] or _nStartTime.nStartTime or 0
+		_nStartTime[hash] = nil
+	else
+		_nStartTime = {}
+	end
+	Log(sformat("[LR DB]CloseDB, cost %d ms.\n", GetTickCount() - nStartTime))
+	DB:Release()
+end
+
 function SQLITE3.UpdateTable(DB, table_config)
 	---创建表格
 	local sql = "CREATE TABLE IF NOT EXISTS %s ( %s )"
@@ -417,17 +446,17 @@ function SQLITE3.IniDB(db_path, db_name, tTable_Config)
 	CPath.MakeDir(db_path)
 	----
 	local path = sformat("%s\\%s", db_path, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = SQLITE3.OpenDB(path, "F86937F4A6361019C2A0448BE48BDEFD")
 	SQLITE3.UpdateTable(DB, schema_table_info)
 	for k, v in pairs (tTable_Config) do
 		SQLITE3.UpdateTable(DB, v)
 	end
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	SQLITE3.CloseDB(DB)
 end
 
 LR.IniDB = SQLITE3.IniDB
+LR.OpenDB = SQLITE3.OpenDB
+LR.CloseDB = SQLITE3.CloseDB
 
 ----------------------------------------------------------------
 ----调色板

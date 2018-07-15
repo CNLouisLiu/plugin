@@ -181,11 +181,9 @@ function _Group.PopupUIMenu()
 				fnAction = function()
 					--保存
 					local path = sformat("%s\\%s", SaveDataPath, db_name)
-					local DB = SQLite3_Open(path)
-					DB:Execute("BEGIN TRANSACTION")
+					local DB = LR.OpenDB(path, "DA963592E980D9750A906E615FBE59D5")
 					_Group.DelGroup(groupID, DB)
-					DB:Execute("END TRANSACTION")
-					DB:Release()
+					LR.CloseDB(DB)
 					--从查看的分组列表里删除
 					_Group.AddShowGroup(groupID, "DEL")
 					--读取
@@ -201,11 +199,9 @@ function _Group.PopupUIMenu()
 						if szText ~=  "" then
 							--保存
 							local path = sformat("%s\\%s", SaveDataPath, db_name)
-							local DB = SQLite3_Open(path)
-							DB:Execute("BEGIN TRANSACTION")
+							local DB = LR.OpenDB(path, "94E8100574E74E3DDE15A1BCB8955674")
 							_Group.RenameGroup(groupID, szText, DB)
-							DB:Execute("END TRANSACTION")
-							DB:Release()
+							LR.CloseDB(DB)
 							--刷新UI
 							LR_AS_Panel.RefreshUI()
 						end
@@ -231,11 +227,9 @@ function _Group.PopupUIMenu()
 				if szText ~=  "" then
 					--保存分组
 					local path = sformat("%s\\%s", SaveDataPath, db_name)
-					local DB = SQLite3_Open(path)
-					DB:Execute("BEGIN TRANSACTION")
+					local DB = LR.OpenDB(path, "4006FC1148A7F785B3E84AF13ED3035F")
 					_Group.AddGroup(szText, DB)
-					DB:Execute("END TRANSACTION")
-					DB:Release()
+					LR.CloseDB(DB)
 					--刷新
 					LR_AS_Panel.RefreshUI()
 				end

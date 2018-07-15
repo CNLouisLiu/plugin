@@ -311,13 +311,12 @@ schema_trade_data_temp.name = "trade_data_temp"
 -----------------------------------------------------
 function LR_AS_DB.Convert_Old_Version(option)
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
+	local DB = LR.OpenDB(path, "E2CD230AE8816652267E6E1D6E8A52E2")
 	if option == "player_info" then
 		local path = sformat("%s\\UserList.dat",SaveDataPath)
 		if IsFileExist(sformat("%s.jx3dat", path)) then
 			local data = LoadLUAData(path) or {}
 			if data.data then
-				DB:Execute("BEGIN TRANSACTION")
 				local DB_W  = DB:Prepare("REPLACE INTO player_info (szKey, dwID, szName, nLevel, dwForceID, nGold, nSilver, nCopper, JianBen, BangGong, XiaYi, WeiWang, ZhanJieJiFen, ZhanJieDengJi, MingJianBi, szTitle, nCurrentStamina, nMaxStamina, nCurrentThew, nMaxThew, nCurrentTrainValue, nCamp, szTongName, remainJianBen, loginArea, loginServer, realArea, realServer, SaveTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 				for k, v in pairs(data.data) do
 					local src = "%s\\%s\\%s\\%s\\Information_%s.dat"
@@ -332,12 +331,11 @@ function LR_AS_DB.Convert_Old_Version(option)
 						DB_W:Execute()
 					end
 				end
-				DB:Execute("END TRANSACTION")
 			end
 		end
 	end
 
-	DB:Release()
+	LR.CloseDB(DB)
 end
 
 function LR_AS_DB.ImportPlayerListOld()
@@ -358,8 +356,7 @@ end
 function LR_AS_DB.MainDBVacuum(skip)
 	local vacuum = function()
 		local path = sformat("%s\\%s", SaveDataPath, db_name)
-		local DB = SQLite3_Open(path)
-		DB:Execute("BEGIN TRANSACTION")
+		local DB = LR.OpenDB(path, "9B768A082DF71DDAC8B1FC8EFCDB4E57")
 		local SQL = "DELETE FROM %s WHERE bDel = 1"
 		local tables = {"bookrd_data", "exam_data", "fb_data", "mail_data", "mail_item_data", "mail_receive_time", "qiyu_data", "richang_data"}
 		for k, v in pairs (tables) do
@@ -377,7 +374,8 @@ function LR_AS_DB.MainDBVacuum(skip)
 
 		DB:Execute("END TRANSACTION")
 		DB:Execute("VACUUM")
-		DB:Release()
+		DB:Execute("BEGIN TRANSACTION")
+		LR.CloseDB(DB)
 		LR.SysMsg(sformat("%s\n", _L["VACUUM Success!"]))
 		--LR.GreenAlert(sformat("%s\n", _L["VACUUM Success!"]))
 	end
@@ -479,8 +477,7 @@ function LR_AS_DB.backup()
 
 	for table_config_k, table_config_v in pairs(tTableConfig) do
 		local path = sformat("%s\\%s", SaveDataPath, db_name)
-		local DB = SQLite3_Open(path)
-		DB:Execute("BEGIN TRANSACTION")
+		local DB = LR.OpenDB(path, "B1743D7DDD8D1FDD03E4B14B1E2B5D4D")
 
 		local table_name = table_config_v.name
 		--获取全部数据
@@ -489,8 +486,7 @@ function LR_AS_DB.backup()
 
 		--打开备份数据库
 		local path2 = sformat("%s\\backup\\%s", SaveDataPath, name)
-		local DB2 = SQLite3_Open(path2)
-		DB2:Execute("BEGIN TRANSACTION")
+		local DB2 = LR.OpenDB(path2, "2670572C80E55B4CAAAB65E06B5F2D09")
 
 		--导入
 		for k, v in pairs(data) do
@@ -521,11 +517,8 @@ function LR_AS_DB.backup()
 			end
 		end
 
-		DB2:Execute("END TRANSACTION")
-		DB2:Release()
-
-		DB:Execute("END TRANSACTION")
-		DB:Release()
+		LR.CloseDB(DB2, "2670572C80E55B4CAAAB65E06B5F2D09")
+		LR.CloseDB(DB)
 	end
 	local end_time = GetTickCount()
 	Log(sformat("backup cost %ss\n", tostring((end_time - begin_time) /1000.0)))

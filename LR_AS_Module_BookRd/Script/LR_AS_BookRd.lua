@@ -272,11 +272,9 @@ function LR_BookRd_Panel:OnCreate()
 	end
 	--º”‘ÿ‘ƒ∂¡ ˝æ›
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "5DCC72E35E9640653FB126DF3E2E34E8")
 	_BookRd.LoadAllUsrData(DB)
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 end
 
 function LR_BookRd_Panel:OnEvents(event)

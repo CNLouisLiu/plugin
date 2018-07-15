@@ -258,11 +258,9 @@ function LR_AS_Equip_Panel:OnCreate()
 	_Equip.GetAllEquipBox()
 	_Equip.GetEquipScore()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "6691DCA694DA04E2128D3D5ECE615B95")
 	_Equip.SaveData(DB)
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 
 	RegisterGlobalEsc("LR_AS_Equip_Panel", function () return true end , function() LR_AS_Equip_Panel:Open() end)
 end
@@ -604,11 +602,9 @@ function LR_AS_Equip_Panel:LoadEquipSuit(nIndex)
 		_Equip.AllUsrData[sformat("%s_%s_%d", realArea, realServer, dwID)] = clone(data)
 	else
 		local path = sformat("%s\\%s", SaveDataPath, db_name)
-		local DB = SQLite3_Open(path)
-		DB:Execute("BEGIN TRANSACTION")
+		local DB = LR.OpenDB(path, "C62538E1E3693CC1B81363C0C7A826F3")
 		data = _Equip.LoadData(DB, realArea, realServer, dwID)
-		DB:Execute("END TRANSACTION")
-		DB:Release()
+		LR.CloseDB(DB)
 	end
 
 	local data2 = data[tostring(nIndex)] or {}
@@ -759,11 +755,9 @@ function _Equip.EQUIP_CHANGE()
 		--±£´æ
 		if LR_AS_Equip.UsrData.bAutoSaveWhenChangeEquipment then
 			local path = sformat("%s\\%s", SaveDataPath, db_name)
-			local DB = SQLite3_Open(path)
-			DB:Execute("BEGIN TRANSACTION")
+			local DB = LR.OpenDB(path, "BB77392CC5A9D92DF1011413EE07D945")
 			_Equip.SaveData(DB)
-			DB:Execute("END TRANSACTION")
-			DB:Release()
+			LR.CloseDB(DB)
 		end
 	end)
 	LR.DelayCall(500, function() _Equip.bLock = false end)
@@ -789,11 +783,9 @@ function _Equip.EQUIP_ITEM_UPDATE()
 			--±£´æ
 			if LR_AS_Equip.UsrData.bAutoSaveWhenChangeEquipment then
 				local path = sformat("%s\\%s", SaveDataPath, db_name)
-				local DB = SQLite3_Open(path)
-				DB:Execute("BEGIN TRANSACTION")
+				local DB = LR.OpenDB(path, "8F52275BBD77FC6386511E0E064D6967")
 				_Equip.SaveData(DB)
-				DB:Execute("END TRANSACTION")
-				DB:Release()
+				LR.CloseDB(DB)
 			end
 		end
 	end)

@@ -216,12 +216,10 @@ function LR_AS_Panel.RClickMenu(realArea, realServer, dwID)
 			fnAction = function(UserData)
 				--保存
 				local path = sformat("%s\\%s", SaveDataPath, db_name)
-				local DB = SQLite3_Open(path)
-				DB:Execute("BEGIN TRANSACTION")
+				local DB = LR.OpenDB(path, "B6931908B2648C2F5FEABFE8816E8257")
 				LR_AS_Group.ChangeUserGroup(szKey, groupID, DB)
 				LR_AS_Group.SaveData(DB)
-				DB:Execute("END TRANSACTION")
-				DB:Release()
+				LR.CloseDB(DB)
 				--刷新UI
 				LR_AS_Panel.RefreshUI()
 			end,
@@ -231,12 +229,10 @@ function LR_AS_Panel.RClickMenu(realArea, realServer, dwID)
 	tinsert(menu2, {szOption = _L["Group Cancel"],
 		fnAction = function()
 			local path = sformat("%s\\%s", SaveDataPath, db_name)
-			local DB = SQLite3_Open(path)
-			DB:Execute("BEGIN TRANSACTION")
+			local DB = LR.OpenDB(path, "85E7B24C8750AB7082E646858D6FF2D5")
 			LR_AS_Group.ChangeUserGroup(szKey, 0, DB)
 			LR_AS_Group.SaveData(DB)
-			DB:Execute("END TRANSACTION")
-			DB:Release()
+			LR.CloseDB(DB)
 			--刷新UI
 			LR_AS_Panel.RefreshUI()
 		end,
@@ -247,12 +243,10 @@ function LR_AS_Panel.RClickMenu(realArea, realServer, dwID)
 				local szText =  string.gsub(szText, "^%s*%[?(.-)%]?%s*$", "%1")
 				if szText ~=  "" then
 					local path = sformat("%s\\%s", SaveDataPath, db_name)
-					local DB = SQLite3_Open(path)
-					DB:Execute("BEGIN TRANSACTION")
+					local DB = LR.OpenDB(path, "935E09BF233EC8E405ABB1ED0F639562")
 					LR_AS_Group.AddGroup(szText, DB)
 					LR_AS_Module.Group.LoadData(DB)
-					DB:Execute("END TRANSACTION")
-					DB:Release()
+					LR.CloseDB(DB)
 					--刷新UI
 					LR_AS_Panel.RefreshUI()
 				end
@@ -275,11 +269,9 @@ function LR_AS_Panel.RClickMenu(realArea, realServer, dwID)
 				local szKey = {dwID = player.dwID, loginArea = player.loginArea, loginServer = player.loginServer, szName = player.szName, realArea = player.realArea, realServer = player.realServer}
 				if next(szKey)~= nil then
 					local path = sformat("%s\\%s", SaveDataPath, db_name)
-					local DB = SQLite3_Open(path)
-					DB:Execute("BEGIN TRANSACTION")
+					local DB = LR.OpenDB(path, "810899476BEBD046B845B6F522B0E64F")
 					LR_AS_Base.DelPlayer(szKey, DB)
-					DB:Execute("END TRANSACTION")
-					DB:Release()
+					LR.CloseDB(DB)
 					--读取
 					LR_AS_Base.LoadData()
 					--刷新UI

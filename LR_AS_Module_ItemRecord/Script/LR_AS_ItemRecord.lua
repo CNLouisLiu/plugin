@@ -443,8 +443,7 @@ function _Mail.SaveData()
 
 	local _begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "9A6F34EB5118974C0B727858CD5CEF0B")
 
 	--先清数据
 	--清mail_item_data表
@@ -480,8 +479,7 @@ function _Mail.SaveData()
 		DB_REPLACE2:Execute()
 	end
 
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	Log(sformat("[LR] AS mail save cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
 end
 
@@ -530,8 +528,7 @@ function _Mail.CheckAllMail()
 	end
 	local _check_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "3F2BE76E7773F09F899F220FFB17F490")
 	if LR_AS_Mail.UsrData.atMaturity then
 		local DB_SELECT = DB:Prepare("SELECT COUNT(*) AS COUNT FROM mail_data INNER JOIN player_list ON mail_data.belong = player_list.szKey WHERE mail_data.bDel = 0 AND nEndTime < ? AND nEndTime > ? AND mail_data.nMailID IS NOT NULL AND mail_data.belong IS NOT NULL")
 		local nEndTime = GetCurrentTime() + 60 * 60 * 24 * LR_AS_Mail.UsrData.atMaturityDay
@@ -575,8 +572,7 @@ function _Mail.CheckAllMail()
 		end
 	end
 
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	Log(sformat("[LR] Checking Mail expire cost %0.3f s", (GetTickCount() - _check_time) * 1.0 / 1000 ))
 end
 -----------
@@ -836,8 +832,7 @@ LR_AS_ItemRecord_Panel.oldUsrDataLIst = {}
 
 function LR_AS_ItemRecord_Panel.LoadUserAllData()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "1B2059A6014D9BA8B24ACB5FB320517A")
 	---清空
 	LR_AS_ItemRecord_Panel.ItemInBag = {}
 	LR_AS_ItemRecord_Panel.ItemInBank = {}
@@ -848,8 +843,7 @@ function LR_AS_ItemRecord_Panel.LoadUserAllData()
 	LR_AS_ItemRecord_Panel.LoadUserBagData(DB)
 	LR_AS_ItemRecord_Panel.LoadUserBankData(DB)
 	LR_AS_ItemRecord_Panel.LoadUserMailData(DB)
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 end
 
 function LR_AS_ItemRecord_Panel:OnCreate()
@@ -1012,11 +1006,9 @@ function LR_AS_ItemRecord_Panel:Init()
 			_Mail.MailData = {}
 			_Mail.GetItemByMail()
 			local path = sformat("%s\\%s", SaveDataPath, db_name)
-			local DB = SQLite3_Open(path)
-			DB:Execute("BEGIN TRANSACTION")
+			local DB = LR.OpenDB(path, "8A8A2C8709B71E63D393B93D7DC147E0")
 			_Mail.SaveData(DB)
-			DB:Execute("END TRANSACTION")
-			DB:Release()
+			LR.CloseDB(DB)
 		end
 
 		local realArea = LR_AS_ItemRecord_Panel.realArea
@@ -1290,11 +1282,9 @@ function LR_AS_ItemRecord_Panel:LoadOneItem2(parent, item_data)
 				_Mail.MailData = {}
 				_Mail.GetItemByMail()
 				local path = sformat("%s\\%s", SaveDataPath, db_name)
-				local DB = SQLite3_Open(path)
-				DB:Execute("BEGIN TRANSACTION")
+				local DB = LR.OpenDB(path, "C8291F952F64309ADF250B1112803AEE")
 				_Mail.SaveData(DB)
-				DB:Execute("END TRANSACTION")
-				DB:Release()
+				LR.CloseDB(DB)
 
 				if _Mail.ItemInMail[item_data.szKey] and next(_Mail.ItemInMail[item_data.szKey].nBelongMailID or {}) ~= nil then
 					local ItemBelong = LR_AS_ItemRecord_Panel.ItemBelong[item_data.szKey] or {}
@@ -1345,11 +1335,9 @@ function LR_AS_ItemRecord_Panel:LoadOneItem2(parent, item_data)
 				_Mail.MailData = {}
 				_Mail.GetItemByMail()
 				local path = sformat("%s\\%s", SaveDataPath, db_name)
-				local DB = SQLite3_Open(path)
-				DB:Execute("BEGIN TRANSACTION")
+				local DB = LR.OpenDB(path, "267E4BA1DE2D031AB2ED0B9BE38F2353")
 				_Mail.SaveData(DB)
-				DB:Execute("END TRANSACTION")
-				DB:Release()
+				LR.CloseDB(DB)
 
 				if _Mail.ItemInMail[item_data.szKey] and next(_Mail.ItemInMail[item_data.szKey].nBelongMailID or {}) ~= nil then
 					local ItemBelong = LR_AS_ItemRecord_Panel.ItemBelong[item_data.szKey] or {}

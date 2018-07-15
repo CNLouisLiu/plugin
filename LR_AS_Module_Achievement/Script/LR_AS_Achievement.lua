@@ -138,11 +138,9 @@ function LR_Acc_Achievement_Panel:OnCreate()
 	this:RegisterEvent("UI_SCALED")
 
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "36BBE7216610F96DD808C09F3F1D1780")
 	_Achievement.LoadAllUsrData(DB)
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 
 	LR_Acc_Achievement_Panel.UpdateAnchor(this)
 	RegisterGlobalEsc("LR_Acc_Achievement_Panel", function () return true end , function() LR_Acc_Achievement_Panel:Open() end)

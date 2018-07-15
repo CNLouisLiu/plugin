@@ -1058,11 +1058,9 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 			LR_GKP_Panel:CheckBill()
 		else
 			--先保存一波
-			local DB = SQLite3_Open(DB_Path)
-			DB:Execute("BEGIN TRANSACTION")
+			local DB = LR.OpenDB(DB_Path, "CF6549915CAFB1D53E07759C262E379B")
 			LR_GKP_Base.SaveSingleData(DB, LR_GKP_Distribute_Panel.data)
-			DB:Execute("END TRANSACTION")
-			DB:Release()
+			LR.CloseDB(DB)
 			--
 			LR_GKP_Base.GKP_BgTalk("SYNC_BEGIN", {})
 			LR_GKP_Base.GKP_BgTalk("SYNC", LR_GKP_Distribute_Panel.data)
@@ -1103,11 +1101,9 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 				LR_GKP_Panel:CheckBill()
 			else
 				--先保存一波
-				local DB = SQLite3_Open(DB_Path)
-				DB:Execute("BEGIN TRANSACTION")
+				local DB = LR.OpenDB(DB_Path, "E26A87028D5D116F2F132B1183AF0E44")
 				LR_GKP_Base.SaveSingleData(DB, LR_GKP_Distribute_Panel.data)
-				DB:Execute("END TRANSACTION")
-				DB:Release()
+				LR.CloseDB(DB)
 				--
 				LR_GKP_Base.GKP_BgTalk("SYNC_BEGIN", {})
 				LR_GKP_Base.GKP_BgTalk("SYNC", LR_GKP_Distribute_Panel.data)

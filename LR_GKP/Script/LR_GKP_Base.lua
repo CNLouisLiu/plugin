@@ -818,16 +818,14 @@ function _GKP.BatchDistributeItem(items)
 			success_distribute[item.dwID] = true
 		end
 	end
-	local DB = SQLite3_Open(DB_Path)
+	local DB = LR.OpenDB(DB_Path, "7FD9A3240C1CDF39CFF749750130A9DE")
 	--先记录一波
-	DB:Execute("BEGIN TRANSACTION")
 	for k, item in pairs(items) do
 		if success_distribute[item.dwID] then
 			_GKP.SaveSingleData(DB, item)
 		end
 	end
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	--发布同步信息
 	_GKP.GKP_BgTalk("SYNC_BEGIN", {})
 	for k, item in pairs(items) do
@@ -1122,8 +1120,7 @@ function _GKP.LoadGKPList(szBillName)
 	if not me then
 		return
 	end
-	local DB = SQLite3_Open(DB_Path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(DB_Path, "38B7EFAC48E2FC186FFE1D51D392C367")
 	local szName = szBillName
 	local DB_SELECT = DB:Prepare("SELECT * FROM bill_data WHERE szName = ? AND bDel = 0")
 	DB_SELECT:ClearBindings()
@@ -1238,8 +1235,8 @@ function _GKP.LoadGKPList(szBillName)
 		LR_GKP_Base.GKP_Person_Cash = {}		--个人交易金钱记录
 		LR.SysMsg(_L["No such bill.\n"])
 	end
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+
+	LR.CloseDB(DB)
 end
 
 --[[
@@ -1372,14 +1369,12 @@ function _GKP.SaveBill()
 	local bill_data = g2d(clone(LR_GKP_Base.GKP_Bill))
 	local szBossData = g2d(LR.JsonEncode(_GKP.BossDataG2D()))
 
-	local DB = SQLite3_Open(DB_Path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(DB_Path, "A060E056443B28BEBEB643F661258C5E")
 	local DB_REPLACE = DB:Prepare("REPLACE INTO bill_data ( szName, hash, szArea, szServer, nCreateTime, szBossData, bDel ) VALUES ( ?, ?, ?, ?, ?, ?, 0 )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(bill_data.szName, bill_data.hash, bill_data.szArea, bill_data.szServer, bill_data.nCreateTime, szBossData)
 	DB_REPLACE:Execute()
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 
 	--同步BOSS信息
 	_GKP.SyncBoss()
@@ -1396,8 +1391,7 @@ end
 
 function _GKP.SaveBoss(szBelongBill)
 	--先保存账单信息
-	local DB = SQLite3_Open(DB_Path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(DB_Path, "116416E5878E27DF602BB7EDDD2C5918")
 	local DB_SELECT = DB:Prepare("SELECT * FROM bill_data WHERE szName = ? AND bDel = 0")
 	DB_SELECT:ClearBindings()
 	DB_SELECT:BindAll(g2d(szBelongBill))
@@ -1414,8 +1408,7 @@ function _GKP.SaveBoss(szBelongBill)
 		}
 		LR_GKP_Panel:RefreshBillName()
 	end
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	_GKP.SaveBill()
 end
 
@@ -1465,16 +1458,14 @@ function _GKP.ON_BG_CHANNEL_MSG()
 			DEL_LIST = DEL_LIST or {}
 			DEL_LIST[#DEL_LIST + 1] = clone(data[2])
 		elseif data[1] == "SYNC_END" then
-			local BG_DB = SQLite3_Open(DB_Path)
-			BG_DB:Execute("BEGIN TRANSACTION")
+			local BG_DB = LR.OpenDB(DB_Path)
 			for k, v in pairs(ADD_LIST) do
 				_GKP.SaveSingleData(BG_DB, v)
 			end
 			for k, v in pairs(DEL_LIST) do
 				_GKP.DelSingleData(BG_DB, v)
 			end
-			BG_DB:Execute("END TRANSACTION")
-			BG_DB:Release()
+			LR.CloseDB(BG_DB)
 			ADD_LIST = nil
 			DEL_LIST = nil
 			LR.DelayCall(100, function() LR_GKP_Panel:LoadGKPItemBox() end)
@@ -1515,11 +1506,9 @@ function _GKP.ON_BG_CHANNEL_MSG()
 
 			else
 				local szBillName = LR_GKP_NewBill_Panel:CreateMainName() .. "_MY_GKP"
-				local DB = SQLite3_Open(DB_Path)
-				DB:Execute("BEGIN TRANSACTION")
+				local DB = LR.OpenDB(DB_Path, "093B1D3C7ABCD2FBFFB195EEA8E85765")
 				_GKP.CreateNewBill(DB, szBillName)
-				DB:Execute("END TRANSACTION")
-				DB:Release()
+				LR.CloseDB(DB)
 				_GKP.Save_MY_GKP(szBillName)
 			end
 		end
@@ -1553,18 +1542,14 @@ function _GKP.ON_BG_CHANNEL_MSG()
 		}
 
 		if data[1] == "add" or data[1] == "edit" then
-			local DB = SQLite3_Open(DB_Path)
-			DB:Execute("BEGIN TRANSACTION")
+			local DB = LR.OpenDB(DB_Path, "2CDA7874E9A5E7F41F54127FF1BB7B82")
 			_GKP.SaveSingleData(DB, trade_data)
-			DB:Execute("END TRANSACTION")
-			DB:Release()
+			LR.CloseDB(DB)
 			LR.DelayCall(500, function() LR_GKP_Panel:LoadGKPItemBox() end)
 		elseif data[1] == "del" then
-			local DB = SQLite3_Open(DB_Path)
-			DB:Execute("BEGIN TRANSACTION")
+			local DB = LR.OpenDB(DB_Path, "4C36BD514818BA3BE1B369969AE60DB9")
 			_GKP.SaveSingleData(DB, trade_data, true)
-			DB:Execute("END TRANSACTION")
-			DB:Release()
+			LR.CloseDB(DB)
 			LR.DelayCall(500, function() LR_GKP_Panel:LoadGKPItemBox() end)
 		end
 	end
@@ -1662,11 +1647,9 @@ function _GKP.MoneyUpdate(nGold, nSilver, nCopper)
 		LR.DelayCall(500, function() LR_GKP_Panel:LoadTradeItemBox() end)
 		return
 	end
-	DB = SQLite3_Open(DB_Path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(DB_Path, "EB3BF291E38D0D84B69B238EA3755FD3")
 	_GKP.SaveCashRecord(DB, cash_data)
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	if LR_GKP_Loot.DistributeCheck() then
 		local text = {}
 		if cash_data.nGold > 0 then

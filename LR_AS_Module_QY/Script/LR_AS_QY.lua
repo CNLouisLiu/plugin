@@ -612,8 +612,7 @@ function _QY.SaveData(DB)
 	local DB = DB
 	if not DB then
 		local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-		DB = SQLite3_Open(path)
-		DB:Execute("BEGIN TRANSACTION")
+		DB = LR.OpenDB(path, "29583960578E953B49032A172A76C5CA")
 		flag = true
 	end
 	local ServerInfo = {GetUserServer()}
@@ -629,8 +628,7 @@ function _QY.SaveData(DB)
 	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(SelfData), LR.JsonEncode(_QY.SelfAchievementData or {}), 0})))
 	DB_REPLACE:Execute()
 	if flag then
-		DB:Execute("END TRANSACTION")
-		DB:Release()
+		LR.CloseDB(DB)
 	end
 end
 
@@ -1041,11 +1039,9 @@ function _QY.ListQY()
 	end
 
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "7B741438AB62A42190E4D3445F11BE01")
 	_QY.LoadAllUsrData(DB)
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 
 	_QY.Container = frame:Lookup("PageSet_Menu/Page_QY/WndScroll_QY/Wnd_QY")
 	_QY.Container:Clear()
@@ -1279,11 +1275,9 @@ function LR_ACS_QiYu_Panel:OnCreate()
 	LR_ACS_QiYu_Panel.UpdateAnchor(this)
 
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "BF88A3C912E67A2A14EBEAB59CF8B9D4")
 	_QY.LoadAllUsrData(DB)
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 
 	RegisterGlobalEsc("LR_ACS_QiYu_Panel", function () return true end , function() LR_ACS_QiYu_Panel:Open() end)
 end
@@ -1548,23 +1542,20 @@ function _History.SaveData(data)
 
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "D29336E0F2380C1263F48564BA19591F")
 
 	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_history ( szName, szQYName, realArea, realServer, nMethod, bFinished, nTime, hash ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({ v.szName, v.szQYName, v.realArea, v.realServer, v.nMethod, v.bFinished, v.nTime, v.hash })))
 	DB_REPLACE:Execute()
 
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 end
 
 function _History.LoadData()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "3E9B015C6EC052E5100CC9DDD3C1CF5E")
 
 	local szQYName = QY_History_Panel.szQYName
 	local realArea = QY_History_Panel.realArea
@@ -1578,8 +1569,7 @@ function _History.LoadData()
 	DB_SELECT = DB:Prepare(sformat("SELECT * FROM qiyu_history WHERE %s ORDER BY nTime DESC LIMIT 50 OFFSET 0", sql_where))
 	local data = d2g(DB_SELECT:GetAll())
 
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	_History.data = clone(data)
 end
 
@@ -1587,15 +1577,13 @@ end
 function _History.GetQYList()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "B27A500ADC055B7FCB7082498128DC2C")
 	local realArea = QY_History_Panel.realArea
 	local realServer = QY_History_Panel.realServer
 	local sql_where = sformat("realArea = '%s' AND realServer = '%s'", g2d(realArea), g2d(realServer))
 	DB_SELECT = DB:Prepare(sformat("SELECT szQYName FROM qiyu_history WHERE %s AND szQYName IS NOT NULL GROUP BY szQYName", sql_where))
 	local data = d2g(DB_SELECT:GetAll())
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 
 	return data
 end
@@ -1603,12 +1591,10 @@ end
 function _History.GetServerList()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "CAC8E032450DD265A7AF3F1AAAF38ABA")
 	DB_SELECT = DB:Prepare("SELECT realArea, realServer FROM qiyu_history GROUP BY realArea, realServer ORDER BY realArea ASC, realServer ASC")
 	local data = d2g(DB_SELECT:GetAll())
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 
 	return data
 end
@@ -1656,23 +1642,20 @@ function _Pet.SaveData(data)
 	local v = data
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "5D233B32F0BFE6A494467041A64C19FF")
 
 	DB_REPLACE = DB:Prepare("REPLACE INTO pet_history ( szName, szPetName, realArea, realServer, nTime, hash) VALUES ( ?, ?, ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({ v.szName, v.szPetName, v.realArea, v.realServer, v.nTime, v.hash })))
 	DB_REPLACE:Execute()
 
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 end
 
 function _Pet.LoadData()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "E0A7D0C5DEE30D37C9166C255B044CAC")
 
 	local szPetName = QY_History_Panel.szPetName
 	local realArea = QY_History_Panel.realArea
@@ -1686,8 +1669,7 @@ function _Pet.LoadData()
 	DB_SELECT = DB:Prepare(sformat("SELECT * FROM pet_history WHERE %s ORDER BY nTime DESC LIMIT 50 OFFSET 0", sql_where))
 	local data = d2g(DB_SELECT:GetAll())
 
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	_Pet.data = clone(data)
 end
 
@@ -1695,27 +1677,23 @@ end
 function _Pet.GetPetList()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "CBD071401675286F0BD38A9A2B52E751")
 	local realArea = QY_History_Panel.realArea
 	local realServer = QY_History_Panel.realServer
 	local sql_where = sformat("realArea = '%s' AND realServer = '%s'", g2d(realArea), g2d(realServer))
 	DB_SELECT = DB:Prepare(sformat("SELECT szPetName FROM pet_history WHERE %s AND szPetName IS NOT NULL GROUP BY szPetName", sql_where))
 	local data = d2g(DB_SELECT:GetAll())
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	return data
 end
 
 function _Pet.GetServerList()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "858E64F63F045D420F9C8A673931884E")
 	DB_SELECT = DB:Prepare("SELECT realArea, realServer FROM pet_history GROUP BY realArea, realServer ORDER BY realArea ASC, realServer ASC")
 	local data = d2g(DB_SELECT:GetAll())
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	return data
 end
 

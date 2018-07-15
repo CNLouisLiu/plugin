@@ -123,12 +123,10 @@ GET_LR_RECOMMEND_TEXT()
 
 local LR_EQUIP_TYPE = {}
 local function GET_LR_EQUIP_TYPE()
-	local DB = SQLite3_Open(DB_Path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(DB_Path, "EF5E2BBBC4A5DC7920A72284FA058170")
 	local DB_SELECT = DB:Prepare("SELECT nSub, nDetail FROM equip_data GROUP BY nSub, nDetail")
 	local data = DB_SELECT:GetAll() or {}
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	LR_EQUIP_TYPE = {}
 	for k, v in pairs (data) do
 		local nSub = v.nSub
@@ -187,8 +185,7 @@ function LR_EquipSearch.CheckDB()
 	elseif not IsFileExist(DB_Path) then
 		bInI = true
 	else
-		local DB = SQLite3_Open(DB_Path)
-		DB:Execute("BEGIN TRANSACTION")
+		local DB = LR.OpenDB(DB_Path, "04BEC480CB21E0CA7B530DB30C148EEF")
 		local DB_SELECT = DB:Prepare("SELECT * FROM sqlite_master WHERE type = 'table' AND name ='equip_data'")
 		local Data = DB_SELECT:GetAll() or {}
 		if next(Data) == nil then
@@ -204,8 +201,7 @@ function LR_EquipSearch.CheckDB()
 				bInI = true
 			end
 		end
-		DB:Execute("END TRANSACTION")
-		DB:Release()
+		LR.CloseDB(DB)
 	end
 	if bInI then
 		local msg = {
@@ -237,8 +233,7 @@ end
 
 function LR_EquipSearch.ExportDB()
 	local tTime = GetTickCount()
-	local DB = SQLite3_Open(DB_Path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(DB_Path, "59E83193256DDE21DB9FE60DEDACA299")
 	local DB_REPLACE = DB:Prepare("REPLACE INTO equip_data ( szKey, dwTabType, dwIndex, nLevel, nAucType, szName, nSchoolID, nSetID, szMagicKind, szMagicType, szSourceType, szPvePvp, szSourceForce, szSourceDesc, szBelongMapID, szPrestigeRequire, nRecommendID, nGenre, nSub, nDetail, nQuality, nBindType, szAttribute, nRequireLevel, bDel ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
 
 	local nCount = g_tTable.EquipDB:GetRowCount()
@@ -300,8 +295,7 @@ function LR_EquipSearch.ExportDB()
 		end
 	end
 
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	LR.SysMsg(sformat(_L["Cost %0.3f s\n"], (GetTickCount() - tTime) * 1.0 / 1000))
 end
 
@@ -375,8 +369,7 @@ function LR_EquipSearch.SEARCH(nPage)
 	end
 	SQL = sformat("%s ORDER BY nLevel %s, nQuality DESC, nSub ASC, nDetail ASC, szName ASC", SQL, LR_EquipSearch_Panel.Order)
 
-	local DB = SQLite3_Open(DB_Path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(DB_Path, "8A518302E1BD70EAFB506626852A0867")
 	local SQL2 = sformat("SELECT COUNT( * ) AS COUNT %s", SQL)
 	--Output("SQL2", SQL2)
 	local DB_SELECT2 = DB:Prepare(SQL2)
@@ -395,8 +388,7 @@ function LR_EquipSearch.SEARCH(nPage)
 	local DB_SELECT = DB:Prepare(SQL)
 	local Data = DB_SELECT:GetAll() or {}
 
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 
 	LR_EquipSearch.RESULT = clone(Data)
 end

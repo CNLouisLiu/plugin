@@ -55,15 +55,13 @@ LR_AS_Data.ExamData = {}
 function LR_AS_Base.LoadData()
 	local _begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "05DC638DAB8A11477BDFF035C167AFC9")
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].LoadData then
 			LR_AS_Module[v].LoadData(DB)
 		end
 	end
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	Log(sformat("[LR] AS load cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
 end
 
@@ -78,15 +76,13 @@ function LR_AS_Base.SaveData()
 	--------------save
 	local _begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "0D9F801993115A3C7F3EA6267F0AAA9C")
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].SaveData then
 			LR_AS_Module[v].SaveData(DB)
 		end
 	end
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	Log(sformat("[LR] AS save cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
 end
 
@@ -163,8 +159,7 @@ function LR_AS_Base.ResetData()
 	end
 	--------
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "D7F73ADF2CB70A9AACFB048D8F7C6833")
 	------载入时间
 	local RC_ResetTime = {
 		ClearTimeEveryDay = 0,
@@ -223,8 +218,7 @@ function LR_AS_Base.ResetData()
 		end
 	end
 
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 end
 
 ---------------------------------
@@ -233,15 +227,13 @@ end
 function LR_AS_Base.FIRST_LOADING_END()
 	local _begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "AA481F7DB2E1EC1CBD53005AF1A11D3F")
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].FIRST_LOADING_END then
 			LR_AS_Module[v].FIRST_LOADING_END(DB)
 		end
 	end
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 	Log(sformat("[LR] AS FIRST_LOADING_END load data cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
 	--FireEvent("LR_ACS_REFRESH_FP")
 
@@ -317,8 +309,7 @@ function LR_AS_Base.DelPlayer(player)
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
 
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = SQLite3_Open(path)
-	DB:Execute("BEGIN TRANSACTION")
+	local DB = LR.OpenDB(path, "264015779F0459A1088BA2AEAF2F1E51")
 
 	------删除用户列表数据
 	LR_AS_Data.AllPlayerList[szKey] = nil
@@ -374,8 +365,7 @@ function LR_AS_Base.DelPlayer(player)
 	--重建用户列表
 	LR_AS_Module.PlayerList.LoadData(DB)
 
-	DB:Execute("END TRANSACTION")
-	DB:Release()
+	LR.CloseDB(DB)
 end
 
 ---------------------------------
