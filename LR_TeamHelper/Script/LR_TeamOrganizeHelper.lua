@@ -102,8 +102,8 @@ function LR_TeamRequestPanel.OnLButtonClick()
 			local fnAction = function()
 				for k, v in pairs(REQUEST_LIST) do
 					LR_TeamRequest.Request(k, 0)
-					LR_TeamRequestPanel.ClosePanel()
 				end
+				LR_TeamRequestPanel.ClosePanel()
 			end
 
 			local msg = {
@@ -270,17 +270,19 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 			end
 		end
 		WndWindow:GetSelf().OnRButtonClick = function()
+			local menu = {}
 			if data.dwID then
-				local menu = {}
 				local dwID = data.dwID
 				InsertPlayerCommonMenu(menu, data.dwID, data.szName)
-				menu[#menu+1]={bDevide = true,}
-				menu[#menu+1]=LR.GetEquipmentMenu(dwID)[1]
-				menu[#menu+1]={szOption=_L["Check Attribute"],fnAction=function() LR.ViewCharInfoToPlayer(dwID) end,}
-
-				local fx, fy = Cursor.GetPos()
-				PopupMenu(menu, {fx, fy, 0, 0})
+				menu[#menu + 1] = {bDevide = true,}
+				menu[#menu + 1] = LR.GetEquipmentMenu(dwID)[1]
+				menu[#menu + 1] = {szOption=_L["Check Attribute"], fnAction = function() LR.ViewCharInfoToPlayer(dwID) end,}
+			else
+				menu[#menu + 1] = {szOption = g_tStrings.STR_SAY_SECRET, fnAction = function() LR.SwitchChat(data.szName) end}
+				menu[#menu + 1] = {szOption = g_tStrings.STR_MAKE_FRIEND, fnAction = function() GetClientPlayer().AddFellowship(data.szName) end}
 			end
+			local fx, fy = Cursor.GetPos()
+			PopupMenu(menu, {fx, fy, 0, 0})
 		end
 
 		LR_TeamRequestPanel.ReSize()

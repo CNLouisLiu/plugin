@@ -400,7 +400,7 @@ function LR_TeamMenu.BloodBarSetMenu()
 	end
 
 	m = menu[1][1]
-	m[#m+1] = { szOption = _L["¨‚ Click to change color"],
+	m[#m+1] = { szOption = _L["Click to change color"],
 		rgb = LR_TeamGrid.UsrData.CommonSettings.backGroundFixedColor,
 		fnAutoClose = true,
 		fnAction = function()
@@ -423,7 +423,7 @@ function LR_TeamMenu.BloodBarSetMenu()
 	}
 	for k, v in pairs(szText) do
 		m[#m+1] = {	szOption = v, fnDisable = function() return LR_TeamGrid.UsrData.CommonSettings.backGroundColorType ~= 4 end,
-			{	szOption=_L["¨‚ Click to change color"],  bMCheck = false,
+			{	szOption=_L["Click to change color"],  bMCheck = false,
 				rgb = LR_TeamGrid.UsrData.CommonSettings.distanceColor[k],
 				fnAutoClose=true,
 				fnAction = function()
@@ -467,7 +467,7 @@ function LR_TeamMenu.BloodBarSetMenu()
 	}
 	for k, v in pairs(szText) do
 		m[#m+1] = {szOption= v, fnDisable = function() return LR_TeamGrid.UsrData.CommonSettings.backGroundColorType ~= 5 end,
-			{	szOption = _L["¨‚ Click to change color"],
+			{	szOption = _L["Click to change color"],
 				rgb = LR_TeamGrid.UsrData.CommonSettings.bloodLevelColor[k],
 				fnAutoClose = true,
 				fnAction = function()
@@ -648,6 +648,37 @@ function LR_TeamMenu.BuffMonitorMenu()
 			end,
 		}
 	end
+	menu[#menu+1] = {szOption = _L["Text position set"]}
+	local mm = menu[#menu]
+	local tText = {_L["Stack:RightBottom, Lefttime:LeftTop"], _L["Stack:LeftTop, Lefttime:RightBottom"]}
+	for k, v in pairs(tText) do
+		mm[#mm + 1] = {szOption = v, bCheck = true, bMCheck = true, bChecked = function() return LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType == k end,
+			fnAction = function()
+				LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType = k
+				LR_TeamGrid.SaveCommonData()
+			end,
+		}
+	end
+
+	menu[#menu+1] = {szOption = _L["Buff arrange set"]}
+	local mm = menu[#menu]
+	local tText = {_L["Old style"], _L["New style 1"], _L["New style 2"]}
+	local tTip = {_L["Old style tip"], _L["New style 1 tip"], _L["New style 2 tip"]}
+	for k, v in pairs(tText) do
+		mm[#mm + 1] = {szOption = v, bCheck = true, bMCheck = true, bChecked = function() return LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.nBuffShowType == k end,
+			fnAction = function()
+				LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.nBuffShowType = k
+				LR_TeamGrid.SaveCommonData()
+			end,
+			fnMouseEnter = function()
+				local x, y = this:GetAbsPos()
+				local w, h = this:GetSize()
+				local szXml = {}
+				szXml[#szXml + 1] = GetFormatText(tTip[k])
+				OutputTip(tconcat(szXml), 320, {x, y, w, h})
+			end,
+		}
+	end
 
 	menu[#menu+1]={bDevide=true,}
 	--menu[#menu+1]={szOption=_L["Load default file"],fnAction=function() LR_TeamBuffSettingPanel.LoadDefaultData() end,}
@@ -697,7 +728,7 @@ function LR_TeamMenu.BloodDisplayMenu()
 	end
 
 	menu[#menu+1]={bDevide = true}
-	menu[#menu+1]={szOption = _L["Life/Mana!danger set"], fnDisable=function() return true end, }
+	menu[#menu+1]={szOption = _L["Life/Mana danger set"], fnDisable=function() return true end, }
 	local szText={_L["Show Life Danger"], _L["Show Mana Danger"]}
 	local szText2={_L["Life Danger Line:%d%%, Click to change"], _L["Mana Danger Line:%d%%, Click to change"]}
 	local key={"bShowLifeDanger", "bShowManaDanger"}
@@ -852,56 +883,6 @@ function LR_TeamMenu.PopOptions()
 	local tOptions={}
 	local menu
 	tOptions[#tOptions+1]={szOption = _L["Config Debuff monitor settings"], fnAction = function() LR_TeamBuffTool_Panel:Open() end}
---[[	menu=tOptions[#tOptions]
-	menu[#menu+1]={szOption = _L["Add/Remove Settings"],bCheck=true,bChecked=false,
-		fnAction=function()
-			GetPopupMenu():Hide()
-			LR_TeamBuffTool_Panel:Open()
-			--LR_TeamBuffSettingPanel.OpenPanel()
-		end,
-	}
-	menu[#menu+1]={szOption = _L["Load default file"],bCheck=true,bChecked=false,
-		fnAction=function()
-			local szText = {}
-			szText[#szText+1] = sformat("<Text>text=%s font=2 r=255 g=255 b=255</text>", EncodeComponentsString(_L["¡¡¡¡Are you sure to load the default settings?\n\n"]))
-			szText[#szText+1] = sformat("<Text>text=%s font=162 r=255 g=0 b=0</text>", EncodeComponentsString(_L["¡¡¡¡¡¡ Warning:It will destroy the settings now!"]))
-			local msg =
-			{
-				szMessage = tconcat(szText),
-				bRichText = true,
-				szName = "LoadDefaultSettings",
-				{szOption = g_tStrings.STR_HOTKEY_SURE,
-					fnAction = function()
-						LR_TeamBuffSettingPanel.LoadDefaultData()
-					end
-				},
-				{szOption = g_tStrings.STR_HOTKEY_CANCEL},
-			}
-			MessageBox(msg)
-		end,
-	}
-	menu[#menu+1]={szOption = _L["Backup settings"],fnAction = function() LR_TeamBuffSettingPanel.SaveSettings() end,}
-	menu[#menu+1]={szOption = _L["Load settings"],
-		fnAction = function()
-			local szText = {}
-			szText[#szText+1] = sformat("<Text>text=%s font=2 r=255 g=255 b=255</text>", EncodeComponentsString(_L["¡¡¡¡Are you sure to load external file?\n\n"]))
-			szText[#szText+1] = sformat("<Text>text=%s font=162 r=255 g=0 b=0</text>", EncodeComponentsString(_L["¡¡¡¡¡¡ Warning:It will destroy the settings now!"]))
-			local msg =
-			{
-				szMessage = tconcat(szText),
-				bRichText = true,
-				szName = "LoadSettings",
-				{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction =
-					function()
-						LR_TeamBuffSettingPanel.LoadSettings()
-					end
-				},
-				{szOption = g_tStrings.STR_HOTKEY_CANCEL},
-			}
-			MessageBox(msg)
-		end,
-	}]]
-
 	tOptions[#tOptions+1]= {szOption = _L["Clear Panel"], fnAction = function()
 		LR_TeamBuffMonitor.ClearAllNormalBuffCache()
 		LR_TeamBuffMonitor.ClearAllCache()

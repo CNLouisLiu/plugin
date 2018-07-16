@@ -282,8 +282,16 @@ function _BuffBox:Draw()
 	Text_LeftTime:SetFontScheme(15)
 	Text_LeftTime:SetAlpha(255)
 	Text_LeftTime:SetFontScale(UIConfig.handleBuff.fontscale or 0.9)
-	Text_LeftTime:SetHAlign(0)
-	Text_LeftTime:SetVAlign(0)
+	local buffTextType = LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType or 1
+	LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType = LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType or 1
+	if buffTextType == 1 then
+		Text_LeftTime:SetHAlign(0)
+		Text_LeftTime:SetVAlign(0)
+	else
+		Text_LeftTime:SetHAlign(2)
+		Text_LeftTime:SetVAlign(2)
+	end
+
 	Text_LeftTime:SetFontColor(255, 255, 0)
 
 	local w, h = box:GetSize()
@@ -311,6 +319,13 @@ function _BuffBox:Draw()
 	Text_BuffStacks:SetFontScheme(15)
 	Text_BuffStacks:SetAlpha(255)
 	Text_BuffStacks:SetFontScale(UIConfig.handleBuff.fontscale or 0.9)
+	if buffTextType == 1 then
+		Text_BuffStacks:SetHAlign(2)
+		Text_BuffStacks:SetVAlign(2)
+	else
+		Text_BuffStacks:SetHAlign(0)
+		Text_BuffStacks:SetVAlign(0)
+	end
 	Text_BuffStacks:SetHAlign(2)
 	Text_BuffStacks:SetVAlign(2)
 	Text_BuffStacks:SetFontColor(255, 255, 0)
@@ -1400,9 +1415,26 @@ function LR_TeamBuffMonitor.LR_RAID_BUFF_DELETE()
 		if v.dwID == tBuff.dwID then
 			MemberBuff[k] = {}
 			--LR_TeamBuffMonitor.SortBuff(tBuff.dwPlayerID)
-			return
 		end
 	end
+
+	local nBuffShowType = LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.nBuffShowType or 1
+	local BuffList = {}
+	if nBuffShowType == 1 then
+		BuffList = clone(MemberBuff)
+	elseif nBuffShowType == 2 or nBuffShowType == 3 then
+		local n = 1
+		for i = 1, 4, 1 do
+			MemberBuff[i] = MemberBuff[i] or {}
+			if next(MemberBuff[i]) ~= nil then
+				BuffList[n] = clone(MemberBuff[i])
+				n = n + 1
+			end
+		end
+	end
+
+	_NORMAL_BUFF_SHOW[dwPlayerID] = clone(BuffList)
+	LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
 end
 
 function LR_TeamBuffMonitor.LR_RAID_BUFF_ADD_FRESH()
@@ -1410,31 +1442,59 @@ function LR_TeamBuffMonitor.LR_RAID_BUFF_ADD_FRESH()
 	local tBuff = arg1
 
 	local MemberBuff = clone(_NORMAL_BUFF_SHOW[dwPlayerID] or {})
+	local nBuffShowType = LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.nBuffShowType or 1
+
 	local BuffList = {}
-	BuffList[1] = clone(tBuff)
-	local bFound = false
-	for i = 1, 4, 1 do
-		MemberBuff[i] = MemberBuff[i] or {}
-		if next(MemberBuff[i]) ~= nil and not bFound then
-			if MemberBuff[i].dwID == tBuff.dwID then
-				MemberBuff[i] = {}
-				n = i
-				bFound = true
+	if nBuffShowType == 1 then
+		BuffList[1] = clone(tBuff)
+		local bFound = false
+		for i = 1, 4, 1 do
+			MemberBuff[i] = MemberBuff[i] or {}
+			if next(MemberBuff[i]) ~= nil and not bFound then
+				if MemberBuff[i].dwID == tBuff.dwID then
+					MemberBuff[i] = {}
+					--n = i
+					bFound = true
+				end
 			end
+		end
+
+		local n = 2
+		for i = 1, 4, 1 do
+			MemberBuff[i] = MemberBuff[i] or {}
+			if next(MemberBuff[i]) ~= nil then
+				BuffList[n] = clone(MemberBuff[i])
+				n = n + 1
+			elseif i >= n then
+				BuffList[n] = clone(MemberBuff[i])
+				n = n + 1
+			end
+		end
+	elseif nBuffShowType == 2 then
+		BuffList[1] = clone(tBuff)
+		local n = 2
+		for i = 1, 4, 1 do
+			MemberBuff[i] = MemberBuff[i] or {}
+			if next(MemberBuff[i]) ~= nil and MemberBuff[i].dwID ~= tBuff.dwID then
+				BuffList[n] = clone(MemberBuff[i])
+				n = n + 1
+			end
+		end
+	elseif nBuffShowType == 3 then
+		local n = 1
+		for i = 1, 4, 1 do
+			MemberBuff[i] = MemberBuff[i] or {}
+			if next(MemberBuff[i]) ~= nil and MemberBuff[i].dwID ~= tBuff.dwID then
+				BuffList[n] = clone(MemberBuff[i])
+				n = n + 1
+			end
+		end
+		BuffList[n] = clone(tBuff)
+		for i = 1, #BuffList - 4 do
+			tremove(BuffList, 1)
 		end
 	end
 
-	local n = 2
-	for i = 1, 4, 1 do
-		MemberBuff[i] = MemberBuff[i] or {}
-		if next(MemberBuff[i]) ~= nil then
-			BuffList[n] = clone(MemberBuff[i])
-			n = n + 1
-		elseif i >= n then
-			BuffList[n] = clone(MemberBuff[i])
-			n = n + 1
-		end
-	end
 	local buffMonitorNum = LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffMonitorNum
 	for i = buffMonitorNum + 1, #BuffList, 1 do
 		BuffList[i] = nil
@@ -1562,7 +1622,7 @@ function LR_TeamBuffMonitor.SortBuff(dwPlayerID)
 	_NORMAL_BUFF_SHOW[dwPlayerID] = _NORMAL_BUFF_SHOW[dwPlayerID] or {}
 	local MemberBuff = _NORMAL_BUFF_SHOW[dwPlayerID]
 	local BuffList = {}
-	for i=1,4 do
+	for i = 1, 4 do
 		if MemberBuff[i] then
 			BuffList[#BuffList+1] = clone(MemberBuff[i])
 		end

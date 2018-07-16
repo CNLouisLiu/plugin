@@ -181,6 +181,7 @@ local DefaultCommonSettings = {
 			nBorder = 2,		--debuff颜色边框宽度
 			alpha = 255,		--边框透明度
 		},
+		nBuffShowType = 1, 		--1:传统模式，2：BUFF自动缩进，新BUFF插入第一个，3：BUFF自动缩进，新BUFF自动放入末尾
 	},
 }
 local DefaultData = {

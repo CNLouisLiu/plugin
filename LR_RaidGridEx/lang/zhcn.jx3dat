@@ -558,4 +558,17 @@ data={
 	["Sound settings"]="音效设置",
 	["No sound"]="无音效",
 	["Sound type %d"]="音效%d",
+
+	--20180716add--
+	["Text position set"]="BUFF文字设置",
+	["Stack:RightBottom, Lefttime:LeftTop"]="层数：右下角；剩余时间：左上角",
+	["Stack:LeftTop, Lefttime:RightBottom"]="层数：左上角；剩余时间：右下角",
+	["Buff arrange set"]="BUFF排列设置",
+	["Old style"]="经典排列",
+	["New style 1"]="新方式1",
+	["New style 2"]="新方式2",
+	["Old style tip"]="新(包括刷新)的BUFF提前显示，有BUFF消失后，其余BUFF保持原位",
+	["New style 1 tip"]="新(包括刷新)的BUFF提前显示,有BUFF消失后，其余BUFF自动缩进",
+	["New style 2 tip"]="新(包括刷新)的BUFF置尾显示,有BUFF消失后，其余BUFF自动缩进",
+
 }
