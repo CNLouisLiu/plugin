@@ -1141,7 +1141,7 @@ function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 			local szPath, nFrame = GetForceImage(v.dwForceID)
 			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
 			szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("  %s@%s", v.realArea, v.realServer))
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
 			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
 			local tList = _QY.GetQYList()
 			for k, v in pairs(tList) do

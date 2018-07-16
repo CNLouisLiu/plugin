@@ -936,6 +936,10 @@ function LR_AS_ItemRecord_Panel:Init()
 		fnAction = function()
 			LR_AS_ItemRecord_Panel:ReloadItemBox("ALL", "ALL", -1)
 			hComboBox:SetText(_L["(ALL CHARACTERS)"])
+			local Text_Server = LR_AS_ItemRecord_Panel:Fetch("Text_Server")
+			if Text_Server then
+				Text_Server:SetText("")
+			end
 		end,}
 	hComboBox.OnClick = function (m)
 		LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction, all_option)

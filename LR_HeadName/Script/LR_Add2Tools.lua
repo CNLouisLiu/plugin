@@ -331,6 +331,18 @@ LR_HeadName_UI = {
 					}
 					for k2, v2 in pairs(lv2Option) do
 						if k2 ==  5 then
+							if relation[k] == "Enemy" then
+								menu[relation[k]][#menu[relation[k]]+1] = { szOption = _L["Show life per in name"], bCheck = true, bMCheck = false,
+									bChecked = function()
+										return UsrData.NPC[relation[k]].bShowLifePer
+									end,
+									fnAction = function()
+										UsrData.NPC[relation[k]].bShowLifePer = not UsrData.NPC[relation[k]].bShowLifePer
+										LR_HeadName.SaveCommonSettings()
+										LR_HeadName.ReDrawAll()
+									end,
+								}
+							end
 							menu[relation[k]][#menu[relation[k]]+1] = {bDevide = true, }
 						end
 						menu[relation[k]][#menu[relation[k]]+1] = {szOption = v2, bCheck = true, bMCheck = false, bChecked = function() return UsrData.NPC[relation[k]][lv2Key[k2]] end,
@@ -407,7 +419,19 @@ LR_HeadName_UI = {
 						end,
 					}
 					for k2, v2 in pairs(lv2Option) do
-						if k2 ==  8 then
+						if k2 == 8 then
+							if relation[k] == "Enemy" then
+								menu[relation[k]][#menu[relation[k]]+1] = { szOption = _L["Show life per in name"], bCheck = true, bMCheck = false,
+									bChecked = function()
+										return UsrData.Player[relation[k]].bShowLifePer
+									end,
+									fnAction = function()
+										UsrData.Player[relation[k]].bShowLifePer = not UsrData.Player[relation[k]].bShowLifePer
+										LR_HeadName.SaveCommonSettings()
+										LR_HeadName.ReDrawAll()
+									end,
+								}
+							end
 							menu[relation[k]][#menu[relation[k]]+1] = {bDevide = true, }
 						end
 						menu[relation[k]][#menu[relation[k]]+1] = {szOption = v2, bCheck = true, bMCheck = false, bChecked = function() return UsrData.Player[relation[k]][lv2Key[k2]] end,

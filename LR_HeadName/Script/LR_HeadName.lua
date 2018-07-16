@@ -118,6 +118,7 @@ LR_HeadName.default = {
 				Level = true,
 				LifeBar = true,
 				HideLifeBar = true,
+				bShowLifePer = true,
 			},
 			["Neutrality"] = {
 				bShow = true,
@@ -152,6 +153,7 @@ LR_HeadName.default = {
 				HideLifeBar = true,
 				ForceID = false,
 				RoleType = false,
+				bShowLifePer = true,
 			},
 			["Neutrality"] = {
 				bShow = true,
@@ -668,6 +670,10 @@ function _HandleRole:DrawLife(t)
 
 	hLifePer:Hide()
 	LifeBar:Hide()
+
+	if GetLogicFrameCount() % 16 == 0 then
+		self:DrawLifeBoard()
+	end
 end
 
 function _HandleRole:SetLifeBarColor(rgb)
@@ -1615,7 +1621,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 						end
 					end
 					local line2Text = ""
-					if szTitle~= "" and LR_HeadName.GetbShow(obj, nType, "Title", nShip) then
+					if szTitle ~= "" and LR_HeadName.GetbShow(obj, nType, "Title", nShip) then
 						if not (nType ==  TARGET.PLAYER and LR_HeadName.UsrData.HideInDungeon.bOn and LR_HeadName.UsrData.HideInDungeon.Title and scene.nType ==  MAP_TYPE.DUNGEON ) then
 							line2Text = sformat("<%s>", szTitle)
 						end
@@ -1667,8 +1673,8 @@ function LR_HeadName.Check(dwID, nType, bForced)
 								end
 							end
 						end
-						if (obj.bFightState and nShip ==  "Enemy" ) or
-						 (nShip ==  "Ally" and obj.nCurrentLife < obj.nMaxLife and nType ==  TARGET.NPC)
+						if (obj.bFightState and nShip == "Enemy" and LR_HeadName.GetbShow(obj, nType, "bShowLifePer", nShip)) or
+							(nShip ==  "Ally" and obj.nCurrentLife < obj.nMaxLife and nType ==  TARGET.NPC)
 						then
 							local LifePer = obj.nCurrentLife/obj.nMaxLife
 							if not LifePer or  LifePer>1 then
@@ -2221,7 +2227,7 @@ function LR_HeadName.GetbShow(obj, nType1, nType2, nShip)
 	if not obj then
 		return false
 	end
-	if nType1 ==  TARGET.NPC then
+	if nType1 == TARGET.NPC then
 		if not LR_HeadName.UsrData.NPC.bShow then
 			return false
 		else
