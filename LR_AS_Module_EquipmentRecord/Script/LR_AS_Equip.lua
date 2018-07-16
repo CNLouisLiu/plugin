@@ -258,7 +258,7 @@ function LR_AS_Equip_Panel:OnCreate()
 	_Equip.GetAllEquipBox()
 	_Equip.GetEquipScore()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "6691DCA694DA04E2128D3D5ECE615B95")
+	local DB = LR.OpenDB(path, "AS_EQUIP_PANEL_CREATE_SAVE_6691DCA694DA04E2128D3D5ECE615B95")
 	_Equip.SaveData(DB)
 	LR.CloseDB(DB)
 
@@ -602,7 +602,7 @@ function LR_AS_Equip_Panel:LoadEquipSuit(nIndex)
 		_Equip.AllUsrData[sformat("%s_%s_%d", realArea, realServer, dwID)] = clone(data)
 	else
 		local path = sformat("%s\\%s", SaveDataPath, db_name)
-		local DB = LR.OpenDB(path, "C62538E1E3693CC1B81363C0C7A826F3")
+		local DB = LR.OpenDB(path, "EQUIP_PANEL_LOAD_DATA_C62538E1E3693CC1B81363C0C7A826F3")
 		data = _Equip.LoadData(DB, realArea, realServer, dwID)
 		LR.CloseDB(DB)
 	end
@@ -755,7 +755,7 @@ function _Equip.EQUIP_CHANGE()
 		--±£´æ
 		if LR_AS_Equip.UsrData.bAutoSaveWhenChangeEquipment then
 			local path = sformat("%s\\%s", SaveDataPath, db_name)
-			local DB = LR.OpenDB(path, "BB77392CC5A9D92DF1011413EE07D945")
+			local DB = LR.OpenDB(path, "EQUIP_CHANGE_SAVE_DATA_BB77392CC5A9D92DF1011413EE07D945")
 			_Equip.SaveData(DB)
 			LR.CloseDB(DB)
 		end
@@ -783,7 +783,7 @@ function _Equip.EQUIP_ITEM_UPDATE()
 			--±£´æ
 			if LR_AS_Equip.UsrData.bAutoSaveWhenChangeEquipment then
 				local path = sformat("%s\\%s", SaveDataPath, db_name)
-				local DB = LR.OpenDB(path, "8F52275BBD77FC6386511E0E064D6967")
+				local DB = LR.OpenDB(path, "EQUIP_ITEM_UPDATE_SAVE_8F52275BBD77FC6386511E0E064D6967")
 				_Equip.SaveData(DB)
 				LR.CloseDB(DB)
 			end

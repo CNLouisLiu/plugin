@@ -424,6 +424,7 @@ function SQLITE3.UpdateTable(DB, table_config)
 	local sql2 = sformat("SELECT * FROM table_info WHERE table_name = '%s' AND version = '%s'", table_name, version)
 	local result = DB:Execute(sql2) or {}
 	if not result or next(result) == nil then
+		Log(sformat("[LR DB]UpdateTable, (%s), (%s)\n", table_name, version))
 		local column = {}
 		for k, v in pairs (table_config.data) do
 			local sql3 = sformat("SELECT * FROM sqlite_master WHERE type = 'table' AND name ='%s' AND sql like '%% %s %%'", table_name, v.name)
@@ -446,7 +447,7 @@ function SQLITE3.IniDB(db_path, db_name, tTable_Config)
 	CPath.MakeDir(db_path)
 	----
 	local path = sformat("%s\\%s", db_path, db_name)
-	local DB = SQLITE3.OpenDB(path, "F86937F4A6361019C2A0448BE48BDEFD")
+	local DB = SQLITE3.OpenDB(path, "IniDB_F86937F4A6361019C2A0448BE48BDEFD")
 	SQLITE3.UpdateTable(DB, schema_table_info)
 	for k, v in pairs (tTable_Config) do
 		SQLITE3.UpdateTable(DB, v)

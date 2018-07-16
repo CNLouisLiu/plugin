@@ -612,7 +612,7 @@ function _QY.SaveData(DB)
 	local DB = DB
 	if not DB then
 		local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-		DB = LR.OpenDB(path, "29583960578E953B49032A172A76C5CA")
+		DB = LR.OpenDB(path, "QY_SAVE_DATA_29583960578E953B49032A172A76C5CA")
 		flag = true
 	end
 	local ServerInfo = {GetUserServer()}
@@ -1039,7 +1039,7 @@ function _QY.ListQY()
 	end
 
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "7B741438AB62A42190E4D3445F11BE01")
+	local DB = LR.OpenDB(path, "QY_LIST_LOAD_DATA_7B741438AB62A42190E4D3445F11BE01")
 	_QY.LoadAllUsrData(DB)
 	LR.CloseDB(DB)
 
@@ -1275,7 +1275,7 @@ function LR_ACS_QiYu_Panel:OnCreate()
 	LR_ACS_QiYu_Panel.UpdateAnchor(this)
 
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "BF88A3C912E67A2A14EBEAB59CF8B9D4")
+	local DB = LR.OpenDB(path, "QIYU_PANEL_CREATE_LOAD_DATA_BF88A3C912E67A2A14EBEAB59CF8B9D4")
 	_QY.LoadAllUsrData(DB)
 	LR.CloseDB(DB)
 
@@ -1542,7 +1542,7 @@ function _History.SaveData(data)
 
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "D29336E0F2380C1263F48564BA19591F")
+	local DB = LR.OpenDB(path, "QY_BIG_HISTORY_SAVE_DATA_D29336E0F2380C1263F48564BA19591F")
 
 	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_history ( szName, szQYName, realArea, realServer, nMethod, bFinished, nTime, hash ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
@@ -1555,7 +1555,7 @@ end
 function _History.LoadData()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "3E9B015C6EC052E5100CC9DDD3C1CF5E")
+	local DB = LR.OpenDB(path, "QIYU_BIG_HISTORY_LOAD_DATA_3E9B015C6EC052E5100CC9DDD3C1CF5E")
 
 	local szQYName = QY_History_Panel.szQYName
 	local realArea = QY_History_Panel.realArea
@@ -1577,7 +1577,7 @@ end
 function _History.GetQYList()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "B27A500ADC055B7FCB7082498128DC2C")
+	local DB = LR.OpenDB(path, "QIYU_HISTORY_GETLIST_B27A500ADC055B7FCB7082498128DC2C")
 	local realArea = QY_History_Panel.realArea
 	local realServer = QY_History_Panel.realServer
 	local sql_where = sformat("realArea = '%s' AND realServer = '%s'", g2d(realArea), g2d(realServer))
@@ -1591,7 +1591,7 @@ end
 function _History.GetServerList()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "CAC8E032450DD265A7AF3F1AAAF38ABA")
+	local DB = LR.OpenDB(path, "QY_BIG_HISTORY_GET_SERVER_LIST_CAC8E032450DD265A7AF3F1AAAF38ABA")
 	DB_SELECT = DB:Prepare("SELECT realArea, realServer FROM qiyu_history GROUP BY realArea, realServer ORDER BY realArea ASC, realServer ASC")
 	local data = d2g(DB_SELECT:GetAll())
 	LR.CloseDB(DB)
@@ -1642,7 +1642,7 @@ function _Pet.SaveData(data)
 	local v = data
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "5D233B32F0BFE6A494467041A64C19FF")
+	local DB = LR.OpenDB(path, "QY_PET_HISTORY_SAVE_DATA_5D233B32F0BFE6A494467041A64C19FF")
 
 	DB_REPLACE = DB:Prepare("REPLACE INTO pet_history ( szName, szPetName, realArea, realServer, nTime, hash) VALUES ( ?, ?, ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
@@ -1655,7 +1655,7 @@ end
 function _Pet.LoadData()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "E0A7D0C5DEE30D37C9166C255B044CAC")
+	local DB = LR.OpenDB(path, "QY_PET_LOAD_DATA_E0A7D0C5DEE30D37C9166C255B044CAC")
 
 	local szPetName = QY_History_Panel.szPetName
 	local realArea = QY_History_Panel.realArea
@@ -1677,7 +1677,7 @@ end
 function _Pet.GetPetList()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "CBD071401675286F0BD38A9A2B52E751")
+	local DB = LR.OpenDB(path, "QY_PET_LOAD_LIST_CBD071401675286F0BD38A9A2B52E751")
 	local realArea = QY_History_Panel.realArea
 	local realServer = QY_History_Panel.realServer
 	local sql_where = sformat("realArea = '%s' AND realServer = '%s'", g2d(realArea), g2d(realServer))
@@ -1690,7 +1690,7 @@ end
 function _Pet.GetServerList()
 	local db_name = "qiyu_history.db"
 	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "858E64F63F045D420F9C8A673931884E")
+	local DB = LR.OpenDB(path, "QY_PET_LOAD_SERVER_LIST_858E64F63F045D420F9C8A673931884E")
 	DB_SELECT = DB:Prepare("SELECT realArea, realServer FROM pet_history GROUP BY realArea, realServer ORDER BY realArea ASC, realServer ASC")
 	local data = d2g(DB_SELECT:GetAll())
 	LR.CloseDB(DB)

@@ -818,7 +818,7 @@ function _GKP.BatchDistributeItem(items)
 			success_distribute[item.dwID] = true
 		end
 	end
-	local DB = LR.OpenDB(DB_Path, "7FD9A3240C1CDF39CFF749750130A9DE")
+	local DB = LR.OpenDB(DB_Path, "GKP_BATCH_DISTRIBUTE_ITEM_7FD9A3240C1CDF39CFF749750130A9DE")
 	--先记录一波
 	for k, item in pairs(items) do
 		if success_distribute[item.dwID] then
@@ -1120,7 +1120,7 @@ function _GKP.LoadGKPList(szBillName)
 	if not me then
 		return
 	end
-	local DB = LR.OpenDB(DB_Path, "38B7EFAC48E2FC186FFE1D51D392C367")
+	local DB = LR.OpenDB(DB_Path, "GKP_LOAD_LIST_38B7EFAC48E2FC186FFE1D51D392C367")
 	local szName = szBillName
 	local DB_SELECT = DB:Prepare("SELECT * FROM bill_data WHERE szName = ? AND bDel = 0")
 	DB_SELECT:ClearBindings()
@@ -1369,7 +1369,7 @@ function _GKP.SaveBill()
 	local bill_data = g2d(clone(LR_GKP_Base.GKP_Bill))
 	local szBossData = g2d(LR.JsonEncode(_GKP.BossDataG2D()))
 
-	local DB = LR.OpenDB(DB_Path, "A060E056443B28BEBEB643F661258C5E")
+	local DB = LR.OpenDB(DB_Path, "GKP_SAVE_BILL_A060E056443B28BEBEB643F661258C5E")
 	local DB_REPLACE = DB:Prepare("REPLACE INTO bill_data ( szName, hash, szArea, szServer, nCreateTime, szBossData, bDel ) VALUES ( ?, ?, ?, ?, ?, ?, 0 )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(bill_data.szName, bill_data.hash, bill_data.szArea, bill_data.szServer, bill_data.nCreateTime, szBossData)
@@ -1391,7 +1391,7 @@ end
 
 function _GKP.SaveBoss(szBelongBill)
 	--先保存账单信息
-	local DB = LR.OpenDB(DB_Path, "116416E5878E27DF602BB7EDDD2C5918")
+	local DB = LR.OpenDB(DB_Path, "GKP_SAVE_BOSS_116416E5878E27DF602BB7EDDD2C5918")
 	local DB_SELECT = DB:Prepare("SELECT * FROM bill_data WHERE szName = ? AND bDel = 0")
 	DB_SELECT:ClearBindings()
 	DB_SELECT:BindAll(g2d(szBelongBill))
@@ -1458,7 +1458,7 @@ function _GKP.ON_BG_CHANNEL_MSG()
 			DEL_LIST = DEL_LIST or {}
 			DEL_LIST[#DEL_LIST + 1] = clone(data[2])
 		elseif data[1] == "SYNC_END" then
-			local BG_DB = LR.OpenDB(DB_Path)
+			local BG_DB = LR.OpenDB(DB_Path, "GKP_SYNC_DATA_LR_GKP")
 			for k, v in pairs(ADD_LIST) do
 				_GKP.SaveSingleData(BG_DB, v)
 			end
@@ -1506,7 +1506,7 @@ function _GKP.ON_BG_CHANNEL_MSG()
 
 			else
 				local szBillName = LR_GKP_NewBill_Panel:CreateMainName() .. "_MY_GKP"
-				local DB = LR.OpenDB(DB_Path, "093B1D3C7ABCD2FBFFB195EEA8E85765")
+				local DB = LR.OpenDB(DB_Path, "GKP_SYNC_DATA_MY_GKP_093B1D3C7ABCD2FBFFB195EEA8E85765")
 				_GKP.CreateNewBill(DB, szBillName)
 				LR.CloseDB(DB)
 				_GKP.Save_MY_GKP(szBillName)
@@ -1542,12 +1542,12 @@ function _GKP.ON_BG_CHANNEL_MSG()
 		}
 
 		if data[1] == "add" or data[1] == "edit" then
-			local DB = LR.OpenDB(DB_Path, "2CDA7874E9A5E7F41F54127FF1BB7B82")
+			local DB = LR.OpenDB(DB_Path, "GKP_SYNC_MY_GKP_ADD_EDIT_2CDA7874E9A5E7F41F54127FF1BB7B82")
 			_GKP.SaveSingleData(DB, trade_data)
 			LR.CloseDB(DB)
 			LR.DelayCall(500, function() LR_GKP_Panel:LoadGKPItemBox() end)
 		elseif data[1] == "del" then
-			local DB = LR.OpenDB(DB_Path, "4C36BD514818BA3BE1B369969AE60DB9")
+			local DB = LR.OpenDB(DB_Path, "GKP_SYNC_MY_GKP_DEL_4C36BD514818BA3BE1B369969AE60DB9")
 			_GKP.SaveSingleData(DB, trade_data, true)
 			LR.CloseDB(DB)
 			LR.DelayCall(500, function() LR_GKP_Panel:LoadGKPItemBox() end)
@@ -1647,7 +1647,7 @@ function _GKP.MoneyUpdate(nGold, nSilver, nCopper)
 		LR.DelayCall(500, function() LR_GKP_Panel:LoadTradeItemBox() end)
 		return
 	end
-	local DB = LR.OpenDB(DB_Path, "EB3BF291E38D0D84B69B238EA3755FD3")
+	local DB = LR.OpenDB(DB_Path, "GKP_SAVE_MONEY_TRADE_EB3BF291E38D0D84B69B238EA3755FD3")
 	_GKP.SaveCashRecord(DB, cash_data)
 	LR.CloseDB(DB)
 	if LR_GKP_Loot.DistributeCheck() then

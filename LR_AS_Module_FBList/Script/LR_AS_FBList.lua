@@ -268,7 +268,7 @@ function _FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
 
 	--保存进数据库
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "DE4533D93EA9A55619841F731C02064C")
+	local DB = LR.OpenDB(path, "FB_LIST_APPLY_RESPOND_SAVE_DE4533D93EA9A55619841F731C02064C")
 	_FBList.SaveData(DB)
 	LR.CloseDB(DB)
 

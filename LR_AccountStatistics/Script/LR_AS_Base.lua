@@ -55,7 +55,7 @@ LR_AS_Data.ExamData = {}
 function LR_AS_Base.LoadData()
 	local _begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "05DC638DAB8A11477BDFF035C167AFC9")
+	local DB = LR.OpenDB(path, "AS_BASE_LOAD_DATA_05DC638DAB8A11477BDFF035C167AFC9")
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].LoadData then
 			LR_AS_Module[v].LoadData(DB)
@@ -76,7 +76,7 @@ function LR_AS_Base.SaveData()
 	--------------save
 	local _begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "0D9F801993115A3C7F3EA6267F0AAA9C")
+	local DB = LR.OpenDB(path, "AS_BASE_SAVE_DATA_0D9F801993115A3C7F3EA6267F0AAA9C")
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].SaveData then
 			LR_AS_Module[v].SaveData(DB)
@@ -159,7 +159,7 @@ function LR_AS_Base.ResetData()
 	end
 	--------
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "D7F73ADF2CB70A9AACFB048D8F7C6833")
+	local DB = LR.OpenDB(path, "AS_BASE_RESET_DATA_D7F73ADF2CB70A9AACFB048D8F7C6833")
 	------载入时间
 	local RC_ResetTime = {
 		ClearTimeEveryDay = 0,
@@ -227,7 +227,7 @@ end
 function LR_AS_Base.FIRST_LOADING_END()
 	local _begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "AA481F7DB2E1EC1CBD53005AF1A11D3F")
+	local DB = LR.OpenDB(path, "AS_BASE_FIRST_LOADING_END_AA481F7DB2E1EC1CBD53005AF1A11D3F")
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].FIRST_LOADING_END then
 			LR_AS_Module[v].FIRST_LOADING_END(DB)
@@ -309,7 +309,7 @@ function LR_AS_Base.DelPlayer(player)
 	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
 
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "264015779F0459A1088BA2AEAF2F1E51")
+	local DB = LR.OpenDB(path, "DEL_PLAYER_264015779F0459A1088BA2AEAF2F1E51")
 
 	------删除用户列表数据
 	LR_AS_Data.AllPlayerList[szKey] = nil

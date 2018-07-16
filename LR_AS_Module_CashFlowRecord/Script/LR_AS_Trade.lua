@@ -561,7 +561,7 @@ function LR_AS_Trade.SaveTempData(bSaveImmediately)
 	local realArea, realServer = serverInfo[5], serverInfo[6]
 	local szName = me.szName
 	local path = sformat("%s\\TradeData\\%s\\%s\\%s\\TradeDB.db", SaveDataPath, realArea, realServer, szName)
-	local DB = LR.OpenDB(path, "86B9CAF777543A467C77821DEF5D91AA")
+	local DB = LR.OpenDB(path, "AS_TRADE_SAVE_TEMP_DATA_86B9CAF777543A467C77821DEF5D91AA")
 	LR_AS_Trade.SaveTempData2(DB)
 	LR.CloseDB(DB)
 	_SaveTempDataTime = GetCurrentTime()
@@ -601,7 +601,7 @@ function LR_AS_Trade.MoveData2MainTable()
 	local realArea, realServer = serverInfo[5], serverInfo[6]
 	local szName = me.szName
 	local path = sformat("%s\\TradeData\\%s\\%s\\%s\\TradeDB.db", SaveDataPath, realArea, realServer, szName)
-	local DB = LR.OpenDB(path, "9C945166DC2179E258864DC4AD28C34A")
+	local DB = LR.OpenDB(path, "AS_TRADE_MOVE_TEMP_DATA_9C945166DC2179E258864DC4AD28C34A")
 	LR_AS_Trade.SaveTempData2(DB)
 	LR_AS_DB.MoveTradeDB(DB)
 	DB:Execute("DROP TABLE trade_data_temp")
@@ -622,7 +622,7 @@ function LR_AS_Trade.VacuumData()
 		local realArea, realServer = serverInfo[5], serverInfo[6]
 		local szName = me.szName
 		local path = sformat("%s\\TradeData\\%s\\%s\\%s\\TradeDB.db", SaveDataPath, realArea, realServer, szName)
-		local DB = LR.OpenDB(DB, "116F822102736954564DE4B8DAC08F46")
+		local DB = LR.OpenDB(DB, "AS_TRADE_VACUUM_DATA_116F822102736954564DE4B8DAC08F46")
 		local DB_DELETE = DB:Prepare("DELETE FROM trade_data WHERE bDel = 1")
 		DB_DELETE:Execute()
 		DB:Execute("END TRANSACTION")
@@ -654,7 +654,7 @@ function LR_AS_Trade.LoadData(nType, nPage)
 	local realArea, realServer = serverInfo[5], serverInfo[6]
 	local szName = me.szName
 	local path = sformat("%s\\TradeData\\%s\\%s\\%s\\TradeDB.db", SaveDataPath, realArea, realServer, szName)
-	local DB = LR.OpenDB(path, "D29E9166CAA75E3F535F3674BF091D81")
+	local DB = LR.OpenDB(path, "AS_TRADE_LOAD_DATA_D29E9166CAA75E3F535F3674BF091D81")
 	local SQL, SQL2, SQL3 = "", "", ""
 	if not nType or nType == OP1.TODAY then
 		SQL = "SELECT * FROM trade_data WHERE bDel = 0 AND nDate = date('now', 'localtime') AND szKey IS NOT NULL ORDER BY nTime, OrderTime LIMIT 100 OFFSET ?"
@@ -789,7 +789,7 @@ function LR_AS_Trade.ImportOldData2(realArea, realServer, szName)
 	local src = "%s\\%s\\%s\\%s\\Trade\\Data_%s\\Record_%s_%s.dat"
 	local path = sformat("%s\\TradeData\\%s\\%s\\%s\\TradeDB.db", SaveDataPath, realArea, realServer, szName)
 	LR_AS_DB.IniTradeDB(realArea, realServer, szName)
-	local DB = LR.OpenDB(path, "4F5345F8597C42EA9D982B07CC26910D")
+	local DB = LR.OpenDB(path, "AS_TRADE_IMPORT_DATA2_4F5345F8597C42EA9D982B07CC26910D")
 	local DB_REPLACE = DB:Prepare("REPLACE INTO trade_data ( szKey, nTime, OrderTime, nMoney, nItem_in, nItem_out, dwMapID, nType, Distributor, Source, tDate, nDate, bDel ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
 	for month = 3, 4, 1 do
 		local src2 = "%s\\%s\\%s\\%s\\Trade\\Record_%s_%s.dat"
@@ -879,7 +879,7 @@ function LR_AS_Trade.ImportNewVersionData()
 	local filepath = sformat(_L["file locate at 'Interface/LR_Plugin@Data/LR_AccountStatistics/UsrData/TradeData/[Area]/[Server]/[PlayerName]'"])
 	local step_3 = function(szFile)
 		local path = szFile
-		local DB = LR.OpenDB(path, "984684081279407503BCA422E48BA1AC")
+		local DB = LR.OpenDB(path, "AS_TRADE_LOAD_OLD_VERSION_DATA_984684081279407503BCA422E48BA1AC")
 		DB_SELECT = DB:Prepare("SELECT * FROM trade_data WHERE bDel = 0 AND szKey IS NOT NULL")
 		local Data = d2g(DB_SELECT:GetAll())
 		LR.CloseDB(DB)
@@ -889,7 +889,7 @@ function LR_AS_Trade.ImportNewVersionData()
 		local realArea, realServer = serverInfo[5], serverInfo[6]
 		local szName = me.szName
 		local path2 = sformat("%s\\TradeData\\%s\\%s\\%s\\TradeDB.db", SaveDataPath, realArea, realServer, szName)
-		local DB2 = LR.OpenDB(path2, "1ED0C5B68C340B819AC6A77F3DAB91EA")
+		local DB2 = LR.OpenDB(path2, "AS_TRADE_IMPORT_NEW_VERSION_DATA_1ED0C5B68C340B819AC6A77F3DAB91EA")
 		local DB_REPLACE = DB2:Prepare("REPLACE INTO trade_data ( szKey, nTime, OrderTime, nMoney, nItem_in, nItem_out, dwMapID, nType, Distributor, Source, tDate, nDate, bDel ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
 		for k, v in pairs (Data) do
 			DB_REPLACE:ClearBindings()
@@ -919,7 +919,7 @@ function LR_AS_Trade.ImportNewVersionData()
 				return
 			end
 		end
-		local DB = LR.OpenDB(szFile, "E7F21CAEA685ED25B933D5F8A2592E10")
+		local DB = LR.OpenDB(szFile, "AS_TRADE_CHECK_OLD_VERSION_DATA_E7F21CAEA685ED25B933D5F8A2592E10")
 		local DB_SELECT = DB:Prepare("SELECT * FROM sqlite_master WHERE type = 'table' AND name ='trade_data'")
 		if not DB_SELECT then
 			LR.SysMsg(sformat("%s\n", _L["File open error."]))

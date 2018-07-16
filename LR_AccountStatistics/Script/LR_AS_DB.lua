@@ -311,7 +311,7 @@ schema_trade_data_temp.name = "trade_data_temp"
 -----------------------------------------------------
 function LR_AS_DB.Convert_Old_Version(option)
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "E2CD230AE8816652267E6E1D6E8A52E2")
+	local DB = LR.OpenDB(path, "AS_DB_CONVERT_OLD_VERSION_E2CD230AE8816652267E6E1D6E8A52E2")
 	if option == "player_info" then
 		local path = sformat("%s\\UserList.dat",SaveDataPath)
 		if IsFileExist(sformat("%s.jx3dat", path)) then
@@ -356,7 +356,7 @@ end
 function LR_AS_DB.MainDBVacuum(skip)
 	local vacuum = function()
 		local path = sformat("%s\\%s", SaveDataPath, db_name)
-		local DB = LR.OpenDB(path, "9B768A082DF71DDAC8B1FC8EFCDB4E57")
+		local DB = LR.OpenDB(path, "AS_DB_VACUUM_9B768A082DF71DDAC8B1FC8EFCDB4E57")
 		local SQL = "DELETE FROM %s WHERE bDel = 1"
 		local tables = {"bookrd_data", "exam_data", "fb_data", "mail_data", "mail_item_data", "mail_receive_time", "qiyu_data", "richang_data"}
 		for k, v in pairs (tables) do
@@ -477,7 +477,7 @@ function LR_AS_DB.backup()
 
 	for table_config_k, table_config_v in pairs(tTableConfig) do
 		local path = sformat("%s\\%s", SaveDataPath, db_name)
-		local DB = LR.OpenDB(path, "B1743D7DDD8D1FDD03E4B14B1E2B5D4D")
+		local DB = LR.OpenDB(path, "AS_DB_BACKUP_OPEN_MAIN_B1743D7DDD8D1FDD03E4B14B1E2B5D4D")
 
 		local table_name = table_config_v.name
 		--获取全部数据
@@ -486,7 +486,7 @@ function LR_AS_DB.backup()
 
 		--打开备份数据库
 		local path2 = sformat("%s\\backup\\%s", SaveDataPath, name)
-		local DB2 = LR.OpenDB(path2, "2670572C80E55B4CAAAB65E06B5F2D09")
+		local DB2 = LR.OpenDB(path2, "AS_DB_BACKUP_OPEN_BACKUP2670572C80E55B4CAAAB65E06B5F2D09")
 
 		--导入
 		for k, v in pairs(data) do

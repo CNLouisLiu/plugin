@@ -1058,7 +1058,7 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 			LR_GKP_Panel:CheckBill()
 		else
 			--先保存一波
-			local DB = LR.OpenDB(DB_Path, "CF6549915CAFB1D53E07759C262E379B")
+			local DB = LR.OpenDB(DB_Path, "GKP_DISTRIBUTE_OK_SAVE_CF6549915CAFB1D53E07759C262E379B")
 			LR_GKP_Base.SaveSingleData(DB, LR_GKP_Distribute_Panel.data)
 			LR.CloseDB(DB)
 			--
@@ -1101,7 +1101,7 @@ function LR_GKP_Distribute_Panel:Init(item, player, bModify)
 				LR_GKP_Panel:CheckBill()
 			else
 				--先保存一波
-				local DB = LR.OpenDB(DB_Path, "E26A87028D5D116F2F132B1183AF0E44")
+				local DB = LR.OpenDB(DB_Path, "GKP_DISTRIBUTE_CLOSE_SAVE_E26A87028D5D116F2F132B1183AF0E44")
 				LR_GKP_Base.SaveSingleData(DB, LR_GKP_Distribute_Panel.data)
 				LR.CloseDB(DB)
 				--

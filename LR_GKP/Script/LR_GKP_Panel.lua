@@ -365,7 +365,7 @@ function LR_GKP_Panel:CheckBill()
 end
 
 function LR_GKP_Panel:CreateBillMenu()
-	local DB = LR.OpenDB(DB_Path, "12ECBA4677E145173D5DD0B526CA59D0")
+	local DB = LR.OpenDB(DB_Path, "GKP_PANEL_CREATE_BILL_MENU_12ECBA4677E145173D5DD0B526CA59D0")
 	local DB_SELECT = DB:Prepare("SELECT * FROM bill_data WHERE szName IS NOT NULL ORDER BY nCreateTime DESC LIMIT 20 OFFSET 0")
 	local result = DB_SELECT:GetAll() or {}
 	local mm = {}
@@ -550,7 +550,7 @@ function LR_GKP_Panel:LoadGKPItemBox()
 						LR_GKP_Panel:CheckBill()
 					else
 						--œ»±£¥Ê“ª≤®
-						local DB = LR.OpenDB(DB_Path, "285816BD3A31781FC47CE22156C11F49")
+						local DB = LR.OpenDB(DB_Path, "GKP_DEL_DATA_SAVE_285816BD3A31781FC47CE22156C11F49")
 						LR_GKP_Base.DelSingleData(DB, v)
 						LR.CloseDB(DB)
 						--
@@ -820,7 +820,7 @@ function LR_GKP_NewBill_Panel:Init()
 		end
 		local text = sformat("%s_%s", text_main, text_sub)
 
-		local DB = LR.OpenDB(DB_Path, "5159C695EBE4EFF3C33743BE4ECD510B")
+		local DB = LR.OpenDB(DB_Path, "GKP_NEW_BILL_SAVE_5159C695EBE4EFF3C33743BE4ECD510B")
 		LR_GKP_Base.CreateNewBill(DB, text)
 		LR.CloseDB(DB)
 		LR.DelayCall(500, function()

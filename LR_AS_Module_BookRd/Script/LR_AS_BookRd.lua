@@ -272,7 +272,7 @@ function LR_BookRd_Panel:OnCreate()
 	end
 	--º”‘ÿ‘ƒ∂¡ ˝æ›
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "5DCC72E35E9640653FB126DF3E2E34E8")
+	local DB = LR.OpenDB(path, "BOOK_PANEL_CREATE_LOAD_DATA_5DCC72E35E9640653FB126DF3E2E34E8")
 	_BookRd.LoadAllUsrData(DB)
 	LR.CloseDB(DB)
 end

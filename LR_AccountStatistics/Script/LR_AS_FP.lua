@@ -200,7 +200,7 @@ end
 function LR_AS_FP.LoadPlayerInfo()
 	if LR_AS_Module["PlayerInfo"] then
 		local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-		local DB = LR.OpenDB(path, "41B1C29AE9C4FA1AA626CC430031DCA2")
+		local DB = LR.OpenDB(path, "AS_FP_LOAD_PLAYER_INFO_41B1C29AE9C4FA1AA626CC430031DCA2")
 		LR_AS_Module["PlayerInfo"].LoadData(DB)
 		LR.CloseDB(DB)
 	end

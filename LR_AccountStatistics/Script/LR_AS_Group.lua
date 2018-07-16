@@ -181,7 +181,7 @@ function _Group.PopupUIMenu()
 				fnAction = function()
 					--保存
 					local path = sformat("%s\\%s", SaveDataPath, db_name)
-					local DB = LR.OpenDB(path, "DA963592E980D9750A906E615FBE59D5")
+					local DB = LR.OpenDB(path, "AS_DEL_GROUP_DA963592E980D9750A906E615FBE59D5")
 					_Group.DelGroup(groupID, DB)
 					LR.CloseDB(DB)
 					--从查看的分组列表里删除
@@ -199,7 +199,7 @@ function _Group.PopupUIMenu()
 						if szText ~=  "" then
 							--保存
 							local path = sformat("%s\\%s", SaveDataPath, db_name)
-							local DB = LR.OpenDB(path, "94E8100574E74E3DDE15A1BCB8955674")
+							local DB = LR.OpenDB(path, "AS_RENAME_GROUP_94E8100574E74E3DDE15A1BCB8955674")
 							_Group.RenameGroup(groupID, szText, DB)
 							LR.CloseDB(DB)
 							--刷新UI
@@ -227,7 +227,7 @@ function _Group.PopupUIMenu()
 				if szText ~=  "" then
 					--保存分组
 					local path = sformat("%s\\%s", SaveDataPath, db_name)
-					local DB = LR.OpenDB(path, "4006FC1148A7F785B3E84AF13ED3035F")
+					local DB = LR.OpenDB(path, "AS_ADD_GROUP_4006FC1148A7F785B3E84AF13ED3035F")
 					_Group.AddGroup(szText, DB)
 					LR.CloseDB(DB)
 					--刷新

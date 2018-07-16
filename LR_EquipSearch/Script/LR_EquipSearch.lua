@@ -123,7 +123,7 @@ GET_LR_RECOMMEND_TEXT()
 
 local LR_EQUIP_TYPE = {}
 local function GET_LR_EQUIP_TYPE()
-	local DB = LR.OpenDB(DB_Path, "EF5E2BBBC4A5DC7920A72284FA058170")
+	local DB = LR.OpenDB(DB_Path, "EQUIP_SEARCH_GET_EQUIP_TYPE_EF5E2BBBC4A5DC7920A72284FA058170")
 	local DB_SELECT = DB:Prepare("SELECT nSub, nDetail FROM equip_data GROUP BY nSub, nDetail")
 	local data = DB_SELECT:GetAll() or {}
 	LR.CloseDB(DB)
@@ -185,7 +185,7 @@ function LR_EquipSearch.CheckDB()
 	elseif not IsFileExist(DB_Path) then
 		bInI = true
 	else
-		local DB = LR.OpenDB(DB_Path, "04BEC480CB21E0CA7B530DB30C148EEF")
+		local DB = LR.OpenDB(DB_Path, "EQUIP_SEARCH_CHECK_DB_04BEC480CB21E0CA7B530DB30C148EEF")
 		local DB_SELECT = DB:Prepare("SELECT * FROM sqlite_master WHERE type = 'table' AND name ='equip_data'")
 		local Data = DB_SELECT:GetAll() or {}
 		if next(Data) == nil then
@@ -233,7 +233,7 @@ end
 
 function LR_EquipSearch.ExportDB()
 	local tTime = GetTickCount()
-	local DB = LR.OpenDB(DB_Path, "59E83193256DDE21DB9FE60DEDACA299")
+	local DB = LR.OpenDB(DB_Path, "EQUIP_SEARCH_IMPORT_DATA_59E83193256DDE21DB9FE60DEDACA299")
 	local DB_REPLACE = DB:Prepare("REPLACE INTO equip_data ( szKey, dwTabType, dwIndex, nLevel, nAucType, szName, nSchoolID, nSetID, szMagicKind, szMagicType, szSourceType, szPvePvp, szSourceForce, szSourceDesc, szBelongMapID, szPrestigeRequire, nRecommendID, nGenre, nSub, nDetail, nQuality, nBindType, szAttribute, nRequireLevel, bDel ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0 )")
 
 	local nCount = g_tTable.EquipDB:GetRowCount()
@@ -369,7 +369,7 @@ function LR_EquipSearch.SEARCH(nPage)
 	end
 	SQL = sformat("%s ORDER BY nLevel %s, nQuality DESC, nSub ASC, nDetail ASC, szName ASC", SQL, LR_EquipSearch_Panel.Order)
 
-	local DB = LR.OpenDB(DB_Path, "8A518302E1BD70EAFB506626852A0867")
+	local DB = LR.OpenDB(DB_Path, "EQUIP_SEARCH_ON_SEARCH_8A518302E1BD70EAFB506626852A0867")
 	local SQL2 = sformat("SELECT COUNT( * ) AS COUNT %s", SQL)
 	--Output("SQL2", SQL2)
 	local DB_SELECT2 = DB:Prepare(SQL2)

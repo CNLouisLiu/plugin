@@ -1819,7 +1819,7 @@ local function SAVE_QUEST(dwQuestID)
 		return
 	end
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "C4C149DED36AB08F230374D361E4103E")
+	local DB = LR.OpenDB(path, "RC_SAVE_QUEST_C4C149DED36AB08F230374D361E4103E")
 	_RC.SaveData(DB)
 	LR.CloseDB(DB)
 	Log("[LR] RI_CHANG_QUEST_EVENT_SAVE\n")

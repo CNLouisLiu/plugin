@@ -138,7 +138,7 @@ function LR_Acc_Achievement_Panel:OnCreate()
 	this:RegisterEvent("UI_SCALED")
 
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "36BBE7216610F96DD808C09F3F1D1780")
+	local DB = LR.OpenDB(path, "Achievement_Panel_CREATE_LOAD_DATA_36BBE7216610F96DD808C09F3F1D1780")
 	_Achievement.LoadAllUsrData(DB)
 	LR.CloseDB(DB)
 
