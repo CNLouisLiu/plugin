@@ -338,4 +338,7 @@ data={
 	["<SYMBOL_MISSIONOBJ2>"]="★",
 	["Mission Point"]="任务点",
 
+	--20180716add--
+	["High Light Team Mark"]="高亮团队图标名字",
+
 }

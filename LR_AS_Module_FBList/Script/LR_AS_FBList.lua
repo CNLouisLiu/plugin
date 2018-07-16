@@ -493,7 +493,8 @@ function _FBList.ShowItem(t_Table, Alpha, bCal, _num)
 			local szTipInfo = {}
 			local szPath, nFrame = GetForceImage(v.dwForceID)
 			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s£®%d£©\n", v.szName, v.nLevel), 62, r, g, b)
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("  %s@%s\n", v.realArea, v.realServer))
 			--szTipInfo[#szTipInfo+1] = GetFormatText(" ================================ \n", 17)
 			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
 			szTipInfo[#szTipInfo+1] = GetFormatText("\n", 41)
@@ -631,9 +632,15 @@ function LR_AS_FB_Detail_Panel:Init()
     imgTab:SetImage("ui\\Image\\UICommon\\ActivePopularize2.UITex", 46)
 	imgTab:SetImageType(11)
 
+	local realArea = LR_AS_FB_Detail_Panel.realArea
+	local realServer = LR_AS_FB_Detail_Panel.realServer
+
 	--------------»ÀŒÔ—°‘Ò
 	local hComboBox = self:Append("ComboBox", frame, "hComboBox", {w = 160, x = 20, y = 51, text = ""})
 	hComboBox:Enable(true)
+
+	local Text_Server = self:Append("Text", frame, "Text_Server", {w = 100, h = 30, x = 195, y = 50, text = ""})
+	Text_Server:SetVAlign(1):SetHAlign(0):SetText(sformat("%s@%s", realArea, realServer))
 
 	local hPageSet = self:Append("PageSet", frame, "PageSet", {x = 20, y = 120, w = 360, h = 360})
 	local hWinIconView = self:Append("Window", hPageSet, "WindowItemView", {x = 0, y = 0, w = 360, h = 360})
@@ -676,6 +683,10 @@ function LR_AS_FB_Detail_Panel:Init()
 		local realServer = data.realServer
 		local dwID = data.dwID
 		LR_AS_FB_Detail_Panel:ReloadItemBox(realArea, realServer, dwID)
+		local Text_Server = LR_AS_FB_Detail_Panel:Fetch("Text_Server")
+		if Text_Server then
+			Text_Server:SetText(sformat("%s@%s", realArea, realServer))
+		end
 	end
 	hComboBox.OnClick = function (m)
 		LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction)
@@ -747,22 +758,50 @@ function LR_AS_FB_Detail_Panel:LoadItemBox(hWin)
 		if m % 2 ==  1 then
 			Image_Line:Hide()
 		end
-		m = m+1
+		m = m + 1
 
 		local Text_break1 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_1", m), {w = 160, h = 30, x  = 36, y = 2, text = LR.MapType[FB_25R[i].dwMapID].szName , font = 18})
 		Text_break1:SetHAlign(0)
 		Text_break1:SetVAlign(1)
 
-		local FB_ID = _FBList.GetFBIDByMapID(FB_Record, FB_25R[i].dwMapID)
-		local Text_ID =  ""
-		if FB_ID ~=  nil then
-			Text_ID = sformat("ID: %d", FB_ID)
+		local Text_FB = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 140, h = 30, x  = 200, y = 2, text = "", font = 18})
+		Text_FB:SetHAlign(1)
+		Text_FB:SetVAlign(1)
+
+		local dwMapID = FB_25R[i].dwMapID
+		if INDEPENDENT_MAP[dwMapID] then
+			local data = {}
+			if FB_Record[dwMapID] then
+				local tBossList = Table_GetCDProcessBoss and Table_GetCDProcessBoss(dwMapID) or {}
+				if false then
+					tBossList = {{dwProgressID = 1}, {dwProgressID = 2}, {dwProgressID = 3}, {dwProgressID = 4}, {dwProgressID = 5}, }
+					Output(FB_Record[dwMapID])
+				end
+				tsort(tBossList, function(a, b) return a.dwProgressID < b.dwProgressID end)
+				local szText = ""
+				for k2, v2 in pairs(tBossList) do
+					if FB_Record[dwMapID][tostring(v2.dwProgressID)] then
+						szText = sformat("%s%s", szText, _L["<SYMBOL_DONE>"])
+					else
+						szText = sformat("%s%s", szText, _L["<SYMBOL_NOT>"])
+					end
+				end
+				Text_FB:SetText(szText)
+				Text_FB:SetFontScheme(2)
+			else
+				Text_FB:SetText("--")
+				Text_FB:SetFontScheme(80)
+			end
 		else
-			Text_ID = "--"
+			local FB_ID = _FBList.GetFBIDByMapID(FB_Record, dwMapID)
+			local Text_ID =  ""
+			if FB_ID ~=  nil then
+				Text_ID = sformat("ID: %d", FB_ID)
+			else
+				Text_ID = "--"
+			end
+			Text_FB:SetText(Text_ID)
 		end
-		local Text_break2 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 140, h = 30, x  = 200, y = 2, text = Text_ID, font = 18})
-		Text_break2:SetHAlign(1)
-		Text_break2:SetVAlign(1)
 	end
 
 	local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", m), {x = 0, y = 0, w = 340, h = 30})
@@ -775,7 +814,7 @@ function LR_AS_FB_Detail_Panel:LoadItemBox(hWin)
 	Text_break1:SetHAlign(0)
 	Text_break1:SetVAlign(1)
 
-	m = m+1
+	m = m + 1
 	for i = 1, #FB_10R do
 		local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", m), {x = 0, y = 0, w = 340, h = 30})
 		local Image_Line = self:Append("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 0, y = 0, w = 340, h = 30})
@@ -786,23 +825,50 @@ function LR_AS_FB_Detail_Panel:LoadItemBox(hWin)
 		if m % 2 ==  1 then
 			Image_Line:Hide()
 		end
-		m = m+1
+		m = m + 1
 
 		local Text_break1 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_1", m), {w = 160, h = 30, x  = 36, y = 2, text = LR.MapType[FB_10R[i].dwMapID].szName  , font = 18})
 		Text_break1:SetHAlign(0)
 		Text_break1:SetVAlign(1)
 
-		local FB_ID = _FBList.GetFBIDByMapID(FB_Record, FB_10R[i].dwMapID)
-		local Text_ID =  ""
-		if FB_ID ~=  nil then
-			Text_ID = sformat("ID: %d", FB_ID)
-		else
-			Text_ID = "--"
-		end
+		local Text_FB = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 140, h = 30, x  = 200, y = 2, text = Text_ID, font = 18})
+		Text_FB:SetHAlign(1)
+		Text_FB:SetVAlign(1)
 
-		local Text_break2 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 140, h = 30, x  = 200, y = 2, text = Text_ID, font = 18})
-		Text_break2:SetHAlign(1)
-		Text_break2:SetVAlign(1)
+		local dwMapID = FB_10R[i].dwMapID
+		if INDEPENDENT_MAP[dwMapID] then
+			local data = {}
+			if FB_Record[dwMapID] then
+				local tBossList = Table_GetCDProcessBoss and Table_GetCDProcessBoss(dwMapID) or {}
+				if false then
+					tBossList = {{dwProgressID = 1}, {dwProgressID = 2}, {dwProgressID = 3}, {dwProgressID = 4}, {dwProgressID = 5}, }
+					Output(FB_Record[dwMapID])
+				end
+				tsort(tBossList, function(a, b) return a.dwProgressID < b.dwProgressID end)
+				local szText = ""
+				for k2, v2 in pairs(tBossList) do
+					if FB_Record[dwMapID][tostring(v2.dwProgressID)] then
+						szText = sformat("%s%s", szText, _L["<SYMBOL_DONE>"])
+					else
+						szText = sformat("%s%s", szText, _L["<SYMBOL_NOT>"])
+					end
+				end
+				Text_FB:SetText(szText)
+				Text_FB:SetFontScheme(2)
+			else
+				Text_FB:SetText("--")
+				Text_FB:SetFontScheme(80)
+			end
+		else
+			local FB_ID = _FBList.GetFBIDByMapID(FB_Record, dwMapID)
+			local Text_ID =  ""
+			if FB_ID ~=  nil then
+				Text_ID = sformat("ID: %d", FB_ID)
+			else
+				Text_ID = "--"
+			end
+			Text_FB:SetText(Text_ID)
+		end
 	end
 end
 

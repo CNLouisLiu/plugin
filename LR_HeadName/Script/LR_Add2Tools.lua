@@ -526,6 +526,13 @@ LR_HeadName_UI = {
 						LR_HeadName.ReDrawAll()
 					end,
 				}
+				m[#m+1] = {szOption = _L["High Light Team Mark"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bHightLightTeamMark end,
+					fnAction = function()
+						LR_HeadName.UsrData.bHightLightTeamMark = not LR_HeadName.UsrData.bHightLightTeamMark
+						LR_HeadName.SaveCommonSettings()
+						LR_HeadName.ReDrawAll()
+					end,
+				}
 				m[#m+1] = {bDevide = true, }
 				local szText = {_L["Show Team Mark Text"], _L["Show Team Mark Image"]}
 				for k, v in pairs (szText) do

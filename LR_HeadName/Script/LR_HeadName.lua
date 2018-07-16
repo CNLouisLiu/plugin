@@ -86,6 +86,7 @@ LR_HeadName.default = {
 		bShowDoodadKind = false, 	--是否显示Doodad的类型
 		bShowTeamMark = true, 	--是否显示队伍标记
 		nShowTeamMarkType = 2, 	----1:显示文字，2：显示图标
+		bHightLightTeamMark = true,		--是否高亮队伍标记
 		nMarkOffset = 14,	--图标偏移
 		nOffset = 0, 	--头顶相对高度
 		nLifeBarOffset = 0, 		--血条高度偏移量
@@ -497,8 +498,12 @@ function _HandleRole:DrawName()
 			hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, ( - (nHight-2) *  tText[i].lenth), (-30- del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
 		else
 			del_height = del_height+mceil(nHight*(LR_HeadName.UsrData.nFontScale))
-			if self.nTeamMark and LR_HeadName.UsrData.bShowTeamMark then
-				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30- del_height -nOffset)}, 207 , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
+			if self.nTeamMark and LR_HeadName.UsrData.bShowTeamMark and LR_HeadName.UsrData.bHightLightTeamMark then
+				local font = 207
+				if LR_HeadName._Role[dwID]:GetShip() == "Enemy" then
+					font = 207
+				end
+				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30- del_height -nOffset)}, font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
 			else
 				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30- del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
 			end

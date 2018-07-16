@@ -721,13 +721,27 @@ function LR_BookRd_Panel:LoadUsrNameBox(hWin)
 				local User = LR_AS_Data.AllPlayerList[szKey]
 				if User then
 					local r, g, b = LR.GetMenPaiColor(User.dwForceID)
+					local path, nFrame = GetForceImage(User.dwForceID)
 					local Image_MenPai = self:Append("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 15, y = 0, w = 30, h = 30})
-					Image_MenPai:FromUITex(GetForceImage(User.dwForceID))
+					Image_MenPai:FromUITex(path, nFrame)
 					--»ÀŒÔ√˚≥∆
 					local Text_break2 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 150, h = 30, x  = 50, y = 2, text = User.szName , font = 18})
 					Text_break2:SetHAlign(0)
 					Text_break2:SetVAlign(1)
 					Text_break2:SetFontColor(r, g, b)
+
+					hIconViewContent.OnEnter = function()
+						local x, y = this:GetAbsPos()
+						local w, h = this:GetSize()
+						local szXml = {}
+						szXml[#szXml + 1] = GetFormatImage(path, nFrame, 24, 24)
+						szXml[#szXml + 1] = GetFormatText(sformat("%s(%d)\n", User.szName, User.nLevel), nil, r, g, b)
+						szXml[#szXml + 1] = GetFormatText(sformat("%s@%s", User.realArea, User.realServer))
+						OutputTip(tconcat(szXml), 360, {x, y, w, h})
+					end
+					hIconViewContent.OnLeave = function()
+						HideTip()
+					end
 				end
 			end
 		end

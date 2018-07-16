@@ -1140,7 +1140,8 @@ function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 			local szTipInfo = {}
 			local szPath, nFrame = GetForceImage(v.dwForceID)
 			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s£®%d£©\n", v.szName, v.nLevel), 62, r, g, b)
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("  %s@%s", v.realArea, v.realServer))
 			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
 			local tList = _QY.GetQYList()
 			for k, v in pairs(tList) do
@@ -1348,6 +1349,11 @@ function LR_ACS_QiYu_Panel:Init()
 	Text_break2:SetVAlign(1)
 
 	--------------»ÀŒÔ—°‘Ò
+	local realArea = LR_ACS_QiYu_Panel.realArea
+	local realServer = LR_ACS_QiYu_Panel.realServer
+	local Text_Server = self:Append("Text", frame, "Text_Server", {w = 100, h = 30, x = 195, y = 50, text = ""})
+	Text_Server:SetHAlign(0):SetVAlign(1):SetText(sformat("%s@%s", realArea, realServer))
+
 	local hComboBox = self:Append("ComboBox", frame, "hComboBox", {w = 160, x = 20, y = 51, text = ""})
 	hComboBox:Enable(true)
 	local fnAction = function(data)
@@ -1355,6 +1361,10 @@ function LR_ACS_QiYu_Panel:Init()
 		local realServer = data.realServer
 		local dwID = data.dwID
 		LR_ACS_QiYu_Panel:ReloadItemBox(realArea, realServer, dwID)
+		local Text_Server = LR_ACS_QiYu_Panel:Fetch("Text_Server")
+		if Text_Server then
+			Text_Server:SetText(sformat("%s@%s", realArea, realServer))
+		end
 	end
 	hComboBox.OnClick = function (m)
 		LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction)

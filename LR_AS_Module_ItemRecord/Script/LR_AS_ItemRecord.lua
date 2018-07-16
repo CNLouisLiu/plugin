@@ -893,6 +893,16 @@ function LR_AS_ItemRecord_Panel:Init()
 	local frame = self:Append("Frame", "LR_AS_ItemRecord_Panel", {title = _L["Item Statistics"], style = "NORMAL"})
 
 	--------------½ÇÉ«Ñ¡Ôñ
+	local realArea = LR_AS_ItemRecord_Panel.realArea
+	local realServer = LR_AS_ItemRecord_Panel.realServer
+	local Text_Server = self:Append("Text", frame, "Text_Server", {w = 140, h = 20, x = 20, y = 30, text = ""})
+	Text_Server:SetVAlign(1):SetHAlign(1)
+	if LR_AS_ItemRecord_Panel.dwID > 0 then
+		Text_Server:SetText(sformat("%s@%s", realArea, realServer))
+	else
+		Text_Server:SetText("")
+	end
+
 	local hComboBox = self:Append("ComboBox", frame, "ComboBox_name", {w = 140, x = 20, y = 51, text = GetClientPlayer().szName})
 	hComboBox:Enable(true)
 
@@ -913,6 +923,14 @@ function LR_AS_ItemRecord_Panel:Init()
 		local szName = data.szName
 		local dwID = data.dwID
 		LR_AS_ItemRecord_Panel:ReloadItemBox(realArea, realServer, dwID)
+		local Text_Server = LR_AS_ItemRecord_Panel:Fetch("Text_Server")
+		if Text_Server then
+			if dwID > 0 then
+				Text_Server:SetText(sformat("%s@%s", realArea, realServer))
+			else
+				Text_Server:SetText("")
+			end
+		end
 	end
 	local all_option = {szOption = _L["(ALL CHARACTERS)"],
 		fnAction = function()

@@ -305,10 +305,17 @@ function LR_AS_Equip_Panel:Init()
 		local dwID = data.dwID
 		local dwForceID = data.dwForceID
 		LR_AS_Equip_Panel:ReLoadEquipSuit(szName, realArea, realServer, dwForceID, dwID)
+		local TextServer = LR_AS_Equip_Panel:Fetch("TextServer")
+		if TextServer then
+			TextServer:SetText(sformat("%s@%s", realArea, realServer))
+		end
 	end
 	hComboBox.OnClick = function (m)
 		LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction)
 	end
+
+	local TextServer = self:Append("Text", frame, "TextServer", {w = 160, h = 30, x = 105, y = 65})
+	TextServer:SetVAlign(1):SetHAlign(1):SetText(sformat("%s@%s", LR_AS_Equip_Panel.realArea, LR_AS_Equip_Panel.realServer))
 
 	local hIconViewContent = self:Append("Handle", frame, "IconViewContent", {x = 0, y = 12, w = 700, h = 300})
 	local icon = self:Append("Image", hIconViewContent, "Icon_blank", {x = 0, y = 0, w = 45, h = 45, })
