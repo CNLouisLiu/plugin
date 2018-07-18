@@ -1161,6 +1161,12 @@ function LR.ViewCharInfoToPlayer(dwID)
 	if not me then
 		return
 	end
+	if IsRemotePlayer(me.dwID) then
+		LR.SysMsg(_L["Remote player can not use.\n"])
+		return
+	end
+
+
 	local target = nil
 	if me.IsInParty() or me.IsInRaid() then
 		if me.IsPlayerInMyParty(dwID) then

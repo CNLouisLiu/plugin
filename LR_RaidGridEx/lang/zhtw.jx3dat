@@ -571,5 +571,5 @@ data={
 	["New style 1 tip"]="新(包括刷新)的BUFF提前顯示,有BUFF消失後，其餘BUFF自動縮進",
 	["New style 2 tip"]="新(包括刷新)的BUFF置尾顯示,有BUFF消失後，其餘BUFF自動縮進",
 	["To make this function work normally, please turn off player sound because it may interrupt this sound."]="為了使這個功能正常工作，請關閉角色音效。因為當有大量角色音效觸發時，極易被打斷或覆蓋。",
-
+	["TeamBuffTool_Panel_Tip03\n"]="請及時導出自定義的BUFF數據，以防插件更新時被默認數據覆蓋。",
 }

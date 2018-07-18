@@ -183,4 +183,6 @@ data={
 
 	["Unknown quest"]="未知任務",
 	["This map can not use team notice\n"]="此地圖不能使用團隊告示\n",
+
+	["Remote player can not use.\n"]="【懶人】跨服不可使用\n",
 }
