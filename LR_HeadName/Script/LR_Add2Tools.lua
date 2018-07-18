@@ -641,24 +641,7 @@ LR_HeadName_UI = {
 					--[DOODAD_KIND.DOOR] = true, --"×À×Ó"
 					--[DOODAD_KIND.NPCDROP], --"NPCDROP"
 				}
-				for k, v in pairs (DoodadKind) do
-					m[#m+1] = {szOption = LR_HeadName.DoodadKindDescribe[k], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.DoodadKind[k] end,
-						fnAction = function()
-							LR_HeadName.DoodadKind[k] = not LR_HeadName.DoodadKind[k]
-							LR_HeadName.AddAllDoodad2AllList()
-							LR_HeadName.ReDrawAll()
-							LR_HeadName.SaveCommonSettings()
-						end,
-					}
-				end
-				m[#m+1] = {bDevide = true}
-				m[#m+1] = {szOption = _L["Show Doodad Type"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowDoodadKind end,
-					fnAction = function()
-						LR_HeadName.UsrData.bShowDoodadKind = not LR_HeadName.UsrData.bShowDoodadKind
-						LR_HeadName.SaveCommonSettings()
-						LR_HeadName.ReDrawAll()
-					end,
-				}
+
 				m[#m+1] = {szOption = _L["Enhance guding show"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bEnhanceGuDing end,
 					fnAction = function()
 						LR_HeadName.UsrData.bEnhanceGuDing = not LR_HeadName.UsrData.bEnhanceGuDing
@@ -673,6 +656,26 @@ LR_HeadName_UI = {
 						if LR_HeadName.UsrData.bShowQuestDoodad then
 							LR_HeadName.AddAllDoodad2AllList()
 						end
+						LR_HeadName.ReDrawAll()
+					end,
+				}
+				m[#m+1] = {bDevide = true}
+				m[#m+1] = {szOption = _L["Show doodad type below"], fnDisable = function() return true end}
+				for k, v in pairs (DoodadKind) do
+					m[#m+1] = {szOption = sformat(_L["[%s] kind doodad"], LR_HeadName.DoodadKindDescribe[k]), bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.DoodadKind[k] end,
+						fnAction = function()
+							LR_HeadName.DoodadKind[k] = not LR_HeadName.DoodadKind[k]
+							LR_HeadName.AddAllDoodad2AllList()
+							LR_HeadName.ReDrawAll()
+							LR_HeadName.SaveCommonSettings()
+						end,
+					}
+				end
+				m[#m+1] = {bDevide = true}
+				m[#m+1] = {szOption = _L["Show Doodad Type"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowDoodadKind end,
+					fnAction = function()
+						LR_HeadName.UsrData.bShowDoodadKind = not LR_HeadName.UsrData.bShowDoodadKind
+						LR_HeadName.SaveCommonSettings()
 						LR_HeadName.ReDrawAll()
 					end,
 				}

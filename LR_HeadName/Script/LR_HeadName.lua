@@ -7,7 +7,7 @@ local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_HeadName"
 local _L = LR.LoadLangPack(AddonPath)
 local szIniFile = sformat("%s\\UI\\LR_HeadNameItem.ini", AddonPath)
 local DEBUG = false
-local CustomVersion = "20180704"
+local CustomVersion = "20180718"	--修改此处可重置默认数据
 ---------------------------------------------------------
 local HEAD_CLIENTPLAYER = 0
 local HEAD_OTHERPLAYER = 1
@@ -838,7 +838,9 @@ function _HandleRole:TeamMarkImageSetPos()
 		if self.dwID ==  8471036 then
 			--Output("s")
 		end
-		SceneObject_SetTitleEffect(LR_HeadName._Role[dwID].nType, dwID, 0)
+		if LR_HeadName.bOn then
+			SceneObject_SetTitleEffect(LR_HeadName._Role[dwID].nType, dwID, 0)
+		end
 		if self.nTeamMark then
 			Image_TeamMark:Show()
 		else

@@ -133,7 +133,7 @@ local function GetItemScore(item)
 	if not item then
 		return 0
 	end
-	return item.nBaseScore + item.nMountsScore + item.nStrengthScore
+	return item.nBaseScore
 end
 
 function LR_PickupDead.CheckEquip(item)

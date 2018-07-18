@@ -145,8 +145,9 @@ data={
 	["This item suits you."]="这件装备适合你。",
 
 	["Pick up everything into the bag of the boss.\n"]="一键分配老板\n",
-	["Leftclick for settings and single onekey\n"]="左键进行设置和单独的分配\n",
-	["Rightclick for all boss. Ctrl + RightClick for no warning.\n"]="右键一键分配除散件的所有老板。同时按住Ctrl以跳过确认。\n",
+	["Rightclick for settings and single onekey\n"]="右键进行设置和单独的分配\n",
+	["Leftclick for all boss. Ctrl + Leftclick for no warning.\n"]="左键一键分配除散件的所有老板。同时按住Ctrl以跳过确认。\n",
+	["The aperture disappears after onekey boss\n"]="光圈在一键分配后消失。\n",
 	["Set menpai boss"]="设置门派老板",
 	["Add menpai boss"]="新建门派老板",
 	["Sure to delete menpai Boss:"]="确定要删除门派老板：",

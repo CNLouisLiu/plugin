@@ -1829,6 +1829,81 @@ end
 LR.RegisterEvent("LOADING_END", function() _GKP.LOADING_END() end)
 LR.RegisterEvent("TEAM_AUTHORITY_CHANGED", function() _GKP.TEAM_AUTHORITY_CHANGED() end)
 
+---------------------------------------------------------------
+function _GKP.GetEquipItemEquiped(nEqSubType, nDetailType)
+	local nPos = 0
+	if nEqSubType == EQUIPMENT_SUB.MELEE_WEAPON then
+		nPos = EQUIPMENT_INVENTORY.MELEE_WEAPON
+		if nDetailType == WEAPON_DETAIL.BIG_SWORD then
+			nPos = EQUIPMENT_INVENTORY.BIG_SWORD
+		end
+	elseif nEqSubType == EQUIPMENT_SUB.RANGE_WEAPON then
+		nPos = EQUIPMENT_INVENTORY.RANGE_WEAPON
+	elseif nEqSubType == EQUIPMENT_SUB.ARROW then
+		nPos = EQUIPMENT_INVENTORY.ARROW
+	elseif nEqSubType == EQUIPMENT_SUB.CHEST then
+		nPos = EQUIPMENT_INVENTORY.CHEST
+	elseif nEqSubType == EQUIPMENT_SUB.HELM then
+		nPos = EQUIPMENT_INVENTORY.HELM
+	elseif nEqSubType == EQUIPMENT_SUB.AMULET then
+		nPos = EQUIPMENT_INVENTORY.AMULET
+	elseif nEqSubType == EQUIPMENT_SUB.RING then
+		nPos = EQUIPMENT_INVENTORY.RIGHT_RING
+		return INVENTORY_INDEX.EQUIP, nPos, EQUIPMENT_INVENTORY.LEFT_RING
+	elseif nEqSubType == EQUIPMENT_SUB.WAIST then
+		nPos = EQUIPMENT_INVENTORY.WAIST
+	elseif nEqSubType == EQUIPMENT_SUB.PENDANT then
+		nPos = EQUIPMENT_INVENTORY.PENDANT
+	elseif nEqSubType == EQUIPMENT_SUB.PANTS then
+		nPos = EQUIPMENT_INVENTORY.PANTS
+	elseif nEqSubType == EQUIPMENT_SUB.BOOTS then
+		nPos = EQUIPMENT_INVENTORY.BOOTS
+	elseif nEqSubType == EQUIPMENT_SUB.BANGLE then
+		nPos = EQUIPMENT_INVENTORY.BANGLE
+	elseif nEqSubType == EQUIPMENT_SUB.WAIST_EXTEND then
+		nPos = EQUIPMENT_INVENTORY.WAIST_EXTEND
+	elseif nEqSubType == EQUIPMENT_SUB.BACK_EXTEND then
+		nPos = EQUIPMENT_INVENTORY.BACK_EXTEND
+	elseif nEqSubType == EQUIPMENT_SUB.HORSE then
+		nPos = EQUIPMENT_INVENTORY.HORSE
+	end
+
+	return INVENTORY_INDEX.EQUIP, nPos
+end
+
+local function GetItemScore(item)
+	if not item then
+		return 0
+	end
+	return item.nBaseScore
+end
+
+function _GKP.CheckEquip(item)
+	local flag = true
+	local me = GetClientPlayer()
+	if not me then
+		return false
+	end
+	local dwBox, nPos, nPos2 = LR_PickupDead.GetEquipItemEquiped(item.nSub, item.nDetail)
+
+	if item.nSub == EQUIPMENT_SUB.RING then
+		local item2, item3 = me.GetItem(dwBox, nPos), me.GetItem(dwBox, nPos2)
+		if item2 and item3 then
+			if not (item2 and (GetItemScore(item2) < GetItemScore(item)) or item3 and (GetItemScore(item3) < GetItemScore(item))) then
+				return false
+			end
+		end
+	else
+		local item2 = me.GetItem(dwBox, nPos)
+		if item2 then
+			if GetItemScore(item2) >= GetItemScore(item) then
+				return false
+			end
+		end
+	end
+
+	return true
+end
 --------------------------------
 local test_data = {
 	{8, 21844,},
@@ -1913,7 +1988,7 @@ local Open_Shield_Function = {
 	"CheckIsEquipmentEquiped", "IsSmallIron", "GroupItem", "GetCount", "GKP_BgTalk", "SaveSingleData", "DelSingleData",
 	"GetLastItemPrice", "GetItemStartPrice", "GetMoneyCol", "DistributeItem", "ShoutDistributeItemToRaid",
 	"OutputTradeList", "OutputDebtList", "SyncRecord", "SyncBoss", "SaveBill",
-	"LoadGKPList", "CreateNewBill", "InsertSetBossMenu", "InsertSetPriceMenu", "LoadBill",
+	"LoadGKPList", "CreateNewBill", "InsertSetBossMenu", "InsertSetPriceMenu", "LoadBill", "CheckEquip",
 	"OneKey2Self", "OneKey2EquipmentBoss", "OneKey2MaterialBoss", "OneKey2SmallIronBoss", "Onekey2MenPaiBoss", "OneKey2AllBoss",
 }
 for k, v in pairs(Open_Shield_Function) do

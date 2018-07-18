@@ -344,5 +344,6 @@ data={
 	["LR Headname onekey shield npc"]="头顶增强一键屏蔽NPC",
 	["LR Headname onekey shield player"]="头顶增强一键屏蔽玩家",
 
-
+	["Show doodad type below"]="显示以下类型的物品",
+	["[%s] kind doodad"]="类型为【%s】的物品",
 }

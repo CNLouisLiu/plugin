@@ -783,7 +783,7 @@ function _Equip.EQUIP_ITEM_UPDATE()
 	if me.bFightState then
 		return
 	end
-	LR.DelayCall(100, function()
+--[[	LR.DelayCall(100, function()
 		if not _Equip.bLock then
 			_Equip.GetAllEquipBox()
 			_Equip.GetEquipScore()
@@ -795,7 +795,7 @@ function _Equip.EQUIP_ITEM_UPDATE()
 				LR.CloseDB(DB)
 			end
 		end
-	end)
+	end)]]
 end
 
 function _Equip.FIRST_LOADING_END(DB)

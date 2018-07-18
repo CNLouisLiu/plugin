@@ -20,6 +20,7 @@ LR_GKP_Loot_Base = class()
 function LR_GKP_Loot_Base.OnFrameCreate()
 	this:RegisterEvent("UI_SCALED")
 	this:RegisterEvent("TEAM_AUTHORITY_CHANGED")
+	this:RegisterEvent("EQUIP_CHANGE")
 	this:Lookup("Btn_Close").OnLButtonClick = function()
 		local _, _, dwDoodadID = sfind(this:GetRoot():GetName(), "LR_GKP_Loot_(%d+)")
 		dwDoodadID = tonumber(dwDoodadID)
@@ -39,6 +40,8 @@ function LR_GKP_Loot_Base.OnEvent(szEvent)
 		LR_GKP_Loot.UpdateAnchor(this)
 	elseif szEvent == "TEAM_AUTHORITY_CHANGED" then
 		LR_GKP_Loot.TEAM_AUTHORITY_CHANGED()
+	elseif szEvent == "EQUIP_CHANGE" then
+		LR_GKP_Loot.EQUIP_CHANGE()
 	end
 end
 
@@ -87,6 +90,8 @@ end
 ---------------------------------------------------------------
 ---拾取面板
 ---------------------------------------------------------------
+local ONE_KEY_CACHE = {}
+
 LR_GKP_Loot = CreateAddon("LR_GKP_Loot")
 LR_GKP_Loot.UsrData = {
 	Anchor = {s = "CENTER", r = "CENTER",  x = 500, y = 500},
@@ -125,7 +130,7 @@ function LR_GKP_Loot.DrawDistance()
 		Handle_Compass:Lookup("Image_Player"):SetRotate( - me.nFaceDirection / 128 * pi)
 	end
 	-- 物品位置
-	local nRotate, nRadius = 0, 19
+	local nRotate, nRadius = 0, 18
 	if me and doodad and nDistance > 0 then
 		-- 特判角度
 		if me.nX == doodad.nX then
@@ -144,8 +149,8 @@ function LR_GKP_Loot.DrawDistance()
 			nRotate = pi + nRotate
 		end
 	end
-	local nX = nRadius + nRadius * cos(nRotate) - 5.0
-	local nY = nRadius - nRadius * sin(nRotate) - 5.0
+	local nX = 20 + nRadius * cos(nRotate) - 4.5
+	local nY = 20 - nRadius * sin(nRotate) - 4.5
 	Handle_Compass:Lookup("Image_PointGreen"):SetRelPos(nX, nY)
 	Handle_Compass:FormatAllItemPos()
 end
@@ -216,6 +221,20 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 	end
 
 	local Btn_OneKeyBoss = LR.AppendUI("UIButton", frame, "Btn_OneKeyBoss" , {x = 65 , y = 4 , w = 26 , h = 26, ani = {"ui\\Image\\UICommon\\YiRong15.UITex", 19, 20, 21}, })
+	local xxx = Btn_OneKeyBoss:GetSelf():Lookup("","")
+	local Handle_HighLight = xxx:AppendItemFromIni(sformat("%s\\UI\\PSS.ini", AddonPath), "Handle_HighLight", "Handle_HighLight")
+	local w, h = Handle_HighLight:Lookup("Handle_HighLight_Fixed"):GetSize()	--SFX原始大小
+	local width, height = 26, 26
+	local fSFXX, fSFXY = width / w, height / h
+	Handle_HighLight:Lookup("SFX_HighLight"):Get3DModel():SetScaling(fSFXX, fSFXY, fSFXX)
+	Handle_HighLight:Lookup("SFX_HighLight"):SetRelPos(width/2, height/2)
+	Handle_HighLight:FormatAllItemPos()
+	Handle_HighLight:Hide()
+	xxx:FormatAllItemPos()
+	if LR_GKP_Base.IsDistributor() and not ONE_KEY_CACHE[dwDoodadID] then
+		Handle_HighLight:Show()
+	end
+
 	--Btn_OneKeyBoss:RegisterEvent(304)	--包含左键单击，右键单击，鼠标进出
 	Btn_OneKeyBoss.OnRClick = function()
 		if not LR_GKP_Base.CheckIsDistributor(true) then
@@ -286,31 +305,39 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 	end
 
 	Btn_OneKeyBoss.OnClick = function()
-		if IsCtrlKeyDown() then
-			LR_GKP_Base.OneKey2AllBoss(dwDoodadID)
-		else
-			local msg = {
-				szMessage = _L["Are you sure to pick up items into the bag of all boss?"],
-				szName = "one key",
-				fnAutoClose = function() return false end,
-				{szOption = _L["Yes"], fnAction = function() LR_GKP_Base.OneKey2AllBoss(dwDoodadID) end, },
-				{szOption = _L["No"], fnAction = function()  end,},
-			}
-			MessageBox(msg)
+		if LR_GKP_Base.CheckBillExist() then
+			if IsCtrlKeyDown() then
+				LR_GKP_Base.OneKey2AllBoss(dwDoodadID)
+			else
+				local msg = {
+					szMessage = _L["Are you sure to pick up items into the bag of all boss?"],
+					szName = "one key",
+					fnAutoClose = function() return false end,
+					{szOption = _L["Yes"], fnAction = function()
+						LR_GKP_Base.OneKey2AllBoss(dwDoodadID)
+						ONE_KEY_CACHE[dwDoodadID] = true
+						Handle_HighLight:Hide()
+					end, },
+					{szOption = _L["No"], fnAction = function()  end,},
+				}
+				MessageBox(msg)
+			end
 		end
 	end
 	Btn_OneKeyBoss.OnEnter = function()
 		local x, y =  this:GetAbsPos()
 		local w, h = this:GetSize()
 		local szXml = {}
-		szXml[#szXml + 1] = GetFormatText(_L["Pick up everything into the bag of the boss.\n"])
-		szXml[#szXml + 1] = GetFormatText(_L["Rightclick for settings and single onekey\n"])
-		szXml[#szXml + 1] = GetFormatText(_L["Leftclick for all boss. Ctrl + RightClick for no warning.\n"])
+		szXml[#szXml + 1] = GetFormatText(_L["Pick up everything into the bag of the boss.\n"], 2)
+		szXml[#szXml + 1] = GetFormatText(_L["Leftclick for all boss. Ctrl + Leftclick for no warning.\n"], 5)
+		szXml[#szXml + 1] = GetFormatText(_L["Rightclick for settings and single onekey\n"], 5)
+		szXml[#szXml + 1] = GetFormatText(_L["The aperture disappears after onekey boss\n"], 30)
 		OutputTip(tconcat(szXml), 350, {x, y, 0, 0})
 	end
 	Btn_OneKeyBoss.OnLeave = function()
 		HideTip()
 	end
+
 
 	LR_GKP_Loot:LoadItemBox(dwDoodadID, items)
 	LR.AppendAbout(LR_GKP_Loot, frame:Lookup("Wnd_Button"))
@@ -477,11 +504,16 @@ function LR_GKP_Loot:LoadOneItem(parent, item, dwDoodadID)
 
 	local box = LR.AppendUI("Box", Handle_Item, "Box_Item_" .. v.dwID, {w = 44, h = 44})
 	box:SetRelPos(8, 6)
-	UpdateBoxObject(box:GetSelf(), UI_OBJECT_ITEM_ONLY_ID, v.dwID)
-	--box:SetOverText(1, v.nStackNum)
-	--box:SetOverTextFontScheme(1, 15)
-	--box:SetOverTextPosition(1, ITEM_POSITION.LEFT_TOP)
-	--UpdateBoxObject(box:GetSelf(), UI_OBJECT_ITEM_INFO, 1, v.dwTabType, v.dwIndex)
+	if v.dwID then
+		UpdateBoxObject(box:GetSelf(), UI_OBJECT_ITEM_ONLY_ID, v.dwID)
+	else
+		UpdateBoxObject(box:GetSelf(), UI_OBJECT_ITEM_INFO, 1, v.dwTabType, v.dwIndex)
+		box:SetOverText(1, v.nStackNum)
+		box:SetOverTextFontScheme(1, 15)
+		box:SetOverTextPosition(1, IITEM_POSITION.RIGHT_BOTTOM)
+	end
+
+	--
 	local Text_Item_Name = LR.AppendUI("Text", Handle_Item, "Text_Item_Name_" .. v.dwID, {w = 140, h = 48, x = 65, y = 4, eventid = 0, font = 15})
 	Text_Item_Name:SetHAlign(0)
 	Text_Item_Name:SetVAlign(1)
@@ -554,6 +586,19 @@ function LR_GKP_Loot:LoadOneItem(parent, item, dwDoodadID)
 							_UI[dwDoodadID]["imageFit_Item_".. v.dwID]:SetAlpha(180)
 						end
 						HideTip()
+					end
+
+					if LR_GKP_Base.CheckEquip(itemInfo) then
+						--local xxx = fitHandle:GetSelf():Lookup("","")
+						local Handle_HighLight = fitHandle:AppendItemFromIni(sformat("%s\\UI\\PSS.ini", AddonPath), "Handle_HighLight", "Handle_HighLight")
+						local w, h = Handle_HighLight:Lookup("Handle_HighLight_Fixed"):GetSize()	--SFX原始大小
+						local width, height = 26, 26
+						local fSFXX, fSFXY = width / w, height / h
+						Handle_HighLight:Lookup("SFX_HighLight"):Get3DModel():SetScaling(fSFXX, fSFXY, fSFXX)
+						Handle_HighLight:Lookup("SFX_HighLight"):SetRelPos(width/2, height/2)
+						Handle_HighLight:FormatAllItemPos()
+						Handle_HighLight:Show()
+						fitHandle:FormatAllItemPos()
 					end
 				end
 			end
@@ -795,6 +840,15 @@ function LR_GKP_Loot.TEAM_AUTHORITY_CHANGED()
 				LR_GKP_Loot.Open(dwDoodadID, szDoodadName, items)
 			end
 		end
+	end
+end
+
+function LR_GKP_Loot.EQUIP_CHANGE()
+	local _, _, dwDoodadID = sfind(this:GetRoot():GetName(), "LR_GKP_Loot_(%d+)")
+	dwDoodadID = tonumber(dwDoodadID)
+	local szDoodadName, items = LR_GKP_Base.GetItemInDoodad(dwDoodadID)
+	if #items > 0 then
+		LR_GKP_Loot.Open(dwDoodadID, szDoodadName, items)
 	end
 end
 
