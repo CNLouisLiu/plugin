@@ -3,6 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 local g2d, d2g = LR.StrGame2DB, LR.StrDB2Game
+local pi, cos, sin = math.pi, math.cos, math.sin
 ---------------------------------------------------------------
 local AddonPath = "Interface\\LR_Plugin\\LR_GKP"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_GKP\\"
@@ -27,6 +28,10 @@ function LR_GKP_Loot_Base.OnFrameCreate()
 	end
 
 	LR_GKP_Loot.UpdateAnchor(this)
+end
+
+function LR_GKP_Loot_Base.OnFrameBreathe()
+	LR_GKP_Loot.DrawDistance()
 end
 
 function LR_GKP_Loot_Base.OnEvent(szEvent)
@@ -90,6 +95,60 @@ local CustomVersion = "20180102"
 RegisterCustomData("LR_GKP_Loot.UsrData", CustomVersion)
 
 local ANIMATE_SALE = {}
+
+function LR_GKP_Loot.DrawDistance()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local _, _, dwDoodadID = sfind(this:GetName(), "LR_GKP_Loot_(%d+)")
+	dwDoodadID = tonumber(dwDoodadID)
+
+	local doodad = GetDoodad(dwDoodadID)
+	local Wnd_Title = this:Lookup("Wnd_Title")
+	local Handle_Compass = Wnd_Title:Lookup("",""):Lookup("Handle_Compass")
+	if not doodad then
+		Handle_Compass:Hide()
+	else
+		Handle_Compass:Show()
+	end
+
+	-- 目标距离
+	local nDistance = 0
+	if me and doodad then
+		nDistance = LR.GetDistance(doodad)
+	end
+	Handle_Compass:Lookup("Text_Distance"):SetText(sformat("%0.2f", nDistance))
+	-- 自身面向
+	if me then
+		Handle_Compass:Lookup("Image_Player"):Show()
+		Handle_Compass:Lookup("Image_Player"):SetRotate( - me.nFaceDirection / 128 * pi)
+	end
+	-- 物品位置
+	local nRotate, nRadius = 0, 19
+	if me and doodad and nDistance > 0 then
+		-- 特判角度
+		if me.nX == doodad.nX then
+			if me.nY > doodad.nY then
+				nRotate = pi / 2
+			else
+				nRotate = - pi / 2
+			end
+		else
+			nRotate = math.atan((me.nY - doodad.nY) / (me.nX - doodad.nX))
+		end
+		if nRotate < 0 then
+			nRotate = nRotate + pi
+		end
+		if doodad.nY < me.nY then
+			nRotate = pi + nRotate
+		end
+	end
+	local nX = nRadius + nRadius * cos(nRotate) - 5.0
+	local nY = nRadius - nRadius * sin(nRotate) - 5.0
+	Handle_Compass:Lookup("Image_PointGreen"):SetRelPos(nX, nY)
+	Handle_Compass:FormatAllItemPos()
+end
 
 function LR_GKP_Loot.UpdateAnchor(frame)
 	frame:SetRelPos(LR_GKP_Loot.UsrData.Anchor.x, LR_GKP_Loot.UsrData.Anchor.y)
@@ -156,9 +215,9 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 		HideTip()
 	end
 
-	local Btn_OneKeyBoss = LR.AppendUI("UIButton", frame, "Btn_OneKeyBoss" , {x = 172 , y = 4 , w = 26 , h = 26, ani = {"ui\\Image\\UICommon\\YiRong15.UITex", 19, 20, 21}, })
+	local Btn_OneKeyBoss = LR.AppendUI("UIButton", frame, "Btn_OneKeyBoss" , {x = 65 , y = 4 , w = 26 , h = 26, ani = {"ui\\Image\\UICommon\\YiRong15.UITex", 19, 20, 21}, })
 	--Btn_OneKeyBoss:RegisterEvent(304)	--包含左键单击，右键单击，鼠标进出
-	Btn_OneKeyBoss.OnClick = function()
+	Btn_OneKeyBoss.OnRClick = function()
 		if not LR_GKP_Base.CheckIsDistributor(true) then
 			return
 		end
@@ -226,7 +285,7 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 		PopupMenu(menu)
 	end
 
-	Btn_OneKeyBoss.OnRClick = function()
+	Btn_OneKeyBoss.OnClick = function()
 		if IsCtrlKeyDown() then
 			LR_GKP_Base.OneKey2AllBoss(dwDoodadID)
 		else
@@ -245,8 +304,8 @@ function LR_GKP_Loot:Init(dwDoodadID, szDoodadName, items)
 		local w, h = this:GetSize()
 		local szXml = {}
 		szXml[#szXml + 1] = GetFormatText(_L["Pick up everything into the bag of the boss.\n"])
-		szXml[#szXml + 1] = GetFormatText(_L["Leftclick for settings and single onekey\n"])
-		szXml[#szXml + 1] = GetFormatText(_L["Rightclick for all boss. Ctrl + RightClick for no warning.\n"])
+		szXml[#szXml + 1] = GetFormatText(_L["Rightclick for settings and single onekey\n"])
+		szXml[#szXml + 1] = GetFormatText(_L["Leftclick for all boss. Ctrl + RightClick for no warning.\n"])
 		OutputTip(tconcat(szXml), 350, {x, y, 0, 0})
 	end
 	Btn_OneKeyBoss.OnLeave = function()

@@ -178,6 +178,11 @@ function _FBList.GetFBList()
 end
 
 ------↓↓↓保存自己的副本CD数据
+function _FBList.SaveData2(DB)
+	LR.DelayCall(100, function() _FBList.GetFBList() end)
+	_FBList.SaveData(DB)
+end
+
 function _FBList.SaveData(DB)
 	if not LR_AS_Base.UsrData.bRecord then
 		return
@@ -186,6 +191,7 @@ function _FBList.SaveData(DB)
 	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
+
 	local serverInfo = {GetUserServer()}
 	local realArea, realServer = serverInfo[5], serverInfo[6]
 	local dwID = me.dwID
@@ -218,12 +224,13 @@ function _FBList.LoadAllUsrData(DB)
 	_FBList.AllUsrData = clone(AllUsrData)
 
 	--将自己的数据加入列表
-	_FBList.GetFBList()
-	--将自己的数据加入列表
 	local ServerInfo = {GetUserServer()}
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, GetClientPlayer().dwID)
 	_FBList.AllUsrData[szKey] = clone(_FBList.SelfData)
+
+	--将自己的数据加入列表
+	LR.DelayCall(500, function() _FBList.GetFBList() end)
 end
 
 ------↓↓↓对服务器获取副本CD事件的响应
@@ -282,9 +289,6 @@ end
 function _FBList.FIRST_LOADING_END()
 	_FBList.LoadCommonSetting()
 	_FBList.GetFBList()
-	LR.DelayCall(300, function()
-		_FBList.GetFBList()
-	end)
 end
 
 function _FBList.ResetData()
@@ -1014,7 +1018,7 @@ LR_AS_FBList.LoadCommonSetting = _FBList.LoadCommonSetting
 ------------------------------------------
 --注册模块
 LR_AS_Module.FBList = {}
-LR_AS_Module.FBList.SaveData = _FBList.SaveData
+LR_AS_Module.FBList.SaveData = _FBList.SaveData2
 LR_AS_Module.FBList.LoadData = _FBList.LoadAllUsrData
 LR_AS_Module.FBList.ResetDataMonday = _FBList.ResetDataMonday
 LR_AS_Module.FBList.ResetDataEveryDay = _FBList.ResetDataEveryDay

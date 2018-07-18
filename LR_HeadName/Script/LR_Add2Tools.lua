@@ -1103,4 +1103,6 @@ tinsert(LR_TOOLS.menu, LR_HeadName_UI.menu)
 ---¿ì½Ý¼ü
 -----------------------------
 LR.AddHotKey(_L["LR Headname"], function() LR_TOOLS:OpenPanel(_L["LR Headname"]) end)
+LR.AddHotKey(_L["LR Headname onekey shield npc"], function() LR_HeadName.OneKeyShieldNpc() end)
+LR.AddHotKey(_L["LR Headname onekey shield player"], function() LR_HeadName.OneKeyShieldPlayer() end)
 

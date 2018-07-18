@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local VERSION = "20180704"
+local VERSION = "20180718"		--修改此项可重置为默认数据
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
@@ -1629,6 +1629,13 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 				Add_Effect()
 			end,
 		}
+		local SOUND_TYPE = {
+			g_sound.OpenAuction,
+			g_sound.CloseAuction,
+			g_sound.FinishAchievement,
+			g_sound.PickupRing,
+			g_sound.PickupWater,
+		}
 		for nSoundType = 1, 5, 1 do
 			m[#m + 1] = {szOption = sformat(_L["Sound type %d"], nSoundType), bCheck = true, bMCheck = true, bChecked = function() return buff.nSoundType == nSoundType end,
 				fnAction = function()
@@ -1636,18 +1643,27 @@ function LR_Team_Buff_Setting_Panel:ini(szGroupName, buff)
 					LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
 					LR_TeamBuffTool_Panel:DrawOneBuffBox(szGroupName, buff)
 					Add_Effect()
-					local SOUND_TYPE = {
-						g_sound.OpenAuction,
-						g_sound.CloseAuction,
-						g_sound.FinishAchievement,
-						g_sound.PickupRing,
-						g_sound.PickupWater,
-					}
+					PlaySound(SOUND.UI_SOUND, SOUND_TYPE[nSoundType])
+				end,
+				szIcon = "ui\\Image\\uitga\\voice.UITex",
+				nFrame =21,
+				nMouseOverFrame = 22,
+				szLayer = "ICON_RIGHT",
+				fnClickIcon = function ()
 					PlaySound(SOUND.UI_SOUND, SOUND_TYPE[nSoundType])
 				end,
 			}
 		end
 		PopupMenu(m)
+	end
+	ComboBox_Sound.OnEnter = function()
+		local x, y = this:GetAbsPos()
+		local szXml = {}
+		szXml[#szXml + 1] = GetFormatText(_L["To make this function work normally, please turn off player sound because it may interrupt this sound."])
+		OutputTip(tconcat(szXml), 320, {x, y, 0, 0})
+	end
+	ComboBox_Sound.OnLeave = function()
+		HideTip()
 	end
 	_UI[szKey]["ComboBox_Sound"] = ComboBox_Sound
 end

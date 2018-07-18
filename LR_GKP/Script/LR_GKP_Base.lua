@@ -1880,8 +1880,6 @@ function LR_GKP_Base.Test2(n, dwDoodadID)
 	LR_GKP_Loot.Open(dwID, "≤‚ ‘∂‘œÛ", items)
 end
 
-
-
 function LR_GKP_Base.Test(n, dwDoodadID)
 	local dwID = dwDoodadID
 	if not dwID then

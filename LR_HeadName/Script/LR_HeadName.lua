@@ -503,7 +503,11 @@ function _HandleRole:DrawName()
 			if self.nTeamMark and LR_HeadName.UsrData.bShowTeamMark and LR_HeadName.UsrData.bHightLightTeamMark then
 				local font = 207
 				if LR_HeadName._Role[dwID]:GetShip() == "Enemy" then
-					font = 207
+					font = 99
+					local _, _dwID = GetClientPlayer().GetTarget()
+					if _dwID == dwID then
+						font = 2
+					end
 				end
 				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30- del_height -nOffset)}, font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
 			else
@@ -3091,22 +3095,24 @@ LR.RegisterEvent("QUEST_DATA_UPDATE", function() LR_HeadName.QUEST_DATA_UPDATE()
 LR.RegisterEvent("QUEST_CANCELED", function() LR_HeadName.QUEST_CANCELED() end)
 LR.RegisterEvent("QUEST_ACCEPTED", function() LR_HeadName.QUEST_ACCEPTED() end)
 ------------------------------------------------------------------------------------------
-function LR_HeadName.PARTY_SET_MARK()
-	if not LR_HeadName.UsrData.bShowTeamMark then
-		return
-	end
-	local team = GetClientTeam()
-	if team then
-		for dwID, v in pairs(_tPartyMark) do
-			if LR_HeadName._Role[dwID] then
-				local _h = LR_HeadName._Role[dwID]:GetHandle()
-				if _h then
-					_h:SetTeamMark(nil):DrawName()
-				end
+function LR_HeadName.ClearPartyMark()
+	local temp = clone(_tPartyMark)
+	_tPartyMark = {}
+	for dwID, v in pairs(temp) do
+		if LR_HeadName._Role[dwID] then
+			local _h = LR_HeadName._Role[dwID]:GetHandle()
+			if _h then
+				_h:SetTeamMark(nil):DrawName()
 			end
 		end
-		_tPartyMark = team.GetTeamMark() or {}
-		for dwID , v in pairs(_tPartyMark) do
+	end
+end
+
+function LR_HeadName.DrawPartyMark()
+	local team = GetClientTeam()
+	if team then
+		local temp = team.GetTeamMark() or {}
+		for dwID , v in pairs(temp) do
 			if LR_HeadName._Role[dwID] then
 				local _h = LR_HeadName._Role[dwID]:GetHandle()
 				if _h then
@@ -3114,10 +3120,43 @@ function LR_HeadName.PARTY_SET_MARK()
 				end
 			end
 		end
+		_tPartyMark = clone(temp)
 	end
 end
 
+function LR_HeadName.PARTY_SET_MARK()
+	if not LR_HeadName.UsrData.bShowTeamMark then
+		return
+	end
+	local team = GetClientTeam()
+	if team then
+		LR_HeadName.ClearPartyMark()
+		LR_HeadName.DrawPartyMark()
+	end
+end
+
+function LR_HeadName.PARTY_DELETE_MEMBER()
+	local dwTeamID = arg0
+	local dwMemberID = arg1
+	local szName = arg2
+	local nGroupIndex = arg3
+
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	if dwMemberID == me.dwID then
+		LR_HeadName.ClearPartyMark()
+	end
+end
+
+function LR_HeadName.PARTY_DISBAND()
+	LR_HeadName.ClearPartyMark()
+end
+
 LR.RegisterEvent("PARTY_SET_MARK", function() LR_HeadName.PARTY_SET_MARK() end)
+LR.RegisterEvent("PARTY_DELETE_MEMBER", function() LR_HeadName.PARTY_DELETE_MEMBER() end)
+LR.RegisterEvent("PARTY_DISBAND", function() LR_HeadName.PARTY_DISBAND() end)
 ------------------------------------------------------------------------------------------
 function LR_HeadName.ResetSettings()
 	LR_HeadName.Agriculture = clone(LR_HeadName.default.Agriculture)
@@ -3281,9 +3320,6 @@ end
 
 function LR_HeadName.LOADING_END()
 	LR_HeadName.AllList[GetClientPlayer().dwID] = {dwID = GetClientPlayer().dwID, nType = TARGET.PLAYER, Quest_List = {}, }
-	if not FIRST_LOADING_END then
-		return
-	end
 	local me = GetClientPlayer()
 	if not me then
 		return
@@ -3393,8 +3429,15 @@ function LR_HeadName.ON_READ_BOOK()
 		LR_HeadName.Check(k, TARGET.DOODAD, true)
 	end
 end
-
-
 LR.RegisterEvent("ON_READ_BOOK",function() LR_HeadName.ON_READ_BOOK() end)
 
+function LR_HeadName.OneKeyShieldNpc()
+	LR_HeadName.UsrData.NPC.bShow = not LR_HeadName.UsrData.NPC.bShow
+	LR_HeadName.ReDrawAll()
+end
+
+function LR_HeadName.OneKeyShieldPlayer()
+	LR_HeadName.UsrData.Player.bShow = not LR_HeadName.UsrData.Player.bShow
+	LR_HeadName.ReDrawAll()
+end
 

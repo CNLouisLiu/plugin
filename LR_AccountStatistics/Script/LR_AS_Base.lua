@@ -53,11 +53,13 @@ LR_AS_Data.ExamData = {}
 ---LoadData
 ---------------------------------
 function LR_AS_Base.LoadData()
+	Log("[LR] AS load begin\n")
 	local _begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "AS_BASE_LOAD_DATA_05DC638DAB8A11477BDFF035C167AFC9")
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].LoadData then
+			--Log(sformat("%s\n", v))
 			LR_AS_Module[v].LoadData(DB)
 		end
 	end
@@ -79,6 +81,7 @@ function LR_AS_Base.SaveData()
 	local DB = LR.OpenDB(path, "AS_BASE_SAVE_DATA_0D9F801993115A3C7F3EA6267F0AAA9C")
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].SaveData then
+			--Log(sformat("%s\n", v))
 			LR_AS_Module[v].SaveData(DB)
 		end
 	end

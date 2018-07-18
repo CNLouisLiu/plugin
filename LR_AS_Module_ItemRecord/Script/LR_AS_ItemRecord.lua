@@ -2083,6 +2083,7 @@ function _Hook.ON_FRAME_CREATE()
 	elseif szName == "OptionPanel" then
 		if GetTickCount() - _option_time > 10 * 1000 then
 			_option_time = GetTickCount()
+			Log("ITEM_RECORD_ESC\n")
 			LR_AS_Base.LoadData()
 			_Mail.CheckAllMail()
 		end

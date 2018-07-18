@@ -341,5 +341,8 @@ data={
 	--20180716add--
 	["High Light Team Mark"]="高亮团队图标名字",
 	["Show life per in name"]="在名字中显示血量百分比",
+	["LR Headname onekey shield npc"]="头顶增强一键屏蔽NPC",
+	["LR Headname onekey shield player"]="头顶增强一键屏蔽玩家",
+
 
 }

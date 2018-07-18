@@ -1233,6 +1233,9 @@ function _QY.AddPageButton()
 		HideTip()
 	end
 
+	local Text_Tip = LR.AppendUI("Text", page:Lookup("",""), "Text_Tip", {w = 100, h = 20, x = 20, y = 515, text = ""})
+	Text_Tip:SetText(_L["Tip_QY"]):SetFontScheme(2)
+
 	LR_AS_Base.AddButton(page, "btn_5", _L["Show Group"], 340, 555, 110, 36, function() LR_AS_Group.PopupUIMenu() end)
 	LR_AS_Base.AddButton(page, "btn_4", _L["Open qy history panel"], 470, 555, 110, 36, function() QY_History_Panel:Open() end)
 	LR_AS_Base.AddButton(page, "btn_3", _L["QiYu Detail"], 600, 555, 110, 36, function() _QY.OpenQYDetail_Panel() end)

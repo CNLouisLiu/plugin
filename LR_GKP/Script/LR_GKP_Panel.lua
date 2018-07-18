@@ -456,10 +456,10 @@ function LR_GKP_Panel:LoadGKPItemBox()
 		local dwTabType, dwIndex = v.dwTabType, v.dwIndex
 		local itemInfo = GetItemInfo(dwTabType, dwIndex)
 		local Handle_Item = LR.AppendUI("Handle", handleTradeList, "Handle_Item" .. k, {x = nn, h = 30, w = nWidth[2], eventid = 0})
-		Handle_Item:SetHandleStyle(3)
+		--Handle_Item:SetHandleStyle(3)
 
 		if v.dwTabType ~= 0 then
-			local box = LR.AppendUI("Box", Handle_Item, sformat("Box_Item_%d_%d", v.dwTabType, v.dwIndex), {w = 30, h = 30})
+			local box = LR.AppendUI("Box", Handle_Item, sformat("Box_Item_%d_%d", v.dwTabType, v.dwIndex), {w = 30, h = 30, x = 0, y = 0})
 			UpdateBoxObject(box:GetSelf(), UI_OBJECT_ITEM_INFO, 1, v.dwTabType, v.dwIndex)
 			if v.nStackNum > 1 then
 				box:SetOverText(1, v.nStackNum)
@@ -471,19 +471,19 @@ function LR_GKP_Panel:LoadGKPItemBox()
 			box:OnItemMouseEnter(function() Image_Hover:Show()	end)
 			box:OnItemMouseLeave(function() Image_Hover:Hide() end)]]
 		else
-			local box = LR.AppendUI("Image", Handle_Item, "Image_Item_Icon" .. k, {h = 30, w = 30, eventid = 0})
+			local box = LR.AppendUI("Image", Handle_Item, "Image_Item_Icon" .. k, {h = 30, w = 30, x = 0, y = 0, eventid = 0})
 			box:FromIconID(582)
 		end
 
-		local Text_Item = LR.AppendUI("Text", Handle_Item, "Text_Item" .. k, {h = 30, w = 40, text = v.szName, eventid = 0})
-		Text_Item:SetHAlign(1)
-		Text_Item:SetVAlign(0)
+		local Text_Item = LR.AppendUI("Text", Handle_Item, "Text_Item" .. k, {h = 30, w = 120, x = 33, y = 0, text = v.szName, eventid = 0})
 		if itemInfo then
 			Text_Item:SetFontColor(GetItemFontColorByQuality(itemInfo.nQuality))
 		end
+		--Handle_Item:FormatAllItemPos()
+		--local w_ItemName, h_ItemName = Text_Item:GetTextExtent()
+		Text_Item:SetVAlign(1):SetHAlign(0)
+		--Text_Item:SetSize(w_ItemName, 30):SetVAlign(1):SetHAlign(0)
 		Handle_Item:FormatAllItemPos()
-		local w_ItemName, h_ItemName = Text_Item:GetTextExtent()
-		Text_Item:SetSize(w_ItemName, 30):SetVAlign(1):SetHAlign(1)
 		nn = nn + nWidth[2]
 
 		--œ‘ æπ∫¬Ú’ﬂ
