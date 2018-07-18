@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local VERSION = "20180718"		--修改此项可重置为默认数据
+local VERSION = "20180718a"		--修改此项可重置为默认数据
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
@@ -229,7 +229,8 @@ LR_TeamBuffTool_Panel.UsrData = {
 LR_TeamBuffTool_Panel.bOnCollect = false
 LR_TeamBuffTool_Panel.bCollectHideBuff = false
 LR_TeamBuffTool_Panel.bCollectOnlyFromNpc = false
-LR_TeamBuffTool_Panel.bConnectSysRaidPanel = false
+LR_TeamBuffTool_Panel.bConnectSysRaidPanel = true
+RegisterCustomData("LR_TeamBuffTool_Panel.bConnectSysRaidPanel", VERSION)
 
 LR_TeamBuffTool_Panel.szChoose = "SelfBuff"
 LR_TeamBuffTool_Panel.szChooseGroupName = ""
@@ -330,7 +331,6 @@ function LR_TeamBuffTool_Panel:Init()
 		HideTip()
 	end
 
-
 	local ComboBox_Import = LR.AppendUI("ComboBox", frame, "ComboBox_Import", {w = 150, h = 30, x = 20, y = 51, text = _L["Import/Export data"]})
 	ComboBox_Import.OnClick = function(m)
 		m[#m + 1] = {szOption = _L["Export data"], fnAction = function() LR_TeamBuffTool.Export() end}
@@ -348,6 +348,19 @@ function LR_TeamBuffTool_Panel:Init()
 				end
 			end}
 		PopupMenu(m)
+	end
+
+	local Btn_FAQ2 = self:Append("UIButton", frame, "Btn_FAQ2" , {x = 180 , y = 55 , w = 20 , h = 20, ani = {"ui\\Image\\UICommon\\CommonPanel2.UITex", 48, 50, 54}, })
+	Btn_FAQ2.OnEnter = function()
+		local tTip = {}
+		tTip[#tTip + 1] = GetFormatText(_L["TeamBuffTool_Panel_Tip03\n"], 2)
+
+		local fx, fy = this:GetAbsPos()
+		local nW, nH = this:GetSize()
+		OutputTip(tconcat(tTip), 320, {fx, fy, nW, nH})
+	end
+	Btn_FAQ2.OnLeave = function()
+		HideTip()
 	end
 
 	local CheckBox_EnableCollect = LR.AppendUI("CheckBox", frame, "ComboBox_Import", {w = 150, h = 30, x = 740, y = 51, text = _L["Begin buff collect"]})
@@ -1306,13 +1319,13 @@ function LR_TeamBuffTool.BUFF_UPDATE()
 	--LR_TeamBuffTool_Panel:LoadSearchResultBox()
 end
 
-function LR_TeamBuffTool.LOGIN_GAME()
+function LR_TeamBuffTool.FIRST_LOADING_END()
 	LR_TeamBuffTool.LoadData()
 	LR_TeamBuffTool.LoadBuffCache()
 end
 
 LR.RegisterEvent("BUFF_UPDATE", function() LR_TeamBuffTool.BUFF_UPDATE() end)
-LR.RegisterEvent("LOGIN_GAME", function() LR_TeamBuffTool.LOGIN_GAME() end)
+LR.RegisterEvent("FIRST_LOADING_END", function() LR_TeamBuffTool.FIRST_LOADING_END() end)
 
 ---------------------------------------------------------------
 ---ini配置文件多重窗口 单BUFF设置

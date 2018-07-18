@@ -252,7 +252,7 @@ data = {
 	{	name = "Handle_BossFocus",
 		nType = "PSS",
 		Parent = "Handle_RoleDummy",
-		path = "interface/LR_Plugin/LR_RaidGridEx/UI/NewStyle5/PSS.ini",
+		path = "interface/LR_Plugin/LR_RaidGridEx/UI/PSS.ini",
 		section = "Handle_BossFocus",
 	},
 	{	name = "Handle_Debuffs",

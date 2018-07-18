@@ -99,8 +99,8 @@ data={
 	["Set material boss"]="設置材料老闆",
 	["Set equipment boss"]="設置散件老闆",
 
-	["Error: Doodad is not exesit.\n"]="錯誤：拾取包不存在。\n",
-	["Error: Item is not exesit.\n"]="錯誤：物品不存在。\n",
+	["Error: Doodad is not exist.\n"]="錯誤：拾取包不存在。\n",
+	["Error: Item is not exist.\n"]="錯誤：物品不存在。\n",
 	["%s is not in party.\n"]="[%s] 不在團隊中。\n",
 	["%s is not online.\n"]="[%s] 不在線。\n",
 	["%s is not in the same map with you.\n"]="[%s] 和你不在同一個地圖。\n",
@@ -165,4 +165,7 @@ data={
 	["--Start bidding->"]="--開始競拍->",
 	["Start price:%d"]="<-起拍價格：%d金",
 	["Uint price:%d"]="單價：%d",
+	["[LR GKP]System detects that the recent GKP record came from MY_GKP. \nLoad record or clear record?\nYou can also load the recent record from main panel."]="【懶人金團】系統檢測到你最近的金團記錄信息來源於茗伊金團。\n是繼續載入該金團記錄還是不載入？\n提示：選擇不載入後仍可由金團面板加載導入。如不載入，遇到新的來源於茗伊金團的記錄會自行建立新賬單。",
+	["Load MY_GKP"]="載入",
+	["Unload MY_GKP"]="不載入",
 }

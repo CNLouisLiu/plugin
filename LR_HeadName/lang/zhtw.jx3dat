@@ -338,4 +338,11 @@ data={
 	["<SYMBOL_MISSIONOBJ2>"]="★",
 	["Mission Point"]="任務點",
 
+	--20180716add--
+	["High Light Team Mark"]="高亮團隊圖標名字",
+	["Show life per in name"]="在名字中顯示血量百分比",
+	["LR Headname onekey shield npc"]="頭頂增強一鍵屏蔽NPC",
+	["LR Headname onekey shield player"]="頭頂增強一鍵屏蔽玩家",
+
+
 }

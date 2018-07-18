@@ -392,6 +392,7 @@ for i = 1, RowCount, 1 do
 end
 --_BossFocus[208] = {dwID = 208, nLevel = 11, nStackNum = 1}	--·öÒ¡
 --_BossFocus[680] = {dwID = 680, nLevel = 29, nStackNum = 1}	--ÏèÎè
+--_BossFocus[103] = {dwID = 103, nLevel = 1, nStackNum = 1}	--´ò×ø
 
 
 ----------------------------------------------------------------
