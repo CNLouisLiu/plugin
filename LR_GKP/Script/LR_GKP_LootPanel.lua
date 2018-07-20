@@ -1526,7 +1526,7 @@ local _SYNCED_LOOT_NUM = {}
 function LR_GKP_Loot.SYNC_LOOT_LIST()
 	local dwDoodadID = arg0
 	local frame = Station.Lookup(sformat("Normal/LR_GKP_Loot_%d", dwDoodadID))
-	if frame or (not _SYNCED_LOOT_LIST[dwDoodadID] and LR_GKP_Base.UsrData.bLazy) then
+	if frame or (not _SYNCED_LOOT_LIST[dwDoodadID] and false and LR_GKP_Base.UsrData.bLazy) then
 		local szDoodadName, items = LR_GKP_Base.GetItemInDoodad(dwDoodadID)
 		if #items > 0 then
 			if not (_SYNCED_LOOT_NUM[dwDoodadID] and #items == _SYNCED_LOOT_NUM[dwDoodadID]) then

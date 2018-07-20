@@ -40,7 +40,7 @@ local _GKP = {}
 LR_GKP_Base = {}
 local DefaultData = {
 	bOn = true,
-	bLazy = false,
+	--bLazy = false,
 }
 LR_GKP_Base.UsrData = clone(DefaultData)
 RegisterCustomData("LR_GKP_Base.UsrData", CustomVersion)

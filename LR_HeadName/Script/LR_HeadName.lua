@@ -779,9 +779,10 @@ end
 function _HandleRole:ShowTeamMarkImage()
 	local Handle_Dummy = self.handle
 	local Image_TeamMark = Handle_Dummy:Lookup("Image_TeamMark")
-	if self.nTeamMark and LR_HeadName.UsrData.bShowTeamMark and LR_HeadName.UsrData.nShowTeamMarkType ==  2 then
-		if tMarkerTextList[self.nTeamMark] then
-			Image_TeamMark:SetFrame(tMarkerImageList[self.nTeamMark])
+	local dwID = self.dwID
+	if _tPartyMark[dwID] and LR_HeadName.UsrData.bShowTeamMark and LR_HeadName.UsrData.nShowTeamMarkType ==  2 then
+		if tMarkerTextList[_tPartyMark[dwID]] then
+			Image_TeamMark:SetFrame(tMarkerImageList[_tPartyMark[dwID]])
 			Image_TeamMark:SetSize(44, 44)
 			Image_TeamMark:SetAlpha(255)
 			Image_TeamMark:Show()
@@ -825,7 +826,11 @@ end
 function _HandleRole:TeamMarkImageSetPos()
 	local xScreen = self.xScreen
 	local yScreen = self.yScreen
-	local Image_TeamMark = self.Image_TeamMark
+	local Handle_Dummy = self.handle
+	local Image_TeamMark = nil
+	if Handle_Dummy:IsValid() then
+		Image_TeamMark = Handle_Dummy:Lookup("Image_TeamMark")
+	end
 	local dwID = self.dwID
 	if not LR_HeadName._Role[dwID] then
 		return
@@ -841,7 +846,10 @@ function _HandleRole:TeamMarkImageSetPos()
 		if LR_HeadName.bOn then
 			SceneObject_SetTitleEffect(LR_HeadName._Role[dwID].nType, dwID, 0)
 		end
-		if self.nTeamMark then
+		if _tPartyMark[dwID] then
+			if GetLogicFrameCount() % 36 == 0 then
+				self:ShowTeamMarkImage()
+			end
 			Image_TeamMark:Show()
 		else
 			Image_TeamMark:Hide()
@@ -3114,6 +3122,7 @@ function LR_HeadName.DrawPartyMark()
 	local team = GetClientTeam()
 	if team then
 		local temp = team.GetTeamMark() or {}
+		_tPartyMark = clone(temp)
 		for dwID , v in pairs(temp) do
 			if LR_HeadName._Role[dwID] then
 				local _h = LR_HeadName._Role[dwID]:GetHandle()

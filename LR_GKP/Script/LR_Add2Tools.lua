@@ -20,14 +20,15 @@ local LR_GKP_UI ={
 	dwIcon = 2490,
 	szClass = "Normal",
 	tWidget = {
-		{name = "LR_GKP_CheckBox_01",type = "CheckBox", x = 0, y = 0, w = 200, text = _L["Pop panel when drop"],
+--[[		{name = "LR_GKP_CheckBox_01",type = "CheckBox", x = 0, y = 0, w = 200, text = _L["Pop panel when drop"],
 			default = function ()
 				return LR_GKP_Base.UsrData.bLazy
 			end,
 			callback = function (enabled)
 				LR_GKP_Base.UsrData.bLazy = enabled
 			end,
-		},{ name = "LR_GKP_ComboBox_01",type = "ComboBox", x = 0, y = 40, w = 200, text = _L["Set price"],
+		},]]
+		{ name = "LR_GKP_ComboBox_01",type = "ComboBox", x = 0, y = 40, w = 200, text = _L["Set price"],
 			callback = function(m)
 				LR_GKP_Base.InsertSetPriceMenu(m)
 				PopupMenu(m)
