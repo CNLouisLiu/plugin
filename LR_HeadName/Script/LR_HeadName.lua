@@ -1334,6 +1334,8 @@ function LR_HeadName.GetSysHeadSettings()
 		["HEAD_CLIENTPLAYER_TITLE"] = GetGlobalTopHeadFlag(HEAD_CLIENTPLAYER, HEAD_TITLE),
 		["HEAD_CLIENTPLAYER_LEFE"] = GetGlobalTopHeadFlag(HEAD_CLIENTPLAYER, HEAD_LEFE ),
 		["HEAD_CLIENTPLAYER_GUILD"] = GetGlobalTopHeadFlag(HEAD_CLIENTPLAYER, HEAD_GUILD),
+
+		["AI_LIFE_BAR"] = GetGlobalTopIntelligenceLife()
 	}
 --	Output(LR_HeadName.tSysSettings)
 end
@@ -1363,6 +1365,7 @@ function LR_HeadName.HideSysHead()
 	if LR_HeadName.UsrData.Player.bShow or LR_HeadName.UsrData.Player.bAlwaysHideSysPlayerTop then
 		LR_HeadName.HideSysPlayerTop()
 	end
+	SetGlobalTopIntelligenceLife(false)
 end
 
 function LR_HeadName.ResumeSysNpcTop()
@@ -1390,6 +1393,7 @@ function LR_HeadName.ResumeSysHead()
 	if not LR_HeadName.bOn or not LR_HeadName.UsrData.Player.bShow and not LR_HeadName.UsrData.Player.bAlwaysHideSysPlayerTop then
 		LR_HeadName.ResumeSysPlayerTop()
 	end
+	SetGlobalTopIntelligenceLife(LR_HeadName.tSysSettings["AI_LIFE_BAR"])
 end
 
 function LR_HeadName.Convert2SysHead()
@@ -1409,6 +1413,7 @@ function LR_HeadName.Convert2SysHead()
 		SetGlobalTopHeadFlag(HEAD_CLIENTPLAYER, HEAD_LEFE , 		LR_HeadName.UsrData.Player["Self"].LifeBar)
 		SetGlobalTopHeadFlag(HEAD_CLIENTPLAYER, HEAD_GUILD, 		LR_HeadName.UsrData.Player["Self"].Tong)
 	end
+	SetGlobalTopIntelligenceLife(false)
 end
 ------------------------------------
 
