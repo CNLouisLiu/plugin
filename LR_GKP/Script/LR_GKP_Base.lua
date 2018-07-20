@@ -1154,17 +1154,18 @@ function _GKP.LoadGKPList(szBillName)
 		DB_SELECT2:ClearBindings()
 		DB_SELECT2:BindAll(g2d(szName))
 		local result2 = d2g(DB_SELECT2:GetAll())
+
 		for k, v in pairs(result2) do
 			local trade_data = clone(v)
 			trade_data.bDel = (v.bDel == 1)
 			GKP_TradeList[#GKP_TradeList + 1] = clone(trade_data)
 
 			if v.bDel == 0 then
-				LR_GKP_Base.GKP_Person_Trade[v.dwPurchaserID] = LR_GKP_Base.GKP_Person_Trade[v.dwPurchaserID] or {nGold = 0}
-				LR_GKP_Base.GKP_Person_Trade[v.dwPurchaserID].dwID = trade_data.dwPurchaserID
-				LR_GKP_Base.GKP_Person_Trade[v.dwPurchaserID].szName = trade_data.szPurchaserName
-				LR_GKP_Base.GKP_Person_Trade[v.dwPurchaserID].dwForceID = trade_data.dwPurchaserForceID
-				LR_GKP_Base.GKP_Person_Trade[v.dwPurchaserID].nGold = LR_GKP_Base.GKP_Person_Trade[v.dwPurchaserID].nGold + trade_data.nGold
+				LR_GKP_Base.GKP_Person_Trade[v.szPurchaserName] = LR_GKP_Base.GKP_Person_Trade[v.szPurchaserName] or {nGold = 0}
+				LR_GKP_Base.GKP_Person_Trade[v.szPurchaserName].dwID = trade_data.dwPurchaserID
+				LR_GKP_Base.GKP_Person_Trade[v.szPurchaserName].szName = trade_data.szPurchaserName
+				LR_GKP_Base.GKP_Person_Trade[v.szPurchaserName].dwForceID = trade_data.dwPurchaserForceID
+				LR_GKP_Base.GKP_Person_Trade[v.szPurchaserName].nGold = LR_GKP_Base.GKP_Person_Trade[v.szPurchaserName].nGold + trade_data.nGold
 
 				local szKey = sformat("%d_%d", v.dwTabType, v.dwIndex)
 				local dd = {nGold = trade_data.nGold, dwID = trade_data.dwPurchaserForceID, szName = trade_data.szPurchaserName, dwForceID = trade_data.dwPurchaserForceID, nCreateTime = trade_data.nCreateTime}
@@ -1210,12 +1211,12 @@ function _GKP.LoadGKPList(szBillName)
 
 		for k, v in pairs(LR_GKP_Base.GKP_Person_Cash_Temp) do
 			if not (v.szBelongBill and v.szBelongBill ~= LR_GKP_Base.GKP_Bill.szName) then
-				LR_GKP_Base.GKP_Person_Debt[v.dwID] = LR_GKP_Base.GKP_Person_Debt[v.dwID] or {nGold = 0}
-				LR_GKP_Base.GKP_Person_Debt[v.dwID].dwID = v.dwID
-				LR_GKP_Base.GKP_Person_Debt[v.dwID].szName = v.szName
-				LR_GKP_Base.GKP_Person_Debt[v.dwID].dwForceID = v.dwForceID
+				LR_GKP_Base.GKP_Person_Debt[v.szName] = LR_GKP_Base.GKP_Person_Debt[v.szName] or {nGold = 0}
+				LR_GKP_Base.GKP_Person_Debt[v.szName].dwID = v.dwID
+				LR_GKP_Base.GKP_Person_Debt[v.szName].szName = v.szName
+				LR_GKP_Base.GKP_Person_Debt[v.szName].dwForceID = v.dwForceID
 				if v.nGold > 0 then
-					LR_GKP_Base.GKP_Person_Debt[v.dwID].nGold = LR_GKP_Base.GKP_Person_Debt[v.dwID].nGold + v.nGold
+					LR_GKP_Base.GKP_Person_Debt[v.szName].nGold = LR_GKP_Base.GKP_Person_Debt[v.szName].nGold + v.nGold
 				end
 			end
 		end
@@ -1946,7 +1947,6 @@ function LR_GKP_Base.Test2(n, dwDoodadID)
 		end
 	end
 
-	Output(items)
 	if not _GKP.DoodadOriginalCount[dwID] then
 		_GKP.DoodadOriginalCount[dwID] = clone(history)
 	end
