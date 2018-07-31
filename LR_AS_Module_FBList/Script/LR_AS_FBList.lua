@@ -119,7 +119,7 @@ function _FBList.ClearAllData10R(DB)
 		local t = {}
 		local FB25R = _FBList.FB25R
 		for j = 1, #FB25R, 1 do
-			if FB_Record[tostring(FB25R[j].dwMapID)] ~=  nil then
+			if FB_Record[tostring(FB25R[j].dwMapID)] ~= nil then
 				t[tostring(FB25R[j].dwMapID)] = FB_Record[tostring(FB25R[j].dwMapID)]
 			end
 		end
@@ -141,12 +141,12 @@ function _FBList.ClearAllData5R(DB)
 		local FB25R = _FBList.FB25R
 		local FB10R = _FBList.FB10R
 		for j = 1, #FB25R, 1 do
-			if FB_Record[tostring(FB25R[j].dwMapID)] ~=  nil then
+			if FB_Record[tostring(FB25R[j].dwMapID)] ~= nil then
 				t[tostring(FB25R[j].dwMapID)] = FB_Record[tostring(FB25R[j].dwMapID)]
 			end
 		end
 		for j = 1, #FB10R, 1 do
-			if FB_Record[tostring(FB25R[j].dwMapID)] ~=  nil then
+			if FB_Record[tostring(FB10R[j].dwMapID)] ~= nil then
 				t[tostring(FB10R[j].dwMapID)] = FB_Record[tostring(FB10R[j].dwMapID)]
 			end
 		end

@@ -18,11 +18,11 @@ LR_TeamTools.DPS = {
 }
 
 function LR_TeamTools.DPS.FIGHT_HINT()
-	if MY_Recount == nil or MY_Recount=={} then
+	if MY_Recount == nil or MY_Recount == {} then
 		--LR.SysMsg("需安装【茗伊插件集】-【伤害统计】\n")
 		return
 	end
-	local DPS_ALL=MY_Recount.Data.Get()
+	local DPS_ALL = MY_Recount.Data.Get()
 	if not DPS_ALL then
 		return
 	end
@@ -30,17 +30,18 @@ function LR_TeamTools.DPS.FIGHT_HINT()
 	if not DPS_Last then
 		return
 	end
-	if FightUIID==DPS_Last["UUID"] then
+	if FightUIID == DPS_Last["UUID"] then
 		return
 	else
 		FightUIID = DPS_Last["UUID"]
 	end
-	local nTimeBegin= DPS_Last["nTimeBegin"]
+	local nTimeBegin = DPS_Last["nTimeBegin"]
 	local nTimeDuring = DPS_Last["nTimeDuring"]
 	local szBossName = DPS_Last["szBossName"]
-	local Damage=DPS_Last["Damage"]
-	for k,v in pairs (Damage) do
-		local dwID=k
+	local Damage = DPS_Last["Damage"]
+	--Output(Damage)
+	for k, v in pairs (Damage) do
+		local dwID = k
 		local nTotalEffect = v["nTotalEffect"]
 		if LR_TeamTools.DPS.Record[k] == nil then
 			LR_TeamTools.DPS.Record[k]={{FightUIID=FightUIID,nTimeBegin=nTimeBegin,nTimeDuring=nTimeDuring,szBossName=szBossName,DPS={nTotalEffect=nTotalEffect},}}
