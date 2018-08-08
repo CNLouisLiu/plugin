@@ -116,10 +116,10 @@ function LR_AS_Base.ResetDataMonday(DB)
 	end
 end
 
-function LR_AS_Base.ResetDataThursday(DB)
+function LR_AS_Base.ResetDataFriday(DB)
 	for k, v in pairs(Module_List) do
-		if LR_AS_Module[v] and LR_AS_Module[v].ResetDataThursday then
-			LR_AS_Module[v].ResetDataThursday(DB)
+		if LR_AS_Module[v] and LR_AS_Module[v].ResetDataFriday then
+			LR_AS_Module[v].ResetDataFriday(DB)
 		end
 	end
 end
@@ -151,7 +151,7 @@ function LR_AS_Base.ResetData()
 	else
 		RefreshTimeEveryDay = CurrentTime -  hour * 60 * 60 - minute* 60 - second + 7 * 60 *60
 	end
-	---周四刷新时间
+	---周五刷新时间
 	local RefreshTimeFriday = RefreshTimeMonday
 	if (weekday > 5) or (weekday ==  5 and hour>= 7 ) then
 		day = weekday - 5
@@ -180,7 +180,7 @@ function LR_AS_Base.ResetData()
 	if RefreshTimeMonday > RC_ResetTime.ClearTimeMonday or RefreshTimeFriday > RC_ResetTime.ClearTimeFriday or RefreshTimeEveryDay > RC_ResetTime.ClearTimeEveryDay then
 		if RefreshTimeMonday > RC_ResetTime.ClearTimeMonday then
 			LR_AS_Base.ResetDataMonday(DB)
-			LR_AS_Base.ResetDataThursday(DB)
+			LR_AS_Base.ResetDataFriday(DB)
 			LR_AS_Base.ResetDataEveryDay(DB)
 			----
 			RC_ResetTime.ClearTimeMonday = CurrentTime
@@ -195,8 +195,9 @@ function LR_AS_Base.ResetData()
 				end
 			end)
 		elseif RefreshTimeFriday > RC_ResetTime.ClearTimeFriday then
-			LR_AS_Base.ResetDataThursday(DB)
+			LR_AS_Base.ResetDataFriday(DB)
 			LR_AS_Base.ResetDataEveryDay(DB)
+
 			--
 			RC_ResetTime.ClearTimeFriday = CurrentTime
 			RC_ResetTime.ClearTimeEveryDay = CurrentTime

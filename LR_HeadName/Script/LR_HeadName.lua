@@ -26,6 +26,59 @@ local ROLETYPE_TEXT = {
 	[5] = _L["ZhengTai"],
 	[6] = _L["Loli"],
 }
+
+local function _D(dwDoodadID)
+	return Table_GetDoodadTemplateName(dwDoodadID)
+end
+
+HEAD_NAME_MINERAL = {
+	_D(1020),	--铜矿
+	_D(1021),	--锡矿
+	_D(1022),	--铅矿
+	_D(1023),	--锌矿
+	_D(1024),	--铁矿
+	_D(1025),	--银矿
+	_D(1027),	--银砂矿
+	_D(2644),	--赤铁
+	_D(2645),	--月锡
+	_D(4229),	--圳铁矿
+	_D(4230),	--禹铜矿
+	_D(5661),	--天青石矿
+	_D(5662),	--烟雨石矿
+}
+
+HEAD_NAME_AGRICULTURE = {
+	_D(1001),	--甘草
+	_D(1002),	--大黄
+	_D(1003),	--芍药
+	_D(1004),	--兰草
+	_D(1005),	--相思子
+	_D(1006),	--车前草
+	_D(1007),	--天名精
+	_D(1008),	--防风
+	_D(1009),	--五味子
+	_D(1010),	--金银花
+	_D(1011),	--金创小草
+	_D(1012),	--枸杞
+	_D(1015),	--千里香
+	_D(1016),	--田七
+	_D(1017),	--天麻
+	_D(1018),	--远志
+	_D(1019),	--仙茅
+	_D(2641),	--川贝
+	_D(2642),	--虫草
+	_D(2643),	--麦冬
+	_D(4227),	--石莲花
+	_D(4228),	--彼岸花
+	_D(5659),	--白术
+	_D(5660),	--紫苏
+	_D(3358),	--百脉根
+	_D(3359),	--皇竹草
+	_D(3360),	--甜象草
+	_D(3361),	--紫花苜蓿
+}
+
+
 -----------------------------------------------
 LR_HeadName = LR_HeadName or {
 	AllList = {},
@@ -241,52 +294,6 @@ LR_HeadName.default = {
 			},
 		},
 	},
-	Mineral = {
-		{szName = _L["TongKuang"], bShow = true, },
-		{szName = _L["XiKuang"], bShow = false, },
-		{szName = _L["QianKuang"], bShow = false, },
-		{szName = _L["XinKuang"], bShow = false, },
-		{szName = _L["TieKuang"], bShow = false, },
-		{szName = _L["YinKuang"], bShow = false, },
-		{szName = _L["YinShaKuang"], bShow = false, },
-		{szName = _L["ChiTie"], bShow = false, },
-		{szName = _L["YueXi"], bShow = false, },
-		{szName = _L["ZhenTieKuang"], bShow = false, },
-		{szName = _L["YuTongKuang"], bShow = false, },
-		{szName = _L["TianQingShiKuang"], bShow = true, },
-		{szName = _L["YanYuShiKuang"], bShow = true, },
-	},
-	Agriculture = {
-		{szName = _L["GanCao"], bShow = true, },
-		{szName = _L["DaHuang"], bShow = true, },
-		{szName = _L["ShaoYao"], bShow = false, },
-		{szName = _L["LanCao"], bShow = false, },
-		{szName = _L["XiangSiZi"], bShow = false, },
-		{szName = _L["CheQianCao"], bShow = false, },
-		{szName = _L["TianMingJing"], bShow = false, },
-		{szName = _L["FangFeng"], bShow = false, },
-		{szName = _L["WuWeiZi"], bShow = false, },
-		{szName = _L["JinYinHua"], bShow = false, },
-		{szName = _L["JinChuangXiaoCao"], bShow = false, },
-		{szName = _L["GouQi"], bShow = false, },
-		{szName = _L["QianLiXiang"], bShow = false, },
-		{szName = _L["TianQi"], bShow = false, },
-		{szName = _L["TianMa"], bShow = false, },
-		{szName = _L["YuanZhi"], bShow = false, },
-		{szName = _L["XianMao"], bShow = false, },
-		{szName = _L["ChuanBei"], bShow = false, },
-		{szName = _L["ChongCao"], bShow = false, },
-		{szName = _L["MaiDong"], bShow = false, },
-		{szName = _L["SuGuanHeDing"], bShow = false, },
-		{szName = _L["BaiMaiGen"], bShow = false, },
-		{szName = _L["HuangZhuCao"], bShow = false, },
-		{szName = _L["TianXiangCao"], bShow = false, },
-		{szName = _L["ZiHuaMuXu"], bShow = false, },
-		{szName = _L["ShiLianHua"], bShow = false, },
-		{szName = _L["BiAnHua"], bShow = false, },
-		{szName = _L["BaiZhu"], bShow = true, },
-		{szName = _L["ZiSu"], bShow = true, },
-	},
 	Version = CustomVersion,
 	CustomDoodad = {
 		[_L["LiangCaoDui"]] = true,
@@ -294,6 +301,25 @@ LR_HeadName.default = {
 		[_L["ShouLingDeZhanLiPin"]] = true,
 	},
 }
+
+--设置矿默认数据
+LR_HeadName.default.Mineral = {}
+for k, v in pairs(HEAD_NAME_MINERAL) do
+	LR_HeadName.default.Mineral[v] = false
+end
+LR_HeadName.default.Mineral[_D(1020)] = true	--铜矿
+LR_HeadName.default.Mineral[_D(5661)] = true	--天青石矿
+LR_HeadName.default.Mineral[_D(5662)] = true	--烟雨石矿
+
+--设置神农默认数据
+LR_HeadName.default.Agriculture = {}
+for k, v in pairs(HEAD_NAME_AGRICULTURE) do
+	LR_HeadName.default.Agriculture[v] = false
+end
+LR_HeadName.default.Agriculture[_D(1001)] = true	--甘草
+LR_HeadName.default.Agriculture[_D(1002)] = true	--大黄
+LR_HeadName.default.Agriculture[_D(5659)] = true	--白术
+LR_HeadName.default.Agriculture[_D(5660)] = true	--紫苏
 
 LR_HeadName.UsrData = clone(LR_HeadName.default.UsrData)
 LR_HeadName.DoodadKind = clone(LR_HeadName.default.DoodadKind)
@@ -3296,26 +3322,14 @@ function LR_HeadName.CheckAgriculture(szName)
 	if not szName then
 		return false
 	end
-	local Agriculture = LR_HeadName.Agriculture
-	for i = 1, #Agriculture, 1 do
-		if Agriculture[i].szName == szName then
-			return Agriculture[i].bShow
-		end
-	end
-	return false
+	return LR_HeadName.Agriculture[szName] or false
 end
 
 function LR_HeadName.CheckMineral(szName)
 	if not szName then
 		return false
 	end
-	local Mineral = LR_HeadName.Mineral
-	for i = 1, #Mineral, 1 do
-		if Mineral[i].szName == szName then
-			return Mineral[i].bShow
-		end
-	end
-	return false
+	return LR_HeadName.Mineral[szName] or false
 end
 
 function LR_HeadName.LoadBookCopyQuests()

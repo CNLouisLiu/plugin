@@ -687,15 +687,16 @@ LR_HeadName_UI = {
 			end,
 			callback = function(m)
 				local Mineral = LR_HeadName.Mineral
-				for i = 1, #Mineral, 1 do
-					m[#m+1] = {szOption = Mineral[i].szName, bCheck = true, bMCheck = false, bChecked = function() return Mineral[i].bShow end,
+				for k, v in pairs(HEAD_NAME_MINERAL) do
+					m[#m+1] = {szOption = v, bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.Mineral[v] or false end,
 						fnAction = function()
-							Mineral[i].bShow = not Mineral[i].bShow
+							LR_HeadName.Mineral[v] = not (LR_HeadName.Mineral[v] or false)
 							LR_HeadName.AddAllDoodad2AllList()
 							LR_HeadName.ReDrawAll()
 							LR_HeadName.SaveCommonSettings()
 						end,
 					}
+
 				end
 				m[#m+1] = {bDevide = true, }
 				m[#m+1] = {szOption = _L["Mark in minimap"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bMiniMapMine end,
@@ -721,14 +722,15 @@ LR_HeadName_UI = {
 			end,
 			callback = function(m)
 				local Agriculture = LR_HeadName.Agriculture
-				for i = 1, #Agriculture, 1 do
-					m[#m+1] = {szOption = Agriculture[i].szName, bCheck = true, bMCheck = false, bChecked = function() return Agriculture[i].bShow end,
+				for k, v in pairs(HEAD_NAME_AGRICULTURE) do
+					m[#m+1] = {szOption = v, bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.Agriculture[v] or false end,
 						fnAction = function()
-							Agriculture[i].bShow = not Agriculture[i].bShow
+							LR_HeadName.Agriculture[v] = not (LR_HeadName.Agriculture[v] or false)
 							LR_HeadName.AddAllDoodad2AllList()
 							LR_HeadName.ReDrawAll()
 							LR_HeadName.SaveCommonSettings()
-						end, }
+						end,
+					}
 				end
 				m[#m+1] = {bDevide = true, }
 				m[#m+1] = {szOption = _L["Mark in minimap"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bMiniMapAgriculture end,
@@ -974,55 +976,11 @@ LR_HeadName_UI = {
 }
 
 function LR_HeadName_UI.ResetAgriculture()
-	LR_HeadName.Agriculture = {
-		{szName = _L["GanCao"], bShow = true, },
-		{szName = _L["DaHuang"], bShow = true, },
-		{szName = _L["ShaoYao"], bShow = false, },
-		{szName = _L["LanCao"], bShow = false, },
-		{szName = _L["XiangSiZi"], bShow = false, },
-		{szName = _L["CheQianCao"], bShow = false, },
-		{szName = _L["TianMingJing"], bShow = false, },
-		{szName = _L["FangFeng"], bShow = false, },
-		{szName = _L["WuWeiZi"], bShow = false, },
-		{szName = _L["JinYinHua"], bShow = false, },
-		{szName = _L["JinChuangXiaoCao"], bShow = false, },
-		{szName = _L["GouQi"], bShow = false, },
-		{szName = _L["QianLiXiang"], bShow = false, },
-		{szName = _L["TianQi"], bShow = false, },
-		{szName = _L["TianMa"], bShow = false, },
-		{szName = _L["YuanZhi"], bShow = false, },
-		{szName = _L["XianMao"], bShow = false, },
-		{szName = _L["ChuanBei"], bShow = false, },
-		{szName = _L["ChongCao"], bShow = false, },
-		{szName = _L["MaiDong"], bShow = false, },
-		{szName = _L["SuGuanHeDing"], bShow = false, },
-		{szName = _L["BaiMaiGen"], bShow = false, },
-		{szName = _L["HuangZhuCao"], bShow = false, },
-		{szName = _L["TianXiangCao"], bShow = false, },
-		{szName = _L["ZiHuaMuXu"], bShow = false, },
-		{szName = _L["ShiLianHua"], bShow = false, },
-		{szName = _L["BiAnHua"], bShow = false, },
-		{szName = _L["BaiZhu"], bShow = true, },
-		{szName = _L["ZiSu"], bShow = true, },
-	}
+	LR_HeadName.Agriculture = clone(LR_HeadName.default.Agriculture)
 end
 
 function LR_HeadName_UI.ResetMineral()
-	LR_HeadName.Mineral  = {
-		{szName = _L["TongKuang"], bShow = true, },
-		{szName = _L["XiKuang"], bShow = false, },
-		{szName = _L["QianKuang"], bShow = false, },
-		{szName = _L["XinKuang"], bShow = false, },
-		{szName = _L["TieKuang"], bShow = false, },
-		{szName = _L["YinKuang"], bShow = false, },
-		{szName = _L["YinShaKuang"], bShow = false, },
-		{szName = _L["ChiTie"], bShow = false, },
-		{szName = _L["YueXi"], bShow = false, },
-		{szName = _L["ZhenTieKuang"], bShow = false, },
-		{szName = _L["YuTongKuang"], bShow = false, },
-		{szName = _L["TianQingShiKuang"], bShow = true, },
-		{szName = _L["YanYuShiKuang"], bShow = true, },
-	}
+	LR_HeadName.Mineral = clone(LR_HeadName.default.Mineral)
 end
 
 LR_TOOLS:RegisterPanel(LR_HeadName_UI)
