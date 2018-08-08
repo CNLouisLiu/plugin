@@ -160,11 +160,11 @@ function LR.LoadDragonMapData()
 		end
 		local _s2, _e2, szOtherName = sfind(tLine.szOtherName, _L["·(.+)"])
 		if not _s2 then
-			szOtherName = tLine.szOtherName
+			szOtherName = LR.Trim(tLine.szOtherName)
 		end
 		local szName = sformat("%s%s", szOtherName, desc)
 		local szBossInfo = sgsub(tLine.szBossInfo, "(%s+)", ",")
-		LR.MapType[dwMapID] = {szName = szName, dwMapID = dwMapID, nMaxPlayerCount = tonumber(num_limit), bossList = szBossInfo, Level = tLine.nDivideLevel, szVersionName = tLine.szVersionName, path = tLine.szDungeonImage2, nFrame = tLine.nDungeonFrame2 }
+		LR.MapType[dwMapID] = {szName = szName, dwMapID = dwMapID, nMaxPlayerCount = tonumber(num_limit), bossList = szBossInfo, Level = tLine.nDivideLevel, szVersionName = LR.Trim(tLine.szVersionName), path = tLine.szDungeonImage2, nFrame = tLine.nDungeonFrame2 }
 	end
 
 	---下面是重定义bossList

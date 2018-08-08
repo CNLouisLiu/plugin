@@ -20,6 +20,8 @@ local VERSION = "20180619"
 local INDEPENDENT_MAP = {
 	[298] = true,
 	[300] = true,
+	[299] = true,
+	[301] = true,
 }
 
 LR_AS_FBList = {}

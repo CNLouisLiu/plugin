@@ -11,6 +11,8 @@ local _L = LR.LoadLangPack(AddonPath)
 local INDEPENDENT_MAP = {
 	[298] = true,
 	[300] = true,
+	[299] = true,
+	[301] = true,
 }
 
 local UI = {}
