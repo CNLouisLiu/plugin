@@ -407,8 +407,8 @@ LR_HeadName_UI = {
 				local menu = {}
 				local szOption = {_L["Self"], _L["Neutrality Player"], _L["Ally Player"], _L["Enemy Player"], _L["In Group"]}
 				local relation = {"Self", "Neutrality", "Ally", "Enemy", "Party"}
-				local lv2Option = {_L["Show Name"], _L["Show Title"], _L["Show Tong"], _L["Show Level"], _L["Show Blood"], _L["Show Force"], _L["Show RoleType"], _L["Hide Blood when not in Fight"]}
-				local lv2Key = {"Name", "Title", "Tong", "Level", "LifeBar", "ForceID", "RoleType", "HideLifeBar"}
+				local lv2Option = {_L["Show Name"], _L["Show Title"], _L["Show Tong"], _L["Show Level"], _L["Show Blood"], _L["Show Force"], _L["Show RoleType"], _L["ColorMode"], _L["Hide Blood when not in Fight"]}
+				local lv2Key = {"Name", "Title", "Tong", "Level", "LifeBar", "ForceID", "RoleType", "nColorMode", "HideLifeBar"}
 				for k, v in pairs(szOption) do
 					menu[relation[k]] = {szOption = v, bCheck = true, bMCheck = false, bChecked = function() return UsrData.Player[relation[k]].bShow end,
 						fnDisable = function() return  not UsrData.Player.bShow end,
@@ -419,7 +419,7 @@ LR_HeadName_UI = {
 						end,
 					}
 					for k2, v2 in pairs(lv2Option) do
-						if k2 == 8 then
+						if k2 == 9 then
 							if relation[k] == "Enemy" then
 								menu[relation[k]][#menu[relation[k]]+1] = { szOption = _L["Show life per in name"], bCheck = true, bMCheck = false,
 									bChecked = function()
@@ -434,14 +434,29 @@ LR_HeadName_UI = {
 							end
 							menu[relation[k]][#menu[relation[k]]+1] = {bDevide = true, }
 						end
-						menu[relation[k]][#menu[relation[k]]+1] = {szOption = v2, bCheck = true, bMCheck = false, bChecked = function() return UsrData.Player[relation[k]][lv2Key[k2]] end,
-							fnDisable = function() return not UsrData.Player[relation[k]].bShow end,
-							fnAction = function()
-								UsrData.Player[relation[k]][lv2Key[k2]] = not UsrData.Player[relation[k]][lv2Key[k2]]
-								LR_HeadName.SaveCommonSettings()
-								LR_HeadName.ReDrawAll()
-							end}
-						if k2 ==  8 then
+						if k2 ~= 8 then
+							menu[relation[k]][#menu[relation[k]]+1] = {szOption = v2, bCheck = true, bMCheck = false, bChecked = function() return UsrData.Player[relation[k]][lv2Key[k2]] end,
+								fnDisable = function() return not UsrData.Player[relation[k]].bShow end,
+								fnAction = function()
+									UsrData.Player[relation[k]][lv2Key[k2]] = not UsrData.Player[relation[k]][lv2Key[k2]]
+									LR_HeadName.SaveCommonSettings()
+									LR_HeadName.ReDrawAll()
+								end}
+						else
+							menu[relation[k]][#menu[relation[k]]+1] = {szOption = _L["Set color mode"], fnDisable = function() return not UsrData.Player[relation[k]].bShow end,}
+							local mm = menu[relation[k]][#menu[relation[k]]]
+							local m1 = {_L["Normal mode"], _L["Color by menpai"]}
+
+							for k4, v4 in pairs (m1) do
+								mm[#mm + 1] = {szOption = v4, bCheck = true, bMCheck = true, bChecked = function() return UsrData.Player[relation[k]].nColorMode == k4 end,
+								fnAction = function()
+									UsrData.Player[relation[k]].nColorMode = k4
+									LR_HeadName.SaveCommonSettings()
+									LR_HeadName.ReDrawAll()
+								end,}
+							end
+						end
+						if k2 == 9 then
 							menu[relation[k]][#menu[relation[k]]].fnDisable = function() return not (UsrData.Player[relation[k]].bShow and UsrData.Player[relation[k]].LifeBar)  end
 						end
 					end

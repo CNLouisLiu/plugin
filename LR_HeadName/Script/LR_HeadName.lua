@@ -195,6 +195,7 @@ LR_HeadName.default = {
 				HideLifeBar = true,
 				ForceID = false,
 				RoleType = false,
+				nColorMode = 1,		--颜色模式 1：默认颜色；2：以门派方式着色
 			},
 			["Enemy"] = {
 				bShow = true,
@@ -207,6 +208,7 @@ LR_HeadName.default = {
 				ForceID = false,
 				RoleType = false,
 				bShowLifePer = true,
+				nColorMode = 1,		--颜色模式 1：默认颜色；2：以门派方式着色
 			},
 			["Neutrality"] = {
 				bShow = true,
@@ -218,6 +220,7 @@ LR_HeadName.default = {
 				HideLifeBar = true,
 				ForceID = false,
 				RoleType = false,
+				nColorMode = 1,		--颜色模式 1：默认颜色；2：以门派方式着色
 			},
 			["Party"] = {
 				bShow = true,
@@ -229,6 +232,7 @@ LR_HeadName.default = {
 				HideLifeBar = true,
 				ForceID = false,
 				RoleType = false,
+				nColorMode = 1,		--颜色模式 1：默认颜色；2：以门派方式着色
 			},
 			["Self"] = {
 				bShow = true,
@@ -240,6 +244,7 @@ LR_HeadName.default = {
 				HideLifeBar = true,
 				ForceID = false,
 				RoleType = false,
+				nColorMode = 1,		--颜色模式 1：默认颜色；2：以门派方式着色
 			},
 		},
 		HideInDungeon = {
@@ -2205,7 +2210,14 @@ function LR_HeadName.GetColor(obj, nType, nShip)
 		end
 		return LR_HeadName.Color[nShip]
 	elseif nType ==  TARGET.PLAYER then
-		return LR_HeadName.Color[nShip]
+		local nColorMode = LR_HeadName.UsrData.Player[nShip].nColorMode or 1
+		if nColorMode == 1 then
+			return LR_HeadName.Color[nShip]
+		elseif nColorMode == 2 then
+			local r, g, b = LR.GetMenPaiColor(obj.dwForceID)
+			local h, s, v = LR.rgb2hsv(r, g, b)
+			return {LR.hsv2rgb(h, s, (v * 0.8))}
+		end
 	elseif nType ==  TARGET.DOODAD then
 		return LR_HeadName.Color["Doodad"]
 	end
@@ -2225,10 +2237,20 @@ function LR_HeadName.FixColor(obj, rgb, nShip)
         else
             return {mceil(r/2.5), mceil(g/2.5), mceil(b/2.5), }
         end
-    elseif _dwTargetID ==  obj.dwID then
-        return LR_HeadName.HighLightColor[nShip]
+    elseif _dwTargetID == obj.dwID then
+		if _nType == TARGET.PLAYER then
+			local nColorMode = LR_HeadName.UsrData.Player[nShip].nColorMode or 1
+			if nColorMode == 1 then
+				return LR_HeadName.HighLightColor[nShip]
+			else
+				local h, s, v = LR.rgb2hsv(r, g, b)
+				return {LR.hsv2rgb(h, s, (v * 1.25))}
+			end
+		else
+			return LR_HeadName.HighLightColor[nShip]
+		end
     else
-        return rgb
+		return rgb
     end
 end
 
