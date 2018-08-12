@@ -276,8 +276,13 @@ function LR_AS_Base.ON_FRAME_CREATE()
 			end)
 			Log("[LR_AccountStatistics]:Exit save")
 			LR_AS_Base.AutoSave()
+			if LR_AS_Trade then
+				LR_AS_Trade.SaveTempData(true)
+				LR_AS_Trade.MoveData2MainTable()
+			end
 			frame:Lookup("Btn_Sure"):Enable(true)
 		end
+
 	elseif szName  ==  "OptionPanel" then
 		if LR_AS_Base.UsrData.bAutoSave and  LR_AS_Base.UsrData.bEscSave then
 			local _now = GetTickCount()

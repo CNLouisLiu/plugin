@@ -2348,7 +2348,7 @@ function LR_AS_Trade.AddRecord(Temp_Record)
 	_Event_Trace = {}
 	_Bag_item = {}
 	LR_Acc_Trade_Panel:Refresh()
-	LR_AS_Trade.SaveTempData()
+	--LR_AS_Trade.SaveTempData()
 end
 
 function LR_AS_Trade.FIRST_LOADING_END()
@@ -2546,6 +2546,7 @@ function LR_Acc_Trade_Panel:OnCreate()
 	LR_Acc_Trade_Panel.UpdateAnchor(this)
 	RegisterGlobalEsc("LR_Acc_Trade_Panel", function () return true end , function() LR_Acc_Trade_Panel:Open() end)
 	LR_Acc_Trade_Panel.Show_Type = OP1.THIS_LOGIN
+	LR_AS_Trade.SaveTempData(true)
 	LR_AS_Trade.MoveData2MainTable()
 end
 
@@ -2853,500 +2854,514 @@ function LR_Acc_Trade_Panel:LoadItemBox(hWin)
 		local OrderTime = index[i].OrderTime
 		local key = sformat("%d_%d", nTime, OrderTime)
 		local Trade_Record = Trade_LIst[key]
-		local data = TimeToDate(nTime)
-		local year = data["year"]
-		local month = data["month"]
-		local day = data["day"]
-		local weekday = data["weekday"]
-		if year~= old_year or month~= old_month or day~= old_day then
-			local handle_day = self:Append("Handle", hWin, sformat("Handle_Day_%d_%d_%d", year, month, day), {x = 0, y = 0, w = 900, h = 30})
-			local t = self:Append("Image", handle_day, sformat("Image_Day_Line2_%d_%d_%d", year, month, day), {x = 4, y = 0, w = 915, h = 30 , image = "ui\\Image\\Minimap\\MapMark.UITex" , frame = 49 })
-			t:SetImageType(10)
-			t:SetAlpha(150)
-			local Image_day_line = self:Append("Image", handle_day, sformat("Image_Day_Line_%d_%d_%d", year, month, day), {x = 0, y = 0, w = 900, h = 30})
-			Image_day_line:FromUITex("ui\\Image\\Common\\TextShadow.UITex", 5)
-			Image_day_line:SetImageType(10)
-			Image_day_line:SetAlpha(250)
-			local text = self:Append("Text", handle_day, sformat("Text_Time_%d_1", i), { h = 30, x  = 15, w = 200 , y = 2, text = sformat("%d-%d-%d  %s", year, month, day, _WEEKDAY[weekday]), font = _font})
-			text:SetVAlign(1)
-			--text:SetHAlign(1)
-			old_year, old_month, old_day = year, month, day
-		end
 
-		local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", i), {x = 0, y = 0, w = 900, h = 30})
-		--hIconViewContent:SetHandleStyle(3)
-
-		local Image_Line = self:Append("Image", hIconViewContent, sformat("Image_Line1_%d", i), {x = 0, y = 0, w = 900, h = 30})
-		Image_Line:FromUITex("ui\\Image\\button\\ShopButton.UITex", 75)
-		Image_Line:SetImageType(10)
-		Image_Line:SetAlpha(200)
-		if i%2 == 0 then
-			Image_Line:SetAlpha(35)
-		end
-
-		local Image_Line2 = self:Append("Image", hIconViewContent, sformat("Image_Line2_%d", i), {x = 0, y = 0, w = 900, h = 30})
-		if Trade_Record:GetType() ==  TRADE.GKP then
-			Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 228)
-		elseif Trade_Record:GetType() ==  TRADE.TRADE or Trade_Record:GetType() ==  TRADE.AUCTION_BUY or Trade_Record:GetType() ==  TRADE.AUCTION_SELL then
-			Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 213)
-		elseif Trade_Record:GetType() ==  TRADE.SHOP_BUY then
-			Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 214)
-		elseif Trade_Record:GetType() ==  TRADE.SHOP_SELL then
-			Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 215)
-		elseif Trade_Record:GetType() ==  TRADE.LOOT or Trade_Record:GetType() ==  TRADE.LOOT_MONEY or Trade_Record:GetType() ==  TRADE.GOLDTEAM then
-			Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 212)
-		elseif Trade_Record:GetType() ==  TRADE.RETURN or Trade_Record:GetType() ==  TRADE.H_RETURN or Trade_Record:GetType() ==  TRADE.SHOP_RETURN then
-			Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 211)
-		elseif Trade_Record:GetType() ==  TRADE.MAIL_GET or Trade_Record:GetType() ==  TRADE.MAIL_PAY or Trade_Record:GetType() ==  TRADE.MAIL_SEND then
-			Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 219)
-		end
-		Image_Line2:SetImageType(10)
-		Image_Line2:SetAlpha(65)
-
-		--悬停框
-		local Image_Hover = self:Append("Image", hIconViewContent, sformat("Image_Hover_%d", i), {x = 2, y = 0, w = 910, h = 30})
-		Image_Hover:FromUITex("ui\\Image\\Common\\TempBox.UITex", 5)
-		Image_Hover:SetImageType(10)
-		Image_Hover:SetAlpha(200)
-		Image_Hover:Hide()
-		--选择框
-		local Image_Select = self:Append("Image", hIconViewContent, sformat("Image_Select_%d", i), {x = 2, y = 0, w = 910, h = 30})
-		Image_Select:FromUITex("ui\\Image\\Common\\TempBox.UITex", 6)
-		Image_Select:SetImageType(10)
-		Image_Select:SetAlpha(200)
-		Image_Select:Hide()
-
-		-----显示日期
-		local hour = data["hour"]
-		local minute = data["minute"]
-		local second = data["second"]
-
-		local Text_Time = self:Append("Text", hIconViewContent, sformat("Text_Time_%d_1", i), {w = 120, h = 30, x  = 0, y = 2, text = "" , font = _font})
-		Text_Time:SetHAlign(1)
-		Text_Time:SetVAlign(1)
-		Text_Time:SetText(sformat("%0.2d:%0.2d:%0.2d", hour, minute, second))
-
-		----显示地点
-		local dwMapID = Trade_Record:GetMapID()
-		local szMapName = LR.Trim(Table_GetMapName(dwMapID))
-
-		local Text_Location = self:Append("Text", hIconViewContent, sformat("Text_Location_%d_1", i), {w = 80, h = 30, x  = 120, y = 2, text = "" , font = _font})
-		Text_Location:SetHAlign(1)
-		Text_Location:SetVAlign(1)
-		Text_Location:SetText(szMapName)
-
-		local s1 = Text_Location:GetTextPosExtent(76)
-		local s2 = Text_Location:GetTextLen()
-		local s3 = ssub(szMapName, -8)
-		if s2>4 then
-			Text_Location:RegisterEvent(272)
-			Text_Location:SetText(s3)
-			Text_Location.OnEnter = function()
-				Image_Hover:Show()
-				local x, y = Text_Location:GetAbsPos()
-				local w, h = Text_Location:GetSize()
-				local szXml  = GetFormatText(szMapName, 18)
-				OutputTip(szXml, 350, {x, y, w, h})
-			end
-			Text_Location.OnLeave = function()
-				Image_Hover:Hide()
-				HideTip()
-			end
-		end
-
-		----显示类型
 		local nType = Trade_Record:GetType()
-
-		local Text_Type = self:Append("Text", hIconViewContent, sformat("Text_Type_%d_1", i), {w = 80, h = 30, x  = 200, y = 2, text = "" , font = _font})
-		Text_Type:SetHAlign(1)
-		Text_Type:SetVAlign(1)
-		Text_Type:SetText(TRADE_TEXT[nType])
-
-		----显示来源
-		local Text_Source = self:Append("Text", hIconViewContent, sformat("Text_Source_%d_1", i), {w = 120, h = 30, x  = 280, y = 2, text = "" , font = _font})
-		Text_Source:SetHAlign(1)
-		Text_Source:SetVAlign(1)
-
-		local Source = Trade_Record:GetSource()
-		if Source.nType == TARGET.NPC then
-			Text_Source:RegisterEvent(272)
-			Text_Source:SetText(Source.szName)
-			Text_Source.OnEnter = function()
-				Image_Hover:Show()
-				local x, y = Text_Source:GetAbsPos()
-				local w, h = Text_Source:GetSize()
-				local szXml = {}
-				szXml[#szXml+1] = GetFormatText(sformat("%s\n", Source.szName), 18)
-				if Source.szTitle then
-					local szTitle = Source.szTitle or ""
-					szXml[#szXml+1] = GetFormatText(sformat("[%s]\n", szTitle), 18)
-				end
-				szXml[#szXml+1] = GetFormatText(sformat("%s\n", szMapName), 18)
-				OutputTip(tconcat(szXml), 350, {x, y, w, h})
-			end
-			Text_Source.OnLeave = function()
-				Image_Hover:Hide()
-				HideTip()
-			end
-		elseif Source.nType == TARGET.DOODAD then
-			Text_Source:RegisterEvent(272)
-			Text_Source:SetText(Source.szName)
-			Text_Source.OnEnter = function()
-				Image_Hover:Show()
-				local x, y = Text_Source:GetAbsPos()
-				local w, h = Text_Source:GetSize()
-				local szXml = {}
-				szXml[#szXml+1] = GetFormatText(sformat("%s\n", Source.szName), 18)
-				szXml[#szXml+1] = GetFormatText("<DOODAD>\n", 18)
-				if Source.szTitle then
-					local szTitle = Source.szTitle
-					if type(Source.szTitle) ==  "number" then
-						szTitle = DOODAD_TYPETEXT[Source.szTitle] or ""
-					end
-					szXml[#szXml+1] = GetFormatText(sformat("[%s]\n", szTitle), 18)
-				end
-				szXml[#szXml+1] = GetFormatText(sformat("%s\n", szMapName), 18)
-				OutputTip(tconcat(szXml), 350, {x, y, w, h})
-			end
-			Text_Source.OnLeave = function()
-				Image_Hover:Hide()
-				HideTip()
-			end
-		elseif Source.nType == TARGET.PLAYER then
-			Text_Source:RegisterEvent(272)
-			Text_Source:SetText(Source.szName)
-			local dwForceID = Source.dwForceID or 0
-			local r, g, b = LR.GetMenPaiColor(dwForceID)
-			Text_Source:SetFontColor(r, g, b)
-			Text_Source.OnEnter = function()
-				Image_Hover:Show()
-				local x, y = Text_Source:GetAbsPos()
-				local w, h = Text_Source:GetSize()
-				local dwForceID = Source.dwForceID or 0
-				local szPath, nFrame = GetForceImage(dwForceID)
-				local r, g, b = LR.GetMenPaiColor(dwForceID)
-				local szXml = {}
-				szXml[#szXml+1] = GetFormatImage(szPath, nFrame, 26, 26)
-				szXml[#szXml+1] = GetFormatText(sformat("%s\n", Source.szName), 18, r, g, b)
-				szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["<PLAYER>"]), 18)
-				OutputTip(tconcat(szXml), 350, {x, y, w, h})
-			end
-			Text_Source.OnLeave = function()
-				Image_Hover:Hide()
-				HideTip()
-			end
-			Text_Source.OnClick = function()
-				local menu = {}
-				local dwID = Source.dwID
-				local szName = Source.szName
-				if IsCtrlKeyDown() then
-					LR.EditBox_AppendLinkPlayer(szName)
-				else
-					InsertPlayerCommonMenu(menu, dwID, szName)
-					if menu then
-						local invite = menu[1].fnAction
-						invite()
-					end
-				end
-			end
-		elseif Source.nType ==  TARGET.NO_TARGET and Trade_Record:GetType() ==  TRADE.GKP then
-			Text_Source:RegisterEvent(272)
-			Text_Source:SetText(Source.szName)
-			Text_Source.OnEnter = function()
-				Image_Hover:Show()
-				local x, y = Text_Source:GetAbsPos()
-				local w, h = Text_Source:GetSize()
-				local szXml = {}
-				szXml[#szXml+1] = GetFormatText(sformat("%s\n", Source.szName), 18)
-				szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["<GKP>"]), 18)
-				szXml[#szXml+1] = GetFormatText(sformat("%s\n", szMapName), 18)
-				OutputTip(tconcat(szXml), 350, {x, y, w, h})
-			end
-			Text_Source.OnLeave = function()
-				Image_Hover:Hide()
-				HideTip()
+		local flag = true
+		if nType == TRADE.QUEST then
+			local t_item
+			t_item = Trade_Record:GetItem_in()
+			local dwQuestID = t_item[1].nBookID
+			local szQuestName = LR.GetQuestName(dwQuestID)
+			if sfind(szQuestName, _L["QYJSMD"]) then
+				flag = false
 			end
 		end
+		if flag then
+			local data = TimeToDate(nTime)
+			local year = data["year"]
+			local month = data["month"]
+			local day = data["day"]
+			local weekday = data["weekday"]
+			if year ~= old_year or month ~= old_month or day ~= old_day then
+				local handle_day = self:Append("Handle", hWin, sformat("Handle_Day_%d_%d_%d", year, month, day), {x = 0, y = 0, w = 900, h = 30})
+				local t = self:Append("Image", handle_day, sformat("Image_Day_Line2_%d_%d_%d", year, month, day), {x = 4, y = 0, w = 915, h = 30 , image = "ui\\Image\\Minimap\\MapMark.UITex" , frame = 49 })
+				t:SetImageType(10)
+				t:SetAlpha(150)
+				local Image_day_line = self:Append("Image", handle_day, sformat("Image_Day_Line_%d_%d_%d", year, month, day), {x = 0, y = 0, w = 900, h = 30})
+				Image_day_line:FromUITex("ui\\Image\\Common\\TextShadow.UITex", 5)
+				Image_day_line:SetImageType(10)
+				Image_day_line:SetAlpha(250)
+				local text = self:Append("Text", handle_day, sformat("Text_Time_%d_1", i), { h = 30, x  = 15, w = 200 , y = 2, text = sformat("%d-%d-%d  %s", year, month, day, _WEEKDAY[weekday]), font = _font})
+				text:SetVAlign(1)
+				--text:SetHAlign(1)
+				old_year, old_month, old_day = year, month, day
+			end
 
-		----显示内容
-		local handle_content = self:Append("Handle", hIconViewContent, sformat("Handle_Content_%d_1", i), {x = 400, y = 2, w = 300, h = 28})
-		handle_content:SetHandleStyle(3)
-		handle_content:SetMinRowHeight(30)
+			local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", i), {x = 0, y = 0, w = 900, h = 30})
+			--hIconViewContent:SetHandleStyle(3)
 
-		if nType == TRADE.SHOP_BUY or nType == TRADE.SHOP_SELL or nType ==  TRADE.RETURN or nType ==  TRADE.H_RETURN or nType ==  TRADE.LOOT or nType ==  TRADE.SHOP_RETURN
-		or nType == TRADE.MAIL_GET or nType == TRADE.MAIL_PAY or nType == TRADE.MAIL_SEND
-		then
-			local t_item =  {}
-			if nType == TRADE.SHOP_BUY or nType ==  TRADE.RETURN or nType ==  TRADE.H_RETURN or nType ==  TRADE.LOOT or nType ==  TRADE.SHOP_RETURN
-			or nType == TRADE.MAIL_GET or nType == TRADE.MAIL_PAY
-			then
-				t_item = Trade_Record:GetItem_in() or {}
-			elseif nType == TRADE.SHOP_SELL or nType == TRADE.MAIL_SEND then
-				t_item = Trade_Record:GetItem_out() or {}
+			local Image_Line = self:Append("Image", hIconViewContent, sformat("Image_Line1_%d", i), {x = 0, y = 0, w = 900, h = 30})
+			Image_Line:FromUITex("ui\\Image\\button\\ShopButton.UITex", 75)
+			Image_Line:SetImageType(10)
+			Image_Line:SetAlpha(200)
+			if i%2 == 0 then
+				Image_Line:SetAlpha(35)
 			end
-			if next(t_item)~= nil then
-				if nType ==  TRADE.SHOP_RETURN then
-					self:Append("Text", handle_content, sformat("Text_content_%d_re", i), {h = 30, text = _L["Get:"] , font = _font})
-				elseif nType ==  TRADE.MAIL_GET then
-					self:Append("Text", handle_content, sformat("Text_content_%d_mailget", i), {h = 30, text = _L["Get Attachment:"] , font = _font})
-				elseif nType ==  TRADE.MAIL_PAY then
-					self:Append("Text", handle_content, sformat("Text_content_%d_mailpay", i), {h = 30, text = _L["Pay for Attachment:"] , font = _font})
-				elseif nType ==  TRADE.MAIL_SEND then
-					self:Append("Text", handle_content, sformat("Text_content_%d_mailsend", i), {h = 30, text = _L["Mail Items:"] , font = _font})
+
+			local Image_Line2 = self:Append("Image", hIconViewContent, sformat("Image_Line2_%d", i), {x = 0, y = 0, w = 900, h = 30})
+			if Trade_Record:GetType() ==  TRADE.GKP then
+				Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 228)
+			elseif Trade_Record:GetType() ==  TRADE.TRADE or Trade_Record:GetType() ==  TRADE.AUCTION_BUY or Trade_Record:GetType() ==  TRADE.AUCTION_SELL then
+				Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 213)
+			elseif Trade_Record:GetType() ==  TRADE.SHOP_BUY then
+				Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 214)
+			elseif Trade_Record:GetType() ==  TRADE.SHOP_SELL then
+				Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 215)
+			elseif Trade_Record:GetType() ==  TRADE.LOOT or Trade_Record:GetType() ==  TRADE.LOOT_MONEY or Trade_Record:GetType() ==  TRADE.GOLDTEAM then
+				Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 212)
+			elseif Trade_Record:GetType() ==  TRADE.RETURN or Trade_Record:GetType() ==  TRADE.H_RETURN or Trade_Record:GetType() ==  TRADE.SHOP_RETURN then
+				Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 211)
+			elseif Trade_Record:GetType() ==  TRADE.MAIL_GET or Trade_Record:GetType() ==  TRADE.MAIL_PAY or Trade_Record:GetType() ==  TRADE.MAIL_SEND then
+				Image_Line2:FromUITex("ui\\Image\\Common\\Money.UITex", 219)
+			end
+			Image_Line2:SetImageType(10)
+			Image_Line2:SetAlpha(65)
+
+			--悬停框
+			local Image_Hover = self:Append("Image", hIconViewContent, sformat("Image_Hover_%d", i), {x = 2, y = 0, w = 910, h = 30})
+			Image_Hover:FromUITex("ui\\Image\\Common\\TempBox.UITex", 5)
+			Image_Hover:SetImageType(10)
+			Image_Hover:SetAlpha(200)
+			Image_Hover:Hide()
+			--选择框
+			local Image_Select = self:Append("Image", hIconViewContent, sformat("Image_Select_%d", i), {x = 2, y = 0, w = 910, h = 30})
+			Image_Select:FromUITex("ui\\Image\\Common\\TempBox.UITex", 6)
+			Image_Select:SetImageType(10)
+			Image_Select:SetAlpha(200)
+			Image_Select:Hide()
+
+			-----显示日期
+			local hour = data["hour"]
+			local minute = data["minute"]
+			local second = data["second"]
+
+			local Text_Time = self:Append("Text", hIconViewContent, sformat("Text_Time_%d_1", i), {w = 120, h = 30, x  = 0, y = 2, text = "" , font = _font})
+			Text_Time:SetHAlign(1)
+			Text_Time:SetVAlign(1)
+			Text_Time:SetText(sformat("%0.2d:%0.2d:%0.2d", hour, minute, second))
+
+			----显示地点
+			local dwMapID = Trade_Record:GetMapID()
+			local szMapName = LR.Trim(Table_GetMapName(dwMapID))
+
+			local Text_Location = self:Append("Text", hIconViewContent, sformat("Text_Location_%d_1", i), {w = 80, h = 30, x  = 120, y = 2, text = "" , font = _font})
+			Text_Location:SetHAlign(1)
+			Text_Location:SetVAlign(1)
+			Text_Location:SetText(szMapName)
+
+			local s1 = Text_Location:GetTextPosExtent(76)
+			local s2 = Text_Location:GetTextLen()
+			local s3 = ssub(szMapName, -8)
+			if s2>4 then
+				Text_Location:RegisterEvent(272)
+				Text_Location:SetText(s3)
+				Text_Location.OnEnter = function()
+					Image_Hover:Show()
+					local x, y = Text_Location:GetAbsPos()
+					local w, h = Text_Location:GetSize()
+					local szXml  = GetFormatText(szMapName, 18)
+					OutputTip(szXml, 350, {x, y, w, h})
+				end
+				Text_Location.OnLeave = function()
+					Image_Hover:Hide()
+					HideTip()
 				end
 			end
-			for k = 1, #t_item, 1 do
-				self:AddBoxItem(t_item[k], handle_content, sformat("%d_%d_%d", OrderTime, i, k), Image_Hover)
-			end
-		elseif nType == TRADE.TRADE then
-			local t_item
-			t_item = Trade_Record:GetItem_in()
-			if next(t_item) ~=  nil then
-				self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["Get:"] , font = _font})
-				for k = 1, #t_item, 1 do
-					self:AddBoxItem(t_item[k], handle_content, sformat("%d_in_%d_%d", OrderTime, i, k), Image_Hover)
+
+			----显示类型
+			local nType = Trade_Record:GetType()
+
+			local Text_Type = self:Append("Text", hIconViewContent, sformat("Text_Type_%d_1", i), {w = 80, h = 30, x  = 200, y = 2, text = "" , font = _font})
+			Text_Type:SetHAlign(1)
+			Text_Type:SetVAlign(1)
+			Text_Type:SetText(TRADE_TEXT[nType])
+
+			----显示来源
+			local Text_Source = self:Append("Text", hIconViewContent, sformat("Text_Source_%d_1", i), {w = 120, h = 30, x  = 280, y = 2, text = "" , font = _font})
+			Text_Source:SetHAlign(1)
+			Text_Source:SetVAlign(1)
+
+			local Source = Trade_Record:GetSource()
+			if Source.nType == TARGET.NPC then
+				Text_Source:RegisterEvent(272)
+				Text_Source:SetText(Source.szName)
+				Text_Source.OnEnter = function()
+					Image_Hover:Show()
+					local x, y = Text_Source:GetAbsPos()
+					local w, h = Text_Source:GetSize()
+					local szXml = {}
+					szXml[#szXml+1] = GetFormatText(sformat("%s\n", Source.szName), 18)
+					if Source.szTitle then
+						local szTitle = Source.szTitle or ""
+						szXml[#szXml+1] = GetFormatText(sformat("[%s]\n", szTitle), 18)
+					end
+					szXml[#szXml+1] = GetFormatText(sformat("%s\n", szMapName), 18)
+					OutputTip(tconcat(szXml), 350, {x, y, w, h})
 				end
-				self:Append("Text", handle_content, sformat("Text_content_%d_3", i), {h = 30, text = "  \n" , font = _font})
-			end
-			t_item = Trade_Record:GetItem_out()
-			if next(t_item) ~=  nil then
-				self:Append("Text", handle_content, sformat("Text_content_%d_2", i), {h = 30, text = _L["Give:"] , font = _font})
-				for k = 1, #t_item, 1 do
-					self:AddBoxItem(t_item[k], handle_content, sformat("%d_out_%d_%d", OrderTime, i, k), Image_Hover)
+				Text_Source.OnLeave = function()
+					Image_Hover:Hide()
+					HideTip()
 				end
-			end
-		elseif nType == TRADE.AUCTION_SELL then
-			local t_item
-			t_item = Trade_Record:GetItem_out()
-			if next(t_item) ~=  nil then
-				self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["Consignment:"] , font = _font})
-				for k = 1, #t_item, 1 do
-					self:AddBoxItem(t_item[k], handle_content, sformat("%d_in_%d_%d", OrderTime, i, k), Image_Hover)
+			elseif Source.nType == TARGET.DOODAD then
+				Text_Source:RegisterEvent(272)
+				Text_Source:SetText(Source.szName)
+				Text_Source.OnEnter = function()
+					Image_Hover:Show()
+					local x, y = Text_Source:GetAbsPos()
+					local w, h = Text_Source:GetSize()
+					local szXml = {}
+					szXml[#szXml+1] = GetFormatText(sformat("%s\n", Source.szName), 18)
+					szXml[#szXml+1] = GetFormatText("<DOODAD>\n", 18)
+					if Source.szTitle then
+						local szTitle = Source.szTitle
+						if type(Source.szTitle) ==  "number" then
+							szTitle = DOODAD_TYPETEXT[Source.szTitle] or ""
+						end
+						szXml[#szXml+1] = GetFormatText(sformat("[%s]\n", szTitle), 18)
+					end
+					szXml[#szXml+1] = GetFormatText(sformat("%s\n", szMapName), 18)
+					OutputTip(tconcat(szXml), 350, {x, y, w, h})
 				end
-			end
-		elseif nType == TRADE.AUCTION_BUY then
-			local t_item
-			t_item = Trade_Record:GetItem_in()
-			if next(t_item) ~=  nil then
-				self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["You successfully bought"] , font = _font})
-				for k = 1, #t_item, 1 do
-					local szName = t_item[k].szName or ""
-					self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = sformat("[%s] ", szName), font = 27})
+				Text_Source.OnLeave = function()
+					Image_Hover:Hide()
+					HideTip()
 				end
-				self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = "！" , font = _font})
-			end
-		elseif nType == TRADE.AUCTION_SUCCESS then
-			local t_item
-			t_item = Trade_Record:GetItem_out()
-			if next(t_item) ~=  nil then
-				self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["You consignment thing "] , font = _font})
-				for k = 1, #t_item, 1 do
-					local szName = t_item[k].szName or ""
-					self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = sformat("[%s] ", szName) , font = 27})
-				end
-				self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["sold out successful."] , font = _font})
-			end
-		elseif nType == TRADE.GKP then
-			local t_item
-			t_item = Trade_Record:GetItem_in()
-			if next(t_item) ~=  nil then
-				local Distributor = Trade_Record:GetDistributor()
-				if Distributor.nType ==  TARGET.PLAYER then
-					local text = self:Append("Text", handle_content, sformat("Text_content_%d_4", i), {h = 30, text = "" , font = _font})
-					text:RegisterEvent(272)
-					text:SprintfText("[%s] ", Distributor.szName)
-					local dwForceID =  Distributor.dwForceID
+			elseif Source.nType == TARGET.PLAYER then
+				Text_Source:RegisterEvent(272)
+				Text_Source:SetText(Source.szName)
+				local dwForceID = Source.dwForceID or 0
+				local r, g, b = LR.GetMenPaiColor(dwForceID)
+				Text_Source:SetFontColor(r, g, b)
+				Text_Source.OnEnter = function()
+					Image_Hover:Show()
+					local x, y = Text_Source:GetAbsPos()
+					local w, h = Text_Source:GetSize()
+					local dwForceID = Source.dwForceID or 0
+					local szPath, nFrame = GetForceImage(dwForceID)
 					local r, g, b = LR.GetMenPaiColor(dwForceID)
-					text:SetFontColor(r, g, b)
-
-					text.OnEnter = function()
-						Image_Hover:Show()
-						local x, y = text:GetAbsPos()
-						local w, h = text:GetSize()
-						local dwForceID = Distributor.dwForceID or 0
-						local szPath, nFrame = GetForceImage(dwForceID)
-						local r, g, b = LR.GetMenPaiColor(dwForceID)
-						local szXml = {}
-						szXml[#szXml+1] = GetFormatImage(szPath, nFrame, 26, 26)
-						szXml[#szXml+1] = GetFormatText(sformat("%s\n", Distributor.szName), 18, r, g, b)
-						szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["<PLAYER>"]), 18)
-						OutputTip(tconcat(szXml), 350, {x, y, w, h})
-					end
-					text.OnLeave = function()
-						Image_Hover:Hide()
-						HideTip()
-					end
-
-					text.OnClick = function()
-						local menu = {}
-						local dwID = Distributor.dwID
-						local szName = Distributor.szName
-						if IsCtrlKeyDown() then
-							LR.EditBox_AppendLinkPlayer(szName)
-						else
-							InsertPlayerCommonMenu(menu, dwID, szName)
-							if menu then
-								local invite = menu[1].fnAction
-								invite()
-							end
+					local szXml = {}
+					szXml[#szXml+1] = GetFormatImage(szPath, nFrame, 26, 26)
+					szXml[#szXml+1] = GetFormatText(sformat("%s\n", Source.szName), 18, r, g, b)
+					szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["<PLAYER>"]), 18)
+					OutputTip(tconcat(szXml), 350, {x, y, w, h})
+				end
+				Text_Source.OnLeave = function()
+					Image_Hover:Hide()
+					HideTip()
+				end
+				Text_Source.OnClick = function()
+					local menu = {}
+					local dwID = Source.dwID
+					local szName = Source.szName
+					if IsCtrlKeyDown() then
+						LR.EditBox_AppendLinkPlayer(szName)
+					else
+						InsertPlayerCommonMenu(menu, dwID, szName)
+						if menu then
+							local invite = menu[1].fnAction
+							invite()
 						end
 					end
 				end
-				self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["Record "] , font = _font})
-				for k = 1, #t_item, 1 do
-					self:AddBoxItem(t_item[k], handle_content, sformat("%d_in_%d_%d", OrderTime, i, k), Image_Hover)
+			elseif Source.nType ==  TARGET.NO_TARGET and Trade_Record:GetType() ==  TRADE.GKP then
+				Text_Source:RegisterEvent(272)
+				Text_Source:SetText(Source.szName)
+				Text_Source.OnEnter = function()
+					Image_Hover:Show()
+					local x, y = Text_Source:GetAbsPos()
+					local w, h = Text_Source:GetSize()
+					local szXml = {}
+					szXml[#szXml+1] = GetFormatText(sformat("%s\n", Source.szName), 18)
+					szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["<GKP>"]), 18)
+					szXml[#szXml+1] = GetFormatText(sformat("%s\n", szMapName), 18)
+					OutputTip(tconcat(szXml), 350, {x, y, w, h})
 				end
-				self:Append("Text", handle_content, sformat("Text_content_%d_2", i), {h = 30, text = _L["as"] , font = _font})
-				local nMoney = Trade_Record:GetMoney() / 10000
-				self:Append("Text", handle_content, sformat("Text_content_%d_3", i), {h = 30, text = nMoney , font = _font})
-				local img = self:Append("Image", handle_content, sformat("Img_content_%d_4", i), {w = 24, h = 24})
-				img:FromUITex("ui\\Image\\Common\\Money.UITex", 0)
-				img:Show()
-			end
-		elseif nType == TRADE.QUEST then
-			local t_item
-			t_item = Trade_Record:GetItem_in()
-			if next(t_item) ~=  nil then
-				self:Append("Text", handle_content, sformat("Text_content_%d_QUEST_1", i), {h = 30, text = _L["Finish quest "] , font = _font})
-				for k = 1, #t_item, 1 do
-					local dwQuestID = t_item[k].nBookID
-					local szQuestName = LR.GetQuestName(dwQuestID)
-					local text = self:Append("Text", handle_content, sformat("Text_QUEST_%d_1", i), {h = 30, text = sformat("[%s] ", szQuestName), font = 27})
-					text:RegisterEvent(272)
-					text.OnEnter = function()
-						Image_Hover:Show()
-						local x, y = text:GetAbsPos()
-						local w, h = text:GetSize()
-						OutputQuestTip(dwQuestID, {x, y, w, h, }, false)
-					end
-					text.OnLeave = function()
-						Image_Hover:Hide()
-						HideTip()
-					end
+				Text_Source.OnLeave = function()
+					Image_Hover:Hide()
+					HideTip()
 				end
 			end
-		end
-		handle_content:FormatAllItemPos()
-		local w, h = handle_content:GetAllItemSize()
-		local w2, h2 = hIconViewContent:GetSize()
-		if h>30 then
-			local x = mceil(h/30)
-			hIconViewContent:SetSize(w2, x*30)
-			Image_Line:SetSize(w2, x*30)
-			Image_Hover:SetSize(910, x*30)
-			Image_Line2:SetSize(w2, x*30)
-		end
+
+			----显示内容
+			local handle_content = self:Append("Handle", hIconViewContent, sformat("Handle_Content_%d_1", i), {x = 400, y = 2, w = 300, h = 28})
+			handle_content:SetHandleStyle(3)
+			handle_content:SetMinRowHeight(30)
+
+			if nType == TRADE.SHOP_BUY or nType == TRADE.SHOP_SELL or nType ==  TRADE.RETURN or nType ==  TRADE.H_RETURN or nType ==  TRADE.LOOT or nType ==  TRADE.SHOP_RETURN
+			or nType == TRADE.MAIL_GET or nType == TRADE.MAIL_PAY or nType == TRADE.MAIL_SEND
+			then
+				local t_item =  {}
+				if nType == TRADE.SHOP_BUY or nType ==  TRADE.RETURN or nType ==  TRADE.H_RETURN or nType ==  TRADE.LOOT or nType ==  TRADE.SHOP_RETURN
+				or nType == TRADE.MAIL_GET or nType == TRADE.MAIL_PAY
+				then
+					t_item = Trade_Record:GetItem_in() or {}
+				elseif nType == TRADE.SHOP_SELL or nType == TRADE.MAIL_SEND then
+					t_item = Trade_Record:GetItem_out() or {}
+				end
+				if next(t_item)~= nil then
+					if nType ==  TRADE.SHOP_RETURN then
+						self:Append("Text", handle_content, sformat("Text_content_%d_re", i), {h = 30, text = _L["Get:"] , font = _font})
+					elseif nType ==  TRADE.MAIL_GET then
+						self:Append("Text", handle_content, sformat("Text_content_%d_mailget", i), {h = 30, text = _L["Get Attachment:"] , font = _font})
+					elseif nType ==  TRADE.MAIL_PAY then
+						self:Append("Text", handle_content, sformat("Text_content_%d_mailpay", i), {h = 30, text = _L["Pay for Attachment:"] , font = _font})
+					elseif nType ==  TRADE.MAIL_SEND then
+						self:Append("Text", handle_content, sformat("Text_content_%d_mailsend", i), {h = 30, text = _L["Mail Items:"] , font = _font})
+					end
+				end
+				for k = 1, #t_item, 1 do
+					self:AddBoxItem(t_item[k], handle_content, sformat("%d_%d_%d", OrderTime, i, k), Image_Hover)
+				end
+			elseif nType == TRADE.TRADE then
+				local t_item
+				t_item = Trade_Record:GetItem_in()
+				if next(t_item) ~=  nil then
+					self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["Get:"] , font = _font})
+					for k = 1, #t_item, 1 do
+						self:AddBoxItem(t_item[k], handle_content, sformat("%d_in_%d_%d", OrderTime, i, k), Image_Hover)
+					end
+					self:Append("Text", handle_content, sformat("Text_content_%d_3", i), {h = 30, text = "  \n" , font = _font})
+				end
+				t_item = Trade_Record:GetItem_out()
+				if next(t_item) ~=  nil then
+					self:Append("Text", handle_content, sformat("Text_content_%d_2", i), {h = 30, text = _L["Give:"] , font = _font})
+					for k = 1, #t_item, 1 do
+						self:AddBoxItem(t_item[k], handle_content, sformat("%d_out_%d_%d", OrderTime, i, k), Image_Hover)
+					end
+				end
+			elseif nType == TRADE.AUCTION_SELL then
+				local t_item
+				t_item = Trade_Record:GetItem_out()
+				if next(t_item) ~=  nil then
+					self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["Consignment:"] , font = _font})
+					for k = 1, #t_item, 1 do
+						self:AddBoxItem(t_item[k], handle_content, sformat("%d_in_%d_%d", OrderTime, i, k), Image_Hover)
+					end
+				end
+			elseif nType == TRADE.AUCTION_BUY then
+				local t_item
+				t_item = Trade_Record:GetItem_in()
+				if next(t_item) ~=  nil then
+					self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["You successfully bought"] , font = _font})
+					for k = 1, #t_item, 1 do
+						local szName = t_item[k].szName or ""
+						self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = sformat("[%s] ", szName), font = 27})
+					end
+					self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = "！" , font = _font})
+				end
+			elseif nType == TRADE.AUCTION_SUCCESS then
+				local t_item
+				t_item = Trade_Record:GetItem_out()
+				if next(t_item) ~=  nil then
+					self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["You consignment thing "] , font = _font})
+					for k = 1, #t_item, 1 do
+						local szName = t_item[k].szName or ""
+						self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = sformat("[%s] ", szName) , font = 27})
+					end
+					self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["sold out successful."] , font = _font})
+				end
+			elseif nType == TRADE.GKP then
+				local t_item
+				t_item = Trade_Record:GetItem_in()
+				if next(t_item) ~=  nil then
+					local Distributor = Trade_Record:GetDistributor()
+					if Distributor.nType ==  TARGET.PLAYER then
+						local text = self:Append("Text", handle_content, sformat("Text_content_%d_4", i), {h = 30, text = "" , font = _font})
+						text:RegisterEvent(272)
+						text:SprintfText("[%s] ", Distributor.szName)
+						local dwForceID =  Distributor.dwForceID
+						local r, g, b = LR.GetMenPaiColor(dwForceID)
+						text:SetFontColor(r, g, b)
+
+						text.OnEnter = function()
+							Image_Hover:Show()
+							local x, y = text:GetAbsPos()
+							local w, h = text:GetSize()
+							local dwForceID = Distributor.dwForceID or 0
+							local szPath, nFrame = GetForceImage(dwForceID)
+							local r, g, b = LR.GetMenPaiColor(dwForceID)
+							local szXml = {}
+							szXml[#szXml+1] = GetFormatImage(szPath, nFrame, 26, 26)
+							szXml[#szXml+1] = GetFormatText(sformat("%s\n", Distributor.szName), 18, r, g, b)
+							szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["<PLAYER>"]), 18)
+							OutputTip(tconcat(szXml), 350, {x, y, w, h})
+						end
+						text.OnLeave = function()
+							Image_Hover:Hide()
+							HideTip()
+						end
+
+						text.OnClick = function()
+							local menu = {}
+							local dwID = Distributor.dwID
+							local szName = Distributor.szName
+							if IsCtrlKeyDown() then
+								LR.EditBox_AppendLinkPlayer(szName)
+							else
+								InsertPlayerCommonMenu(menu, dwID, szName)
+								if menu then
+									local invite = menu[1].fnAction
+									invite()
+								end
+							end
+						end
+					end
+					self:Append("Text", handle_content, sformat("Text_content_%d_1", i), {h = 30, text = _L["Record "] , font = _font})
+					for k = 1, #t_item, 1 do
+						self:AddBoxItem(t_item[k], handle_content, sformat("%d_in_%d_%d", OrderTime, i, k), Image_Hover)
+					end
+					self:Append("Text", handle_content, sformat("Text_content_%d_2", i), {h = 30, text = _L["as"] , font = _font})
+					local nMoney = Trade_Record:GetMoney() / 10000
+					self:Append("Text", handle_content, sformat("Text_content_%d_3", i), {h = 30, text = nMoney , font = _font})
+					local img = self:Append("Image", handle_content, sformat("Img_content_%d_4", i), {w = 24, h = 24})
+					img:FromUITex("ui\\Image\\Common\\Money.UITex", 0)
+					img:Show()
+				end
+			elseif nType == TRADE.QUEST then
+				local t_item
+				t_item = Trade_Record:GetItem_in()
+				if next(t_item) ~=  nil then
+					self:Append("Text", handle_content, sformat("Text_content_%d_QUEST_1", i), {h = 30, text = _L["Finish quest "] , font = _font})
+					for k = 1, #t_item, 1 do
+						local dwQuestID = t_item[k].nBookID
+						local szQuestName = LR.GetQuestName(dwQuestID)
+						local text = self:Append("Text", handle_content, sformat("Text_QUEST_%d_1", i), {h = 30, text = sformat("[%s] ", szQuestName), font = 27})
+						text:RegisterEvent(272)
+						text.OnEnter = function()
+							Image_Hover:Show()
+							local x, y = text:GetAbsPos()
+							local w, h = text:GetSize()
+							OutputQuestTip(dwQuestID, {x, y, w, h, }, false)
+						end
+						text.OnLeave = function()
+							Image_Hover:Hide()
+							HideTip()
+						end
+					end
+				end
+			end
+			handle_content:FormatAllItemPos()
+			local w, h = handle_content:GetAllItemSize()
+			local w2, h2 = hIconViewContent:GetSize()
+			if h>30 then
+				local x = mceil(h/30)
+				hIconViewContent:SetSize(w2, x*30)
+				Image_Line:SetSize(w2, x*30)
+				Image_Hover:SetSize(910, x*30)
+				Image_Line2:SetSize(w2, x*30)
+			end
 
 
-		-----显示金额
-		local MoneyContentHandle = self:Append("Handle", hIconViewContent, sformat("MoneyContentHandle_%d", i), {x = 700, y = 0, w = 200, h = 30})
-		--MoneyContentHandle:SetHandleStyle(1)
-		MoneyContentHandle:SetMinRowHeight(30)
+			-----显示金额
+			local MoneyContentHandle = self:Append("Handle", hIconViewContent, sformat("MoneyContentHandle_%d", i), {x = 700, y = 0, w = 200, h = 30})
+			--MoneyContentHandle:SetHandleStyle(1)
+			MoneyContentHandle:SetMinRowHeight(30)
 
-		local Text_GoldBrick = self:Append("Text", MoneyContentHandle, sformat("Text_GoldBrick_%d", i), {w = 24, h = 30, x = 0 , text = "88" , font = _font})
-		Text_GoldBrick:SetVAlign(1)
-		Text_GoldBrick:SetHAlign(2)
-		local Img_GoldBrick = self:Append("Animate", MoneyContentHandle, sformat("Img_GoldBrick_%d", i), {w = 24, h = 24, x = 24, })
-		Img_GoldBrick:SetAnimate("ui\\Image\\Common\\Money.UITex", 41)
-		Img_GoldBrick:Show()
-		local Text_Gold = self:Append("Text", MoneyContentHandle, sformat("Text_Gold_%d", i), {w = 40, h = 30, x = 48 , text = "8888" , font = _font})
-		Text_Gold:SetVAlign(1)
-		Text_Gold:SetHAlign(2)
-		local Img_Gold = self:Append("Image", MoneyContentHandle, sformat("Img_Gold_%d", i) , {w = 24, h = 24, x = 88 , })
-		Img_Gold:FromUITex("ui\\Image\\Common\\Money.UITex", 0)
-		Img_Gold:Show()
-		local Text_Silver = self:Append("Text", MoneyContentHandle, sformat("Text_Gold_%d", i), {w = 24, h = 30, x = 112 , text = "88" , font = _font})
-		Text_Silver:SetVAlign(1)
-		Text_Silver:SetHAlign(2)
-		local Img_Silver = self:Append("Image", MoneyContentHandle, sformat("Img_Gold_%d", i), {w = 24, h = 24, x = 136 , })
-		Img_Silver:FromUITex("ui\\Image\\Common\\Money.UITex", 2)
-		Img_Silver:Show()
-		local Text_Copper = self:Append("Text", MoneyContentHandle, sformat("Text_Gold_%d", i), {w = 24, h = 30, x = 160 , text = "88" , font = _font})
-		Text_Copper:SetVAlign(1)
-		Text_Copper:SetHAlign(2)
-		local Img_Copper	 = self:Append("Image", MoneyContentHandle, sformat("Img_Gold_%d", i), {w = 24, x = 184 , h = 24, })
-		Img_Copper:FromUITex("ui\\Image\\Common\\Money.UITex", 1)
-		Img_Copper:Show()
+			local Text_GoldBrick = self:Append("Text", MoneyContentHandle, sformat("Text_GoldBrick_%d", i), {w = 24, h = 30, x = 0 , text = "88" , font = _font})
+			Text_GoldBrick:SetVAlign(1)
+			Text_GoldBrick:SetHAlign(2)
+			local Img_GoldBrick = self:Append("Animate", MoneyContentHandle, sformat("Img_GoldBrick_%d", i), {w = 24, h = 24, x = 24, })
+			Img_GoldBrick:SetAnimate("ui\\Image\\Common\\Money.UITex", 41)
+			Img_GoldBrick:Show()
+			local Text_Gold = self:Append("Text", MoneyContentHandle, sformat("Text_Gold_%d", i), {w = 40, h = 30, x = 48 , text = "8888" , font = _font})
+			Text_Gold:SetVAlign(1)
+			Text_Gold:SetHAlign(2)
+			local Img_Gold = self:Append("Image", MoneyContentHandle, sformat("Img_Gold_%d", i) , {w = 24, h = 24, x = 88 , })
+			Img_Gold:FromUITex("ui\\Image\\Common\\Money.UITex", 0)
+			Img_Gold:Show()
+			local Text_Silver = self:Append("Text", MoneyContentHandle, sformat("Text_Gold_%d", i), {w = 24, h = 30, x = 112 , text = "88" , font = _font})
+			Text_Silver:SetVAlign(1)
+			Text_Silver:SetHAlign(2)
+			local Img_Silver = self:Append("Image", MoneyContentHandle, sformat("Img_Gold_%d", i), {w = 24, h = 24, x = 136 , })
+			Img_Silver:FromUITex("ui\\Image\\Common\\Money.UITex", 2)
+			Img_Silver:Show()
+			local Text_Copper = self:Append("Text", MoneyContentHandle, sformat("Text_Gold_%d", i), {w = 24, h = 30, x = 160 , text = "88" , font = _font})
+			Text_Copper:SetVAlign(1)
+			Text_Copper:SetHAlign(2)
+			local Img_Copper	 = self:Append("Image", MoneyContentHandle, sformat("Img_Gold_%d", i), {w = 24, x = 184 , h = 24, })
+			Img_Copper:FromUITex("ui\\Image\\Common\\Money.UITex", 1)
+			Img_Copper:Show()
 
-		local nMoney = Trade_Record:GetMoney()
-		if Trade_Record:GetType() == TRADE.GKP then
-			nMoney = 0
-		end
+			local nMoney = Trade_Record:GetMoney()
+			if Trade_Record:GetType() == TRADE.GKP then
+				nMoney = 0
+			end
 
-		if not (Trade_Record:GetType() == TRADE.GKP or Trade_Record:GetType() == TRADE.AUCTION_SUCCESS) then
-			nMoneyall = nMoneyall+nMoney
-		end
+			if not (Trade_Record:GetType() == TRADE.GKP or Trade_Record:GetType() == TRADE.AUCTION_SUCCESS) then
+				nMoneyall = nMoneyall+nMoney
+			end
 
-		local minus = 1
-		if nMoney < 0 then
-			minus = -1
-			nMoney = 0 - nMoney
-		end
+			local minus = 1
+			if nMoney < 0 then
+				minus = -1
+				nMoney = 0 - nMoney
+			end
 
-		local nGoldBrick, nGold, nSilver, nCopper =  LR.MoneyToGoldSilverAndCopper (nMoney)
-		Text_GoldBrick:SetText(nGoldBrick)
-		Text_Gold:SetText(nGold)
-		Text_Silver:SetText(nSilver)
-		Text_Copper:SetText(nCopper)
+			local nGoldBrick, nGold, nSilver, nCopper =  LR.MoneyToGoldSilverAndCopper (nMoney)
+			Text_GoldBrick:SetText(nGoldBrick)
+			Text_Gold:SetText(nGold)
+			Text_Silver:SetText(nSilver)
+			Text_Copper:SetText(nCopper)
 
-		if minus == -1 then
-			Text_GoldBrick:SetFontColor(237, 28, 36)
-			Text_Gold:SetFontColor(237, 28, 36)
-			Text_Silver:SetFontColor(237, 28, 36)
-			Text_Copper:SetFontColor(237, 28, 36)
+			if minus == -1 then
+				Text_GoldBrick:SetFontColor(237, 28, 36)
+				Text_Gold:SetFontColor(237, 28, 36)
+				Text_Silver:SetFontColor(237, 28, 36)
+				Text_Copper:SetFontColor(237, 28, 36)
 
-			if nMoney >= 100000000 then
-				Text_GoldBrick:SprintfText("- %d", nGoldBrick)
-			elseif nMoney >= 10000 then
-				Text_Gold:SprintfText("- %d", nGold)
-			elseif nMoney >= 100 then
-				Text_Silver:SprintfText("- %d", nSilver)
+				if nMoney >= 100000000 then
+					Text_GoldBrick:SprintfText("- %d", nGoldBrick)
+				elseif nMoney >= 10000 then
+					Text_Gold:SprintfText("- %d", nGold)
+				elseif nMoney >= 100 then
+					Text_Silver:SprintfText("- %d", nSilver)
+				else
+					Text_Copper:SprintfText("- %d", nCopper)
+				end
+			end
+
+			if nMoney >=  100000000 then
+				-----
+			elseif nMoney >=  10000 then
+				Text_GoldBrick:Hide()
+				Img_GoldBrick:Hide()
+			elseif nMoney >=  100 then
+				Text_GoldBrick:Hide()
+				Img_GoldBrick:Hide()
+				Text_Gold:Hide()
+				Img_Gold:Hide()
 			else
-				Text_Copper:SprintfText("- %d", nCopper)
+				Text_GoldBrick:Hide()
+				Img_GoldBrick:Hide()
+				Text_Gold:Hide()
+				Img_Gold:Hide()
+				Text_Silver:Hide()
+				Img_Silver:Hide()
 			end
-		end
 
-		if nMoney >=  100000000 then
-			-----
-		elseif nMoney >=  10000 then
-			Text_GoldBrick:Hide()
-			Img_GoldBrick:Hide()
-		elseif nMoney >=  100 then
-			Text_GoldBrick:Hide()
-			Img_GoldBrick:Hide()
-			Text_Gold:Hide()
-			Img_Gold:Hide()
-		else
-			Text_GoldBrick:Hide()
-			Img_GoldBrick:Hide()
-			Text_Gold:Hide()
-			Img_Gold:Hide()
-			Text_Silver:Hide()
-			Img_Silver:Hide()
-		end
+			MoneyContentHandle:FormatAllItemPos()
 
-		MoneyContentHandle:FormatAllItemPos()
+			-----------鼠标操作
+			hIconViewContent.OnEnter = function()
+				Image_Hover:Show()
+			end
+			hIconViewContent.OnLeave = function()
+				Image_Hover:Hide()
+			end
 
-		-----------鼠标操作
-		hIconViewContent.OnEnter = function()
-			Image_Hover:Show()
-		end
-		hIconViewContent.OnLeave = function()
-			Image_Hover:Hide()
-		end
+			handle_content.OnEnter = function()
+				Image_Hover:Show()
+			end
+			handle_content.OnLeave = function()
+				Image_Hover:Hide()
+			end
 
-		handle_content.OnEnter = function()
-			Image_Hover:Show()
-		end
-		handle_content.OnLeave = function()
-			Image_Hover:Hide()
-		end
-
-		MoneyContentHandle.OnEnter = function()
-			Image_Hover:Show()
-		end
-		MoneyContentHandle.OnLeave = function()
-			Image_Hover:Hide()
+			MoneyContentHandle.OnEnter = function()
+				Image_Hover:Show()
+			end
+			MoneyContentHandle.OnLeave = function()
+				Image_Hover:Hide()
+			end
 		end
 	end
 

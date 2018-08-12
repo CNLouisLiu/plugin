@@ -204,6 +204,17 @@ local UI = {
 					LR_AS_Panel.RefreshUI()
 				end
 			end,
+		},{name = "LR_Acc_UI_RCComx02", type = "CheckBox", text = _L["Instant saving when quest update"], x = 0, y = 30, w = 200,
+			default = function ()
+ 				return LR_AS_RC.UsrData.InstantSaving
+			end,
+			callback = function (enabled)
+				LR_AS_RC.UsrData.InstantSaving = enabled
+				if LR_AS_RC.UsrData.bUseCommonData then
+					LR_AS_RC.LoadCommomMenuList()
+					LR_AS_Panel.RefreshUI()
+				end
+			end,
 		},
 	},
 }

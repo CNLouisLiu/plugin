@@ -301,9 +301,9 @@ LR_HeadName.default = {
 	},
 	Version = CustomVersion,
 	CustomDoodad = {
-		[_L["LiangCaoDui"]] = true,
-		[_L["SanLuoDeBiaoYin"]] = true,
-		[_L["ShouLingDeZhanLiPin"]] = true,
+		[_D(3996)] = true,
+		[_D(3874)] = true,
+		[_D(4255)] = true,
 	},
 }
 
@@ -377,11 +377,10 @@ LR_HeadName.MissionPatch2 = {}
 
 ------Doodad必定显示的补丁
 LR_HeadName.DoodadBeShow = {
-	[_L["YinRan"]] = true,
-	[_L["ZhuZao"]] = true,
-	[_L["CuiLian"]] = true,
-	[_L["LuZao"]] = true,
-	[_L["DaYaoJiu"]] = true,
+	[_D(183)] = true,
+	[_D(342)] = true,
+	[_D(343)] = true,
+	[_D(344)] = true,
 }
 
 ----------NPC用Template的名字显示的补丁
@@ -3024,19 +3023,9 @@ function LR_HeadName.QUEST_FAILED()
 	_QuestTraceInfo[dwQuestID] = nil
 	_QuestInfo[dwQuestID] = nil
 
-
 	LR_HeadName.Tree()
 	LR_HeadName.RefreshTarget()
 	LR_HeadName.ReDrawNpc()
---[[	LR.DelayCall(150, function()
-		----刷新NPC/Doodad上的任务标记
-		LR_HeadName.Tree()
-		----将Doodad加入显示列表
-		--LR_HeadName.AddAllDoodad2AllList()
-		----刷新当前目标
-		LR_HeadName.RefreshTarget()
-		LR_HeadName.ReDrawNpc()
-	end)]]
 end
 
 function LR_HeadName.QUEST_ACCEPTED()
@@ -3057,16 +3046,6 @@ function LR_HeadName.QUEST_ACCEPTED()
 	LR_HeadName.Tree()
 	LR_HeadName.ReDrawNpc()
 	LR_HeadName.AddAllDoodad2AllList()
-
---[[	LR.DelayCall(150, function()
-		----刷新NPC/Doodad上的任务标记
-		LR_HeadName.Tree()
-		----将Doodad加入显示列表
-		LR_HeadName.AddAllDoodad2AllList()
-		----刷新当前目标
-		LR_HeadName.RefreshTarget()
-		LR_HeadName.ReDrawNpc()
-	end)]]
 end
 
 function LR_HeadName.QUEST_CANCELED()
@@ -3129,15 +3108,6 @@ function LR_HeadName.QUEST_DATA_UPDATE()
 	----刷新当前目标
 	--LR_HeadName.RefreshTarget()
 	LR_HeadName.ReDrawNpc()
---[[	LR.DelayCall(150, function()
-		----刷新NPC/Doodad上的任务标记
-		LR_HeadName.Tree()
-		----将Doodad加入显示列表
-		LR_HeadName.AddAllDoodad2AllList()
-		----刷新当前目标
-		LR_HeadName.RefreshTarget()
-		LR_HeadName.ReDrawNpc()
-	end)]]
 end
 
 function LR_HeadName.RefreshTarget()

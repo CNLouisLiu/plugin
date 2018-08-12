@@ -9,7 +9,7 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20180403"
+local VERSION = "20180809"
 -------------------------------------------------------------
 local RI_CHANG = {
 	DA = 1, 	--大战
@@ -73,11 +73,11 @@ LR_AS_RC.Default = {
 		[RI_CHANG.LUOYANGSHENBING] = false,
 	},
 	bUseCommonData = true,
-	Version = "20170626",
+	InstantSaving = false,
+	Version = VERSION,
 }
 LR_AS_RC.UsrData = clone(LR_AS_RC.Default)
-local CustomVersion = "20170111"
-RegisterCustomData("LR_AS_RC.UsrData", CustomVersion)
+RegisterCustomData("LR_AS_RC.UsrData", VERSION)
 
 LR_AS_RC.CustomQuestList = {}
 
@@ -105,7 +105,6 @@ _RC.SelfData = {
 }
 
 _RC.SelfCustomQuestStatus = {}
-
 
 -------------------------------
 local MONITED_QUEST_LIST = {}		----不在这个列表中的任务不会触发保存
@@ -1741,20 +1740,12 @@ function LR_QuestTools:LoadItemBox()
 						Output("ss", tList)
 					end
 				end
-
-
-
 				if questInfo.dwStartDoodadTemplateID ~= 0 then
 
 				elseif questInfo.dwStartNpcTemplateID ~= 0 then
 
 				end
 			end
-
-
-
-
-
 			local tQuest = g_tTable.Quest:Search(dwQuestID)
 			if tQuest then
 				if IsCtrlKeyDown() then
@@ -1812,6 +1803,11 @@ end
 --------------------------------------
 local _quest_save_time = 0
 local function SAVE_QUEST(dwQuestID)
+	--非即时保存则返回
+	if not LR_AS_RC.UsrData.InstantSaving then
+		return
+	end
+	--不在监控中的任务不保存
 	if not MONITED_QUEST_LIST[dwQuestID] then
 		return
 	end
