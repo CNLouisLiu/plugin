@@ -1338,7 +1338,10 @@ function _RoleGrid:DrawLifeText()
 	local UIConfig = LR_TeamGrid.UIConfig
 	local halign = UIConfig.lifeText.halign
 	local valign = UIConfig.lifeText.valign
-	if MemberInfo.bDeathFlag or nCurrentLife == 0 or not MemberInfo.bIsOnLine or nMaxLife == 0 then
+	if not MemberInfo.bDeathFlag then
+		handle.bDeathFlag = false	--用于消除BOSS_FOCUS
+	end
+	if (MemberInfo.bDeathFlag and nCurrentLife == 0) or not MemberInfo.bIsOnLine or nMaxLife == 0 then
 		if not MemberInfo.bIsOnLine then
 			nCurrentLife = _L["Offline"]
 			r, g, b = 96, 96, 96
@@ -1348,7 +1351,13 @@ function _RoleGrid:DrawLifeText()
 		elseif MemberInfo.bDeathFlag then -- or nCurrentLife == 0 then
 			nCurrentLife = _L["Dead"]
 			r, g, b = 255, 0, 0
+			--将队友死后BOSS_FOCUS消除的语句放这
+			if not handle.bDeathFlag then
+				FireEvent("ON_BOSS_FOCUS", dwID, false)
+				handle.bDeathFlag = bDeathFlag
+			end
 		end
+
 		handle:Lookup("Text_LifeValue"):SetText(nCurrentLife)
 		handle:Lookup("Text_LifeValue"):SetFontScheme(15)
 		handle:Lookup("Text_LifeValue"):SetFontScale(LR_TeamGrid.UsrData.CommonSettings.bloodTextScale)
@@ -1967,6 +1976,7 @@ function LR_TeamGrid.OnEvent(szEvent)
 		LR_TeamSkillMonitor.DO_SKILL_CAST()
 	elseif szEvent == "FIGHT_HINT" then
 		LR_TeamTools.DistributeAttention.FIGHT_HINT()
+		LR_TeamGrid.FIGHT_HINT()
 	elseif szEvent == "MONEY_UPDATE" then
 		LR_TeamGrid.MONEY_UPDATE()
 	elseif szEvent == "LOADING_END" then
@@ -2008,6 +2018,12 @@ function LR_TeamGrid.OnFrameBreathe()
 					v:DrawDistanceText()
 				end
 			end
+		end
+	end
+
+	if GetLogicFrameCount() % 2 == 0 then
+		for dwID , v in pairs(_tRoleGrids) do
+			v:DrawLifeText()
 		end
 	end
 
@@ -3919,6 +3935,21 @@ function LR_TeamGrid.ON_BOSS_FOCUS()
 	local dwPlayerID = arg0
 	local bFlash = arg1
 	_tBossFocusList[dwPlayerID] = bFlash
+end
+
+
+function LR_TeamGrid.FIGHT_HINT()
+	local bFight = arg0
+	local frame = Station.Lookup("Normal/LR_TeamGrid")
+	local me = GetClientPlayer()
+	if not frame or not me then
+		return
+	end
+	local tBossFocusList = clone(_tBossFocusList)
+	_tBossFocusList = {}
+	for dwPlayerID, v in pairs(tBossFocusList) do
+		FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
+	end
 end
 
 -----------------------------------------------------------------------

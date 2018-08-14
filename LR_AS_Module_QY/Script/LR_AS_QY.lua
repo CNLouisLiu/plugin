@@ -1456,7 +1456,7 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 		local Text_break1 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_1", m), {w = 140, h = 30, x  = 60, y = 2, text = itemInfo.szName , font = 18})
 		Text_break1:SetHAlign(0):SetVAlign(1):SetFontColor(GetItemFontColorByQuality(itemInfo.nQuality))
 
-		local times = QY_Record[v] or 0
+		local times = QY_Record[v.k] or 0
 		local font = 18
 		if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v])] then
 			times = _L["Achievement done"]
