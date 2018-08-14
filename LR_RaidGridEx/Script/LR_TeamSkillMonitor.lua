@@ -156,7 +156,7 @@ function _SkillBox:Create()
 		szText[#szText+1] = GetFormatText(sformat("%s\n", szName), 224)
 		szText[#szText+1] = GetFormatText(sformat("dwID:%d\n", dwID), 224)
 		--OutputTip(tconcat(szText), 360, {nX, nY, nW, nH})
-		OutputSkillTip(dwID, GetClientPlayer().GetSkillLevel(dwID), {nX, nY, nW, nH})
+		OutputSkillTip(dwID, GetClientPlayer().GetSkillLevel(dwID), {nX, nY, nW, nH - 40})
 	end
 	Handle_Skill_Box.OnItemMouseLeave = function()
 		HideTip()

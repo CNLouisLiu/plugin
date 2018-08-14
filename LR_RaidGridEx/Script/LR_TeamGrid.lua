@@ -147,11 +147,11 @@ local DefaultCommonSettings = {
 	--鼠标操作
 	mouseAction = {
 		LButtonDBClick = 0,		--0:什么都不做，1：跟随
-		LButtonDBClickAlt = 1,	--0：什么都不做，1：交易
+		LButtonDBClickAlt = 0,	--0：什么都不做，1：交易
 		LButtonDBClickShfit = 0,	--0：什么都不做
 		LButtonDBClickCtrl = 0,		--0：什么都不做
-		MouseEnterAlt = 0,	--什么都不做 1：显示dps
-		MouseEnterShift = 0,	--什么都不做，1：显示重伤记录
+		MouseEnterAlt = 1,	--什么都不做 1：显示dps
+		MouseEnterShift = 1,	--什么都不做，1：显示重伤记录
 	},
 	--技能盒子
 	bShowSkillBox = true,
@@ -316,17 +316,23 @@ function _RoleGrid:Create()
 		else
 			--local nX, nY = parentHandle:GetAbsPos()
 			--local nW, nH = parentHandle:GetSize()
-			local nX, nY = LR_TeamGrid.frameSelf:GetAbsPos()
-			local nW, nH = LR_TeamGrid.frameSelf:GetSize()
+			local hHandle = this:GetParent():GetParent()
+			local nX, nY = hHandle:GetAbsPos()
+			local nW, nH = hHandle:GetSize()
+			if LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 4 then
+				nW = nW + 40
+			end
+			--local nX, nY = LR_TeamGrid.frameSelf:GetAbsPos()
+			--local nW, nH = LR_TeamGrid.frameSelf:GetSize()
 			if IsAltKeyDown() and LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterAlt == 1 then
 				if not MY_Recount then
 					LR.SysMsg(sformat("%s\n", _L["Tips:Hold Alt when hover,will show HPS/DPS,MY DPS required."]))
 					return
 				end
 				LR_TeamTools.DPS.FIGHT_HINT()
-				LR_TeamTools.DPS.OutputDPSRecord (dwID, {nX, nY, nW+5, nH-40})
+				LR_TeamTools.DPS.OutputDPSRecord (dwID, {nX, nY, nW, nH - 40})
 			elseif IsShiftKeyDown() and LR_TeamGrid.UsrData.CommonSettings.mouseAction.MouseEnterShift == 1 then
-				LR_TeamTools.DeathRecord.OutputDeathRecord (dwID,{nX, nY, nW+5, nH-40})
+				LR_TeamTools.DeathRecord.OutputDeathRecord (dwID,{nX, nY, nW, nH - 40})
 			else
 				LR_TeamGrid.cureLock = true
 				LR_TeamGrid.hoverHandle = self
@@ -351,7 +357,7 @@ function _RoleGrid:Create()
 					end
 				end
 				if not (LR_TeamGrid.UsrData.CommonSettings.disableTipWhenFight and GetClientPlayer().bFightState) then
-					LR_TeamGrid.OutputTeamMemberTip(dwID, {nX , nY , nW + 10, nH - 40})
+					LR_TeamGrid.OutputTeamMemberTip(dwID, {nX , nY , nW, nH - 40})
 				end
 			end
 		end

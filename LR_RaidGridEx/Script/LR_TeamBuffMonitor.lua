@@ -47,9 +47,14 @@ function _BuffBox:Create()
 	local Box2 = handle:Lookup("Box")
 	Box2:RegisterEvent(272)
 	Box2.OnItemMouseEnter = function()
-		local x, y = this:GetAbsPos()
+		local handle = this:GetParent():GetParent():GetParent():GetParent():GetParent()
+		local x, y = handle:GetAbsPos()
+		local w, h = handle:GetSize()
+		if LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 4 then
+			w = w + 40
+		end
 		local nTime = math.floor(self.tBuff.nEndFrame - GetLogicFrameCount()) / 16 + 1
-		OutputBuffTip(self.dwMemberID, self.tBuff.dwID, self.tBuff.nLevel, self.tBuff.nBuffStack, false, 0, {x, y, 0, 0})
+		OutputBuffTip(self.dwMemberID, self.tBuff.dwID, self.tBuff.nLevel, self.tBuff.nBuffStack, false, 0, {x, y, w, h})
 	end
 	Box2.OnItemMouseLeave = function()
 		HideTip()
