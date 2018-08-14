@@ -346,4 +346,9 @@ data={
 
 	["Show doodad type below"]="顯示以下類型的物品",
 	["[%s] kind doodad"]="類型為【%s】的物品",
+
+	--20180809add--
+	["Set color mode"]="設置顏色模式",
+	["Normal mode"]="默認配色",
+	["Color by menpai"]="根據門派配色",
 }

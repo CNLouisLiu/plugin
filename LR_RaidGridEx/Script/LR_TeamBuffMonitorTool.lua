@@ -566,7 +566,7 @@ function LR_TeamBuffTool_Panel:addGroup()
 			if LR_TeamBuffTool_Panel:checkGroup(szText) then
 				LR.SysMsg(_L["Group existed.\n"])
 			else
-				tinsert(LR_TeamBuffTool.tBuffList, {szGroupName = szText, enable = true, data = {}})
+				tinsert(LR_TeamBuffTool.tBuffList, {szGroupName = szText, enable = true, data = {}, order = 9999})
 			end
 			------Ë¢ÐÂGroup
 			self:LoadGroupBox()
