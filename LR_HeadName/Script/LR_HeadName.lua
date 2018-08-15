@@ -1395,7 +1395,9 @@ function LR_HeadName.HideSysHead()
 	if LR_HeadName.UsrData.Player.bShow or LR_HeadName.UsrData.Player.bAlwaysHideSysPlayerTop then
 		LR_HeadName.HideSysPlayerTop()
 	end
-	SetGlobalTopIntelligenceLife(false)
+	if LR_HeadName.UsrData.NPC.bAlwaysHideSysNpcTop and LR_HeadName.UsrData.Player.bAlwaysHideSysPlayerTop then
+		SetGlobalTopIntelligenceLife(false)
+	end
 end
 
 function LR_HeadName.ResumeSysNpcTop()
@@ -1443,7 +1445,9 @@ function LR_HeadName.Convert2SysHead()
 		SetGlobalTopHeadFlag(HEAD_CLIENTPLAYER, HEAD_LEFE , 		LR_HeadName.UsrData.Player["Self"].LifeBar)
 		SetGlobalTopHeadFlag(HEAD_CLIENTPLAYER, HEAD_GUILD, 		LR_HeadName.UsrData.Player["Self"].Tong)
 	end
-	SetGlobalTopIntelligenceLife(false)
+	if LR_HeadName.UsrData.NPC.bAlwaysHideSysNpcTop and LR_HeadName.UsrData.Player.bAlwaysHideSysPlayerTop then
+		SetGlobalTopIntelligenceLife(false)
+	end
 end
 ------------------------------------
 

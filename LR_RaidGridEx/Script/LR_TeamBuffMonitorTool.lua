@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local VERSION = "20180718a"		--修改此项可重置为默认数据
+local VERSION = "20180815"		--修改此项可重置为默认数据
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
