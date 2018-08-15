@@ -140,6 +140,31 @@ function _SkillBox:Create()
 	if not Handle_Skill_Box then
 		local szIniFile = sformat("%s\\UI\\%s\\SkillBox.ini", AddonPath, LR_TeamGrid.UsrData.UI_Choose)
 		Handle_Skill_Box = parentHandle:AppendItemFromIni(szIniFile, "Handle_Skill_Box", sformat("Handle_Skill_Box_%d", dwID))
+--		local box = LR.AppendUI("Box", parentHandle, sformat("Box_%d", dwID), {w = 40, h = 40})
+--		UpdateBoxObject(box:GetSelf(), 5, 9002, 11, GetClientPlayer().dwID)
+-- 		UI_OBJECT = SetmetaReadonly({
+-- 			NONE             = -1, -- 空Box
+-- 			ITEM             = 0 , -- 身上有的物品。nUiId, dwBox, dwX, nItemVersion, nTabType, nIndex
+-- 			SHOP_ITEM        = 1 , -- 商店里面出售的物品 nUiId, dwID, dwShopID, dwIndex
+-- 			OTER_PLAYER_ITEM = 2 , -- 其他玩家身上的物品 nUiId, dwBox, dwX, dwPlayerID
+-- 			ITEM_ONLY_ID     = 3 , -- 只有一个ID的物品。比如装备链接之类的。nUiId, dwID, nItemVersion, nTabType, nIndex
+-- 			ITEM_INFO        = 4 , -- 类型物品 nUiId, nItemVersion, nTabType, nIndex, nCount(书nCount代表dwRecipeID)
+-- 			SKILL            = 5 , -- 技能。dwSkillID, dwSkillLevel, dwOwnerID
+-- 			CRAFT            = 6 , -- 技艺。dwProfessionID, dwBranchID, dwCraftID
+-- 			SKILL_RECIPE     = 7 , -- 配方dwID, dwLevel
+-- 			SYS_BTN          = 8 , -- 系统栏快捷方式dwID
+-- 			MACRO            = 9 , -- 宏
+-- 			MOUNT            = 10, -- 镶嵌
+-- 			ENCHANT          = 11, -- 附魔
+-- 			NOT_NEED_KNOWN   = 15, -- 不需要知道类型
+-- 			PENDANT          = 16, -- 挂件
+-- 			PET              = 17, -- 宠物
+-- 			MEDAL            = 18, -- 宠物徽章
+-- 			BUFF             = 19, -- BUFF
+-- 			MONEY            = 20, -- 金钱
+-- 			TRAIN            = 21, -- 修为
+-- 			EMOTION_ACTION   = 22, -- 动作表情
+-- 		})
 	end
 	self.handle = Handle_Skill_Box
 	self:SetSkillLevel()

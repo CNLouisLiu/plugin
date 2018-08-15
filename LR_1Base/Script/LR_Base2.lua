@@ -66,7 +66,7 @@ function ItemBox:Create(parent,UI_data)
 
 	local Icon_Item = LR.AppendUI("Image", Handle, "Icon_Item", {w = self.UI_data.width , h = self.UI_data.height ,})
 	local dwTabType, dwIndex = self.item_data.dwTabType, self.item_data.dwIndex
-	local iteminfo,_ntype=GetItemInfo(dwTabType, dwIndex)
+	local iteminfo, _ntype = GetItemInfo(dwTabType, dwIndex)
 	local nQuality = self.item_data.nQuality
 	if self.item_data.nUiId == 0 then
 		Icon_Item:FromIconID(3530)
