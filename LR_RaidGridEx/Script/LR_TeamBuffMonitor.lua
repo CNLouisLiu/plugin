@@ -210,11 +210,11 @@ function _BuffBox:Show()
 	local n = mmin(height, width) * mmin(fx, fy)
 	local fp = n / 16
 	Text_BuffStacks:SetFontScheme(15)
-	Text_BuffStacks:SetSize(height, width)
+	--Text_BuffStacks:SetSize(height, width)
 	Text_BuffStacks:SetVAlign(0)
 	Text_BuffStacks:SetHAlign(0)
 	Text_LeftTime:SetFontScheme(15)
-	Text_LeftTime:SetSize(height, width)
+	--Text_LeftTime:SetSize(height, width)
 	Text_LeftTime:SetVAlign(2)
 	Text_LeftTime:SetHAlign(2)
 	if fp < 1 then
@@ -286,7 +286,7 @@ function _BuffBox:Draw()
 	local Text_LeftTime = handle:Lookup("Text_LeftTime")
 	Text_LeftTime:SetFontScheme(15)
 	Text_LeftTime:SetAlpha(255)
-	Text_LeftTime:SetFontScale(UIConfig.handleBuff.fontscale or 0.9)
+	--Text_LeftTime:SetFontScale(UIConfig.handleBuff.fontscale or 0.9)
 	local buffTextType = LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType or 1
 	LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType = LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.buffTextType or 1
 	if buffTextType == 1 then
@@ -296,11 +296,10 @@ function _BuffBox:Draw()
 		Text_LeftTime:SetHAlign(2)
 		Text_LeftTime:SetVAlign(2)
 	end
-
 	Text_LeftTime:SetFontColor(255, 255, 0)
 
 	local w, h = box:GetSize()
-	local ff = w * 1.0 / 30
+	local ff = w * 1.0 / 26
 	if LR_TeamGrid.UsrData.CommonSettings.debuffMonitor.bShowLeftTime then
 		if nLeftFrame / 16 < 10 then
 			if nLeftFrame / 16 <= 4 then
@@ -323,7 +322,7 @@ function _BuffBox:Draw()
 	local Text_BuffStacks = handle:Lookup("Text_BuffStacks")
 	Text_BuffStacks:SetFontScheme(15)
 	Text_BuffStacks:SetAlpha(255)
-	Text_BuffStacks:SetFontScale(UIConfig.handleBuff.fontscale or 0.9)
+	--Text_BuffStacks:SetFontScale(UIConfig.handleBuff.fontscale or 0.9)
 	if buffTextType == 1 then
 		Text_BuffStacks:SetHAlign(2)
 		Text_BuffStacks:SetVAlign(2)
@@ -342,7 +341,7 @@ function _BuffBox:Draw()
 		else
 			Text_BuffStacks:SetText("")
 		end
-		Text_LeftTime:SetFontScale(ff)
+		Text_BuffStacks:SetFontScale(ff)
 		Text_BuffStacks:Show()
 	else
 		Text_BuffStacks:Hide()
@@ -367,7 +366,6 @@ function _BuffBox:Draw()
 		if self.tBuff.dwPlayerID == GetClientPlayer().dwID then
 			parentHandle:Lookup("Image_SpecialMe"):Show()
 		end
-
 	end
 
 	return self
@@ -975,20 +973,28 @@ function LR_TeamBuffMonitor.BUFF_UPDATE2()
 	local nSoundType = tBuff.nSoundType or 0
 	if nSoundType > 0 then
 		if dwPlayerID == me.dwID then
-			_SOUND_CACHE[dwPlayerID] = _SOUND_CACHE[dwPlayerID] or {}
-			_SOUND_CACHE[dwPlayerID][dwID] = _SOUND_CACHE[dwPlayerID][dwID] or {}
-			for nIndex, v in pairs(_SOUND_CACHE[dwPlayerID][dwID]) do
-				if v.nEndFrame < GetLogicFrameCount() then
-					_SOUND_CACHE[dwPlayerID][dwID][nIndex] = nil
+			local bSoundFlag = true
+			if tBuff.nMonitorStack > 0 then
+				if tBuff.nStackNum < tBuff.nMonitorStack then
+					bSoundFlag = false
 				end
 			end
-			if next(_SOUND_CACHE[dwPlayerID][dwID]) == nil and not bDelete and SOUND_TYPE[nSoundType] then
-				PlaySound(SOUND.UI_SOUND, SOUND_TYPE[nSoundType])
-			end
-			if bDelete then
-				_SOUND_CACHE[dwPlayerID][dwID][nIndex] = nil
-			else
-				_SOUND_CACHE[dwPlayerID][dwID][nIndex] = {nEndFrame = nEndFrame}
+			if bSoundFlag then
+				_SOUND_CACHE[dwPlayerID] = _SOUND_CACHE[dwPlayerID] or {}
+				_SOUND_CACHE[dwPlayerID][dwID] = _SOUND_CACHE[dwPlayerID][dwID] or {}
+				for nIndex, v in pairs(_SOUND_CACHE[dwPlayerID][dwID]) do
+					if v.nEndFrame < GetLogicFrameCount() then
+						_SOUND_CACHE[dwPlayerID][dwID][nIndex] = nil
+					end
+				end
+				if next(_SOUND_CACHE[dwPlayerID][dwID]) == nil and not bDelete and SOUND_TYPE[nSoundType] then
+					PlaySound(SOUND.UI_SOUND, SOUND_TYPE[nSoundType])
+				end
+				if bDelete then
+					_SOUND_CACHE[dwPlayerID][dwID][nIndex] = nil
+				else
+					_SOUND_CACHE[dwPlayerID][dwID][nIndex] = {nEndFrame = nEndFrame}
+				end
 			end
 		else
 			_SOUND_CACHE[dwPlayerID] = _SOUND_CACHE[dwPlayerID] or {}
