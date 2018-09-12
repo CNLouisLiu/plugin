@@ -1671,32 +1671,7 @@ function LR.IsQuestNameShield(szName)
 	return false
 end
 
-function LR.Table_GetAllSceneQuest(dwMapID)
-	local tSceneQuest = {}
-	if LR.tAllSceneQuest[dwMapID] then
-		tSceneQuest = LR.tAllSceneQuest[dwMapID]
-	end
-
-	return tSceneQuest
-end
-
-function LR.Table_LoadSceneQuest()
-	local path = sformat("%s\\QuestStartFinish.dat", SaveDataPath)
-	local data = LoadLUAData(path) or {}
-	local flag = false
-	if data.SaveTime then
-		local TimeNow, TimeRecord = GetCurrentTime(), data.SaveTime
-		local DateNow, DateRecord = TimeToDate(TimeNow), TimeToDate(TimeRecord)
-		if DateNow.year == DateRecord.year and DateNow.month == DateRecord.month and DateNow.day == DateRecord.day then
-			flag = true
-		end
-	end
-	if flag then
-		LR.tAllUnknownAccept = clone(data.tStart)
-		LR.tAllUnknownFinish = clone(data.tFinish)
-		return
-	end
-
+function LR.GetAllSceneQuest()
 	local nRow = g_tTable.Quest:GetRowCount()
 	for i = 2, nRow, 1 do
 		local tQuest = g_tTable.Quest:GetRow(i)
@@ -1714,43 +1689,26 @@ function LR.Table_LoadSceneQuest()
 			end
 		end
 	end
-	local tStart, tFinish = {}, {}
-	for i = 1, 18500, 1 do
-		local questInfo = GetQuestInfo(i)
-		if questInfo then
-			local tt = g_tTable.Quest:Search(i)
-			if not tt then
-				if questInfo.dwStartDoodadTemplateID ~= 0 then
-					local szKey = sformat("D_%d", questInfo.dwStartDoodadTemplateID)
-					tStart[szKey] = tStart[szKey] or {}
-					tinsert(tStart[szKey], i)
-
-					local szKey2 = sformat("D_%d", questInfo.dwEndNpcTemplateID)
-					tFinish[szKey2] = tFinish[szKey] or {}
-					tinsert(tFinish[szKey2], i)
-				elseif questInfo.dwStartNpcTemplateID ~= 0 then
-					local szKey = sformat("N_%d", questInfo.dwStartNpcTemplateID)
-					tStart[szKey] = tStart[szKey] or {}
-					tinsert(tStart[szKey], i)
-
-					local szKey2 = sformat("N_%d", questInfo.dwEndNpcTemplateID)
-					tFinish[szKey2] = tFinish[szKey] or {}
-					tinsert(tFinish[szKey2], i)
-				end
-			end
-		end
-	end
-	LR.tAllUnknownAccept = clone(tStart)
-	LR.tAllUnknownFinish = clone(tFinish)
-
-	local data2 = {}
-	data2.SaveTime = GetCurrentTime()
-	data2.tStart = clone(tStart)
-	data2.tFinish = clone(tFinish)
-	LR.SaveLUAData(path, data2)
 end
 
-RegisterEvent("FIRST_LOADING_END", LR.Table_LoadSceneQuest)
+function LR.Table_GetAllSceneQuest(dwMapID)
+	local tSceneQuest = {}
+	if LR.tAllSceneQuest[dwMapID] then
+		tSceneQuest = LR.tAllSceneQuest[dwMapID]
+	end
+
+	return tSceneQuest
+end
+RegisterEvent("FIRST_LOADING_END", function() LR.LoadQuestData() end)
+
+
+function LR.LoadQuestData()
+	local path = sformat("%s\\Script\\QuestStartFinish.dat", AddonPath)
+	local data = LoadLUAData(path) or {}
+	LR.tAllUnknownAccept = clone(data.tStart)
+	LR.tAllUnknownFinish = clone(data.tFinish)
+end
+RegisterEvent("FIRST_LOADING_END", function() LR.GetAllSceneQuest() end)
 ---------------------------DOODAD
 function LR.TABLE_GetDoodadTemplateName(dwTemplateID)
 	if dwTemplateID == 5402 then
