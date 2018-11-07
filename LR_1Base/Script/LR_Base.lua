@@ -22,6 +22,10 @@ BANK_PACKAGE = {
 	INVENTORY_INDEX.BANK_PACKAGE4,
 	INVENTORY_INDEX.BANK_PACKAGE5,
 }
+
+ALL_KUNGFU_COLLECT = {
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 21, 22, 23, 24, 0,
+}
 -----------------------------------------------------------
 LR = LR or {
 	tDelayCall = {},
@@ -535,8 +539,31 @@ function LR.GetXinFa(dwSkillID)
 		return Table_GetSkillName(dwSkillID, 1)
 	else
 		local kungfu = me.GetKungfuMount()
+		if kungfu then
+			local dwSkillID = kungfu.dwSkillID
+			return Table_GetSkillName(dwSkillID, 1)
+		else
+			return g_tStrings.STR_MENTOR_MALE
+		end
+	end
+end
+
+function LR.IsNurse()
+	local me = GetClientPlayer()
+	if not me then
+		return false
+	end
+	local kungfu = me.GetKungfuMount()
+	if kungfu then
 		local dwSkillID = kungfu.dwSkillID
-		return Table_GetSkillName(dwSkillID, 1)
+		--10028:奶花	10080:奶秀	10176:奶毒	10448:奶歌
+		if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+			return true
+		else
+			return false
+		end
+	else
+		return false
 	end
 end
 
@@ -707,6 +734,7 @@ local DefaltColor = {
 			[21] = {180, 60, 0}, 		--苍云
 			[22] = {100, 250, 180}, 	--长歌门
 			[23] = {106 , 108, 189}, 			----霸刀
+			[24] = {195 , 210, 225}, 			----蓬莱
 		},
 		CampColor = {
 			[0] = {128, 255, 128}, 	--中立
@@ -726,38 +754,24 @@ LR.MenPaiColor = clone(DefaltColor.Color.KungFuColor)
 LR.CampColor = clone(DefaltColor.Color.CampColor)
 LR.RelationColor = clone(DefaltColor.Color.RelationColor)
 
+local KungfuID2dwForceID = {
+	[10002] = 1, [10003] = 1,		--少林
+	[10021] = 2, [10028] = 2,		--万花
+	[10026] = 3, [10062] = 3,		--天策
+	[10014] = 4, [10015] = 4,		--纯阳
+	[10080] = 5, [10080] = 5,		--七秀
+	[10175] = 6, [10176] = 6,		--五毒
+	[10224] = 7, [10225] = 7,		--唐门
+	[10144] = 8, [10145] = 8,		--藏剑
+	[10268] = 9, 					--丐帮
+	[10242] = 10, [10243] = 10,	--明教
+	[10389] = 21, [10390] = 21,	--苍云
+	[10447] = 22, [10448] = 22,	--长歌门
+	[10464] = 23,					--霸刀
+	[10533] = 24,					--蓬莱
+}
 function LR.GetMenPaiByKungfuID(dwKungfuID)
-	if not dwKungfuID then  ----大侠
-		return 0
-	elseif dwKungfuID == 10002 or dwKungfuID == 10002 then	----少林
-		return 1
-	elseif dwKungfuID == 10021 or dwKungfuID == 10028 then	----万花
-		return 2
-	elseif dwKungfuID == 10026 or dwKungfuID == 10062 then	----天策
-		return 3
-	elseif dwKungfuID == 10014 or dwKungfuID == 10015 then	----纯阳
-		return 4
-	elseif dwKungfuID == 10080 or dwKungfuID == 10081 then	----七秀
-		return 5
-	elseif dwKungfuID == 10175 or dwKungfuID == 10176 then	----五毒
-		return 6
-	elseif dwKungfuID == 10224 or dwKungfuID == 10225 then	----唐门
-		return 7
-	elseif dwKungfuID == 10144 or dwKungfuID == 10144 then	----藏剑
-		return 8
-	elseif dwKungfuID == 10268 then	----丐帮
-		return 9
-	elseif dwKungfuID == 10242 or dwKungfuID == 10243 then	----明教
-		return 10
-	elseif dwKungfuID == 10389 or dwKungfuID == 10390 then	----苍云
-		return 21
-	elseif dwKungfuID == 10447 or dwKungfuID == 10448 then	----长歌门
-		return 22
-	elseif dwKungfuID == 10464  then	----霸刀
-		return 23
-	else
-		return 0
-	end
+	return KungfuID2dwForceID[dwKungfuID or 0] or 0
 end
 
 function LR.GetMenPaiColor(dwForceID)

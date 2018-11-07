@@ -9,31 +9,32 @@ local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
 local _KungfuText={
-	[0] = {text=_L["xia"],rgb=LR.MenPaiColor[0]},
-	[10002] = {text=_L["xi"],rgb=LR.MenPaiColor[1]},
-	[10003] = {text=_L["yi"],rgb=LR.MenPaiColor[1]},
-	[10021] = {text=_L["hua"],rgb=LR.MenPaiColor[2]},
-	[10028] = {text=_L["li"],rgb=LR.MenPaiColor[2]},
-	[10026] = {text=_L["ao"],rgb=LR.MenPaiColor[3]},
-	[10062] = {text=_L["tie"],rgb=LR.MenPaiColor[3]},
-	[10014] = {text=_L["qi"],rgb=LR.MenPaiColor[4]},
-	[10015] = {text=_L["jian"],rgb=LR.MenPaiColor[4]},
-	[10080] = {text=_L["yun"],rgb=LR.MenPaiColor[5]},
-	[10081] = {text=_L["bing"],rgb=LR.MenPaiColor[5]},
-	[10175] = {text=_L["du"],rgb=LR.MenPaiColor[6]},
-	[10176] = {text=_L["bu"],rgb=LR.MenPaiColor[6]},
-	[10224] = {text=_L["yu"],rgb=LR.MenPaiColor[7]},
-	[10225] = {text=_L["gui"],rgb=LR.MenPaiColor[7]},
-	[10144] = {text=_L["wen"],rgb=LR.MenPaiColor[8]},
-	[10145] = {text=_L["shan"],rgb=LR.MenPaiColor[8]},
-	[10268] = {text=_L["gai"],rgb=LR.MenPaiColor[9]},
-	[10242] = {text=_L["ying"],rgb=LR.MenPaiColor[10]},
-	[10243] = {text=_L["liu"],rgb=LR.MenPaiColor[10]},
-	[10389] = {text=_L["gu"],rgb=LR.MenPaiColor[21]},
-	[10390] = {text=_L["fen"],rgb=LR.MenPaiColor[21]},
-	[10447] = {text=_L["mo"],rgb=LR.MenPaiColor[22]},
-	[10448] = {text=_L["zhi"],rgb=LR.MenPaiColor[22]},
-	[10464] = {text=_L["ba"],rgb=LR.MenPaiColor[23]},
+	[0] = {text =_L["xia"], rgb = {LR.GetMenPaiColor(0)}},
+	[10002] = {text = _L["xi"], rgb = {LR.GetMenPaiColor(1)}},
+	[10003] = {text = _L["yi"], rgb = {LR.GetMenPaiColor(1)}},
+	[10021] = {text = _L["hua"], rgb = {LR.GetMenPaiColor(2)}},
+	[10028] = {text = _L["li"], rgb = {LR.GetMenPaiColor(2)}},
+	[10026] = {text = _L["ao"], rgb = {LR.GetMenPaiColor(3)}},
+	[10062] = {text = _L["tie"], rgb = {LR.GetMenPaiColor(3)}},
+	[10014] = {text = _L["qi"], rgb = {LR.GetMenPaiColor(4)}},
+	[10015] = {text = _L["jian"], rgb = {LR.GetMenPaiColor(4)}},
+	[10080] = {text = _L["yun"], rgb = {LR.GetMenPaiColor(5)}},
+	[10081] = {text = _L["bing"], rgb = {LR.GetMenPaiColor(5)}},
+	[10175] = {text = _L["du"], rgb = {LR.GetMenPaiColor(6)}},
+	[10176] = {text = _L["bu"], rgb = {LR.GetMenPaiColor(6)}},
+	[10224] = {text = _L["yu"], rgb = {LR.GetMenPaiColor(7)}},
+	[10225] = {text = _L["gui"], rgb = {LR.GetMenPaiColor(7)}},
+	[10144] = {text = _L["wen"], rgb = {LR.GetMenPaiColor(8)}},
+	[10145] = {text = _L["shan"], rgb = {LR.GetMenPaiColor(8)}},
+	[10268] = {text = _L["gai"], rgb = {LR.GetMenPaiColor(9)}},
+	[10242] = {text = _L["ying"], rgb = {LR.GetMenPaiColor(10)}},
+	[10243] = {text = _L["liu"], rgb = {LR.GetMenPaiColor(10)}},
+	[10389] = {text = _L["gu"], rgb = {LR.GetMenPaiColor(21)}},
+	[10390] = {text = _L["fen"], rgb = {LR.GetMenPaiColor(21)}},
+	[10447] = {text = _L["mo"], rgb = {LR.GetMenPaiColor(22)}},
+	[10448] = {text = _L["zhi"], rgb = {LR.GetMenPaiColor(22)}},
+	[10464] = {text = _L["ba"], rgb = {LR.GetMenPaiColor(23)}},
+	[10533] = {text = _L["peng"], rgb = {LR.GetMenPaiColor(24)}},
 }
 local TEAM_VOTE={
 	DELETE_MEMBER=0,
@@ -341,9 +342,7 @@ function _RoleGrid:Create()
 					if not me then
 						return
 					end
-					local kungfu = me.GetKungfuMount()
-					local dwSkillID = kungfu.dwSkillID
-					if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+					if LR.IsNurse() then
 						if LR_TeamGrid.UsrData.CommonSettings.cureMode == 1 then
 							LR_TeamGrid.timeCache = GetLogicFrameCount()
 							LR_TeamGrid.cureTargetInTeam = dwID
@@ -701,7 +700,7 @@ function _RoleGrid:DrawRoleNameText()
 	local dwForceID = MemberInfo.dwForceID
 	if LR_TeamGrid.UsrData.CommonSettings.szFontColor == 1 then
 		if _KungfuText[dwMountKungfuID] then
-			r, g, b = unpack(LR.MenPaiColor[dwForceID])
+			r, g, b = LR.GetMenPaiColor(dwForceID)
 		end
 	elseif LR_TeamGrid.UsrData.CommonSettings.szFontColor == 2 then
 		r, g, b = unpack(LR.CampColor[MemberInfo.nCamp])
@@ -817,7 +816,7 @@ function _RoleGrid:DrawLifeBar()
 		if LR_TeamGrid.UsrData.CommonSettings.backGroundColorType == 1 then 	--固定颜色
 			r, g, b = unpack(LR_TeamGrid.UsrData.CommonSettings.backGroundFixedColor)
 		elseif LR_TeamGrid.UsrData.CommonSettings.backGroundColorType == 2 then 	--按门派着色
-			r, g, b = unpack(LR.MenPaiColor[MemberInfo.dwForceID])
+			r, g, b = LR.GetMenPaiColor(MemberInfo.dwForceID)
 		elseif LR_TeamGrid.UsrData.CommonSettings.backGroundColorType == 3 then 	--按阵营着色
 			r, g, b = unpack(LR.CampColor[MemberInfo.nCamp])
 		elseif LR_TeamGrid.UsrData.CommonSettings.backGroundColorType == 4 then 	--按距离着色
@@ -1022,9 +1021,9 @@ function _RoleGrid:DrawKungFu()
 	local szText = "??"
 	local r, g, b = 255, 255, 255
 	local IconID = Table_GetSkillIconID(0, 1)
-	if MemberInfo and LR.MenPaiColor[MemberInfo.dwForceID] then
+	if MemberInfo and LR.GetMenPaiColor(MemberInfo.dwForceID) then
 		szText = _KungfuText[MemberInfo.dwMountKungfuID].text
-		r, g, b = unpack(LR.MenPaiColor[MemberInfo.dwForceID])
+		r, g, b = LR.GetMenPaiColor(MemberInfo.dwForceID)
 		IconID = Table_GetSkillIconID(MemberInfo.dwMountKungfuID, 1)
 	end
 	local handle = self.handle
@@ -1377,11 +1376,8 @@ function _RoleGrid:DrawLifeText()
 		handle:Lookup("Text_LifeValue"):Hide()
 		return self
 	end
-	local kungfu=me.GetKungfuMount()
-	local dwSkillID=kungfu.dwSkillID
-	if (dwSkillID==10028 or dwSkillID==10080 or dwSkillID==10176 or dwSkillID==10448) and LR_TeamGrid.UsrData.CommonSettings.autoPercentInCure
-	or LR_TeamGrid.UsrData.CommonSettings.bShowBloodInPercent
-	then
+
+	if LR.IsNurse() and LR_TeamGrid.UsrData.CommonSettings.autoPercentInCure or LR_TeamGrid.UsrData.CommonSettings.bShowBloodInPercent then
 		if mfloor(life * 100 / nMaxLife) == 0 then
 			textLife = "0"
 		else
@@ -2280,13 +2276,7 @@ end
 function LR_TeamGrid.OnFrameKeyDown()
 	--屏蔽功能
 	if LR_TeamGrid.UsrData.CommonSettings.bInCureMode and LR_TeamGrid.UsrData.CommonSettings.cureMode == 2 then
-		local me =  GetClientPlayer()
-		if not me then
-			return
-		end
-		local kungfu=me.GetKungfuMount()
-		local dwSkillID=kungfu.dwSkillID
-		if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+		if IsNurse()
 			if LR_TeamGrid.hoverHandle then
 				local playerID = LR_TeamGrid.hoverHandle:GetPlayerID()
 				if LR_TeamGrid.IfICanSelect() and LR_TeamGrid.IfTargetCanBSelect(playerID) then
@@ -2380,9 +2370,7 @@ function LR_TeamGrid.UpdateRoleBodySize()
 		LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetSize(0, 0)
 	end
 
-	local kungfu=me.GetKungfuMount()
-	local dwSkillID=kungfu.dwSkillID
-	if LR_TeamGrid.UsrData.CommonSettings.bShowSkillBox and (dwSkillID==10028 or dwSkillID==10080 or dwSkillID==10176 or dwSkillID==10448) then
+	if LR_TeamGrid.UsrData.CommonSettings.bShowSkillBox and LR.IsNurse() then
 		if LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 1 then
 			LR_TeamGrid.frameSelf:Lookup("Wnd_Body"):SetRelPos(0, 70)
 			LR_TeamGrid.frameSelf:Lookup("Wnd_Skill_Box"):SetRelPos(0, 30)
@@ -2496,9 +2484,7 @@ function LR_TeamGrid.CheckPanelActive()
 		return
 	end
 	if LR_TeamGrid.UsrData.CommonSettings.bInCureMode and LR_TeamGrid.UsrData.CommonSettings.cureMode == 2 then
-		local kungfu=me.GetKungfuMount()
-		local dwSkillID=kungfu.dwSkillID
-		if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+		if LR.IsNurse() then
 			local hActiveFrame = Station.GetActiveFrame()
 			if hActiveFrame and hActiveFrame:GetName() == "LR_TeamGrid" then
 				Image_Frame_State:FromIconID(6933)
@@ -3063,9 +3049,7 @@ function LR_TeamGrid.ResizeTitle()
 	--考虑技能面板
 	local Wnd_Skill_Box = hFrame:Lookup("Wnd_Skill_Box")
 	local w3, h3 = Wnd_Skill_Box:GetSize()
-	local kungfu=me.GetKungfuMount()
-	local dwSkillID=kungfu.dwSkillID
-	if LR_TeamGrid.UsrData.CommonSettings.bShowSkillBox and (dwSkillID==10028 or dwSkillID==10080 or dwSkillID==10176 or dwSkillID==10448) then
+	if LR_TeamGrid.UsrData.CommonSettings.bShowSkillBox and LR.IsNurse() then
 		if LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 1 then  --上下
 			w = mmax(w1 + 5, w2, w3)
 		elseif LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 3 or LR_TeamGrid.UsrData.CommonSettings.skillBoxPos == 4 then
@@ -3406,9 +3390,7 @@ function LR_TeamGrid.BreatheSetTarget()
 	if GetLogicFrameCount() - LR_TeamGrid.timeCache > 8 then
 		return
 	end
-	local kungfu = me.GetKungfuMount()
-	local dwSkillID = kungfu.dwSkillID
-	if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+	if LR.IsNurse() then
 		if LR_TeamGrid.UsrData.CommonSettings.bInCureMode then
 			if not LR_TeamGrid.IfICanSelect() then
 				return
@@ -4047,9 +4029,7 @@ function LR_TeamGrid.LR_TARGET_CHANGE()
 					end
 				end
 
-				local kungfu = me.GetKungfuMount()
-				local dwSkillID = kungfu.dwSkillID
-				if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+				if LR.IsNurse() then
 					if eTargetType == TARGET.PLAYER then
 						if not (me.IsPlayerInMyParty(dwTargetID) and GetLogicFrameCount() - LR_TeamGrid.outTime < 12) then
 							LR_TeamGrid.cureTarget = dwTargetID

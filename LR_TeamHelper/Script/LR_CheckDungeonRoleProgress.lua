@@ -182,8 +182,12 @@ function LR_CDRP.Load()
 			dwForceID = me.dwForceID,
 		}
 		local kungfu = me.GetKungfuMount()
-		local dwSkillID = kungfu.dwSkillID
-		data.dwMountKungfuID = dwSkillID
+		if kungfu then
+			local dwSkillID = kungfu.dwSkillID
+			data.dwMountKungfuID = dwSkillID
+		else
+			data.dwMountKungfuID = 0
+		end
 		local HandleTeam = LR.AppendUI("Handle", HandleBody, "HandleTeam", {w = 120, h = 600})
 		HandleTeam:SetHandleStyle(3)
 		local dwMapID = LR_CDRP.dwMapID

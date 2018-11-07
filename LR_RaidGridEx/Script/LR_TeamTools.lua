@@ -3,22 +3,22 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
-local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
+local AddonPath = "Interface\\LR_Plugin\\LR_RaidGridEx"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
 ------------------------------------
-LR_TeamTools={}
+LR_TeamTools = {}
 
 -----------------------------------------------------------
 ---DPS显示（需铭伊插件支持）
 -----------------------------------------------------------
 LR_TeamTools.DPS = {
-	Record={},
-	FightUIID=0,
+	Record = {},
+	FightUIID = 0,
 }
 
 function LR_TeamTools.DPS.FIGHT_HINT()
-	if MY_Recount == nil or MY_Recount == {} then
+	if MY_Recount ==  nil or MY_Recount ==  {} then
 		--LR.SysMsg("需安装【茗伊插件集】-【伤害统计】\n")
 		return
 	end
@@ -30,7 +30,7 @@ function LR_TeamTools.DPS.FIGHT_HINT()
 	if not DPS_Last then
 		return
 	end
-	if FightUIID == DPS_Last["UUID"] then
+	if FightUIID ==  DPS_Last["UUID"] then
 		return
 	else
 		FightUIID = DPS_Last["UUID"]
@@ -43,32 +43,32 @@ function LR_TeamTools.DPS.FIGHT_HINT()
 	for k, v in pairs (Damage) do
 		local dwID = k
 		local nTotalEffect = v["nTotalEffect"]
-		if LR_TeamTools.DPS.Record[k] == nil then
-			LR_TeamTools.DPS.Record[k]={{FightUIID=FightUIID,nTimeBegin=nTimeBegin,nTimeDuring=nTimeDuring,szBossName=szBossName,DPS={nTotalEffect=nTotalEffect},}}
+		if LR_TeamTools.DPS.Record[k] ==  nil then
+			LR_TeamTools.DPS.Record[k] = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,DPS = {nTotalEffect = nTotalEffect},}}
 		else
-			local t={{FightUIID=FightUIID,nTimeBegin=nTimeBegin,nTimeDuring=nTimeDuring,szBossName=szBossName,DPS={nTotalEffect=nTotalEffect},}}
-			for i=1,#LR_TeamTools.DPS.Record[k] do
+			local t = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,DPS = {nTotalEffect = nTotalEffect},}}
+			for i = 1,#LR_TeamTools.DPS.Record[k] do
 				tinsert(t,LR_TeamTools.DPS.Record[k][i])
 			end
-			LR_TeamTools.DPS.Record[k]=t
-			--tinsert (LR_TeamTools.DPS.Record[k],{FightUIID=FightUIID,nTimeBegin=nTimeBegin,nTimeDuring=nTimeDuring,szBossName=szBossName,DPS={nTotalEffect=nTotalEffect,},})
+			LR_TeamTools.DPS.Record[k] = t
+			--tinsert (LR_TeamTools.DPS.Record[k],{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,DPS = {nTotalEffect = nTotalEffect,},})
 		end
 	end
-	local Heal=DPS_Last["Heal"]
+	local Heal = DPS_Last["Heal"]
 	for k,v in pairs (Heal) do
-		local dwID=k
+		local dwID = k
 		local nTotalEffect = v["nTotalEffect"]
-		if LR_TeamTools.DPS.Record[k] == nil then
-			LR_TeamTools.DPS.Record[k]={{FightUIID=FightUIID,nTimeBegin=nTimeBegin,nTimeDuring=nTimeDuring,szBossName=szBossName,HPS={nTotalEffect=nTotalEffect,},}}
-		elseif LR_TeamTools.DPS.Record[k][1]["FightUIID"] ~= FightUIID then
-			local t={{FightUIID=FightUIID,nTimeBegin=nTimeBegin,nTimeDuring=nTimeDuring,szBossName=szBossName,HPS={nTotalEffect=nTotalEffect},}}
-			for i=1,#LR_TeamTools.DPS.Record[k] do
+		if LR_TeamTools.DPS.Record[k] ==  nil then
+			LR_TeamTools.DPS.Record[k] = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,HPS = {nTotalEffect = nTotalEffect,},}}
+		elseif LR_TeamTools.DPS.Record[k][1]["FightUIID"] ~=  FightUIID then
+			local t = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,HPS = {nTotalEffect = nTotalEffect},}}
+			for i = 1,#LR_TeamTools.DPS.Record[k] do
 				tinsert(t,LR_TeamTools.DPS.Record[k][i])
 			end
-			LR_TeamTools.DPS.Record[k]=t
-			--tinsert (LR_TeamTools.DPS.Record[k],{FightUIID=FightUIID,nTimeBegin=nTimeBegin,nTimeDuring=nTimeDuring,szBossName=szBossName,HPS={nTotalEffect=nTotalEffect,},})
+			LR_TeamTools.DPS.Record[k] = t
+			--tinsert (LR_TeamTools.DPS.Record[k],{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,HPS = {nTotalEffect = nTotalEffect,},})
 		else
-			LR_TeamTools.DPS.Record[k][1]["HPS"]={nTotalEffect=nTotalEffect,}
+			LR_TeamTools.DPS.Record[k][1]["HPS"] = {nTotalEffect = nTotalEffect,}
 		end
 	end
 end
@@ -85,10 +85,10 @@ function LR_TeamTools.DPS.OutputDPSRecord(dwID,rc)
 	szTip[#szTip+1] = GetFormatImage(szPath, nFrame, 26, 26)
 	szTip[#szTip+1] = GetFormatText(FormatString(g_tStrings.STR_NAME_PLAYER, tMemberInfo.szName), 80, r, g, b)
 	szTip[#szTip+1] = GetFormatText(sformat("%s\n", _L["-----DPS（HPS）Record-----"]),17)
-	if LR_TeamTools.DPS.Record[dwID] == nil then
+	if LR_TeamTools.DPS.Record[dwID] ==  nil then
 		szTip[#szTip+1] = sformat("%s\n", _L["No Record"])
 	else
-		for i=1,#LR_TeamTools.DPS.Record[dwID] do
+		for i = 1,#LR_TeamTools.DPS.Record[dwID] do
 			local date = TimeToDate(LR_TeamTools.DPS.Record[dwID][i]["nTimeBegin"])
 			local weekday =  sformat("%02d",date["weekday"])
 			local hour = sformat("%02d",date["hour"])
@@ -96,16 +96,16 @@ function LR_TeamTools.DPS.OutputDPSRecord(dwID,rc)
 			local second = sformat("%02d",date["second"])
 			local szBossName = LR_TeamTools.DPS.Record[dwID][i]["szBossName"]
 			local DPS , HPS = 0,0
-			local t_text= ""
-			if LR_TeamTools.DPS.Record[dwID][i]["DPS"]~=nil and LR_TeamTools.DPS.Record[dwID][i]["HPS"] ~=nil then
-				DPS= sformat("%6d %4s",LR_TeamTools.DPS.Record[dwID][i]["DPS"]["nTotalEffect"] / LR_TeamTools.DPS.Record[dwID][i]["nTimeDuring"],"DPS")
-				HPS= sformat("%6d %4s",LR_TeamTools.DPS.Record[dwID][i]["HPS"]["nTotalEffect"] / LR_TeamTools.DPS.Record[dwID][i]["nTimeDuring"],"HPS")
+			local t_text =  ""
+			if LR_TeamTools.DPS.Record[dwID][i]["DPS"]~= nil and LR_TeamTools.DPS.Record[dwID][i]["HPS"] ~= nil then
+				DPS =  sformat("%6d %4s",LR_TeamTools.DPS.Record[dwID][i]["DPS"]["nTotalEffect"] / LR_TeamTools.DPS.Record[dwID][i]["nTimeDuring"],"DPS")
+				HPS =  sformat("%6d %4s",LR_TeamTools.DPS.Record[dwID][i]["HPS"]["nTotalEffect"] / LR_TeamTools.DPS.Record[dwID][i]["nTimeDuring"],"HPS")
 				t_text = sformat("%s / %s", DPS, HPS)
-			elseif LR_TeamTools.DPS.Record[dwID][i]["HPS"]~=nil then
-				HPS= sformat("%6d %4s",LR_TeamTools.DPS.Record[dwID][i]["HPS"]["nTotalEffect"] / LR_TeamTools.DPS.Record[dwID][i]["nTimeDuring"],"HPS")
+			elseif LR_TeamTools.DPS.Record[dwID][i]["HPS"]~= nil then
+				HPS =  sformat("%6d %4s",LR_TeamTools.DPS.Record[dwID][i]["HPS"]["nTotalEffect"] / LR_TeamTools.DPS.Record[dwID][i]["nTimeDuring"],"HPS")
 				t_text = HPS
 			else
-				DPS= sformat("%6d %4s",LR_TeamTools.DPS.Record[dwID][i]["DPS"]["nTotalEffect"] / LR_TeamTools.DPS.Record[dwID][i]["nTimeDuring"],"DPS")
+				DPS =  sformat("%6d %4s",LR_TeamTools.DPS.Record[dwID][i]["DPS"]["nTotalEffect"] / LR_TeamTools.DPS.Record[dwID][i]["nTimeDuring"],"DPS")
 				t_text = DPS
 			end
 			szTip[#szTip+1] = GetFormatText(sformat("(%s:%s:%s)%s:%s\n", hour, minute, second, szBossName, t_text), 27)
@@ -131,10 +131,10 @@ function LR_TeamTools.DeathRecord.NPC_ENTER_SCENE()
 		local npc = GetNpc(dwID)
 		if npc then
 			local szName = LR.Trim(npc.szName)
-			if szName == "" then
+			if szName ==  "" then
 				szName = LR.Trim(Table_GetNpcTemplateName(npc.dwTemplateID))
 			end
-			if szName == "" then
+			if szName ==  "" then
 				szName = sformat("#%d", npc.dwTemplateID)
 			end
 			NPC_Cache[npc.dwID] = {szName = szName}
@@ -154,13 +154,13 @@ end
 
 function LR_TeamTools.DeathRecord.GetName(nType, dwID)
 	local szKillerName = ""
-	if nType == TARGET.NPC then
+	if nType ==  TARGET.NPC then
 		if NPC_Cache[dwID] then
 			szKillerName = NPC_Cache[dwID].szName
 		else
 			szKillerName = sformat("NPC#%d", dwID)
 		end
-	elseif nType == TARGET.PLAYER then
+	elseif nType ==  TARGET.PLAYER then
 		if Player_Cache[dwID] then
 			szKillerName = Player_Cache[dwID].szName
 		else
@@ -171,7 +171,7 @@ function LR_TeamTools.DeathRecord.GetName(nType, dwID)
 end
 
 function LR_TeamTools.DeathRecord.OnSkillEffectLog(dwCaster, dwTarget, bReact, nEffectType, dwID, dwLevel, bCriticalStrike, nCount, tResult)
-	if nCount <= 2 then			--无效数据
+	if nCount <=  2 then			--无效数据
 		return
 	end
 	local me = GetClientPlayer()
@@ -188,9 +188,9 @@ function LR_TeamTools.DeathRecord.OnSkillEffectLog(dwCaster, dwTarget, bReact, n
 		nCasterType = TARGET.PLAYER
 	end
 	--技能名字
-	if nEffectType == SKILL_EFFECT_TYPE.SKILL then
+	if nEffectType ==  SKILL_EFFECT_TYPE.SKILL then
 		szSkillName = Table_GetSkillName(dwID, dwLevel)
-	elseif nEffectType == SKILL_EFFECT_TYPE.BUFF then
+	elseif nEffectType ==  SKILL_EFFECT_TYPE.BUFF then
 		szSkillName = Table_GetBuffName(dwID, dwLevel)
 	end
 	if not szSkillName then
@@ -204,7 +204,7 @@ function LR_TeamTools.DeathRecord.OnSkillEffectLog(dwCaster, dwTarget, bReact, n
 	for k, v in pairs(DAMAGE_TYPE) do
 		local nValue = tResult[SKILL_RESULT_TYPE[v]]
 		if nValue and nValue > 0 then
-			if szDamage ~= "" then
+			if szDamage ~=  "" then
 				szDamage = sformat("%s%s", szDamage, g_tStrings.STR_COMMA)
 			end
 			szDamage = sformat("%s%s", szDamage, FormatString(g_tStrings.SKILL_DAMAGE, nValue, g_tStrings[DAMAGE_STRING[k]]))
@@ -212,7 +212,7 @@ function LR_TeamTools.DeathRecord.OnSkillEffectLog(dwCaster, dwTarget, bReact, n
 		end
 	end
 
-	if szDamage ~= "" then
+	if szDamage ~=  "" then
 		--Output(tResult, szDamage)
 		local nEffectDamage = tResult[SKILL_RESULT_TYPE.EFFECTIVE_DAMAGE] or 0
 		local data = {}
@@ -245,12 +245,12 @@ function LR_TeamTools.DeathRecord.OnCommonHealthLog(dwTarget, nDeltaLife)
 	end
 	local me = GetClientPlayer()
 	local team = GetClientTeam()
-	if me.IsPlayerInMyParty(dwTarget) or dwTarget == me.dwID then
+	if me.IsPlayerInMyParty(dwTarget) or dwTarget ==  me.dwID then
 		if not LR_TeamTools.DeathRecord.tDamage[dwTarget] then
 			LR_TeamTools.DeathRecord.tDamage[dwTarget] = {}
 		end
 		tinsert(LR_TeamTools.DeathRecord.tDamage[dwTarget],{
-			szCaster =_L["Extraterrestrials"],
+			szCaster  = _L["Extraterrestrials"],
 			szTarget = LR.GetTemplateName(target),
 			szSkillName = _L["Fly up"],
 			szValue = sformat("%d%s", nDeltaLife, _L["point damage"])
@@ -304,7 +304,7 @@ function LR_TeamTools.DeathRecord.OutputDeathRecord(dwID, rc)
 	szXml[#szXml+1] = GetFormatImage(szIcon, nFrame, 26, 26)
 	szXml[#szXml+1] = GetFormatText(sformat("%s:\n", v.szName),136,r,g,b)
 	szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["--Dead Record--"]), 136, 255, 255, 255)
-	if not LR_TeamTools.DeathRecord.tDeath[dwID] or #LR_TeamTools.DeathRecord.tDeath[dwID] == 0 then
+	if not LR_TeamTools.DeathRecord.tDeath[dwID] or #LR_TeamTools.DeathRecord.tDeath[dwID] ==  0 then
 		szXml[#szXml+1] = GetFormatText(sformat("%s\n", _L["No Record"]), 136, 255, 255, 0)
 	else
 		for i = #LR_TeamTools.DeathRecord.tDeath[dwID] , 1 , -1 do
@@ -322,7 +322,7 @@ function LR_TeamTools.DeathRecord.OutputDeathRecord(dwID, rc)
 				if v2.bCriticalStrike then
 					szCriticalStrike = g_tStrings.STR_SKILL_CRITICALSTRIKE
 				end
---[[				if v2.nTotalDamage == v2.nEffectDamage then
+--[[				if v2.nTotalDamage ==  v2.nEffectDamage then
 					szMsg = FormatString("<D0> 的 [<D1>] <D2> 对 [<D3>] 造成了 <D4>", szCasterName, v2.szSkillName, szCriticalStrike, szTargetName, v2.szDamage)
 				else
 					szMsg = FormatString(g_tStrings.SKILL_EFFECT_DAMAGE_LOG, szCasterName, v2.szSkillName, szCriticalStrike, szTargetName, v2.szDamage, v2.nEffectDamage)
@@ -335,7 +335,7 @@ function LR_TeamTools.DeathRecord.OutputDeathRecord(dwID, rc)
 				szXml[#szXml+1] = GetFormatText(szCriticalStrike, 136, 255, 0, 0)
 				szXml[#szXml+1] = GetFormatText(_L["Cause"], 136, 255, 255, 0)
 				szXml[#szXml+1] = GetFormatText(v2.szDamage, 136, 255, 128, 0)
-				if v2.nTotalDamage ~= v2.nEffectDamage then
+				if v2.nTotalDamage ~=  v2.nEffectDamage then
 					szXml[#szXml+1] = GetFormatText(sformat(_L[", effect damage %d point"], v2.nEffectDamage), 136, 255, 128, 0)
 				end
 				szXml[#szXml+1] = GetFormatText(sformat("\n"), 136, 255, 128, 0)
@@ -352,50 +352,41 @@ LR.RegisterEvent("PLAYER_ENTER_SCENE", function() LR_TeamTools.DeathRecord.PLAYE
 --------------------------------------------------------------------------------------------------------------------
 -----------门派人数
 --------------------------------------------------------------------------------------------------------------------
-LR_TeamTools.Menpai={
-	Count={}
+LR_TeamTools.Menpai = {
+	Count = {}
 }
 function LR_TeamTools.Menpai.CheckMenpai ()
 	local player =  GetClientPlayer()
 	if not player then return end
-	local team= GetClientTeam()
+	local team = GetClientTeam()
 	if not team then return end
-	local team_ids=team.GetTeamMemberList()
+	local team_ids = team.GetTeamMemberList()
 
-	LR_TeamTools.Menpai.Count[0]=0 	--大侠
-	LR_TeamTools.Menpai.Count[1]=0	--少林
-	LR_TeamTools.Menpai.Count[2]=0	--万花
-	LR_TeamTools.Menpai.Count[3]=0	--天策
-	LR_TeamTools.Menpai.Count[4]=0	--纯阳
-	LR_TeamTools.Menpai.Count[5]=0	--七秀
-	LR_TeamTools.Menpai.Count[6]=0	--五毒
-	LR_TeamTools.Menpai.Count[7]=0	--唐门
-	LR_TeamTools.Menpai.Count[8]=0	--藏剑
-	LR_TeamTools.Menpai.Count[9]=0	--丐帮
-	LR_TeamTools.Menpai.Count[10]=0	--明教
-	LR_TeamTools.Menpai.Count[21]=0	--苍云
-	LR_TeamTools.Menpai.Count[22]=0	--长歌门
-	LR_TeamTools.Menpai.Count[23]=0	--霸刀
+	--0大侠，1少林，2万花，3天策，4纯阳，5七秀，6五毒，7唐门，8藏剑，9丐帮，10明教，21苍云，22长歌门，23霸刀，24蓬莱
+	for k, v in pairs(ALL_KUNGFU_COLLECT) do
+		LR_TeamTools.Menpai.Count[v] = 0
+	end
 
-	for i=1,#team_ids,1 do
-		local memberinfo= team.GetMemberInfo(team_ids[i])
+	for i = 1, #team_ids, 1 do
+		local memberinfo =  team.GetMemberInfo(team_ids[i])
 		if memberinfo then
-			LR_TeamTools.Menpai.Count[memberinfo.dwForceID] = LR_TeamTools.Menpai.Count[memberinfo.dwForceID]+1
+			LR_TeamTools.Menpai.Count[memberinfo.dwForceID] = (LR_TeamTools.Menpai.Count[memberinfo.dwForceID] or 0) + 1
 		end
 	end
 end
 
 function LR_TeamTools.Menpai.OutputData()
 	LR_TeamTools.Menpai.CheckMenpai ()
-	local szText={}
-	szText[#szText+1]={szText=_L["LR_MenPai Count:\n"]}
-	szText[#szText+1]={szText="----------"}
-	local dwForceID={1,2,3,4,5,6,7,8,9,10,21,22,23,0}
-	local szForceName={_L["ShaoLin"],_L["WanHua"],_L["TianCe"],_L["ChunYang"],_L["QiXiu"],_L["WuDu"],_L["TangMen"],_L["CangJian"],_L["GaiBang"],_L["MingJiao"],_L["CangYun"],_L["ChangGeMen"],_L["BaDao"],_L["DaXia"],}
+	local szText = {}
+	szText[#szText+1] = {szText = _L["LR_MenPai Count:\n"]}
+	szText[#szText+1] = {szText = "----------"}
+	local dwForceID = ALL_KUNGFU_COLLECT
+	--g_tStrings.tForceTitle[dwForceID]
+	--local szForceName = {_L["ShaoLin"],_L["WanHua"],_L["TianCe"],_L["ChunYang"],_L["QiXiu"],_L["WuDu"],_L["TangMen"],_L["CangJian"],_L["GaiBang"],_L["MingJiao"],_L["CangYun"],_L["ChangGeMen"],_L["BaDao"],_L["DaXia"],}
 	for k, v in pairs(dwForceID) do
-		szText[#szText+1]={szText=sformat("【%s】：%d\n", szForceName[k], LR_TeamTools.Menpai.Count[v])}
+		szText[#szText+1] = {szText = sformat("【%s】：%d\n", g_tStrings.tForceTitle[v], LR_TeamTools.Menpai.Count[v] or 0)}
 	end
-	szText[#szText+1]={szText="----------"}
+	szText[#szText+1] = {szText = "----------"}
 	for k, v in pairs(szText) do
 		LR.Talk(PLAYER_TALK_CHANNEL.RAID, v.szText)
 	end
@@ -404,7 +395,7 @@ end
 --------------------------------------------------------------------------------------------------------------------
 -----------分配提醒
 --------------------------------------------------------------------------------------------------------------------
-LR_TeamTools.DistributeAttention={}
+LR_TeamTools.DistributeAttention = {}
 
 function LR_TeamTools.DistributeAttention.FIGHT_HINT()
 	local bFight = arg0
@@ -418,17 +409,17 @@ function LR_TeamTools.DistributeAttention.FIGHT_HINT()
 	end
 	local scene = me.GetScene()
 	local szLootMode = {_L["Free Pick"], _L["Distributor"], _L["Team Pick"], _L["Gold Team"]}
-	if scene.nType == MAP_TYPE.DUNGEON then
+	if scene.nType ==  MAP_TYPE.DUNGEON then
 		if me.IsInParty() or me.IsInRaid() then
 			local team = GetClientTeam()
 			if me.IsInRaid() then
-				if team.nLootMode ~= 2 then
+				if team.nLootMode ~=  2 then
 					LR_TeamGrid.SetTitleText(sformat(_L["Warning: You are in [%s] loot mode"], szLootMode[team.nLootMode]))
 					--LR.SysMsg(sformat(_L["Warning: You are in [%s] loot mode"] .. "\n", szLootMode[team.nLootMode]))
 					LR.DelayCall(12000, function() LR_TeamGrid.SetTitleText("") end)
 				end
 			else
-				if team.nLootMode ~= 3 then
+				if team.nLootMode ~=  3 then
 					LR_TeamGrid.SetTitleText(sformat(_L["Warning: You are in [%s] loot mode"], szLootMode[team.nLootMode]))
 					--LR.SysMsg(sformat(_L["Warning: You are in [%s] loot mode"] .. "\n", szLootMode[team.nLootMode]))
 					LR.DelayCall(12000,function() LR_TeamGrid.SetTitleText("") end)
@@ -441,10 +432,10 @@ end
 --------------------------------------------------------------------------------------------------------------------
 -----------Hack系统团队面板
 --------------------------------------------------------------------------------------------------------------------
---[[LR_TeamTools.HackSystemTeamPanel={}
+--[[LR_TeamTools.HackSystemTeamPanel = {}
 function LR_TeamTools.HackSystemTeamPanel.ON_FRAME_CREATE()
 	local frame = arg0
-	if frame:GetName() == "RaidPanel_Main" then
+	if frame:GetName() ==  "RaidPanel_Main" then
 		--Output("sdf")
 		LR.DelayCall(500, function()
 			local Wnd_Tabs = frame:Lookup("Wnd_Tabs")
@@ -490,7 +481,7 @@ function LR_EdgeIndicator_Panel.OnFrameDestroy()
 end
 
 function LR_EdgeIndicator_Panel.OnEvent(szEvent)
-	if szEvent == "UI_SCALED" then
+	if szEvent ==  "UI_SCALED" then
 		LR_EdgeIndicator_Panel.UpdateAnchor(this)
 	end
 end
@@ -502,7 +493,7 @@ end
 
 function LR_EdgeIndicator_Panel.OnLButtonClick()
 	local szName = this:GetName()
-	if szName == "Btn_Close" then
+	if szName ==  "Btn_Close" then
 		Wnd.CloseWindow("LR_EdgeIndicator_Panel")
 	end
 end
@@ -537,23 +528,23 @@ function LR_EdgeIndicator_Panel:Init()
 		local vStyleOption = {1, 0}
 		for k2, v2 in pairs(szStyleOption) do
 			local RadioBox = self:Append("RadioBox", Window, sformat("RadioBox_%s_%s", v, k2), {w = 100, x = 65 + (k2 - 1) * 60, y = 10, text = _L[v2], group = sformat("Style_%s", v)})
-			RadioBox:Check(LR_TeamEdgeIndicator.UsrData[v].style == vStyleOption[k2])
+			RadioBox:Check(LR_TeamEdgeIndicator.UsrData[v].style ==  vStyleOption[k2])
 			RadioBox.OnCheck = function(arg0)
 				if arg0 then
 					LR_TeamEdgeIndicator.UsrData[v].style = vStyleOption[k2]
-					self:Fetch(sformat("Edit_Buff_%s", v)):Enable(LR_TeamEdgeIndicator.UsrData[v].style == 1)
-					self:Fetch(sformat("CheckBox_%s", v)):Enable(LR_TeamEdgeIndicator.UsrData[v].style == 1)
+					self:Fetch(sformat("Edit_Buff_%s", v)):Enable(LR_TeamEdgeIndicator.UsrData[v].style ==  1)
+					self:Fetch(sformat("CheckBox_%s", v)):Enable(LR_TeamEdgeIndicator.UsrData[v].style ==  1)
 					LR_TeamBuffSettingPanel.FormatDebuffNameList()
 				end
 			end
 		end
 
 		local Text_Buff = LR.AppendUI("Text", Window, "Text_Buff", {x = 20, y = 40, text = _L["Buff"], font = 8})
-		local Edit_Buff = self:Append("Edit", Window, sformat("Edit_Buff_%s", v), {w= 100, x = 65, y = 40, })
-		Edit_Buff:Enable(LR_TeamEdgeIndicator.UsrData[v].style == 1)
-		if LR_TeamEdgeIndicator.UsrData[v].buff.dwID ~= 0 then
+		local Edit_Buff = self:Append("Edit", Window, sformat("Edit_Buff_%s", v), {w =  100, x = 65, y = 40, })
+		Edit_Buff:Enable(LR_TeamEdgeIndicator.UsrData[v].style ==  1)
+		if LR_TeamEdgeIndicator.UsrData[v].buff.dwID ~=  0 then
 			Edit_Buff:SetText(LR_TeamEdgeIndicator.UsrData[v].buff.dwID)
-		elseif LR_TeamEdgeIndicator.UsrData[v].buff.szName ~= "" then
+		elseif LR_TeamEdgeIndicator.UsrData[v].buff.szName ~=  "" then
 			Edit_Buff:SetText(LR_TeamEdgeIndicator.UsrData[v].buff.szName)
 		else
 			Edit_Buff:SetText("")
@@ -561,7 +552,7 @@ function LR_EdgeIndicator_Panel:Init()
 		local Image_Buff = self:Append("Image", Window, sformat("Image_Buff_%s", v), {x = 170, y = 40, w = 25, h = 25,})
 		Image_Buff:Hide()
 		local Text_BuffName = self:Append("Text", Window, sformat("Text_BuffName_%s", v), {x = 195, y = 40, text = "", font = 0})
-		if LR_TeamEdgeIndicator.UsrData[v].buff.dwID ~= 0 then
+		if LR_TeamEdgeIndicator.UsrData[v].buff.dwID ~=  0 then
 			local szBuffName = Table_GetBuffName(LR_TeamEdgeIndicator.UsrData[v].buff.dwID, 1)
 			Text_BuffName:SetText(szBuffName)
 			Image_Buff:FromIconID(Table_GetBuffIconID(LR_TeamEdgeIndicator.UsrData[v].buff.dwID, 1))
@@ -578,10 +569,10 @@ function LR_EdgeIndicator_Panel:Init()
 
 		Edit_Buff.OnChange = function(arg0)
 			local szText = sgsub(arg0, " ", "")
-			if szText == "" then
+			if szText ==  "" then
 				return
 			end
-			if type(tonumber(szText)) == "number" then
+			if type(tonumber(szText)) ==  "number" then
 				local dwID = tonumber(szText)
 				LR_TeamEdgeIndicator.UsrData[v].buff.szName = ""
 				LR_TeamEdgeIndicator.UsrData[v].buff.dwID = dwID
@@ -610,7 +601,7 @@ function LR_EdgeIndicator_Panel:Init()
 				local RowCount = g_tTable.Buff:GetRowCount()
 				for i = 2, RowCount do
 					local buff = g_tTable.Buff:GetRow(i)
-					if buff.szName == szText then
+					if buff.szName ==  szText then
 						m[#m + 1] = {szOption = sformat("%s #%d", buff.szName, buff.dwBuffID),
 							fnMouseEnter = function()
 								local x, y = this:GetAbsPos()
@@ -637,7 +628,7 @@ function LR_EdgeIndicator_Panel:Init()
 		local szBuffOptionKey = {"bSelf"}
 		for k2, v2 in pairs(szBuffOption) do
 			local CheckBox = self:Append("CheckBox", Window, sformat("CheckBox_%s", v), {w = 100, x = 65 + (k2 - 1) * 60, y = 70, text = _L[v2],})
-			CheckBox:Enable(LR_TeamEdgeIndicator.UsrData[v].style == 1)
+			CheckBox:Enable(LR_TeamEdgeIndicator.UsrData[v].style ==  1)
 			CheckBox:Check(LR_TeamEdgeIndicator.UsrData[v].buff.bOnlySelf)
 			CheckBox.OnCheck = function(arg0)
 				LR_TeamEdgeIndicator.UsrData[v].buff.bOnlySelf = arg0
@@ -656,7 +647,7 @@ function LR_EdgeIndicator_Panel:Init()
 	comboBox1.OnClick = function(m)
 		for i = 10, 90, 10 do
 			m[#m +1] = {
-				szOption = sformat("%d%%", i), bCheck = true, bMCheck = true, bChecked = function() return LR_TeamEdgeIndicator.UsrData.yellow == i * 1.0 / 100 end,
+				szOption = sformat("%d%%", i), bCheck = true, bMCheck = true, bChecked = function() return LR_TeamEdgeIndicator.UsrData.yellow ==  i * 1.0 / 100 end,
 				fnAction = function()
 					comboBox1:SetText(sformat("%d%%", i))
 					LR_TeamEdgeIndicator.UsrData.yellow = i * 1.0 /100
@@ -677,7 +668,7 @@ function LR_EdgeIndicator_Panel:Init()
 	comboBox2.OnClick = function(m)
 		for i = 1, 5, 1 do
 			m[#m +1] = {
-				szOption = sformat(_L["%ds"], i), bCheck = true, bMCheck = true, bChecked = function() return LR_TeamEdgeIndicator.UsrData.red == i end,
+				szOption = sformat(_L["%ds"], i), bCheck = true, bMCheck = true, bChecked = function() return LR_TeamEdgeIndicator.UsrData.red ==  i end,
 				fnAction = function()
 					comboBox2:SetText(sformat(_L["%ds"], i))
 					LR_TeamEdgeIndicator.UsrData.red = i

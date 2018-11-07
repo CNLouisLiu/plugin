@@ -364,9 +364,7 @@ function LR_TeamBossMonitor.CheckAllOTState()
 	end
 	if LR_TeamGrid.UsrData.CommonSettings.bShowBossOT then
 		if LR_TeamGrid.UsrData.CommonSettings.bShowBossOTOnlyInCure then
-			local kungfu=GetClientPlayer().GetKungfuMount()
-			local dwSkillID=kungfu.dwSkillID
-			if dwSkillID==10028 or dwSkillID==10080 or dwSkillID==10176 or dwSkillID==10448 then
+			if LR.IsNurse() then
 				for dwID, v in pairs (_OTMonitorList) do
 					LR_TeamBossMonitor.CheckOTState(dwID)
 				end

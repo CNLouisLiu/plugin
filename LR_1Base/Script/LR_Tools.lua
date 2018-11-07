@@ -787,25 +787,8 @@ local Tools_MenPaiColor = {
 	szClass = "About",
 	tWidget = {},
 }
-local tForceID = {
-	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 21, 22, 23,
-}
-local tForceTitle = {
-	[0] = _L["Force0"],
-	[1] = _L["Force1"],
-	[2] = _L["Force2"],
-	[3] = _L["Force3"],
-	[4] = _L["Force4"],
-	[5] = _L["Force5"],
-	[6] = _L["Force6"],
-	[7] = _L["Force7"],
-	[8] = _L["Force8"],
-	[9] = _L["Force9"],
-	[10] = _L["Force10"],
-	[21] = _L["Force21"],
-	[22] = _L["Force22"],
-	[23] = _L["Force23"],
-}
+
+local tForceID = ALL_KUNGFU_COLLECT
 for i = 1, #tForceID, 1 do
 	local tWidget = Tools_MenPaiColor.tWidget
 	local szIcon, nFrame = GetForceImage(tForceID[i])
@@ -813,7 +796,7 @@ for i = 1, #tForceID, 1 do
 		name = sformat("Image_Force_%d", i), type = "Image", x = (i+2)%3 * 150 , y = (mceil(i/3) - 1) *35 , w = 28, h = 28, path = szIcon, nFrame = nFrame,
 	}
 	tWidget[#tWidget+1] = {
-		name = sformat("ColorBox_Force_%d", i), type = "ColorBox", x = (i+2)%3 * 150 + 32 , y = (mceil(i/3)-1) *35 + 3, text = tForceTitle[tForceID[i]], w = 120,
+		name = sformat("ColorBox_Force_%d", i), type = "ColorBox", x = (i+2)%3 * 150 + 32 , y = (mceil(i/3)-1) *35 + 3, text = g_tStrings.tForceTitle[tForceID[i]], w = 120,
 		default = function()
 			return {LR.GetMenPaiColor(tForceID[i])}
 		end,
