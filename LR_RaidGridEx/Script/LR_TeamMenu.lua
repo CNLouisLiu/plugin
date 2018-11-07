@@ -693,7 +693,9 @@ function LR_TeamMenu.MenpaiCountMenu()
 	LR_TeamTools.Menpai.CheckMenpai()
 	for k,v in pairs (dwForceID) do
 		local szPath, nFrame = GetForceImage(v)
-		menu[#menu+1] = {szOption = sformat(_L["[%s]:%2d people"], g_tStrings.tForceTitle[v], LR_TeamTools.Menpai.Count[v] or 0), rgb = LR.MenPaiColor[v], szIcon = szPath, nFrame = nFrame, szLayer = "ICON_LEFT",}
+		if g_tStrings.tForceTitle[v] then
+			menu[#menu+1] = {szOption = sformat(_L["[%s]:%2d people"], g_tStrings.tForceTitle[v] or "", LR_TeamTools.Menpai.Count[v] or 0), rgb = LR.MenPaiColor[v], szIcon = szPath, nFrame = nFrame, szLayer = "ICON_LEFT",}
+		end
 	end
 	menu[#menu+1] = {bDevide = true}
 	menu[#menu+1] = {szOption = _L["Publish to raid"],fnAction = function() LR_TeamTools.Menpai.OutputData() end,}

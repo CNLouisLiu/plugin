@@ -384,7 +384,9 @@ function LR_TeamTools.Menpai.OutputData()
 	--g_tStrings.tForceTitle[dwForceID]
 	--local szForceName = {_L["ShaoLin"],_L["WanHua"],_L["TianCe"],_L["ChunYang"],_L["QiXiu"],_L["WuDu"],_L["TangMen"],_L["CangJian"],_L["GaiBang"],_L["MingJiao"],_L["CangYun"],_L["ChangGeMen"],_L["BaDao"],_L["DaXia"],}
 	for k, v in pairs(dwForceID) do
-		szText[#szText+1] = {szText = sformat("¡¾%s¡¿£º%d\n", g_tStrings.tForceTitle[v], LR_TeamTools.Menpai.Count[v] or 0)}
+		if g_tStrings.tForceTitle[v] then
+			szText[#szText+1] = {szText = sformat("¡¾%s¡¿£º%d\n", g_tStrings.tForceTitle[v], LR_TeamTools.Menpai.Count[v] or 0)}
+		end
 	end
 	szText[#szText+1] = {szText = "----------"}
 	for k, v in pairs(szText) do

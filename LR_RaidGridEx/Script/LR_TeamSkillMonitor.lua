@@ -360,6 +360,8 @@ function LR_TeamSkillMonitor.ShowSkillPanel()
 		return
 	end
 	if LR.IsNurse() then
+		local kungfu = me.GetKungfuMount()
+		local dwSkillID = kungfu.dwSkillID
 		local data = LR_TeamSkillMonitor.SkillMonitorData.data[dwSkillID] or {}
 		local n = 1
 		for i = 1, #data, 1 do

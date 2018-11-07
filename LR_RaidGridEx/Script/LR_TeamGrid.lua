@@ -2276,7 +2276,7 @@ end
 function LR_TeamGrid.OnFrameKeyDown()
 	--ÆÁ±Î¹¦ÄÜ
 	if LR_TeamGrid.UsrData.CommonSettings.bInCureMode and LR_TeamGrid.UsrData.CommonSettings.cureMode == 2 then
-		if IsNurse()
+		if IsNurse() then
 			if LR_TeamGrid.hoverHandle then
 				local playerID = LR_TeamGrid.hoverHandle:GetPlayerID()
 				if LR_TeamGrid.IfICanSelect() and LR_TeamGrid.IfTargetCanBSelect(playerID) then
