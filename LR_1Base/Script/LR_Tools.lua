@@ -96,6 +96,18 @@ function LR_TOOLS:Init()
 		LR_TOOLS.DisableEffect = not arg0
 	end
 
+	local ServerInfo = {GetUserServer()}
+	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if (realArea == "电信一区" and realServer == "红尘寻梦" ) then
+		local TongBox = self:Append("CheckBox", frame, "TongBox", {w = 200, x = 380, y = 477 , text = _L["Shutdown Tong Message"] })
+		TongBox:Check(LR_TOOLS.NeverShowTongS)
+		TongBox:Enable(true)
+		TongBox:SetFontScheme(161)
+		TongBox.OnCheck = function(arg0)
+			LR_TOOLS.NeverShowTongS = arg0
+		end
+	end
+
 	local Window_Welcome = self:Append("Window", hPageSet, "Window_Welcome" , {w = 530, h = 380, x = 210, y = 50})
 	local img_Welcome = self:Append("Image", Window_Welcome, "img_Welcome" , {x = 0, y = 0, w = 520, h = 240, image = "interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.UITex", frame = 0})
 	--self:Append("Image", Window_Welcome, "img_Welcome" , {x = 0, y = 0, w = 150, h = 150, image = "interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.UITex", frame = 1})
@@ -664,14 +676,14 @@ function LR_TOOLS.CHANGE_TONG_NOTIFY(flag)
 	if not (realArea == "电信一区" and realServer == "红尘寻梦" ) then
 		return
 	end
-	if me.nLevel <20 or me.nCamp == 1 then
+	if me.nLevel < 95 or me.nCamp == 1 then
 		return
 	end
 	if me.dwTongID ~=  0 then
 		return
 	end
 	local msg = {}
-	msg[#msg+1] = GetFormatText("懒人插件：您现在还没有帮会！诚挚邀请您", 48)
+	msg[#msg+1] = GetFormatText("懒人插件帮会招人（非剑网3官方发布）：您现在还没有帮会！诚挚邀请您", 48)
 	msg[#msg+1] = GetFormatText("加入", 200 , 255 , 151 , 167)
 	msg[#msg+1] = GetFormatText("懒人插件的电六中恶休闲小帮会", 48)
 	msg[#msg+1] = GetFormatText("【么么哒萌萌哒】", 23 , 255 , 128 , 128 )
@@ -679,7 +691,7 @@ function LR_TOOLS.CHANGE_TONG_NOTIFY(flag)
 	msg[#msg+1] = GetFormatText("么么哒萌萌哒", 200 , 255 , 128 , 128 )
 	msg[#msg+1] = GetFormatText(" 加入，", 48)
 	msg[#msg+1] = GetFormatText("空位很多！", 200 , 255 , 151 , 167)
-	msg[#msg+1] = GetFormatText("如您不想再看到此条消息，请打开懒人设置面板关于页面，进行关闭。\n\n", 48)
+	msg[#msg+1] = GetFormatText("如您不想再看到此条消息，请打开懒人设置面板，进行关闭。\n\n", 48)
 	local szText = tconcat(msg)
 	OutputMessage("MSG_SYS", szText, true)
 	--LR.SysMsg("\n\n懒人插件：您现在还没有帮会！诚挚邀请您加入懒人插件的中恶休闲小帮会【么么哒萌萌哒】，15神行、跑商、帮修已开，欢迎加入！请打开左下角的帮会界面，搜索 么么哒萌萌哒 加入。\n\n")

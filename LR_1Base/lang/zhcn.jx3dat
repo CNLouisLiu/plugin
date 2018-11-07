@@ -185,4 +185,6 @@ data={
 	["This map can not use team notice\n"]="此地图不能使用团队告示\n",
 
 	["Remote player can not use.\n"]="【懒人】跨服不可使用\n",
+
+	["Shutdown Tong Message"]="关闭聊天栏插件帮会招人信息",
 }
