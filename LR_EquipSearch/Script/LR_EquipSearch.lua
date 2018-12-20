@@ -878,6 +878,8 @@ function LR_EquipSearch_Panel:LoadItemBox(hWin)
 			handle:GetHandle().OnItemLButtonClick = function()	--µÈÐ§ÓÚ Handle:OnClick()
 				if IsCtrlKeyDown() then
 					EditBox_AppendLinkItemInfo(1, dwTabType, dwIndex, 0)
+				elseif IsShiftKeyDown() then
+					Output("sub:" .. v.nSub, "detail:" .. v.nDetail)
 				elseif IsAltKeyDown() then
 					Addon_ExteriorViewByItemInfo(dwTabType, dwIndex)
 				else

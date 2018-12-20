@@ -71,7 +71,7 @@ end
 
 function _GKP.IsArmor(item)
 	if item.nGenre == ITEM_GENRE.EQUIPMENT then
-		if item.nSub >= 1 and item.nSub <= 11 then
+		if item.nSub >= 1 and item.nSub < 11 then
 			return true
 		end
 	end
@@ -93,6 +93,15 @@ function _GKP.IsExchangeItem(item)
 	elseif item.nGenre == ITEM_GENRE.MATERIAL and item.nSub == 0 then	--秦风部分牌子
 		local _s, _e, m, n = sfind(item.szName, _L["qinfeng(.+).(.+)"])
 		if _s then
+			return true
+		end
+	end
+	return false
+end
+
+function _GKP.IsGuaJian(item)
+	if item.nGenre == ITEM_GENRE.EQUIPMENT then
+		if item.nSub == 14 or item.nSub == 11 then		--14背部挂件
 			return true
 		end
 	end
