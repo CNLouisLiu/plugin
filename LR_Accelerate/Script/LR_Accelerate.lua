@@ -10,6 +10,7 @@ LR_Accelerate = LR_Accelerate or {
 	jump = 1,
 	Lv90 = 54.782,
 	Lv95 = 47.17425,
+	Lv100 = 188.3264393,
 }
 
 ---95：95等级第一资料片：剑胆琴心
@@ -19,7 +20,7 @@ LR_Accelerate = LR_Accelerate or {
 ---954:95等级第五资料片：日月凌空
 LR_Accelerate.UsrData = {
 	bOn = false,
-	version = 955,
+	version = 100,
 }
 
 local JIA_SU = {
@@ -30,6 +31,7 @@ local JIA_SU = {
 	[953] = "Lv95",
 	[954] = "Lv95",
 	[955] = "Lv95",
+	[100] = "Lv100",
 }
 
 LR_Accelerate.QiXueLv90 = {
@@ -132,6 +134,21 @@ LR_Accelerate.QiXueLv955 = {
 	--[12]={szName=_L["YiFeng(BaDao)"],delta=51},
 }
 
+LR_Accelerate.QiXueLv100 = {
+	[1]={szName=_L["Acupoint:None(Default)"],delta=0},		--默认：无加速，GCD1.5s
+	[2]={szName=_L["MengGe(WanHua)"],delta=60},	--梦歌（万花）
+	[3]={szName=_L["ZhenShang(QiXiu)"],delta=50},	--枕上（七秀）
+	[4]={szName=_L["DuShou(WuDu)"],delta=102},	--毒手（五毒）
+	[5]={szName=_L["JuJingNingShen(TangMen)"],delta=204},	--聚精凝神（唐门）
+	--[6]={szName=_L["YuePo(MingJiao)"],delta=52},	--月破（明教）
+	[7]={szName=_L["TaiJiWuJi(ChunYang)"],delta=60},	--太极无极（纯阳）
+	[8]={szName=_L["QinXin/NingJue(ChangGeMen)"],delta=51},	--沁心/凝绝（长歌门）
+	[9]={szName=_L["RuFeng(CangJian)"],delta=82},	--如风（藏剑）
+	[10]={szName=_L["SuiBing(NaiXiu)"],delta=51},		--碎冰（奶秀）
+	[11]={szName=_L["YuHan(NaiXiu)"],delta=204},		--余寒（奶秀）
+	--[11]={szName=_L["FaJing(MingJiaoT)"],delta=105},	--法境（明教T）
+	--[12]={szName=_L["YiFeng(BaDao)"],delta=51},
+}
 
 LR_Accelerate.QiXue = {}
 
@@ -208,9 +225,9 @@ function LR_Accelerate_Panel:OnCreate()
 	]]
 	LR_Accelerate.QiXue = clone(LR_Accelerate[sformat("QiXueLv%d", LR_Accelerate.UsrData.version)])
 
-	LR_Accelerate.delta=0
-	LR_Accelerate.cd=1.5
-	LR_Accelerate.jump=1
+	LR_Accelerate.delta = 0
+	LR_Accelerate.cd = 1.5
+	LR_Accelerate.jump = 1
 end
 
 function LR_Accelerate_Panel:OnEvents(event)
@@ -412,7 +429,7 @@ function LR_Accelerate_Panel:Init()
 	local t_table = LR_Accelerate.QiXue or {}
 	hComboBoxVersion.OnClick = function (m)
 		local menu = {}
-		local nVersion = {955, 954, 953, 952, 951, 95, 90}
+		local nVersion = {100, 955, 954, 953, 952, 951, 95, 90}
 		for k, v in pairs(nVersion) do
 			menu[k] = { szOption = _L[sformat("Lv%d Version", v)], bCheck = true, bMCheck = true,
 				bChecked = function() return LR_Accelerate.UsrData.version == v end,
@@ -486,8 +503,9 @@ function LR_Accelerate_Panel:LoadItemBox(hWin)
 		if Zhenshu_Yuan / (Zhenshu_Yuan- i + 1) * 1024 - 1024 == Jiasulvzhi then
 			Jiasulvzhi = Jiasulvzhi + 1
 		end
+		--90等级/95等级/100等级都不一样
 		local jiasu = LR_Accelerate[JIA_SU[LR_Accelerate.UsrData.version]] or 0
-
+		--Output("jiasu", jiasu)
 		local YuZhi = mceil ((Jiasulvzhi - LR_Accelerate.delta )  * jiasu / 10.24)
 		if YuZhi <= 0 then
 			YuZhi = 0
@@ -510,6 +528,7 @@ function LR_Accelerate_Panel:LoadItemBox(hWin)
 		Text_break2:SetHAlign(1)
 		Text_break2:SetVAlign(1)
 
+		--加速率 = 加速等级/版本的设定
 		local Text_break3 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_3", i), {w = 90, h = 30, x =150, y = 2, text = sformat("%0.2f%%", YuZhi / jiasu ), font = 18})
 		Text_break3:SetHAlign(1)
 		Text_break3:SetVAlign(1)

@@ -13,6 +13,12 @@ local INDEPENDENT_MAP = {
 	[300] = true,
 	[299] = true,
 	[301] = true,
+	[360] = true,
+	[354] = true,
+	[349] = true,
+	[348] = true,
+	[347] = true,
+	[341] = true,
 }
 
 local UI = {}

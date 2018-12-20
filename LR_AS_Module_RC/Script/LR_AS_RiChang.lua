@@ -327,16 +327,25 @@ _RC.List = {
 ----大战副本数据
 _RC.Dazhan = {
 	----[任务id] = true,
---[[	[14765] = true, 		--14765 大战！英雄微山书院！
+--[[95级初
+	[14765] = true, 		--14765 大战！英雄微山书院！
 	[14766] = true, 		--14766 大战！英雄天泣林！
 	[14767] = true, 		--14767 大战！英雄梵空禅院！
 	[14768] = true, 		--14768 大战！英雄阴山圣泉！
 	[14769] = true, 		--14769 大战！英雄引仙水榭！]]
+--[[95级改版后
 	[17816] = true,		--稻香秘事
 	[17817] = true,		--银雾湖
 	[17818] = true,		--刀轮海厅
 	[17819] = true,		--夕颜阁
-	[17820] = true,		--白帝水宫
+	[17820] = true,		--白帝水宫]]
+--100级大战
+	[19191] = true,	--九辩馆
+	[19192] = true,	--泥兰洞天
+	[19195] = true,	--镜泊糊
+	[19196] = true,	--大衍盘丝洞
+	[19197] = true,	--迷渊岛
+
 }
 ADD2MONITED_QUEST_LIST(_RC.Dazhan)
 
@@ -381,7 +390,7 @@ function _RC.CheckDazhan()
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:869 秘境任务牌子
-	local eCanAccept = me.CanAcceptQuest(17820, 869)		------用【大战！英雄微山书院！】测试大战是否有cd 。代码57：任务完成度已达上限
+	local eCanAccept = me.CanAcceptQuest(19191, 869)		------用【大战！英雄九辩岛！】测试大战是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
 		_RC.SelfData[RI_CHANG.DA].finished = true
 	else

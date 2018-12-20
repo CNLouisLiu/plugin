@@ -98,7 +98,7 @@ function LR_TOOLS:Init()
 
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if (realArea == "电信一区" and realServer == "红尘寻梦" ) then
+	if (realArea == "电信一区" and realServer == "蝶恋花" ) then
 		local TongBox = self:Append("CheckBox", frame, "TongBox", {w = 200, x = 380, y = 477 , text = _L["Shutdown Tong Message"] })
 		TongBox:Check(LR_TOOLS.NeverShowTongS)
 		TongBox:Enable(true)
@@ -115,8 +115,8 @@ function LR_TOOLS:Init()
 	Window_Welcome:Show()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if realArea ==  "电信一区" and realServer == "红尘寻梦" then
-		local text_tone = self:Append("Text", Window_Welcome, "text_Welcome2" , {w = 515, x = 0, y = 225, h = 20, text  = "电六 大一统\n中恶休闲养老帮会【么么哒萌萌哒】收人\n15神行、帮修、骑马跑商已开\n欢迎各类人士加入", font  = 230})
+	if realArea ==  "电信一区" and realServer == "蝶恋花" then
+		local text_tone = self:Append("Text", Window_Welcome, "text_Welcome2" , {w = 515, x = 0, y = 225, h = 20, text  = "电一【红尘蝶恋】（含原电六国色） \n中恶休闲养老帮会【么么哒萌萌哒】收人\n15神行、帮修、骑马跑商已开\n欢迎各类人士加入", font  = 230})
 		text_tone:SetVAlign(2)
 		text_tone:SetHAlign(2)
 		text_tone:SetMultiLine(true)
@@ -673,7 +673,7 @@ function LR_TOOLS.CHANGE_TONG_NOTIFY(flag)
 	end
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if not (realArea == "电信一区" and realServer == "红尘寻梦" ) then
+	if not (realArea == "电信一区" and realServer == "蝶恋花" ) then
 		return
 	end
 	if me.nLevel < 95 or me.nCamp == 1 then
@@ -685,7 +685,7 @@ function LR_TOOLS.CHANGE_TONG_NOTIFY(flag)
 	local msg = {}
 	msg[#msg+1] = GetFormatText("懒人插件帮会招人（非剑网3官方发布）：您现在还没有帮会！诚挚邀请您", 48)
 	msg[#msg+1] = GetFormatText("加入", 200 , 255 , 151 , 167)
-	msg[#msg+1] = GetFormatText("懒人插件的电六中恶休闲小帮会", 48)
+	msg[#msg+1] = GetFormatText("懒人插件的电一【红尘蝶恋服】中恶休闲小帮会", 48)
 	msg[#msg+1] = GetFormatText("【么么哒萌萌哒】", 23 , 255 , 128 , 128 )
 	msg[#msg+1] = GetFormatText("，15神行、跑商、帮修、帮会四任务 已开，欢迎加入！请打开左下角的帮会界面，搜索 ", 48)
 	msg[#msg+1] = GetFormatText("么么哒萌萌哒", 200 , 255 , 128 , 128 )
@@ -760,7 +760,7 @@ RegisterEvent("FIRST_LOADING_END", function()
 			default = function ()
 				local ServerInfo = {GetUserServer()}
 				local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-				if not (realArea == "电信一区" and realServer == "红尘寻梦") then
+				if not (realArea == "电信一区" and realServer == "蝶恋花") then
 					local box = LR_TOOLS:Fetch("LR_TOOLS_Tong_S")
 					if box then
 						box:Hide()
@@ -776,10 +776,10 @@ RegisterEvent("FIRST_LOADING_END", function()
 	}
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if realArea ==  "电信一区" and realServer == "红尘寻梦" then
+	if realArea ==  "电信一区" and realServer == "蝶恋花" then
 		tinsert(LR_TOOLS_About.tWidget, {
 			name = "LR_TOOLS_About_shouren", type = "Text", x = 5, y = 225, w = 515, h = 20, font  = 230, VAlign = 2, HAlign = 2, IsMultiLine = true, IsRichText = true,
-			text  = "电六 大一统\n中恶休闲养老帮会【么么哒萌萌哒】收人\n15神行、帮修、骑马跑商已开\n欢迎各类人士加入",
+			text  = "电一【红尘蝶恋】(原电六国色)\n中恶休闲养老帮会【么么哒萌萌哒】收人\n15神行、帮修、骑马跑商已开\n欢迎各类人士加入",
 		})
 	end
 	LR.DelayCall(2000, function() LR_TOOLS.CHANGE_TONG_NOTIFY() end)

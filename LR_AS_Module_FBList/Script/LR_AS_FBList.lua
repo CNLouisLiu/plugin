@@ -9,7 +9,7 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20180619"
+local VERSION = "20181220"
 -------------------------------------------------------------
 --[[
 因为获取副本信息是异步操作
@@ -22,6 +22,12 @@ local INDEPENDENT_MAP = {
 	[300] = true,
 	[299] = true,
 	[301] = true,
+	[360] = true,
+	[354] = true,
+	[349] = true,
+	[348] = true,
+	[347] = true,
+	[341] = true,
 }
 
 LR_AS_FBList = {}
@@ -29,12 +35,12 @@ local DefaultUsrData = {
 	On = true,
 	CommonSetting = true,
 	bShowMapID = {
-		{dwMapID = 298},
-		{dwMapID = 289},
-		{dwMapID = 288},
-		{dwMapID = 287},
-		{dwMapID = 286},
-		{dwMapID = 284},
+		{dwMapID = 361},
+		{dwMapID = 354},
+		{dwMapID = 350},
+		{dwMapID = 348},
+		{dwMapID = 347},
+		{dwMapID = 341},
 		--{dwMapID = 283},
 	},
 	VERSION = VERSION,
