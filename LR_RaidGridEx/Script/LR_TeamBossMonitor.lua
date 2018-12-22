@@ -50,7 +50,7 @@ function _BossOTBar:Create()
 	local dwID = self.dwID
 	local Handle_ProgressBar=parentHandle:Lookup(sformat("Boss_OTBar_%d", dwID))
 	if not Handle_ProgressBar then
-		local szIniFile = sformat("%s\\UI\\%s\\BossOTBar.ini", AddonPath, LR_TeamGrid.UsrData.UI_Choose)
+		local szIniFile = sformat("%s\\UI\\BossOTBar.ini", AddonPath)
 		Handle_ProgressBar=parentHandle:AppendItemFromIni(szIniFile, "Handle_Bar", sformat("Boss_OTBar_%d", dwID))
 	end
 	self.handle=Handle_ProgressBar
@@ -239,7 +239,7 @@ function LR_TeamBossMonitor.CheckOTState2()
 		end
 		return
 	end
-	local Image_Progress = Handle_Bar:Lookup("Image_Progress")
+	local Image_Progress = Handle_Bar:Lookup("Image_Progress") or Handle_Bar:Lookup("Image_BarProgress")
 	local Image_FlashF = Handle_Bar:Lookup("Image_FlashF")
 	local Image_FlashS = Handle_Bar:Lookup("Image_FlashS")
 	local Text_Name = Handle_Bar:Lookup("Text_Name")
