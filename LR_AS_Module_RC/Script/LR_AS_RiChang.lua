@@ -436,7 +436,8 @@ end
 
 -------检查茶馆
 local CHA_QUEST = {
-	[14246] = true,
+	--[14246] = true,	--95级茶馆任务
+	[19514] = true,	--100级茶馆任务
 }
 ADD2MONITED_QUEST_LIST(CHA_QUEST)
 function _RC.CheckChaGuan()
@@ -445,8 +446,9 @@ function _RC.CheckChaGuan()
 		return
 	end
 
-	-----[快马江湖杯中茶] 任务ID：14246
-	local dwQuestID = 14246
+	-----[快马江湖杯中茶] 95级任务ID：14246
+	----[沧海云帆闻茶香]	100级任务ID：19514
+	local dwQuestID = 19514
 	local eQuestPhase = me.GetQuestPhase(dwQuestID)
 	if eQuestPhase ==  0 or eQuestPhase ==  -1 then
 		_RC.SelfData[RI_CHANG.CHA] = {eQuestPhase = eQuestPhase, need = 10, have = 0, }
@@ -460,8 +462,8 @@ function _RC.CheckChaGuan()
 		_RC.SelfData[RI_CHANG.CHA] = {eQuestPhase = eQuestPhase, need = 10, have = 10, }
 	end
 
-	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:45009 赵云睿
-	local eCanAccept = me.CanAcceptQuest(dwQuestID, 45009)		------测试茶馆是否有cd 。代码57：任务完成度已达上限
+	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:45009 95级赵云睿		63734：100级赵云睿
+	local eCanAccept = me.CanAcceptQuest(dwQuestID, 63734)		------测试茶馆是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
 		_RC.SelfData[RI_CHANG.CHA].finished = true
 	else
