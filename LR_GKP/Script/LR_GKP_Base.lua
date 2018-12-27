@@ -51,6 +51,7 @@ local SMALL_IRON = {
 	["5_10359"] = true,
 	["5_19283"] = true,
 	["5_25829"] = true,
+	["5_31600"] = true,
 }
 
 function _GKP.IsMaterial(item)

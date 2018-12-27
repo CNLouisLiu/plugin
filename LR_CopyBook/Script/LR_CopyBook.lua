@@ -197,7 +197,9 @@ function LR_CopyBook.OnEvent(event)
 					return
 				end
 				local text = handle:Lookup(4)
-				LR.SysMsg(sformat("%s\n", sgsub(text:GetText(),"\n","")))
+				if text then
+					LR.SysMsg(sformat("%s\n", sgsub(text:GetText(),"\n","")))
+				end
 				LR_CopyBook.StopCopy()
 				return
 			end

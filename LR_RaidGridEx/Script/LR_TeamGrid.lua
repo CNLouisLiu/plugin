@@ -2311,15 +2311,16 @@ function LR_TeamGrid.UpdateRoleBodySize()
 
 	if LR_TeamGrid.bMiniPanel then
 		LR_TeamGrid.Handle_Body:Lookup("Image_BodyBg"):SetSize(0, 0)
+		LR_TeamGrid.Handle_Body:Lookup("Handle_Roles"):SetSize(0, 0)
 		LR_TeamGrid.Handle_Body:SetSize(0, 0)
 		LR_TeamGrid.frameSelf:Lookup("Wnd_Body"):SetSize(0, 0)
 
 		LR_TeamGrid.Handle_TeamNumSub:Clear()
 		LR_TeamGrid.Handle_TeamNumSub:SetSize(0, 0)
 		LR_TeamGrid.Handle_BodySub:Lookup("Image_BodyBgSub"):SetSize(0, 0)
+		LR_TeamGrid.Handle_BodySub:Lookup("Handle_RolesSub"):SetSize(0, 0)
 		LR_TeamGrid.Handle_BodySub:SetSize(0, 0)
 		LR_TeamGrid.frameSelf:Lookup("Wnd_BodySub"):SetSize(0, 0)
-
 		return
 	end
 
@@ -3073,6 +3074,10 @@ function LR_TeamGrid.ResizeTitle()
 	Handle_Title:Lookup("Image_TitleBg"):SetSize(w, 30)
 	Handle_Title:Lookup("Image_Title"):SetSize(w, 30)
 	hFrame:SetDragArea(0, 0, w, 30)
+
+	if LR_TeamGrid.bMiniPanel then
+		hFrame:SetSize(w, 30)
+	end
 end
 
 function LR_TeamGrid.SetTitleText(szText)

@@ -255,6 +255,8 @@ function WndFrame:ctor(__name, __data)
 			frame = Wnd.OpenWindow(string.format(__ini, "WndFrame"), __name)
 		elseif __data.style == "LARGER" then
 			frame = Wnd.OpenWindow(string.format(__ini, "WndFrameLarger"), __name)
+		elseif __data.style == "LARGER2" then
+			frame = Wnd.OpenWindow(string.format(__ini, "WndFrameLarger2"), __name)
 		elseif __data.style == "NONE" then
 			frame = Wnd.OpenWindow(string.format(__ini, "WndFrameNone"), __name)
 		elseif __data.style == "NONE2" then
@@ -263,6 +265,7 @@ function WndFrame:ctor(__name, __data)
 	else
 		frame = Wnd.OpenWindow(__data.path , __name)
 	end
+	PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
 	--frame:SetAlpha(0)
 	frame:SetName(__name)
 	--self:Register(__name)
@@ -270,9 +273,10 @@ function WndFrame:ctor(__name, __data)
 	self:_SetSelf(self.__this)
 	self:_SetType("WndFrame")
 	if __data.style and __data.style ~= "NONE" and __data.style ~= "NONE2" or __data.path then
---[[		frame:Lookup("Btn_Close").OnLButtonClick = function()
+		frame:Lookup("Btn_Close").OnLButtonClick = function()
 			self:Destroy()
-		end]]
+			PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
+		end
 		if __data.title then
 			self:SetTitle(__data.title or "")
 		end

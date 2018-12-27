@@ -1766,7 +1766,7 @@ function LR_QuestTools:LoadItemBox()
 					if v.nType == "D" or v.nType == "N" then
 						Output(_L["Accept npc"], "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName, Table_GetQuestPoint(dwQuestID, "accept", k - 1, v.dwMapID))
 						local eCanAccept = me.CanAcceptQuest(dwQuestID, v.dwTemplateID)
-						Output(_L["Can accept?"], eCanAccept, g_tStrings.tQuestResultString[eCanAccept])
+						Output(_L["Do ..... Can accept?"], eCanAccept, v.dwTemplateID, g_tStrings.tQuestResultString[eCanAccept])
 					end
 				end
 				for k, v in pairs (LR_HeadName.SpliteString(tQuest.szFinish)) do

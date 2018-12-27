@@ -742,4 +742,8 @@ data={
 	["Instant saving when quest update"]="日常任务变化时即时保存",
 	["QYJSMD"]="奇遇基数埋点",
 
+	--20181225add--
+	["JingLi"]="精力",
+	["ShengYuJingLi"]="可获精力",
+
 }

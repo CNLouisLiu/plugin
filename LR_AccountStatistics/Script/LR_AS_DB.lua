@@ -9,7 +9,7 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20180420"
+local VERSION = "20181225a"
 -------------------------------------------------------------
 LR_AS_DB = LR_AS_DB or {}
 LR_AS_DEBUG = false
@@ -23,10 +23,6 @@ local schema_group_list = {
 	data = {
 		{name = "groupID", 	sql = "groupID INTEGER"},		--主键
 		{name = "szName", sql = "szName VARCHAR(30) DEFAULT('DEFAULT GROUP')"},
-		{name = "nCurrentStamina", 	sql = "nCurrentStamina INTEGER DEFAULT(0)"},
-		{name = "nMaxStamina", 	sql = "nMaxStamina INTEGER DEFAULT(0)"},
-		{name = "nCurrentThew", 	sql = "nCurrentThew INTEGER DEFAULT(0)"},
-		{name = "nMaxThew", 	sql = "nMaxThew INTEGER DEFAULT(0)"},
 		{name = "SaveTime", 	sql = "SaveTime INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( groupID )"},
@@ -75,14 +71,13 @@ local schema_player_info = {
 		{name = "ZhanJieDengJi", 	sql = "ZhanJieDengJi INTEGER DEFAULT(0)"},
 		{name = "MingJianBi", 	sql = "MingJianBi INTEGER DEFAULT(0)"},
 		{name = "szTitle", sql = "szTitle VARCHAR(20) DEFAULT('')"},
-		{name = "nCurrentStamina", 	sql = "nCurrentStamina INTEGER DEFAULT(0)"},
-		{name = "nMaxStamina", 	sql = "nMaxStamina INTEGER DEFAULT(0)"},
-		{name = "nCurrentThew", 	sql = "nCurrentThew INTEGER DEFAULT(0)"},
-		{name = "nMaxThew", 	sql = "nMaxThew INTEGER DEFAULT(0)"},
 		{name = "nCurrentTrainValue", 	sql = "nCurrentTrainValue INTEGER DEFAULT(0)"},
 		{name = "nCamp", 	sql = "nCamp INTEGER DEFAULT(0)"},
 		{name = "szTongName", sql = "szTongName VARCHAR(20) DEFAULT('')"},
 		{name = "remainJianBen", 	sql = "remainJianBen INTEGER DEFAULT(0)"},
+		{name = "nVigor", 	sql = "nVigor INTEGER DEFAULT(0)"},			--100级新版精力
+		{name = "nMaxVigor", 	sql = "nMaxVigor INTEGER DEFAULT(10000)"},			--100级新版精力
+		{name = "nVigorRemainSpace", 	sql = "nVigorRemainSpace INTEGER DEFAULT(6000)"},			--100级新版精力
 		{name = "SaveTime", sql = "SaveTime INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},

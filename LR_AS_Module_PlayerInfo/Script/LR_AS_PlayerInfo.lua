@@ -33,15 +33,16 @@ function _C.GetSelfData()
 	UserInfo.ZhanJieDengJi = LR.GetSelfZhanJieDengJi() or 0
 	UserInfo.MingJianBi = LR.GetSelfMingJianBi() or 0
 	UserInfo.szTitle = me.szTitle or ""
-	UserInfo.nCurrentStamina = me.nCurrentStamina or 0
-	UserInfo.nMaxStamina = me.nMaxStamina or 0
-	UserInfo.nCurrentThew = me.nCurrentThew or 0
-	UserInfo.nMaxThew = me.nMaxThew or 0
 	UserInfo.nCurrentTrainValue = me.nCurrentTrainValue or 0
 	UserInfo.nCamp = me.nCamp or 0
 	UserInfo.szTongName = LR.GetTongName(me.dwTongID) or ""
 	UserInfo.remainJianBen = me.GetExamPrintRemainSpace() or 0
 	UserInfo.SaveTime = GetCurrentTime()
+
+	--100级新版精力
+	UserInfo.nVigor = me.nVigor
+	UserInfo.nMaxVigor = me.GetMaxVigor()
+	UserInfo.nVigorRemainSpace = me.GetVigorRemainSpace()
 
 	return UserInfo
 end
@@ -52,9 +53,9 @@ function _C.SaveData(DB)
 	end
 	-------保存自身的属性数据
 	local v = _C.GetSelfData()
-	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, BangGong, XiaYi, WeiWang, ZhanJieJiFen, ZhanJieDengJi, MingJianBi, szTitle, nCurrentStamina, nMaxStamina, nCurrentThew, nMaxThew, nCurrentTrainValue, nCamp, szTongName, remainJianBen, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, BangGong, XiaYi, WeiWang, ZhanJieJiFen, ZhanJieDengJi, MingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, remainJianBen, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
-	DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.BangGong, v.XiaYi, v.WeiWang, v.ZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.szTitle, v.nCurrentStamina, v.nMaxStamina, v.nCurrentThew, v.nMaxThew, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.remainJianBen, v.SaveTime})))
+	DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.BangGong, v.XiaYi, v.WeiWang, v.ZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.remainJianBen, v.nVigor, v.nMaxVigor, v.nVigorRemainSpace, v.SaveTime})))
 	DB_REPLACE:Execute()
 end
 
@@ -71,19 +72,20 @@ function _C.LoadData(DB)
 	LR_AS_Data.AllPlayerInfo = clone(AllUsrInfo)
 end
 
-function _C.ClearAllReaminJianBen(DB)
+--每周重置可以获得的监本、精力数量
+function _C.ClearAllReaminJianBenAndJingLi(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM player_info WHERE szKey IS NOT NULL")
 	local Data = d2g(DB_SELECT:GetAll())
-	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, BangGong, XiaYi, WeiWang, ZhanJieJiFen, ZhanJieDengJi, MingJianBi, szTitle, nCurrentStamina, nMaxStamina, nCurrentThew, nMaxThew, nCurrentTrainValue, nCamp, szTongName, remainJianBen, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1500,  ?)")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, BangGong, XiaYi, WeiWang, ZhanJieJiFen, ZhanJieDengJi, MingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, remainJianBen, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1500,  ?, ?, 6000, ?)")
 	for k, v in pairs (Data) do
 		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.BangGong, v.XiaYi, v.WeiWang, v.ZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.szTitle, v.nCurrentStamina, v.nMaxStamina, v.nCurrentThew, v.nMaxThew, v.nCurrentTrainValue, v.nCamp, v.szTongName, GetCurrentTime()})))
+		DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.BangGong, v.XiaYi, v.WeiWang, v.ZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.nVigor, v.nMaxVigor, GetCurrentTime()})))
 		DB_REPLACE:Execute()
 	end
 end
 
 function _C.ResetDataMonday(DB)
-	_C.ClearAllReaminJianBen(DB)
+	_C.ClearAllReaminJianBenAndJingLi(DB)
 end
 
 ----------------------------------------------------
@@ -119,8 +121,8 @@ function _C.ReFreshTitle()
 		return
 	end
 	local page = frame:Lookup("PageSet_Menu"):Lookup("Page_PlayerInfo"):Lookup("","")
-	local key_list = {"nLevel", "nMoney", "JianBen", "BangGong", "XiaYi", "WeiWang", "ZhanJieJiFen", "ZhanJieDengJi", "MingJianBi"}
-	local title_list = {_L["Name"], _L["Money"], _L["Examprint"], _L["JiangGong"], _L["XiaYi"], _L["WeiWang"], _L["ZhanJieJiFen"], _L["ZhanJieLevel"], _L["MingJian"]}
+	local key_list = {"nLevel", "nMoney", "JianBen", "BangGong", "XiaYi", "WeiWang", "JingLi", "ShengYuJingLi", "MingJianBi"}
+	local title_list = {_L["Name"], _L["Money"], _L["Examprint"], _L["JiangGong"], _L["XiaYi"], _L["WeiWang"], _L["JingLi"], _L["ShengYuJingLi"], _L["MingJian"]}
 	for k , v in ipairs(key_list) do
 		if v then
 			local txt = page:Lookup(sformat("Text_Record_Break%d", k))
@@ -220,8 +222,10 @@ function _C.ShowItem(t_Table, Alpha, bCal, _num, _money)
 		local item_BangGong = items:Lookup("Text_BangGong")
 		local item_XiaYi = items:Lookup("Text_XiaYi")
 		local item_WeiWang = items:Lookup("Text_WeiWang")
-		local item_ZhanJieJiFen = items:Lookup("Text_ZhanJieJiFen")
-		local item_ZhanJieDengJi = items:Lookup("Text_ZhanJieDengJi")
+		--local item_ZhanJieJiFen = items:Lookup("Text_ZhanJieJiFen")
+		--local item_ZhanJieDengJi = items:Lookup("Text_ZhanJieDengJi")
+		local item_JingLi = items:Lookup("Text_JingLi")
+		local item_ShengYuJingLi = items:Lookup("Text_ShengYuJingLi")
 		local item_MingJianBi = items:Lookup("Text_MingJianBi")
 		local item_Select = items:Lookup("Image_Select")
 		item_Select:SetAlpha(125)
@@ -269,8 +273,10 @@ function _C.ShowItem(t_Table, Alpha, bCal, _num, _money)
 		item_BangGong:SetText(PlayerInfo.BangGong or "--")
 		item_XiaYi:SetText(PlayerInfo.XiaYi or "--")
 		item_WeiWang:SetText(PlayerInfo.WeiWang or "--")
-		item_ZhanJieJiFen:SetText(PlayerInfo.ZhanJieJiFen or "--")
-		item_ZhanJieDengJi:SetText(PlayerInfo.ZhanJieDengJi or "--")
+		--item_ZhanJieJiFen:SetText(PlayerInfo.ZhanJieJiFen or "--")
+		--item_ZhanJieDengJi:SetText(PlayerInfo.ZhanJieDengJi or "--")
+		item_JingLi:SetText(PlayerInfo.nVigor or "--")
+		item_ShengYuJingLi:SetText(PlayerInfo.nVigorRemainSpace or "--")
 		item_MingJianBi:SetText(PlayerInfo.MingJianBi or "--")
 
 		local remainJianBen = PlayerInfo.remainJianBen or 1500
@@ -322,60 +328,6 @@ function _C.ShowItem(t_Table, Alpha, bCal, _num, _money)
 
 			szTipInfo[#szTipInfo+1] = GetFormatText(_L["TrainValue:"], 224)
 			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.nCurrentTrainValue or "--"), 18)
-
-			if PlayerInfo.nCurrentStamina ~=  nil then
-				local nMaxStamina, nMaxThew, nCurrentStamina, nCurrentThew, SaveTime = 0, 0, 0, 0, 0
-				local delta_time, delta_Stamina, delta_Thew, now_Stamina, now_Thew
-				local GroupList = LR_AS_Group.GroupList
-
-				nMaxStamina = PlayerInfo.nMaxStamina or 0
-				nMaxThew = PlayerInfo.nMaxThew or 0
-				nCurrentStamina = PlayerInfo.nCurrentStamina or 0
-				nCurrentThew = PlayerInfo.nCurrentThew or 0
-				SaveTime = PlayerInfo.SaveTime or 0
-
-				-----如果在分组里，刷新成分组里的数据
-				local loginArea = v.loginArea
-				local loginServer = v.loginServer
-				local realArea = v.realArea or loginArea
-				local realServer = v.realServer or loginServer
-				local dwID = v.dwID
-				local szName = v.szName
-				local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-				if LR_AS_Group.AllUsrGroup[szKey] and LR_AS_Group.AllUsrGroup[szKey].groupID > 0 then
-					local groupID = LR_AS_Group.AllUsrGroup[szKey].groupID
-					nMaxStamina = GroupList[groupID].nMaxStamina or 0
-					nMaxThew = GroupList[groupID].nMaxThew or 0
-					nCurrentStamina = GroupList[groupID].nCurrentStamina or 0
-					nCurrentThew = GroupList[groupID].nCurrentThew or 0
-					SaveTime = GroupList[groupID].SaveTime or 0
-				end
-
-				delta_time = (GetCurrentTime() - SaveTime) / 60 / 6
-				delta_Stamina = mfloor(nMaxStamina * 0.00078 * delta_time )
-				delta_Thew =  mfloor(nMaxThew  * 0.00078 * delta_time)
-				now_Stamina = nCurrentStamina + delta_Stamina
-				now_Thew = nCurrentThew + delta_Thew
-				szTipInfo[#szTipInfo+1] = GetFormatText(_L["Stamina:"], 224)
-				if now_Stamina>= nMaxStamina then
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%d%s", nMaxStamina, _L[" (FULL)"]), 71)
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" = %d + Δ%d\n", nCurrentStamina, nMaxStamina - nCurrentStamina), 18)
-				else
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%d = %d + Δ%d\n", now_Stamina, nCurrentStamina, delta_Stamina), 18)
-				end
-				szTipInfo[#szTipInfo+1] = GetFormatText(_L["Thew:"], 224)
-				if now_Thew>= nMaxThew then
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%d%s", nMaxThew, _L[" (FULL)"]), 71)
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" = %d + Δ%d\n", nCurrentThew, nMaxThew - nCurrentThew), 18)
-				else
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%d = %d +Δ%d\n", now_Thew, nCurrentThew, delta_Thew), 18)
-				end
-			else
-				szTipInfo[#szTipInfo+1] = GetFormatText(_L["Stamina:"], 224)
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", v.nCurrentStamina or ""), 18)
-				szTipInfo[#szTipInfo+1] = GetFormatText(_L["Thew:"], 224)
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", v.nCurrentThew or ""), 18)
-			end
 
 			if PlayerInfo.remainJianBen then
 				szTipInfo[#szTipInfo+1] = GetFormatText(_L["JianBen this week remain:"], 224)

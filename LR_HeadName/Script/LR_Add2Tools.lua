@@ -701,6 +701,15 @@ LR_HeadName_UI = {
 				return LR_HeadName.bOn
 			end,
 			callback = function(m)
+				m[#m + 1] = {szOption = _L["bShowMine"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowMine end,
+					fnAction = function()
+						LR_HeadName.UsrData.bShowMine = not LR_HeadName.UsrData.bShowMine
+						LR_HeadName.AddAllDoodad2AllList()
+						LR_HeadName.ReDrawAll()
+						LR_HeadName.SaveCommonSettings()
+					end,
+				}
+				m[#m + 1] = {bDevide = true}
 				local Mineral = LR_HeadName.Mineral
 				for k, v in pairs(HEAD_NAME_MINERAL) do
 					m[#m+1] = {szOption = v, bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.Mineral[v] or false end,
@@ -709,6 +718,9 @@ LR_HeadName_UI = {
 							LR_HeadName.AddAllDoodad2AllList()
 							LR_HeadName.ReDrawAll()
 							LR_HeadName.SaveCommonSettings()
+						end,
+						fnDisable = function()
+							return not LR_HeadName.UsrData.bShowMine
 						end,
 					}
 
@@ -736,6 +748,16 @@ LR_HeadName_UI = {
 				return LR_HeadName.bOn
 			end,
 			callback = function(m)
+				m[#m + 1] = {szOption = _L["bShowAgriculture"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowAgriculture end,
+					fnAction = function()
+						LR_HeadName.UsrData.bShowAgriculture = not LR_HeadName.UsrData.bShowAgriculture
+						LR_HeadName.AddAllDoodad2AllList()
+						LR_HeadName.ReDrawAll()
+						LR_HeadName.SaveCommonSettings()
+					end,
+				}
+				m[#m + 1] = {bDevide = true}
+
 				local Agriculture = LR_HeadName.Agriculture
 				for k, v in pairs(HEAD_NAME_AGRICULTURE) do
 					m[#m+1] = {szOption = v, bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.Agriculture[v] or false end,
@@ -744,6 +766,9 @@ LR_HeadName_UI = {
 							LR_HeadName.AddAllDoodad2AllList()
 							LR_HeadName.ReDrawAll()
 							LR_HeadName.SaveCommonSettings()
+						end,
+						fnDisable = function()
+							return not LR_HeadName.UsrData.bShowAgriculture
 						end,
 					}
 				end

@@ -62,14 +62,10 @@ function _Group.UpdateMyGroupInfo(DB)
 	local result = d2g(DB_SELECT:GetAll())
 	if result and next(result) ~= nil then
 		local v = result[1]
-		v.nMaxStamina = me.nMaxStamina or 0
-		v.nCurrentStamina = me.nCurrentStamina or 0
-		v.nMaxThew = me.nMaxThew or 0
-		v.nCurrentThew = me.nCurrentThew or 0
 		v.SaveTime = GetCurrentTime()
-		local DB_REPLACE = DB:Prepare("REPLACE INTO group_list ( groupID, szName, nCurrentStamina, nMaxStamina, nCurrentThew, nMaxThew, SaveTime ) VALUES ( ?, ?, ?, ?, ?, ?, ? )")
+		local DB_REPLACE = DB:Prepare("REPLACE INTO group_list ( groupID, szName, SaveTime ) VALUES ( ?, ?, ? )")
 		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(unpack(g2d({v.groupID, v.szName, v.nCurrentStamina, v.nMaxStamina, v.nCurrentThew, v.nMaxThew, v.SaveTime})))
+		DB_REPLACE:BindAll(unpack(g2d({v.groupID, v.szName, v.SaveTime})))
 		DB_REPLACE:Execute()
 	end
 end

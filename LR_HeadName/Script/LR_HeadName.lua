@@ -34,44 +34,24 @@ end
 HEAD_NAME_MINERAL = {
 	_D(1020),	--铜矿
 	_D(1021),	--锡矿
-	_D(1022),	--铅矿
-	_D(1023),	--锌矿
+	_D(1022),	--铅锌矿
 	_D(1024),	--铁矿
 	_D(1025),	--银矿
-	_D(1027),	--银砂矿
-	_D(2644),	--赤铁
-	_D(2645),	--月锡
-	_D(4229),	--圳铁矿
-	_D(4230),	--禹铜矿
-	_D(5661),	--天青石矿
-	_D(5662),	--烟雨石矿
 }
 
 HEAD_NAME_AGRICULTURE = {
 	_D(1001),	--甘草
 	_D(1002),	--大黄
 	_D(1003),	--芍药
-	_D(1004),	--兰草
-	_D(1005),	--相思子
-	_D(1006),	--车前草
-	_D(1007),	--天名精
-	_D(1008),	--防风
 	_D(1009),	--五味子
-	_D(1010),	--金银花
-	_D(1011),	--金创小草
 	_D(1012),	--枸杞
 	_D(1015),	--千里香
-	_D(1016),	--田七
-	_D(1017),	--天麻
-	_D(1018),	--远志
-	_D(1019),	--仙茅
 	_D(2641),	--川贝
 	_D(2642),	--虫草
-	_D(2643),	--麦冬
-	_D(4227),	--石莲花
 	_D(4228),	--彼岸花
-	_D(5659),	--白术
-	_D(5660),	--紫苏
+	_D(7526),	--珊瑚
+
+	---
 	_D(3358),	--百脉根
 	_D(3359),	--皇竹草
 	_D(3360),	--甜象草
@@ -149,6 +129,8 @@ LR_HeadName.default = {
 		bEnhanceGuDing = true,		--增强蛊鼎显示
 		bMiniMapAgriculture = true,	--神农小地图显示
 		bMiniMapMine = true,	--矿藏小地图显示
+		bShowAgriculture = false,	--显示神农
+		bShowMine = false,
 		bShowQuestDoodad = false,	--显示任务拾取物品
 		bShowTargetDis = true,
 		bShowTargetFace = false,	--显示目标面向
@@ -310,21 +292,21 @@ LR_HeadName.default = {
 --设置矿默认数据
 LR_HeadName.default.Mineral = {}
 for k, v in pairs(HEAD_NAME_MINERAL) do
-	LR_HeadName.default.Mineral[v] = false
+	LR_HeadName.default.Mineral[v] = true
 end
-LR_HeadName.default.Mineral[_D(1020)] = true	--铜矿
+--[[LR_HeadName.default.Mineral[_D(1020)] = true	--铜矿
 LR_HeadName.default.Mineral[_D(5661)] = true	--天青石矿
-LR_HeadName.default.Mineral[_D(5662)] = true	--烟雨石矿
+LR_HeadName.default.Mineral[_D(5662)] = true	--烟雨石矿]]
 
 --设置神农默认数据
 LR_HeadName.default.Agriculture = {}
 for k, v in pairs(HEAD_NAME_AGRICULTURE) do
-	LR_HeadName.default.Agriculture[v] = false
+	LR_HeadName.default.Agriculture[v] = true
 end
-LR_HeadName.default.Agriculture[_D(1001)] = true	--甘草
+--[[LR_HeadName.default.Agriculture[_D(1001)] = true	--甘草
 LR_HeadName.default.Agriculture[_D(1002)] = true	--大黄
 LR_HeadName.default.Agriculture[_D(5659)] = true	--白术
-LR_HeadName.default.Agriculture[_D(5660)] = true	--紫苏
+LR_HeadName.default.Agriculture[_D(5660)] = true	--紫苏]]
 
 LR_HeadName.UsrData = clone(LR_HeadName.default.UsrData)
 LR_HeadName.DoodadKind = clone(LR_HeadName.default.DoodadKind)
@@ -3318,14 +3300,22 @@ function LR_HeadName.CheckAgriculture(szName)
 	if not szName then
 		return false
 	end
-	return LR_HeadName.Agriculture[szName] or false
+	if LR_HeadName.UsrData.bShowAgriculture then
+		return LR_HeadName.Agriculture[szName] or false
+	else
+		return false
+	end
 end
 
 function LR_HeadName.CheckMineral(szName)
 	if not szName then
 		return false
 	end
-	return LR_HeadName.Mineral[szName] or false
+	if LR_HeadName.UsrData.bShowMine then
+		return LR_HeadName.Mineral[szName] or false
+	else
+		return false
+	end
 end
 
 function LR_HeadName.LoadBookCopyQuests()
