@@ -77,7 +77,7 @@ local schema_player_info = {
 		{name = "remainJianBen", 	sql = "remainJianBen INTEGER DEFAULT(0)"},
 		{name = "nVigor", 	sql = "nVigor INTEGER DEFAULT(0)"},			--100级新版精力
 		{name = "nMaxVigor", 	sql = "nMaxVigor INTEGER DEFAULT(10000)"},			--100级新版精力
-		{name = "nVigorRemainSpace", 	sql = "nVigorRemainSpace INTEGER DEFAULT(6000)"},			--100级新版精力
+		{name = "nVigorRemainSpace", 	sql = "nVigorRemainSpace INTEGER DEFAULT(3000)"},			--100级新版精力
 		{name = "SaveTime", sql = "SaveTime INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
@@ -280,6 +280,18 @@ local schema_equipment_data = {
 	primary_key = {sql = "PRIMARY KEY ( szKey, nSuitIndex )"},
 }
 
+local schema_wltj_data = {
+	name = "wltj_data",
+	version = VERSION,
+	data = {
+		{name = "szKey", 	sql = "szKey VARCHAR(80)"},		--主键
+		{name = "tCommon", 	sql = "tCommon TEXT DEFAULT('[]')"},
+		{name = "t5R", 	sql = "t5R TEXT DEFAULT('[]')"},
+		{name = "t10R", 	sql = "t10R TEXT DEFAULT('[]')"},
+	},
+	primary_key = {sql = "PRIMARY KEY ( szKey )"},
+}
+
 --收支交易数据库
 local schema_trade_data = {
 	name = "trade_data",
@@ -451,6 +463,7 @@ local tTableConfig = {
 	schema_mail_receive_time,
 	schema_achievement_data,
 	schema_equipment_data,
+	schema_wltj_data,
 }
 
 function LR_AS_DB.IniMainDB()

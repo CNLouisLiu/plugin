@@ -2099,6 +2099,9 @@ function LR_HeadName.Check(dwID, nType, bForced)
 			if obj.dwTemplateID ==  46140 then
 				szName = _L["[TrueBody]"]
 			end
+			if obj.dwTemplateID ==  4691 then
+				szName = _L["--"]
+			end
 		end
 		if nType == TARGET.DOODAD then
 			if LR_HeadName.DoodadTemplateSee[obj.dwTemplateID] then

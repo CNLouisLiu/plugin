@@ -575,4 +575,8 @@ data={
 	["New style 2 tip"]="新(包括刷新)的BUFF置尾显示,有BUFF消失后，其余BUFF自动缩进",
 	["To make this function work normally, please turn off player sound because it may interrupt this sound."]="为了使这个功能正常工作，请关闭角色音效。因为当有大量角色音效触发时，极易被打断或覆盖。",
 	["TeamBuffTool_Panel_Tip03\n"]="请及时导出自定义的BUFF数据，以防插件更新时被默认数据覆盖。",
+
+	--20190101add--
+	["Auto change color in common quest"]="世界公共任务自动切换颜色",
+	["Name text tip01"]="1、需要开启系统的任务追踪面板\n2、当系统的任务追踪面板切换到世界任务页时，会自动切换成按阵营着色\n3、在野外地图时，请调整相同阵营的人员到相同小队，以便激活阵眼以及奶妈操作",
 }

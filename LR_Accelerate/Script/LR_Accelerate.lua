@@ -294,7 +294,7 @@ function LR_Accelerate_Panel:Init()
 	Image_Record_BG1:SetImageType(10)
 	Image_Record_BG1:SetAlpha(110)
 
-	local Image_Record_Line1_0 = self:Append("Image", hHandle, "Image_Record_Line1_0", {x = 3, y = 28, w = 340, h = 3})
+	local Image_Record_Line1_0 = self:Append("Image", hHandle, "Image_Record_Line1_0", {x = 0, y = 28, w = 340, h = 3})
 	Image_Record_Line1_0:FromUITex("ui\\Image\\Minimap\\MapMark.UITex",65)
 	Image_Record_Line1_0:SetImageType(11)
 	Image_Record_Line1_0:SetAlpha(115)

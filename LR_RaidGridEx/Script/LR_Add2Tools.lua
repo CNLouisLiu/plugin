@@ -154,6 +154,7 @@ local LR_TeamGrid_UI ={
 				for k,v in pairs(menu) do
 					m[#m+1]=v
 				end
+
 				PopupMenu(m)
 			end,
 			Tip = function()

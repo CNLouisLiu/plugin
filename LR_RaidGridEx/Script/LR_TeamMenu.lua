@@ -213,6 +213,26 @@ function LR_TeamMenu.NameColoredMenu()
 			end,
 		}
 	end
+	menu[#menu+1] = {bDevide = true}
+	menu[#menu+1] = {szOption = _L["Auto change color in common quest"], bCheck = true, bMCheck = true,
+		bChecked = function()
+			return not LR_TeamGrid.UsrData.CommonSettings.bNotAutoChangeColorWhenInWorldCommonQuest
+		end,
+		fnAction = function()
+			LR_TeamGrid.UsrData.CommonSettings.bNotAutoChangeColorWhenInWorldCommonQuest = not LR_TeamGrid.UsrData.CommonSettings.bNotAutoChangeColorWhenInWorldCommonQuest
+			LR_TeamGrid.ReDrawAllMembers()
+			LR_TeamGrid.SaveCommonData()
+		end,
+		fnMouseEnter = function()
+			local tip = {}
+			tip[#tip + 1] = GetFormatText(_L["Name text tip01"], 32)
+			local x, y = this:GetAbsPos()
+			OutputTip(tconcat(tip), 320, {x, y, 0, 0})
+		end,
+		fnMouseLeave = function()
+			HideTip()
+		end,
+	}
 	return menu
 end
 

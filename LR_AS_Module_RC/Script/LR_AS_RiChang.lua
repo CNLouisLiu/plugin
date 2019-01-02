@@ -1195,6 +1195,8 @@ end
 function _RC.ResetDataMonday(DB)
 	_RC.ClearZC(DB)
 	_Exam.ResetData(DB)
+
+	LR_WLTJ.ClearWLTJdatMonday(DB)
 end
 
 function _RC.ResetDataEveryDay(DB)
@@ -1778,6 +1780,9 @@ function LR_QuestTools:LoadItemBox()
 				Output("g_tTable.Quest Œﬁ–≈œ¢")
 			end
 
+			local nQuestPhase = me.GetQuestPhase(dwQuestID)
+			Output("nQuestPhase", nQuestPhase)
+
 			if IsCtrlKeyDown() then
 				local _nType, _dwID = me.GetTarget()
 				if _nType == TARGET.NPC then
@@ -1912,6 +1917,7 @@ LR_AS_RC.RI_CHANG_NAME = RI_CHANG_NAME
 function _RC.SaveData2(DB)
 	_RC.SaveData(DB)
 	_Exam.SaveData(DB)
+	LR_WLTJ.SaveData(DB)
 end
 
 function _RC.LoadData2(DB)

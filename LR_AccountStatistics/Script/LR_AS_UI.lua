@@ -54,6 +54,18 @@ function LR_AS_Panel.OnFrameCreate()
 		this:Lookup("PageSet_Menu"):ActivePage(0)
 	end
 
+	local BTN_WLTJ = LR.AppendUI("Button", this, "BTN_WLTJ", {x = 510, y = 52, text = _L["WLTJ"]})
+	BTN_WLTJ.OnClick = function()
+		if LR_WLTJ then
+			LR_WLTJ.OpenFrame()
+		end
+	end
+	if LR_WLTJ then
+		BTN_WLTJ:Enable(true)
+	else
+		BTN_WLTJ:Enable(false)
+	end
+
 	LR.AppendAbout(Addon, this)
 	FireEvent("LR_ACS_REFRESH_FP")
 end

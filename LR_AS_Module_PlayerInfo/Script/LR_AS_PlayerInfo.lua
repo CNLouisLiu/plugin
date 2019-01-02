@@ -76,7 +76,7 @@ end
 function _C.ClearAllReaminJianBenAndJingLi(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM player_info WHERE szKey IS NOT NULL")
 	local Data = d2g(DB_SELECT:GetAll())
-	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, BangGong, XiaYi, WeiWang, ZhanJieJiFen, ZhanJieDengJi, MingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, remainJianBen, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1500,  ?, ?, 6000, ?)")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, BangGong, XiaYi, WeiWang, ZhanJieJiFen, ZhanJieDengJi, MingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, remainJianBen, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1500,  ?, ?, 3000, ?)")
 	for k, v in pairs (Data) do
 		DB_REPLACE:ClearBindings()
 		DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.BangGong, v.XiaYi, v.WeiWang, v.ZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.nVigor, v.nMaxVigor, GetCurrentTime()})))

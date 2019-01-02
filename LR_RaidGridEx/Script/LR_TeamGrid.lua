@@ -142,6 +142,7 @@ local DefaultCommonSettings = {
 	nNameNumLimit = 5,	--名字个数限制
 	nameTextScale = 1,	---名字缩放设置
 	nameFontSpacing = 0,		--字间距
+	bNotAutoChangeColorWhenInWorldCommonQuest = false,	--世界任务的时候不自动切换为阵营着色
 	--心法显示
 	kungFuShowType = 2,	--1：心法图标；2：心法文字；3：阵营图标；4：阵营文字
 	kungFuTextScale = 1,	--心法文字缩放比例
@@ -705,6 +706,10 @@ function _RoleGrid:DrawRoleNameText()
 	elseif LR_TeamGrid.UsrData.CommonSettings.szFontColor == 2 then
 		r, g, b = unpack(LR.CampColor[MemberInfo.nCamp])
 	end
+	if LR_TeamGrid.bInWorldCommonQuest and not LR_TeamGrid.UsrData.CommonSettings.bNotAutoChangeColorWhenInWorldCommonQuest then
+		r, g, b = unpack(LR.CampColor[MemberInfo.nCamp])
+	end
+
 	if MemberInfo.bDeathFlag or MemberInfo.nCurrentLife == 0 then
 		--r, g, b = 255, 0, 0
 	end
@@ -3939,6 +3944,41 @@ function LR_TeamGrid.FIGHT_HINT()
 	end
 end
 
+local function HookCheck()
+	--Output("check")
+	LR_TeamGrid.bInWorldCommonQuest = true
+	for dwID , v in pairs(_tRoleGrids) do
+		v:DrawRoleNameText()
+	end
+end
+local function HookUncheck()
+	--Output("uncheck")
+	LR_TeamGrid.bInWorldCommonQuest = false
+	for dwID , v in pairs(_tRoleGrids) do
+		v:DrawRoleNameText()
+	end
+end
+
+function LR_TeamGrid.ON_FRAME_CREATE()
+	local frame = arg0
+	local szName = frame:GetName()
+	if szName == "QuestTraceList" then
+		local frame = Station.Lookup("Normal/QuestTraceList/PageSet_Total/CheckBox_PQ")
+		if frame then
+			HookTableFunc(frame, "OnCheckBoxCheck", HookCheck, false, true)
+			HookTableFunc(frame, "OnCheckBoxUncheck", HookUncheck, false, true)
+			--HookTableFunc(frame, "OnFrameDragEnd", hook, false, true)
+			--HookTableFunc(frame, "OnItemRButtonClick", hook, false, true)
+
+			--HookTableFunc(frame, "OnItemLButtonClick", hook, false, true)
+			--HookTableFunc(frame, "OnLButtonClick", hook, true, true)
+			--HookTableFunc(frame, "OnRButtonClick", hook, false, true)
+
+			--HookTableFunc(frame, "OnActivePage", hook, false, true)
+			--HookTableFunc(frame, "OnRButtonClick", hook, true, true, true)
+		end
+	end
+end
 -----------------------------------------------------------------------
 -- 关于界面打开和刷新面板的时机
 -- 1) 普通情况下 组队会触发[PARTY_UPDATE_BASE_INFO]打开+刷新
@@ -3953,7 +3993,6 @@ end
 --    利用外面的注册的[LOADING_END]来打开
 --    利用UI注册的[LOADING_END]来刷新
 --    避免多次重复刷新面板浪费开销
-
 
 function LR_TeamGrid.PARTY_UPDATE_BASE_INFO()
 	LR_TeamBuffMonitor.ClearAllCache()
@@ -4055,4 +4094,5 @@ LR.RegisterEvent("PARTY_UPDATE_BASE_INFO", function() LR_TeamGrid.PARTY_UPDATE_B
 LR.RegisterEvent("PARTY_LEVEL_UP_RAID", function() LR_TeamGrid.PARTY_LEVEL_UP_RAID() end)
 LR.RegisterEvent("LOADING_END", function() LR_TeamGrid.LOADING_END() end)
 LR.RegisterEvent("LOGIN_GAME", function() LR_TeamGrid.LOGIN_GAME() end)
+LR.RegisterEvent("ON_FRAME_CREATE", function() LR_TeamGrid.ON_FRAME_CREATE() end)
 LR.RegisterEvent("LR_TARGET_CHANGE", function() LR_TeamGrid.LR_TARGET_CHANGE() end)
