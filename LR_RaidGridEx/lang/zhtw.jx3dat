@@ -575,4 +575,9 @@ data={
 	["New style 2 tip"]="新(包括刷新)的BUFF置尾顯示,有BUFF消失後，其餘BUFF自動縮進",
 	["To make this function work normally, please turn off player sound because it may interrupt this sound."]="為了使這個功能正常工作，請關閉角色音效。因為當有大量角色音效觸發時，極易被打斷或覆蓋。",
 	["TeamBuffTool_Panel_Tip03\n"]="請及時導出自定義的BUFF數據，以防插件更新時被默認數據覆蓋。",
+
+	--20190101add--
+	["Auto change color in common quest"]="世界公共任務自動切換顏色",
+	["Name text tip01"]="1、需要開啟系統的任務追蹤面板\n2、當系統的任務追蹤面板切換到世界任務頁時，會自動切換成按陣營著色\n3、在野外地圖時，請調整相同陣營的人員到相同小隊，以便激活陣眼以及奶媽操作",
+	["Clear history"]="清除歷史記錄",
 }

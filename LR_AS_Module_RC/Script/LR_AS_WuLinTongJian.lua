@@ -245,7 +245,7 @@ function LR_WLTJ.Initial()
 		end
 	end
 	hComboBox.OnClick = function(m)
-		local ids = _C.GetIDCanDo(true)
+		local ids = _C.GetIDCanDo(true) or {}
 		local tab = {}
 		for k, v in pairs(ids) do
 			for k2, dwQuestID in pairs(v) do

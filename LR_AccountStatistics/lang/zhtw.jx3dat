@@ -746,4 +746,7 @@ data={
 	["JingLi"]="精力",
 	["ShengYuJingLi"]="可獲精力",
 
+	--20190101add--
+	["WLTJ"]="武林通鑒",
+
 }
