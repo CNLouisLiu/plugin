@@ -48,6 +48,12 @@ function LR_TeamBuffTool.LoadBuffCache()
 	end
 end
 
+function LR_TeamBuffTool.ClearBuffCache()
+	BUFF_CACHE = {}
+	local path = sformat("%s\\buffcache.dat", SaveDataPath)
+	SaveLUAData(path, {})
+end
+
 --------------------------------------------------------------------
 ---公共BUFF配置文件
 --------------------------------------------------------------------
@@ -380,6 +386,14 @@ function LR_TeamBuffTool_Panel:Init()
 		menu[#menu + 1] = {szOption = _L["Only from npc"], bCheck = true, bChecked = function() return LR_TeamBuffTool_Panel.bCollectOnlyFromNpc end,
 			fnAction = function()
 				LR_TeamBuffTool_Panel.bCollectOnlyFromNpc = not LR_TeamBuffTool_Panel.bCollectOnlyFromNpc
+			end,
+		}
+		menu[#menu + 1] = {bDevide = true}
+		menu[#menu + 1] = {szOption = _L["Clear history"],
+			fnAction = function()
+				LR_TeamBuffTool.ClearBuffCache()
+				self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
+				self:LoadSearchResultBox()
 			end,
 		}
 		local tCasterName = {}
