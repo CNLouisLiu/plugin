@@ -25,14 +25,44 @@ LR_TeamBuffTool.tBuffList = {
 }
 --------------------------------------------------------------------
 local BUFF_CACHE = {}
-function LR_TeamBuffTool.SaveBuffCache()
-	local path = sformat("%s\\buffcache.dat", SaveDataPath)
+local BUFF_CACHE_MAP = {}
+local BUFF_CACHE_MAP_TEMP = {}
+local BUFF_TOTAL_TIME = {}
+function LR_TeamBuffTool.SaveBuffCache(skip_check)
+	if not LR_TeamBuffTool_Panel.bOnCollect and not skip_check then
+		return
+	end
+	local path = sformat("%s\\BUFF_CACHE\\buffcache.dat", SaveDataPath)
 	local data = clone(BUFF_CACHE)
 	LR.SaveLUAData(path, data)
+
+	local me = GetClientPlayer()
+	local scene = me.GetScene()
+	local dwMapID = scene.dwMapID
+	local file_name = sformat("Map_%d(%s)", dwMapID, Table_GetMapName(dwMapID))
+	if scene.nType == MAP_TYPE.DUNGEON then
+		file_name = LR.MapType[dwMapID].szOtherName
+	end
+	local path2 = sformat("%s\\BUFF_CACHE\\%s.dat", SaveDataPath, file_name)
+	local data2 = clone(BUFF_CACHE_MAP) or {}
+	for szKey, v in pairs(data2) do
+		for dwCaster, v2 in pairs(v.temp_caster or {}) do
+			local _, obj = LR_TeamTools.DeathRecord.GetName(TARGET.NPC, tonumber(dwCaster))
+			if obj then
+				v.caster[sformat("%d_%d", obj.dwTemplateID, obj.dwMapID)] = clone(obj)
+			else
+				v.temp_caster[dwCaster] = nil
+			end
+		end
+
+		v.temp_caster = {}
+	end
+	BUFF_CACHE_MAP = clone(data2)
+	LR.SaveLUAData(path2, data2)
 end
 
 function LR_TeamBuffTool.LoadBuffCache()
-	local path = sformat("%s\\buffcache.dat", SaveDataPath)
+	local path = sformat("%s\\BUFF_CACHE\\buffcache.dat", SaveDataPath)
 	local data = LoadLUAData(path) or {}
 	for i = #BUFF_CACHE, 1, -1 do
 		for j = #data, 1, -1 do
@@ -48,11 +78,25 @@ function LR_TeamBuffTool.LoadBuffCache()
 	end
 end
 
+function LR_TeamBuffTool.LoadBuffCacheMap()
+	local me = GetClientPlayer()
+	local scene = me.GetScene()
+	local dwMapID = scene.dwMapID
+	local file_name = sformat("Map_%d(%s)", dwMapID, Table_GetMapName(dwMapID))
+	if scene.nType == MAP_TYPE.DUNGEON then
+		file_name = LR.MapType[dwMapID].szOtherName
+	end
+	local path2 = sformat("%s\\BUFF_CACHE\\%s.dat", SaveDataPath, file_name)
+	local data2 = LoadLUAData(path2) or {}
+	BUFF_CACHE_MAP = clone(data2)
+end
+
 function LR_TeamBuffTool.ClearBuffCache()
 	BUFF_CACHE = {}
 	local path = sformat("%s\\buffcache.dat", SaveDataPath)
 	SaveLUAData(path, {})
 end
+
 
 --------------------------------------------------------------------
 ---公共BUFF配置文件
@@ -121,19 +165,36 @@ end
 
 function LR_TeamBuffTool.SaveData()
 	local path = sformat("%s\\BuffMonitorData.dat", SaveDataPath)
-	local data = LR_TeamBuffTool.FormatData(LR_TeamBuffTool.tBuffList)
-	data.VERSION = VERSION
-	SaveLUAData(path, data)
+	local data = {dungeon_data = {}, custom_data = {}, VERSION = VERSION}
+	for k, v in pairs(LR_Team_Map) do
+		if next(v.data) ~= nil then
+			tinsert(data.dungeon_data, {dwMapID = clone(v.dwMapID), data = clone(v.data)})
+		end
+	end
+	data.custom_data = LR_TeamBuffTool.FormatData(LR_TeamBuffTool.tBuffList)
+	LR.SaveLUAData(path, data, "")
+
 	LR_TeamBuffSettingPanel.FormatDebuffNameList()
 end
 
 function LR_TeamBuffTool.LoadData()
 	local path = sformat("%s\\BuffMonitorData.dat", SaveDataPath)
-	local data = LoadLUAData(path) or {}
+	local data = LoadLUAData(path) or {dungeon_data = {}, custom_data = {}, VERSION = "-"}
 	if next(data) == nil or not data.VERSION or data.VERSION ~= VERSION then
 		LR_TeamBuffTool.ResetData()
 	else
-		LR_TeamBuffTool.tBuffList = LR_TeamBuffTool.FormatData(data)
+		for k, v in pairs(data.dungeon_data) do
+			local szName = ""
+			for k2, dwMapID in pairs(v.dwMapID) do
+				if LR.MapType[dwMapID] then
+					szName = LR.MapType[dwMapID].szOtherName
+				end
+			end
+			LR_Team_Map[szName] = LR_Team_Map[szName] or {enable = true, dwMapID = clone(v.dwMapID), data = {}, level = 3}
+			LR_Team_Map[szName].data = clone(v.data)
+		end
+
+		LR_TeamBuffTool.tBuffList = LR_TeamBuffTool.FormatData(data.custom_data)
 	end
 	LR_TeamBuffSettingPanel.FormatDebuffNameList()
 end
@@ -141,9 +202,20 @@ end
 function LR_TeamBuffTool.ResetData()
 	local _, _, szLang = GetVersion()
 	local path = sformat("%s\\DefaultData\\%s", AddonPath, szLang)
-	local data = LoadLUAData(path) or {}
-	data.VERSION = VERSION
-	LR_TeamBuffTool.tBuffList = clone(data)
+	local data = LoadLUAData(path) or {dungeon_data = {}, custom_data = {}, VERSION = VERSION}
+
+	for k, v in pairs(data.dungeon_data) do
+		local szName = ""
+		for k2, dwMapID in pairs(v.dwMapID) do
+			if LR.MapType[dwMapID] then
+				szName = LR.MapType[dwMapID].szOtherName
+			end
+		end
+		LR_Team_Map[szName] = LR_Team_Map[szName] or {enable = true, dwMapID = clone(v.dwMapID), data = {}, level = 3}
+		LR_Team_Map[szName].data = clone(v.data)
+	end
+	LR_TeamBuffTool.tBuffList = LR_TeamBuffTool.FormatData(data.custom_data)
+
 	LR_TeamBuffTool.SaveData()
 end
 
@@ -168,12 +240,19 @@ end
 --------------------------------------------------------------------
 ---数据导入导出
 --------------------------------------------------------------------
+----LR_TeamBuffTool.tBuffList用于存放自定义数据
+----LR_Team_Map用于存放副本数据
+
 function LR_TeamBuffTool.Export()
 	local fExport = function(szName)
 		local path = sformat("%s\\Export\\%s", SaveDataPath, szName)
-		local data = LR_TeamBuffTool.FormatData(LR_TeamBuffTool.tBuffList)
-		data.VERSION = nil
-		data.nType = "LR_TeamBuffTool.DataExport"
+		local data = {dungeon_data = {}, custom_data = {}, nType = "DataExport"}
+		for k, v in pairs(LR_Team_Map) do
+			if next(v.data) ~= nil then
+				tinsert(data.dungeon_data, {dwMapID = clone(v.dwMapID), data = clone(v.data)})
+			end
+		end
+		data.custom_data = LR_TeamBuffTool.FormatData(LR_TeamBuffTool.tBuffList)
 		LR.SaveLUAData(path, data)
 		LR.SysMsg(sformat(_L["File location: %s.jx3dat\n"], path))
 	end
@@ -190,13 +269,22 @@ function LR_TeamBuffTool.Import()
 	end
 	local _s, _e, szFileName = sfind(szFile,"interface(.+)")
 	local path = sformat("interface%s", szFileName)
-	local data = LoadLUAData(path) or {}
-	if data.nType ~= "LR_TeamBuffTool.DataExport" then
+	local data = LoadLUAData(path) or {dungeon_data = {}, custom_data = {},}
+	if data.nType ~= "DataExport" then
 		return
 	end
-	LR_TeamBuffTool.tBuffList = LR_TeamBuffTool.FormatData(data)
-	LR_TeamBuffTool.tBuffList.nType = nil
 
+	for k, v in pairs(data.dungeon_data) do
+		local szName = ""
+		for k2, dwMapID in pairs(v.dwMapID) do
+			if LR.MapType[dwMapID] then
+				szName = LR.MapType[dwMapID].szOtherName
+			end
+		end
+		LR_Team_Map[szName] = LR_Team_Map[szName] or {enable = true, dwMapID = clone(v.dwMapID), data = {}, level = 3}
+		LR_Team_Map[szName].data = clone(v.data)
+	end
+	LR_TeamBuffTool.tBuffList = LR_TeamBuffTool.FormatData(data.custom_data)
 	LR_TeamBuffTool.SaveData()
 
 	LR_TeamBuffTool_Panel.szChooseGroupName = ""
@@ -212,7 +300,10 @@ function LR_TeamBuffTool.Clear()
 		{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction =
 			function()
 				LR_TeamBuffTool.tBuffList = {}
-				LR_TeamBuffTool:SaveData()
+				for k, v in pairs(LR_Team_Map) do
+					v.data = {}
+				end
+				LR_TeamBuffTool.SaveData()
 				LR_TeamBuffTool_Panel:LoadGroupBox()
 				LR_TeamBuffTool_Panel.szChooseGroupName = ""
 				LR_TeamBuffTool_Panel:LoadBuffListBox()
@@ -236,6 +327,8 @@ LR_TeamBuffTool_Panel.bOnCollect = false
 LR_TeamBuffTool_Panel.bCollectHideBuff = false
 LR_TeamBuffTool_Panel.bCollectOnlyFromNpc = false
 LR_TeamBuffTool_Panel.bConnectSysRaidPanel = true
+LR_TeamBuffTool_Panel.bShowMapBuffCache = false
+LR_TeamBuffTool_Panel.bMapData = false
 RegisterCustomData("LR_TeamBuffTool_Panel.bConnectSysRaidPanel", VERSION)
 
 LR_TeamBuffTool_Panel.szChoose = "SelfBuff"
@@ -249,6 +342,9 @@ LR_TeamBuffTool_Panel.szCasterName = ""
 LR_TeamBuffTool_Panel.bDraged = false
 LR_TeamBuffTool_Panel.bAdd = false
 LR_TeamBuffTool_Panel.bAddBuff = nil
+
+LR_TeamBuffTool_Panel.ShowBuffOnNPC = true
+LR_TeamBuffTool_Panel.ShowBuffOnPlayer = true
 
 local BuffListBoxUI = {}
 
@@ -265,8 +361,15 @@ function LR_TeamBuffTool_Panel:OnCreate()
 	LR_TeamBuffTool_Panel.searchText = ""
 	LR_TeamBuffTool_Panel.szCasterName = ""
 
+	LR_TeamBuffTool_Panel.LoadType = "by dungeon"
+
 	LR_TeamBuffTool.LoadBuffCache()
 	LR_TeamBuffTool.SaveBuffCache()
+
+	for k, v in pairs(LR_Team_Map_Sorted) do
+		v.fold = true	--true为合起来
+	end
+
 end
 
 function LR_TeamBuffTool_Panel:OnEvents(event)
@@ -337,7 +440,24 @@ function LR_TeamBuffTool_Panel:Init()
 		HideTip()
 	end
 
-	local ComboBox_Import = LR.AppendUI("ComboBox", frame, "ComboBox_Import", {w = 150, h = 30, x = 20, y = 51, text = _L["Import/Export data"]})
+	local Text_CheckBox = {_L["Dungeon data"], _L["Custom data"]}
+	local tchose = {"by dungeon", "by custom"}
+	local Check_Box = {}
+	for k, v in pairs(Text_CheckBox) do
+		Check_Box[k] = self:Append("UICheckBox", frame, sformat("CheckBox_%d", k), {x = 20 + 150 * (k - 1), y = 51, w = 150, h = 30, text = v, group = "TypeChose"})
+		Check_Box[k].OnCheck = function(bCheck)
+			if bCheck then
+				LR_TeamBuffTool_Panel.szChooseGroup = nil
+				LR_TeamBuffTool_Panel.szChooseGroupName = ""
+				LR_TeamBuffTool_Panel.LoadType = tchose[k]
+				self:LoadGroupBox()
+				self:LoadBuffListBox()
+			end
+		end
+	end
+	Check_Box[1]:Check(true)
+
+	local ComboBox_Import = LR.AppendUI("ComboBox", frame, "ComboBox_Import", {w = 150, h = 30, x = 320, y = 51, text = _L["Import/Export data"]})
 	ComboBox_Import.OnClick = function(m)
 		m[#m + 1] = {szOption = _L["Export data"], fnAction = function() LR_TeamBuffTool.Export() end}
 		m[#m + 1] = {szOption = _L["Import data"], fnAction = function() LR_TeamBuffTool.Import() end}
@@ -356,7 +476,7 @@ function LR_TeamBuffTool_Panel:Init()
 		PopupMenu(m)
 	end
 
-	local Btn_FAQ2 = self:Append("UIButton", frame, "Btn_FAQ2" , {x = 180 , y = 55 , w = 20 , h = 20, ani = {"ui\\Image\\UICommon\\CommonPanel2.UITex", 48, 50, 54}, })
+	local Btn_FAQ2 = self:Append("UIButton", frame, "Btn_FAQ2" , {x = 480 , y = 55 , w = 20 , h = 20, ani = {"ui\\Image\\UICommon\\CommonPanel2.UITex", 48, 50, 54}, })
 	Btn_FAQ2.OnEnter = function()
 		local tTip = {}
 		tTip[#tTip + 1] = GetFormatText(_L["TeamBuffTool_Panel_Tip03\n"], 2)
@@ -375,6 +495,14 @@ function LR_TeamBuffTool_Panel:Init()
 		LR_TeamBuffTool_Panel.bOnCollect = arg0
 	end
 
+	local CheckBox_Selected = LR.AppendUI("CheckBox", frame, "CheckBox_Selected", {w = 150, h = 30, x = 240, y = 92, text = _L["Show select group npc buff"]})
+	CheckBox_Selected:Check(LR_TeamBuffTool_Panel.bMapData)
+	CheckBox_Selected.OnCheck = function(arg0)
+		LR_TeamBuffTool_Panel.bMapData = arg0
+		self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
+		self:LoadSearchResultBox()
+	end
+
 	local Btn_HideBuff = self:Append("UIButton", frame, "Btn_HideBuff" , {x = 870 , y = 55 , w = 14 , h = 20, ani = {"ui\\Image\\UICommon\\CommonPanel2.UITex", 80, 81, 82, 83}, })
 	Btn_HideBuff.OnClick = function()
 		local menu = {}
@@ -388,6 +516,27 @@ function LR_TeamBuffTool_Panel:Init()
 				LR_TeamBuffTool_Panel.bCollectOnlyFromNpc = not LR_TeamBuffTool_Panel.bCollectOnlyFromNpc
 			end,
 		}
+		menu[#menu + 1] = {szOption = _L["Show map buff cache"], bCheck = true, bChecked = function() return LR_TeamBuffTool_Panel.bShowMapBuffCache end,
+			fnAction = function()
+				LR_TeamBuffTool_Panel.bShowMapBuffCache = not LR_TeamBuffTool_Panel.bShowMapBuffCache
+				self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
+				self:LoadSearchResultBox()
+				Wnd.CloseWindow(GetPopupMenu())
+			end,
+		}
+
+		menu[#menu + 1] = {bDevide = true}
+		local tKey = {"ShowBuffOnNPC", "ShowBuffOnPlayer"}
+		for k, v in pairs(tKey) do
+			menu[#menu + 1] = {szOption = _L[v], bCheck = true, bMCheck = false, bChecked = function() return LR_TeamBuffTool_Panel[v] end,
+				fnAction = function()
+					LR_TeamBuffTool_Panel[v] = not LR_TeamBuffTool_Panel[v]
+					self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
+					self:LoadSearchResultBox()
+				end,
+			}
+		end
+
 		menu[#menu + 1] = {bDevide = true}
 		menu[#menu + 1] = {szOption = _L["Clear history"],
 			fnAction = function()
@@ -398,28 +547,56 @@ function LR_TeamBuffTool_Panel:Init()
 		}
 		local tCasterName = {}
 		local tTemp = {}
-		for k, v in pairs(BUFF_CACHE) do
-			local szCasterName = v.szCasterName or "unknow"
-			if not tTemp[szCasterName] then
-				tinsert(tCasterName, v.szCasterName)
-				tTemp[szCasterName] = true
+
+		if LR_TeamBuffTool_Panel.bMapData and LR_TeamBuffTool_Panel.LoadType == "by dungeon" then
+			for k, v in pairs(BUFF_CACHE_MAP_TEMP) do
+				for k2, v2 in pairs(v.caster) do
+					if not tTemp[v2.szName] then
+						tinsert(tCasterName, v2.szName)
+						tTemp[v2.szName] = true
+					end
+				end
+			end
+		else
+			if LR_TeamBuffTool_Panel.bShowMapBuffCache then
+				for k, v in pairs(BUFF_CACHE_MAP) do
+					for k2, v2 in pairs(v.caster) do
+						if not tTemp[v2.szName] then
+							tinsert(tCasterName, v2.szName)
+							tTemp[v2.szName] = true
+						end
+					end
+				end
+			else
+				for k, v in pairs(BUFF_CACHE) do
+					local szCasterName = v.szCasterName or "unknow"
+					if not tTemp[szCasterName] then
+						tinsert(tCasterName, v.szCasterName)
+						tTemp[szCasterName] = true
+					end
+				end
 			end
 		end
+
 		if next(tCasterName) ~= nil then
 			menu[#menu + 1] = {bDevide = true}
 			for k, v in pairs(tCasterName) do
 				menu[#menu + 1] = {	szOption = v, bCheck = true, bMCheck = true, bChecked = function() return LR_TeamBuffTool_Panel.szCasterName == v end,
 					fnAction = function()
-						if LR_TeamBuffTool_Panel.szCasterName == v then
-							LR_TeamBuffTool_Panel.szCasterName = ""
-						else
-							LR_TeamBuffTool_Panel.szCasterName = v
-						end
+						LR_TeamBuffTool_Panel.szCasterName = v
 						self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
 						self:LoadSearchResultBox()
 					end,
 				}
 			end
+			menu[#menu + 1] = {bDevide = true}
+			menu[#menu + 1] = {szOption = _L["Clear choose"],
+				fnAction = function()
+					LR_TeamBuffTool_Panel.szCasterName = ""
+					self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
+					self:LoadSearchResultBox()
+				end,
+			}
 		end
 
 
@@ -535,14 +712,21 @@ function LR_TeamBuffTool_Panel:Init()
 	----------添加分组
 	local hButton_add_Group = self:Append("Button", frame, "hButton_add_Group" , {w = 196, x = 17, y = 562, text = _L["Add group"]})
 	hButton_add_Group:Enable(true)
-	hButton_add_Group.OnClick = function ()
+	hButton_add_Group.OnClick = function()
 		self:addGroup()
 	end
 
-	----------打开边角管理器
-	local hButton_EdgeOpen = self:Append("Button", frame, "hButton_EdgeOpen" , {w = 196, x = 740, y = 562, text = _L["Open EdgeIndicator"]})
+	--打开log管理器
+	local hButton_EdgeOpen = self:Append("Button", frame, "hButton_EdgeOpen" , {w = 150, x = 580, y = 562, text = _L["Open log"]})
 	hButton_EdgeOpen:Enable(true)
-	hButton_EdgeOpen.OnClick = function ()
+	hButton_EdgeOpen.OnClick = function()
+		LR_FIGHT_LOG.OpenFrame()
+	end
+
+	----------打开边角管理器
+	local hButton_LogOpen = self:Append("Button", frame, "hButton_LogOpen" , {w = 196, x = 740, y = 562, text = _L["Open EdgeIndicator"]})
+	hButton_LogOpen:Enable(true)
+	hButton_LogOpen.OnClick = function()
 		LR_EdgeIndicator_Panel.OpenFrame()
 	end
 
@@ -614,12 +798,22 @@ end
 
 function LR_TeamBuffTool_Panel:modifyBuff(szGroupName, buff)
 	local data, k = LR_TeamBuffTool_Panel:GetGroupData(szGroupName)
-	if k > 0 then
-		local data = LR_TeamBuffTool.tBuffList[k]
+	if LR_TeamBuffTool_Panel.LoadType == "by dungeon" then
+		local data = LR_Team_Map[szGroupName]
 		for key, v in pairs(data.data) do
 			if v.dwID == buff.dwID and v.nLevel == buff.nLevel then
-				LR_TeamBuffTool.tBuffList[k][key] = clone(buff)
+				LR_Team_Map[szGroupName].data[key] = clone(buff)
 				LR_TeamBuffTool.SaveData()
+			end
+		end
+	else
+		if k > 0 then
+			local data = LR_TeamBuffTool.tBuffList[k]
+			for key, v in pairs(data.data) do
+				if v.dwID == buff.dwID and v.nLevel == buff.nLevel then
+					LR_TeamBuffTool.tBuffList[k][key] = clone(buff)
+					LR_TeamBuffTool.SaveData()
+				end
 			end
 		end
 	end
@@ -649,8 +843,13 @@ function LR_TeamBuffTool_Panel:addBuff()
 	end
 	bAddBuff.enable = true
 	local buff = LR_TeamBuffTool.FormatBuff(bAddBuff)
-	tinsert(LR_TeamBuffTool.tBuffList[k].data, buff)
+	if LR_TeamBuffTool_Panel.LoadType == "by dungeon" then
+		tinsert(LR_Team_Map[LR_TeamBuffTool_Panel.szChooseGroupName].data, buff)
+	else
+		tinsert(LR_TeamBuffTool.tBuffList[k].data, buff)
+	end
 	self:LoadBuffListBox()
+	self:RefreshBuffNum(LR_TeamBuffTool_Panel.szChooseGroupName)
 	LR_TeamBuffTool.SaveData()
 end
 
@@ -661,16 +860,27 @@ function LR_TeamBuffTool_Panel:delBuff(buff, szGroupName)
 		szName = "LoadSettings",
 		{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function()
 			local GroupData, k = LR_TeamBuffTool_Panel:GetGroupData(szGroupName)
-			if k > 0 then
-				local data = LR_TeamBuffTool.tBuffList[k]
+
+			if LR_TeamBuffTool_Panel.LoadType == "by dungeon" then
+				local data = LR_Team_Map[k] or {}
 				for key, v in pairs(data.data) do
 					if v.dwID == buff.dwID and v.nLevel == buff.nLevel then
-						tremove(LR_TeamBuffTool.tBuffList[k].data, key)
+						tremove(LR_Team_Map[k].data, key)
+					end
+				end
+			else
+				if k > 0 then
+					local data = LR_TeamBuffTool.tBuffList[k]
+					for key, v in pairs(data.data) do
+						if v.dwID == buff.dwID and v.nLevel == buff.nLevel then
+							tremove(LR_TeamBuffTool.tBuffList[k].data, key)
 
+						end
 					end
 				end
 			end
 			self:LoadBuffListBox()
+			self:RefreshBuffNum(szGroupName)
 			LR_TeamBuffTool.SaveData()
 		end,},
 		{szOption = g_tStrings.STR_HOTKEY_CANCEL},
@@ -699,23 +909,172 @@ function LR_TeamBuffTool_Panel:LoadGroupBox()
 	end
 	self:ClearHandle(ScrollGroupBox)
 
-	local m = 1
-	local List = LR_TeamBuffTool.tBuffList or {}
-	tsort(List, function(a, b) return a.order < b.order end)
-
-	for k, v in pairs (List) do
-		if type(v) == "table" then
-			if m == 1 then
-				LR_TeamBuffTool_Panel.szChooseGroupName = v.szGroupName
-				local szKey = tostring(GetStringCRC(v.szGroupName))
-				LR_TeamBuffTool_Panel.szChooseGroup = sformat("Image_GroupSelect_%s", szKey)
+	if LR_TeamBuffTool_Panel.LoadType == "by dungeon" then
+		for k, v in pairs(LR_Team_Map_Sorted) do
+			local Handle_Version = self:Append("Handle", ScrollGroupBox, sformat("hGroup_%s", v.szVersionName), {x = 0, y = 0, w = 196, h = 40, eventid = 524596})
+			local Image_Version_BG = self:Append("Image", Handle_Version, sformat("Image_Version_BG_%s", v.szVersionName), {x = 3, y = 0, w = 193, h = 40})
+			Image_Version_BG:FromUITex("UI/Image/UICommon/CommonPanel2.uitex", 12):SetImageType(0)
+			local Text_Version = self:Append("Text", Handle_Version, sformat("Text_Version_%s", v.szVersionName), {w = 150, h = 40, x  = 15, y = 2, text = v.szVersionName, font = 18})
+			local m = 0
+			if not v.fold then
+				for k2, v2 in pairs(v.data) do
+					self:LoadDungeonGroupBox(v2, m)
+					m = m + 1
+				end
 			end
-			LR_TeamBuffTool_Panel:LoadOneGroupBox(v, m)
-			m = m+1
+			Handle_Version.OnClick = function()
+				v.fold = not v.fold
+				self:LoadGroupBox()
+			end
+			Handle_Version.OnEnter = function()
+				local x, y = this:GetAbsPos()
+				local w, h = this:GetSize()
+				local tip = {}
+				--Output(v)
+				for k2, v2 in pairs(v.data) do
+					if v2.level == 1 then
+						tip[#tip + 1] = GetFormatImage("ui/image/uitga/desertstorm.UITex", 8, 24, 24)
+					else
+						tip[#tip + 1] = GetFormatImage("ui/image/uitga/desertstorm.UITex", 1, 24, 24)
+					end
+					tip[#tip + 1] = GetFormatText(sformat("%s\n", v2.szOtherName))
+				end
+				OutputTip(tconcat(tip), 320, {x, y, w, h})
+			end
+			Handle_Version.OnLeave = function()
+				HideTip()
+			end
+		end
+	else
+		local m = 1
+		local List = LR_TeamBuffTool.tBuffList or {}
+		tsort(List, function(a, b) return a.order < b.order end)
+
+		for k, v in pairs (List) do
+			if type(v) == "table" then
+				if m == 1 then
+					LR_TeamBuffTool_Panel.szChooseGroupName = v.szGroupName
+					local szKey = tostring(GetStringCRC(v.szGroupName))
+					LR_TeamBuffTool_Panel.szChooseGroup = sformat("Image_GroupSelect_%s", szKey)
+				end
+				LR_TeamBuffTool_Panel:LoadOneGroupBox(v, m)
+				m = m + 1
+			end
 		end
 	end
 	ScrollGroupBox:UpdateList()
 end
+
+function LR_TeamBuffTool_Panel:RefreshBuffNum(szName)
+	if LR_TeamBuffTool_Panel.LoadType == "by dungeon" then
+		local Text = self:Fetch(sformat("Text_Group_Name_%s", szName))
+		if Text then
+			Text:SetText(sformat("%s ( %d )", szName, #LR_Team_Map[szName].data))
+		end
+	else
+		sformat("Text_CustomGroup_%s", szName)
+		local Text = self:Fetch(sformat("Text_CustomGroup_%s", szName))
+		if Text then
+			local data, k = LR_TeamBuffTool_Panel:GetGroupData(szName)
+			Text:SetText(sformat("%s ( %d )", szName, #data.data))
+		end
+	end
+end
+
+
+function LR_TeamBuffTool_Panel:LoadDungeonGroupBox(GroupData, m)
+	local ScrollGroupBox = self:Fetch("ScrollGroupBox")
+	if not ScrollGroupBox then
+		return
+	end
+	local v = clone(GroupData)
+
+	if true then
+		local hGroupDungeon = self:Append("Handle", ScrollGroupBox, sformat("hGroup_%s", v.szOtherName), {x = 0, y = 0, w = 196, h = 40, eventid = 524596})
+		local Image_Line = self:Append("Image", hGroupDungeon, sformat("Image_Line_%s", v.szOtherName), {x = 0, y = 0, w = 196, h = 40})
+		Image_Line:FromUITex("ui\\Image\\UICommon\\CommonPanel.UITex", 48):SetImageType(10):SetAlpha(200)
+		if m % 2 == 0 then
+			Image_Line:SetAlpha(35)
+		end
+
+		--悬停框
+		local Image_Hover = self:Append("Image", hGroupDungeon, sformat("Image_GroupHover_%s", v.szOtherName), {x = 0, y = 0, w = 190, h = 40})
+		Image_Hover:FromUITex("ui\\Image\\Common\\TempBox.UITex",5)
+		Image_Hover:SetImageType(10)
+		Image_Hover:SetAlpha(200)
+		Image_Hover:Hide()
+
+		--选择框
+		local Image_Select = self:Append("Image", hGroupDungeon, sformat("Image_GroupSelect_%s", v.szOtherName), {x = 2, y = 0, w = 190, h = 40})
+		Image_Select:FromUITex("ui\\Image\\Common\\TempBox.UITex",6)
+		Image_Select:SetImageType(10)
+		Image_Select:SetAlpha(200)
+		Image_Select:Hide()
+		if LR_TeamBuffTool_Panel.szChooseGroup == sformat("Image_GroupSelect_%s", v.szOtherName) then
+			local Image_Select = self:Fetch(sformat("Image_GroupSelect_%s", v.szOtherName))
+			if Image_Select then
+				Image_Select:Show()
+			end
+		end
+
+		local Image_Group_Level = self:Append("Image", hGroupDungeon, sformat("Image_Group_Level_%s", v.szOtherName), {x = 5, y = 2, w = 36, h = 36})
+		if v.level == 1 then
+			Image_Group_Level:FromUITex("ui/image/uitga/desertstorm.UITex", 8):SetImageType(0):SetAlpha(200)
+		else
+			Image_Group_Level:FromUITex("ui/image/uitga/desertstorm.UITex", 1):SetImageType(0):SetAlpha(200)
+		end
+		local Text_Group_Name = self:Append("Text", hGroupDungeon, sformat("Text_Group_Name_%s", v.szOtherName), {w = 150, h = 40, x  = 50, y = 2, text = v.szOtherName, font = 18})
+		Text_Group_Name:SetText(sformat("%s ( %d )", v.szOtherName, #LR_Team_Map[v.szOtherName].data))
+
+		hGroupDungeon.OnEnter = function()
+			local Image_Hover = self:Fetch(sformat("Image_GroupHover_%s", v.szOtherName))
+			if Image_Hover then
+				Image_Hover:Show()
+			end
+			local x, y = this:GetAbsPos()
+			local w, h = this:GetSize()
+			local tip = {}
+			for k2, v2 in pairs(v.dwMapID) do
+				if IsCtrlKeyDown() then
+					tip[#tip + 1] = GetFormatText(sformat("%s#%d\n", Table_GetMapName(v2), v2))
+				else
+					tip[#tip + 1] = GetFormatText(sformat("%s\n", LR.MapType[v2].szName))
+				end
+			end
+			OutputTip(tconcat(tip), 320, {x, y, w, h})
+
+		end
+		hGroupDungeon.OnLeave = function()
+			local Image_Hover = self:Fetch(sformat("Image_GroupHover_%s", v.szOtherName))
+			if Image_Hover then
+				Image_Hover:Hide()
+			end
+			HideTip()
+		end
+		hGroupDungeon.OnClick = function()
+			if LR_TeamBuffTool_Panel.szChooseGroup then
+				local Image_Select = self:Fetch(LR_TeamBuffTool_Panel.szChooseGroup)
+				if Image_Select then
+					Image_Select:Hide()
+				end
+			end
+			LR_TeamBuffTool_Panel.szChooseGroup = sformat("Image_GroupSelect_%s", v.szOtherName)
+			LR_TeamBuffTool_Panel.szChooseGroupName = v.szOtherName
+			local Image_Select = self:Fetch(LR_TeamBuffTool_Panel.szChooseGroup)
+			if Image_Select then
+				Image_Select:Show()
+			end
+
+			if LR_TeamBuffTool_Panel.bMapData then
+				self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
+				self:LoadSearchResultBox()
+			end
+			------刷新BuffList
+			self:LoadBuffListBox()
+		end
+	end
+end
+
 
 function LR_TeamBuffTool_Panel:LoadOneGroupBox(GroupData, m)
 	local ScrollGroupBox = self:Fetch("ScrollGroupBox")
@@ -787,9 +1146,8 @@ function LR_TeamBuffTool_Panel:LoadOneGroupBox(GroupData, m)
 		end
 
 		--分组名称
-		local Text_break2 = self:Append("Text", hIconViewContent, "Text_break_"..m.."_2", {w = 150, h = 40, x  = 50, y = 2, text = v.szGroupName, font = 18})
-		Text_break2:SetHAlign(0)
-		Text_break2:SetVAlign(1)
+		local Text_break2 = self:Append("Text", hIconViewContent, sformat("Text_CustomGroup_%s", v.szGroupName), {w = 150, h = 40, x  = 50, y = 2, text = v.szGroupName, font = 18})
+		Text_break2:SetHAlign(0):SetVAlign(1):SetText(sformat("%s ( %d )", v.szGroupName, #v.data))
 
 		--鼠标操作
 		hIconViewContent.OnClick = function()
@@ -873,19 +1231,66 @@ function LR_TeamBuffTool_Panel:LoadSearchResultBox()
 	_ResulUI = {}
 	local szSearchText = LR_TeamBuffTool_Panel.szSearchText or ""
 	if szSearchText ==  "" then
-		for i = 1, 300, 1 do
-			if BUFF_CACHE[i] then
-				if LR_TeamBuffTool_Panel.szCasterName == "" or LR_TeamBuffTool_Panel.szCasterName == BUFF_CACHE[i].szCasterName then
-					local szKey = sformat("%s_%d_%d", "h", BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
-					if BUFF_CACHE[i] and not _ResulUI[szKey] then
-						LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(false, BUFF_CACHE[i], m, "h")
-						m = m+1
+		if LR_TeamBuffTool_Panel.bMapData and LR_TeamBuffTool_Panel.LoadType == "by dungeon" then
+			if LR_TeamBuffTool_Panel.szChooseGroupName and LR_TeamBuffTool_Panel.szChooseGroupName ~= "" then
+				local path = sformat("%s\\BUFF_CACHE\\%s.dat", SaveDataPath, LR_TeamBuffTool_Panel.szChooseGroupName)
+				local data = LoadLUAData(path) or {}
+				BUFF_CACHE_MAP_TEMP = clone(data)
+				for k, v in pairs(data) do
+					local flag = false
+					for k2, v2 in pairs(v.caster) do
+						if v2.szName == LR_TeamBuffTool_Panel.szCasterName then
+							flag = true
+						end
+					end
+
+					if LR_TeamBuffTool_Panel.szCasterName == "" or flag then
+						local szKey = sformat("%s_%d_%d", "h", v.dwID, v.nLevel)
+						if v and not _ResulUI[szKey] then
+							LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(false, v, m, "h")
+							m = m + 1
+						end
 					end
 				end
+				hWin:UpdateList()
+			end
+			return
+		else
+			if LR_TeamBuffTool_Panel.bShowMapBuffCache then
+				for k, v in pairs(BUFF_CACHE_MAP) do
+					local flag = false
+					for k2, v2 in pairs(v.caster) do
+						if v2.szName == LR_TeamBuffTool_Panel.szCasterName then
+							flag = true
+						end
+					end
+
+					if LR_TeamBuffTool_Panel.szCasterName == "" or flag then
+						local szKey = sformat("%s_%d_%d", "h", v.dwID, v.nLevel)
+						if v and not _ResulUI[szKey] then
+							LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(false, v, m, "h")
+							m = m+1
+						end
+					end
+				end
+				hWin:UpdateList()
+				return
+			else
+				for i = 1, 300, 1 do
+					if BUFF_CACHE[i] then
+						if LR_TeamBuffTool_Panel.szCasterName == "" or LR_TeamBuffTool_Panel.szCasterName == BUFF_CACHE[i].szCasterName then
+							local szKey = sformat("%s_%d_%d", "h", BUFF_CACHE[i].dwID, BUFF_CACHE[i].nLevel)
+							if BUFF_CACHE[i] and not _ResulUI[szKey] then
+								LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(false, BUFF_CACHE[i], m, "h")
+								m = m+1
+							end
+						end
+					end
+				end
+				hWin:UpdateList()
+				return
 			end
 		end
-		hWin:UpdateList()
-		return
 	end
 
 	self:ClearHandle(hWin)
@@ -970,6 +1375,9 @@ function LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(bring2top, buff, m, head)
 	if not hWin then
 		return
 	end
+	if not LR_TeamBuffTool_Panel.ShowBuffOnNPC and buff.target_type == TARGET.NPC or not LR_TeamBuffTool_Panel.ShowBuffOnPlayer and buff.target_type == TARGET.PLAYER then
+		return
+	end
 
 --[[	local szSearchText = LR_TeamBuffTool_Panel.szSearchText or ""
 	if szSearchText ~= "" then
@@ -1046,10 +1454,73 @@ function LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(bring2top, buff, m, head)
 			end
 		end
 
+		hBuffSearch.OnRClick = function()
+			if LR_TeamBuffTool_Panel.bMapData then
+				if LR_TeamBuffTool_Panel.LoadType == "by dungeon" then
+					if LR_TeamBuffTool_Panel.szChooseGroupName and LR_TeamBuffTool_Panel.szChooseGroupName ~= "" then
+						local menu = {}
+						menu[#menu + 1] = {szOption = _L["delete"], fnAction = function()
+							local szKey = sformat("%d_%d", buff.dwID, buff.nLevel)
+							BUFF_CACHE_MAP_TEMP[szKey] = nil
+							local path = sformat("%s\\BUFF_CACHE\\%s.dat", SaveDataPath, LR_TeamBuffTool_Panel.szChooseGroupName)
+							LR.SaveLUAData(path, BUFF_CACHE_MAP_TEMP)
+							self:Destroy(hBuffSearch)
+							hWin:UpdateList()
+						end}
+						PopupMenu(menu)
+					end
+				end
+			else
+				if LR_TeamBuffTool_Panel.bShowMapBuffCache then
+					local menu = {}
+					menu[#menu + 1] = {szOption = _L["delete"], fnAction = function()
+						local szKey = sformat("%d_%d", buff.dwID, buff.nLevel)
+						BUFF_CACHE_MAP[szKey] = nil
+						LR_TeamBuffTool.SaveBuffCache(true)
+						self:Destroy(hBuffSearch)
+						hWin:UpdateList()
+					end}
+					PopupMenu(menu)
+				end
+			end
+		end
+
 		hBuffSearch.OnEnter = function()
 			local fx, fy = hBuffSearch:GetAbsPos()
 			local nW, nH = hBuffSearch:GetSize()
-			LR.OutputBuffTip(buff.dwID, buff.nLevel or 1, {fx, fy, nW, nH})
+			if IsCtrlKeyDown() then
+				local tip = {}
+				tip[#tip + 1] = LR.GetFormatImageByID(Table_GetBuffIconID(buff.dwID, buff.nLevel), 30, 30)
+				tip[#tip + 1] = GetFormatText(sformat("%s\n", Table_GetBuffName(buff.dwID, buff.nLevel)))
+				if buff.target_type == TARGET.NPC then
+					tip[#tip + 1] = GetFormatText(_L["NPC self buff\n"], 8)
+				end
+				tip[#tip + 1] = GetFormatText(sformat(_L["ID: %d\n"], buff.dwID))
+				tip[#tip + 1] = GetFormatText(sformat(_L["Level: %d\n"], buff.nLevel))
+				tip[#tip + 1] = GetFormatText(sformat(_L["IconID: %d\n"], Table_GetBuffIconID(buff.dwID, buff.nLevel)))
+				if mceil(buff.nTotalFrame  / 16.0) <= 120 then
+					tip[#tip + 1] = GetFormatText(sformat(_L["Total time:%fs\n"], mceil(buff.nTotalFrame / 16.0)))
+				end
+
+				if LR_TeamBuffTool_Panel.bShowMapBuffCache then
+					tip[#tip + 1] = GetFormatText(_L["From npc:\n"])
+					for k6, v6 in pairs(buff.caster) do
+						tip[#tip + 1] = GetFormatText(sformat("%s(#%d) %s\n", v6.szName, v6.dwTemplateID, Table_GetMapName(v6.dwMapID)))
+					end
+				else
+					tip[#tip + 1] = GetFormatText(_L["From :\n"])
+					for k6, v6 in pairs(buff.caster) do
+						if v6.nType == TARGET.NPC then
+							tip[#tip + 1] = GetFormatText(sformat("%s(#%d) %s\n", v6.szName, v6.dwTemplateID, Table_GetMapName(v6.dwMapID)))
+						else
+							tip[#tip + 1] = GetFormatText(sformat(_L["%s (Player) %s\n"], v6.szName, Table_GetMapName(v6.dwMapID)))
+						end
+					end
+				end
+				OutputTip(tconcat(tip), 600, {fx, fy, nW, nH})
+			else
+				LR.OutputBuffTip(buff.dwID, buff.nLevel or 1, {fx, fy, nW, nH})
+			end
 			-----
 			local Image_Hover = self:Fetch(sformat("Image_BuffSearchHover_%s", szKey))
 			if Image_Hover then
@@ -1092,10 +1563,14 @@ function LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(bring2top, buff, m, head)
 end
 
 function LR_TeamBuffTool_Panel:GetGroupData(szChooseGroupName)
-	for k, v in pairs(LR_TeamBuffTool.tBuffList) do
-		if type(v) == "table" then
-			if v.szGroupName == szChooseGroupName then
-				return v, k
+	if LR_TeamBuffTool_Panel.LoadType == "by dungeon" then
+		return LR_Team_Map[szChooseGroupName] or {}, szChooseGroupName
+	else
+		for k, v in pairs(LR_TeamBuffTool.tBuffList) do
+			if type(v) == "table" then
+				if v.szGroupName == szChooseGroupName then
+					return v, k
+				end
 			end
 		end
 	end
@@ -1303,10 +1778,62 @@ function LR_TeamBuffTool.CloseBuffBoxPanel()
 end
 
 ----------------------------------
+local dwMapID_now = 0
+
+local NPC_BUFF_CACHE = {}
+function LR_TeamBuffTool.MonitorTargetNPC()
+	if not LR_TeamBuffTool_Panel.bOnCollect then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local _type, _dwID = me.GetTarget()
+	if _type ~= TARGET.NPC then
+		return
+	end
+	local npc = GetNpc(_dwID)
+	if not npc then
+		return
+	end
+	NPC_BUFF_CACHE[_dwID] = NPC_BUFF_CACHE[_dwID] or {}
+	local buff_list = LR.GetBuffList(npc)
+	for k, v in pairs(buff_list) do
+		if not NPC_BUFF_CACHE[_dwID][v.nIndex] then
+			NPC_BUFF_CACHE[_dwID][v.nIndex] = clone(v)
+			if (not LR_TeamBuffTool_Panel.bCollectHideBuff and not Table_BuffIsVisible(v.dwID, v.nLevel)) then
+				--
+			else
+				if v.dwSkillSrcID == 0 or not IsPlayer(v.dwSkillSrcID) then
+					local szKey = sformat("%d_%d", v.dwID, v.nLevel)
+					BUFF_CACHE_MAP[szKey] = BUFF_CACHE_MAP[szKey] or {dwID = v.dwID, nLevel = v.nLevel, target_type = TARGET.NPC, caster = {}, temp_caster = {}, nMaxStackNum = 0, nTotalFrame = v.nEndFrame - GetLogicFrameCount()}
+					BUFF_CACHE_MAP[szKey].nMaxStackNum = mmax(BUFF_CACHE_MAP[szKey].nMaxStackNum, v.nStackNum)
+					if v.dwSkillSrcID == 0 then
+						BUFF_CACHE_MAP[szKey].caster[sformat("%s_%d", "0", dwMapID_now)] = {szName = "NPC#0", dwTemplateID = 0, dwMapID = dwMapID_now, nType = TARGET.NPC}
+					else
+						local szCasterName, obj = LR_TeamTools.DeathRecord.GetName(TARGET.NPC, v.dwSkillSrcID)
+						if obj then
+							BUFF_CACHE_MAP[szKey].caster[sformat("%d_%d", obj.dwTemplateID, obj.dwMapID)] = clone(obj)
+						else
+							BUFF_CACHE_MAP[szKey].temp_caster = BUFF_CACHE_MAP[szKey].temp_caster or {}
+							BUFF_CACHE_MAP[szKey].temp_caster[tostring(v.dwSkillSrcID)] = true
+						end
+					end
+					LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE_MAP[szKey], 1, "h")
+				end
+			end
+		end
+	end
+
+end
+LR.BreatheCall("MonitorTargetNPC", function() LR_TeamBuffTool.MonitorTargetNPC() end)
+
 function LR_TeamBuffTool.BUFF_UPDATE()
 	if not LR_TeamBuffTool_Panel.bOnCollect then
 		return
 	end
+
 	local dwPlayerID, bDelete, nIndex, bCanCancel, dwID, nStackNum, nEndFrame, bInit, nLevel, dwCaster, IsValid, nLeftFrame = arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11
 	if (not LR_TeamBuffTool_Panel.bCollectHideBuff and not Table_BuffIsVisible(dwID, nLevel)) or dwID == 0 then
 		return
@@ -1314,32 +1841,96 @@ function LR_TeamBuffTool.BUFF_UPDATE()
 	if IsPlayer(dwCaster) and LR_TeamBuffTool_Panel.bCollectOnlyFromNpc then
 		return
 	end
-	local szCasterName = ""
-	if IsPlayer(dwCaster) then
-		szCasterName = LR_TeamTools.DeathRecord.GetName(TARGET.PLAYER, dwCaster)
+	local szCasterName, obj, nType = "", nil, TARGET.NPC
+	if dwCaster == 0 then
+		szCasterName = "NPC#0"
 	else
-		szCasterName = LR_TeamTools.DeathRecord.GetName(TARGET.NPC, dwCaster)
+		if IsPlayer(dwCaster) then
+			szCasterName, obj = LR_TeamTools.DeathRecord.GetName(TARGET.PLAYER, dwCaster)
+			nType = TARGET.PLAYER
+		else
+			szCasterName, obj = LR_TeamTools.DeathRecord.GetName(TARGET.NPC, dwCaster)
+		end
+	end
+
+	local szKey = sformat("%d_%d", dwID, nLevel)
+	if not bDelete then
+		BUFF_TOTAL_TIME[szKey] = nEndFrame - GetLogicFrameCount()
 	end
 	local data = {
 		dwID = dwID,
 		nLevel = nLevel,
 		nStackNum = nStackNum,
+		caster = {},
 		szCasterName = szCasterName,
-		nTotalFrame = nEndFrame - GetLogicFrameCount()
+		target_type = TARGET.PLAYER,
+		nTotalFrame = nEndFrame - GetLogicFrameCount(),
 	}
+	if dwCaster == 0 or not IsPlayer(dwCaster) then
+		if dwCaster == 0 then
+			data.caster[sformat("0_%d", dwMapID_now)] = {szName = "NPC#0", dwTemplateID = 0, dwMapID = dwMapID, nType = TARGET.NPC}
+		else
+			data.caster[sformat("d_%d", dwCaster, dwMapID_now)] = {szName = szCasterName, dwTemplateID = obj.dwTemplateID, dwMapID = dwMapID_now, nType = TARGET.NPC}
+		end
+	else
+		data.caster[sformat("%d_%d", dwCaster, dwMapID_now)] = {szName = szCasterName, dwMapID = dwMapID_now, dwID = dwCaster, nType = TARGET.PLAYER}
+	end
+
+
 	tinsert(BUFF_CACHE, 1, data)
 
-	LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[1], 1, "h")
+	if not LR_TeamBuffTool_Panel.bShowMapBuffCache then
+		LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE[1], 1, "h")
+	end
+
+	if not IsPlayer(dwCaster) or dwCaster == 0 then
+		BUFF_CACHE_MAP[szKey] = BUFF_CACHE_MAP[szKey] or {dwID = dwID, nLevel = nLevel, target_type = TARGET.PLAYER, caster = {}, temp_caster = {}, nMaxStackNum = 0, nTotalFrame = BUFF_TOTAL_TIME[szKey] or nEndFrame - GetLogicFrameCount()}
+		BUFF_CACHE_MAP[szKey].nMaxStackNum = mmax(BUFF_CACHE_MAP[szKey].nMaxStackNum, nStackNum)
+		if dwCaster == 0 then
+			BUFF_CACHE_MAP[szKey].caster[sformat("%s_%d", "0", dwMapID_now)] = {szName = "NPC#0", dwTemplateID = 0, dwMapID = dwMapID_now, nType = TARGET.NPC}
+		else
+			local szCasterName, obj = LR_TeamTools.DeathRecord.GetName(TARGET.NPC, dwCaster)
+			if obj then
+				BUFF_CACHE_MAP[szKey].caster[sformat("%d_%d", obj.dwTemplateID, obj.dwMapID)] = clone(obj)
+			else
+				BUFF_CACHE_MAP[szKey].temp_caster[tostring(dwCaster)] = true
+			end
+		end
+		LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE_MAP[szKey], 1, "h")
+	end
 	--LR_TeamBuffTool_Panel:LoadSearchResultBox()
 end
 
-function LR_TeamBuffTool.FIRST_LOADING_END()
+function LR_TeamBuffTool.LOADING_END()
+	local me = GetClientPlayer()
+	local scene = me.GetScene()
+	dwMapID_now = scene.dwMapID
 	LR_TeamBuffTool.LoadData()
 	LR_TeamBuffTool.LoadBuffCache()
+	LR_TeamBuffTool.LoadBuffCacheMap()
+end
+
+function LR_TeamBuffTool.ON_FRAME_CREATE()
+	local frame = arg0
+	local szName = frame:GetName()
+	if szName  ==  "ExitPanel" then
+		LR_TeamBuffTool.SaveBuffCache()
+	elseif szName  ==  "OptionPanel" then
+		LR_TeamBuffTool.SaveBuffCache()
+	end
+end
+
+function LR_TeamBuffTool.FIGHT_HINT()
+	local bFight = arg0
+	if not bFight then
+		LR_TeamBuffTool.SaveBuffCache()
+	end
 end
 
 LR.RegisterEvent("BUFF_UPDATE", function() LR_TeamBuffTool.BUFF_UPDATE() end)
-LR.RegisterEvent("FIRST_LOADING_END", function() LR_TeamBuffTool.FIRST_LOADING_END() end)
+LR.RegisterEvent("LOADING_END", function() LR_TeamBuffTool.LOADING_END() end)
+LR.RegisterEvent("ON_FRAME_CREATE", function() LR_TeamBuffTool.ON_FRAME_CREATE() end)
+LR.RegisterEvent("FIGHT_HINT", function() LR_TeamBuffTool.FIGHT_HINT() end)
 
 ---------------------------------------------------------------
 ---ini配置文件多重窗口 单BUFF设置

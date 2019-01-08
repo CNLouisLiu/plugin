@@ -138,8 +138,6 @@ function _C.LockIDList()
 	LR.SysMsg(_L["Lock!\n"])
 end
 
-
-
 function _C.SaveData(DB)
 	if not LR_AS_Base.UsrData.bRecord then
 		return
@@ -399,6 +397,9 @@ function LR_WLTJ.SetTitle()
 					Text_Title_WLTJ[i].OnLeave = function()
 						HideTip()
 					end
+					Text_Title_WLTJ[i].OnClick = function()
+
+					end
 					i = i + 1
 				end
 			end
@@ -495,6 +496,7 @@ function LR_WLTJ.ShowOneData(data)
 
 	hRole.OnEnter = function()
 		Image_Hover:Show()
+		_C.ShowTip(data)
 	end
 	hRole.OnLeave = function()
 		Image_Hover:Hide()
@@ -502,6 +504,62 @@ function LR_WLTJ.ShowOneData(data)
 	LR_WLTJ.Count = LR_WLTJ.Count + 1
 end
 
+function _C.ShowTip(v)
+	local nMouseX, nMouseY =  Cursor.GetPos()
+	local szTipInfo = {}
+	local szPath, nFrame = GetForceImage(v.dwForceID)
+	local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
+	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+	local title_num = 0
+	local IDs = clone(ID_CAN_DO) or {}
+	local group = {"t5R", "t10R", "tCommon",}
+	local limit_num = {3, 3, 2}
+	for k, GroupName in pairs(group) do
+		IDs[GroupName] = IDs[GroupName] or {}
+		for k2 = 1, limit_num[k] do
+			if IDs[GroupName][k2] then
+				title_num = title_num + 1
+			end
+		end
+	end
+	ALL_USER_DATA[szKey] = ALL_USER_DATA[szKey] or {}
+
+	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
+	szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
+	szTipInfo[#szTipInfo+1] = GetFormatText("\n")
+
+	for k, GroupName in pairs(group) do
+		ALL_USER_DATA[szKey][GroupName] = ALL_USER_DATA[szKey][GroupName] or {}
+		for k2 = 1, limit_num[k] do
+			if IDs[GroupName][k2] then
+				local dwQuestID = IDs[GroupName][k2]
+				local v = ALL_USER_DATA[v.szKey][GroupName][tostring(dwQuestID)] or {}
+				local QuestInfo = LR.Table_GetQuestStringInfo(dwQuestID)
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s\t"], QuestInfo.szName))
+				if next(v) ~= nil then
+					if v.eCanAccept == 1 then
+						szTipInfo[#szTipInfo+1] = GetFormatText("--\n")
+					elseif v.eCanAccept == 7 then
+						----3: 表示已完成任务0: 表示任务不存在1: 表示任务正在进行中，2: 表示任务已完成但还没有交-1: 表示任务id非法
+						if v.nQuestPhase == 1 then
+							szTipInfo[#szTipInfo+1] = GetFormatText(_L["Doing"], 16)
+						elseif v.nQuestPhase == 2 then
+							szTipInfo[#szTipInfo+1] = GetFormatText(_L["Not submit"], 17)
+						end
+					elseif v.eCanAccept == 57 then
+						szTipInfo[#szTipInfo+1] = GetFormatText(_L["Complete"], 47)
+					end
+				else
+					szTipInfo[#szTipInfo+1] = GetFormatText("--\n")
+				end
+			end
+		end
+	end
+
+	OutputTip(tconcat(szTipInfo), 330, {nMouseX, nMouseY, 0, 0})
+end
 
 
 function LR_WLTJ.OpenFrame()
@@ -513,12 +571,15 @@ function LR_WLTJ.OpenFrame()
 	end
 end
 
-
-
-
-
 LR_WLTJ.GetData = _C.GetData
 LR_WLTJ.GetIDCanDo = _C.GetIDCanDo
 LR_WLTJ.SaveData = _C.SaveData
 LR_WLTJ.ClearWLTJdatMonday = _C.ClearWLTJdatMonday
+
+LR.RegisterEvent("FIRST_LOADING_END", function() LR.DelayCall(1000, function() _C.GetIDCanDo(); _C.LoadAllUsrData() end) end)
+
+LR_AS_Module.WLTJ = {}
+LR_AS_Module.WLTJ.ShowTip = _C.ShowTip
+
+
 

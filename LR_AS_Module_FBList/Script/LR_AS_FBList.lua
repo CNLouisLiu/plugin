@@ -501,42 +501,7 @@ function _FBList.ShowItem(t_Table, Alpha, bCal, _num)
 		handle:RegisterEvent(304)
 		handle.OnItemMouseEnter = function ()
 			item_Select:Show()
-			local nMouseX, nMouseY =  Cursor.GetPos()
-			local szTipInfo = {}
-			local szPath, nFrame = GetForceImage(v.dwForceID)
-			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
-			--szTipInfo[#szTipInfo+1] = GetFormatText(" ================================ \n", 17)
-			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
-			szTipInfo[#szTipInfo+1] = GetFormatText("\n", 41)
-			for dwMapID, v in pairs (FB_Record) do
-				szTipInfo[#szTipInfo+1] = GetFormatText(Table_GetMapName(dwMapID), 224)
-				local str = ""
-				if INDEPENDENT_MAP[dwMapID] then
-					local tBossList = Table_GetCDProcessBoss and Table_GetCDProcessBoss(dwMapID) or {}
-					if false then
-						tBossList = {{dwProgressID = 1}, {dwProgressID = 2}, {dwProgressID = 3}, {dwProgressID = 4}, {dwProgressID = 5}, }
-					end
-					tsort(tBossList, function(a, b) return a.dwProgressID < b.dwProgressID end)
-					local szText = ""
-					for k2, v2 in pairs(tBossList) do
-						if FB_Record[dwMapID][tostring(v2.dwProgressID)] then
-							szText = sformat("%s%s", szText, _L["<SYMBOL_DONE>"])
-						else
-							szText = sformat("%s%s", szText, _L["<SYMBOL_NOT>"])
-						end
-					end
-					str = sformat(_L["\tKill status£º%s \n"], szText)
-				else
-					str = sformat(_L["\tID:%6d \n"], v[1] or -1)
-				end
-				szTipInfo[#szTipInfo+1] = GetFormatText(str, 27)
-			end
-			--szTipInfo = szTipInfo .. GetFormatText("¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ\n", 41)
-			szTipInfo[#szTipInfo+1] = GetFormatText("\t \n", 41)
-			local szOutputTip = tconcat(szTipInfo)
-			OutputTip(szOutputTip, 330, {nMouseX, nMouseY, 0, 0})
+			_FBList.ShowTip(v)
 		end
 		handle.OnItemMouseLeave = function()
 			item_Select:Hide()
@@ -579,6 +544,47 @@ end
 function _FBList.RefreshPage()
 	_FBList.ReFreshTitle()
 	_FBList.ListFB()
+end
+
+function _FBList.ShowTip(v)
+	local nMouseX, nMouseY =  Cursor.GetPos()
+	local szTipInfo = {}
+	local szPath, nFrame = GetForceImage(v.dwForceID)
+	local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
+	local FB_Record = _FBList.AllUsrData[szKey] or {}
+	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
+	szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
+	szTipInfo[#szTipInfo+1] = GetFormatText("\n", 41)
+	for dwMapID, v in pairs (FB_Record) do
+		szTipInfo[#szTipInfo+1] = GetFormatText(Table_GetMapName(dwMapID), 224)
+		local str = ""
+		if INDEPENDENT_MAP[dwMapID] then
+			local tBossList = Table_GetCDProcessBoss and Table_GetCDProcessBoss(dwMapID) or {}
+			if false then
+				tBossList = {{dwProgressID = 1}, {dwProgressID = 2}, {dwProgressID = 3}, {dwProgressID = 4}, {dwProgressID = 5}, }
+			end
+			tsort(tBossList, function(a, b) return a.dwProgressID < b.dwProgressID end)
+			local szText = ""
+			for k2, v2 in pairs(tBossList) do
+				if FB_Record[dwMapID][tostring(v2.dwProgressID)] then
+					szText = sformat("%s%s", szText, _L["<SYMBOL_DONE>"])
+				else
+					szText = sformat("%s%s", szText, _L["<SYMBOL_NOT>"])
+				end
+			end
+			str = sformat(_L["\tKill status£º%s \n"], szText)
+		else
+			str = sformat(_L["\tID:%6d \n"], v[1] or -1)
+		end
+		szTipInfo[#szTipInfo+1] = GetFormatText(str, 27)
+	end
+	--szTipInfo = szTipInfo .. GetFormatText("¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ\n", 41)
+	szTipInfo[#szTipInfo+1] = GetFormatText("\t \n", 41)
+	local szOutputTip = tconcat(szTipInfo)
+	OutputTip(szOutputTip, 330, {nMouseX, nMouseY, 0, 0})
 end
 
 ------------------------------------------------------------------------------------
@@ -1033,5 +1039,6 @@ LR_AS_Module.FBList.ResetDataEveryDay = _FBList.ResetDataEveryDay
 LR_AS_Module.FBList.ResetDataFriday = _FBList.ResetDataFriday
 LR_AS_Module.FBList.AddPage = _FBList.AddPage
 LR_AS_Module.FBList.RefreshPage = _FBList.RefreshPage
+LR_AS_Module.FBList.ShowTip = _FBList.ShowTip
 
 

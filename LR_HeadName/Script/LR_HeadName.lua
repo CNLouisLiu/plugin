@@ -1551,7 +1551,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 			end
 
 			if nType == TARGET.NPC and not obj.CanSeeName() then
-				if szName == _L["Mission Point"] and not LR_HeadName.IsMissionObj({dwTemplateID = obj.dwTemplateID, dwMapID = LR_HeadName.dwMapID, nType = TARGET.NPC}) then
+				if (szName == _L["Mission Point"] or obj.szName == "") and not LR_HeadName.IsMissionObj({dwTemplateID = obj.dwTemplateID, dwMapID = LR_HeadName.dwMapID, nType = TARGET.NPC}) then
 					szName = ""
 				end
 			end
@@ -1899,10 +1899,10 @@ function LR_HeadName.Check(dwID, nType, bForced)
 				end
 				if LR_HeadName.CustomDoodad[szName] then
 					bShow = true
-				elseif LR_HeadName.CheckAgriculture(szName) then
+				elseif LR_HeadName.CheckAgriculture(szName) and obj.nKind == DOODAD_KIND.CRAFT_TARGET then
 					bShow = true
 					isAgriculture = true
-				elseif LR_HeadName.CheckMineral(szName) then
+				elseif LR_HeadName.CheckMineral(szName) and obj.nKind == DOODAD_KIND.CRAFT_TARGET then
 					bShow = true
 					isMineral = true
 				elseif LR_HeadName.DoodadBeShow[szName] then
@@ -2014,6 +2014,10 @@ function LR_HeadName.Check(dwID, nType, bForced)
 								tinsert(szText, {szText = temp2, rgb = rgb2 , font = font, })
 							elseif LR_HeadName.UsrData.bShowQMode ==  1 and LR_HeadName.UsrData.bShowQuestFlag then
 								temp = sformat("%s %s   ", _L["<SYMBOL_MISSIONOBJ2>"], temp)
+								if IsCtrlKeyDown() then
+									temp = sformat("%s %d   ", temp, obj.dwTemplateID)
+								end
+
 								tinsert(szText, {szText = temp, rgb = rgb , font = font, })
 							else
 								tinsert(szText, {szText = temp, rgb = rgb , font = font, })
@@ -2084,7 +2088,13 @@ function LR_HeadName.Check(dwID, nType, bForced)
 				else
 					--Output({dwTemplateID = obj.dwTemplateID, nType = TARGET.NPC, dwMapID = LR_HeadName.dwMapID})
 					if LR_HeadName.IsMissionObj({dwTemplateID = obj.dwTemplateID, nType = TARGET.NPC, dwMapID = LR_HeadName.dwMapID}) then
-						szName = _L["Mission Point"]
+						if szName == "" then
+							if LR.Trim(Table_GetNpcTemplateName(obj.dwTemplateID)) == "" then
+								szName = _L["Mission Point"]
+							else
+								szName = LR.Trim(Table_GetNpcTemplateName(obj.dwTemplateID))
+							end
+						end
 					else
 						szName = ""
 					end
@@ -2827,9 +2837,9 @@ function LR_HeadName.AddSingleDoodad2AllList(dwID)
 			bAdd = true
 		elseif LR_HeadName.DoodadBeShow[szName] then
 			bAdd = true
-		elseif LR_HeadName.CheckAgriculture(szName) then
+		elseif LR_HeadName.CheckAgriculture(szName) and obj.nKind == DOODAD_KIND.CRAFT_TARGET then
 			bAdd = true
-		elseif LR_HeadName.CheckMineral(szName) then
+		elseif LR_HeadName.CheckMineral(szName) and obj.nKind == DOODAD_KIND.CRAFT_TARGET then
 			bAdd = true
 		elseif LR_HeadName.DoodadKind[obj.nKind] then
 			if obj.nKind ==  DOODAD_KIND.CRAFT_TARGET then
@@ -2887,7 +2897,7 @@ function LR_HeadName.AddSingleDoodad2AllList(dwID)
 		end
 		if bAdd then
 			LR_HeadName.AllList[dwID] = LR_HeadName.DoodadList[dwID]
-			if LR_HeadName.UsrData.bMiniMapAgriculture and LR_HeadName.CheckAgriculture(szName) then
+			if LR_HeadName.UsrData.bMiniMapAgriculture and LR_HeadName.CheckAgriculture(szName) and obj.nKind == DOODAD_KIND.CRAFT_TARGET then
 				MINIMAP_LIST[dwID] = {nType = 5, obj = obj, nFrame1 = 2, nFrame2 = 48}
 			end
 			if LR_HeadName.UsrData.bMiniMapMine and LR_HeadName.CheckMineral(szName) then
@@ -2934,8 +2944,8 @@ function LR_HeadName.IsMissionObj(t)
 			elseif MissionList[i].nType == "D" then
 				if MissionList[i].dwTemplateID == t.dwTemplateID and t.nType == TARGET.DOODAD then
 					return true
-				elseif LR.Trim(MissionList[i].szName) == LR.Trim(t.szName) and t.nType == TARGET.DOODAD then
-					return true
+				elseif LR.Trim(MissionList[i].szName) == LR.Trim(t.szName) and t.nType == TARGET.DOODAD then		--???当初为啥要这样设计？忘了
+					--return true
 				end
 			elseif MissionList[i].nType == "P" then
 				if t.nX and t.nY and MissionList[i].nX and MissionList[i].nY then

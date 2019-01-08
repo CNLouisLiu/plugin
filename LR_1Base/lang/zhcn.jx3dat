@@ -187,4 +187,7 @@ data={
 	["Remote player can not use.\n"]="【懒人】跨服不可使用\n",
 
 	["Shutdown Tong Message"]="关闭聊天栏插件帮会招人信息",
+
+	--20190104add--
+	[".(.+)"]="·(.+)",
 }

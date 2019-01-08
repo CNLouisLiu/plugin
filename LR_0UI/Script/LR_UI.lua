@@ -1442,6 +1442,11 @@ function WndScroll:AddItem(__name)
 	return __item
 end
 
+function WndScroll:RemoveItem(...)
+	self.__handle:RemoveItem(...)
+	return self
+end
+
 function WndScroll:SetHandleStyle(...)
 	self.__handle:SetHandleStyle(...)
 	return self
@@ -1650,7 +1655,11 @@ function ItemBase:HasParent(__name)
 end
 
 function ItemBase:Destroy()
-	self.__parent:RemoveItem(self.__this)
+	if self.__parent:GetType() == "WndScroll" then
+		self.__parent:GetHandle():RemoveItem(self.__this)
+	else
+		self.__parent:RemoveItem(self.__this)
+	end
 	return self
 end
 

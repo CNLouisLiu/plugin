@@ -580,4 +580,40 @@ data={
 	["Auto change color in common quest"]="世界公共任务自动切换颜色",
 	["Name text tip01"]="1、需要开启系统的任务追踪面板\n2、当系统的任务追踪面板切换到世界任务页时，会自动切换成按阵营着色\n3、在野外地图时，请调整相同阵营的人员到相同小队，以便激活阵眼以及奶妈操作",
 	["Clear history"]="清除历史记录",
+
+	--20190103add--
+	["Dungeon data"]="副本数据",
+	["Custom data"]="自定义数据",
+	["Sure to delete group: %s ?"]="确定要删除分组：%s？",
+	["Sure delete buff: %s"]="确定要删除BUFF：%s？",
+
+	["Show map buff cache"]="显示当前地图NPC的BUFF数据",
+	["Show select group npc buff"]="地图数据",
+	["Clear choose"]="清除选择",
+
+	--20190105add--
+	["IconID: %d\n"]="图标ID：%d\n",
+	["Total time:%fs\n"]="持续时间：%fs\n",
+	["NPC self buff\n"]="  NPC自身的BUFF\n",
+	["From npc:\n"]="来自NPC：\n",
+	["From :\n"]="来自：\n",
+	["%s (Player) %s\n"]="%s (玩家) %s\n",
+	
+	["%s cast skill %s"]="%s 释放了技能 %s",
+	["dwTemplateID:%d\n"]="模版ID：%d\n",
+	[" cast skill: "]=" 释放了技能：",
+	[" cast ot skill: "]=" 开始技能读条：",
+	[" ends ot skill."]=" 结束了技能读条。",
+	[" say: "]=" 说：",
+	[" enter the scene."]="出现在了场景里",
+	["Blood :%d%%\n"]="血量：%d%%",
+	["[MAP] "]="[地图] ",
+
+	["LR_FIGHT_LOG"]="懒人战斗记录",
+	["Option"]="选项",
+	["Begin log"]="开始记录",
+	["Load current data"]="显示当前记录",
+	["Load history"]="载入历史记录",
+	["time"]="时间",
+
 }

@@ -63,7 +63,37 @@ function LR_AS_FP.OnFrameCreate()
 	LR_AS_FP.ShowMoney(0)
 	LR_AS_FP.UpdateAnchor()
 	LR_AS_FP.Refresh()
+	LR_AS_FP.AppendBlock()
 end
+
+function LR_AS_FP.AppendBlock()
+	local WndWindow = LR.AppendUI("Window", this, "WNd_D", {x = 0, y = 30, w = 300, h = 30})
+	local keys = {"PlayerInfo", "FBList", "RC", "QY", "WLTJ"}
+	local hBar = LR.AppendUI("Handle", WndWindow, "WNd_D", {x = 0, y = 0, w = 300, h = 30})
+	hBar:SetHandleStyle(3)
+	for k, v in pairs(keys) do
+		if LR_AS_Module[v] and LR_AS_Module[v].ShowTip then
+			local hText = LR.AppendUI("Text", hBar, sformat("Text_%s", v), {text = sformat(" [%s] ", _L[v]), })
+			hText:RegisterEvent(304)
+			hText:SetFontScheme(2)
+			hText.OnEnter = function()
+				hText:SetFontScheme(16)
+				local ServerInfo = {GetUserServer()}
+				local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+				local me = GetClientPlayer()
+				local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+				local data = LR_AS_Data.AllPlayerList[szKey]
+				LR_AS_Module[v].ShowTip(data)
+			end
+			hText.OnLeave = function()
+				hText:SetFontScheme(2)
+				HideTip()
+			end
+		end
+	end
+	hBar:FormatAllItemPos()
+end
+
 
 function LR_AS_FP.OnFrameDragEnd()
 	this:CorrectPos()
@@ -175,8 +205,8 @@ function LR_AS_FP.ShowMoney(nMoney)
 	Animate_Hover:SetSize(w2, h2)
 	Handle_Total:SetSize(w2, h2)
 	frame:Lookup("", ""):Lookup("Image_BG"):SetSize(w2, h2)
-	frame:SetSize(w2, h2)
-	frame:SetDragArea(0, 0, w2, h2)
+	frame:SetSize(300, 60)
+	frame:SetDragArea(0, 0, 300, 60)
 
 	Handle_Money:RegisterEvent(786)
 	Handle_Money.OnItemMouseEnter = function()

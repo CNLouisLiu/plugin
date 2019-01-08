@@ -637,6 +637,7 @@ function _QY.LoadData(DB)
 	if not me then
 		return
 	end
+	_QY.LoadAllUsrData(DB)
 	local ServerInfo = {GetUserServer()}
 	local realArea, realServer = ServerInfo[5], ServerInfo[6]
 	local dwID = me.dwID
@@ -1006,7 +1007,7 @@ function _QY.ReFreshTitle()
 				text.OnItemMouseEnter = function ()
 					local x, y = this:GetAbsPos()
 					local rect = {x, y, 0, 0}
-					_QY.ShowTip(v.k, rect)
+					_QY.ShowTip2(v.k, rect)
 					text:SetFontColor(255, 128, 0)
 				end
 				text.OnItemMouseLeave = function ()
@@ -1136,49 +1137,7 @@ function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 		handle:RegisterEvent(304)
 		handle.OnItemMouseEnter = function ()
 			item_Select:Show()
-			local nMouseX, nMouseY =  Cursor.GetPos()
-			local szTipInfo = {}
-			local szPath, nFrame = GetForceImage(v.dwForceID)
-			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
-			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
-			local tList = _QY.GetQYList()
-			for k, v in pairs(tList) do
-				local times = QY_Record[v.k] or 0
-				local text = ""
-				local font = 17
-				if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v.k])] then
-					text = _L["Achievement done"]
-					font = 47
-				else
-					if times>= 3 then
-						text = _L["Done"]
-						font = 47
-					elseif times>0 then
-						text = times
-						font = 31
-					else
-						text = times
-						font = 17
-					end
-				end
-				local dwTabType = QIYU_PET[v.k].dwTabType
-				local dwIndex = QIYU_PET[v.k].dwIndex
-				local itemInfo = GetItemInfo(dwTabType, dwIndex)
-				if itemInfo then
-					local dwIconID = Table_GetItemIconID(itemInfo.nUiId)
-					local r, g, b = GetItemFontColorByQuality(itemInfo.nQuality)
-					szTipInfo[#szTipInfo+1] = LR.GetFormatImageByID(dwIconID, 24, 24)
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s", itemInfo.szName), nil, r, g, b)
-				end
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" (%s) ", Table_GetMapName(QIYU_MAP[v.k])))
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" %s:", QIYU_NAME[v.k]), 224)
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\t%s\n", text), font)
-
-			end
-			local szOutputTip = tconcat(szTipInfo)
-			OutputTip(szOutputTip, 330, {nMouseX, nMouseY, 0, 0})
+			_QY.ShowTip(v)
 		end
 		handle.OnItemMouseLeave = function()
 			item_Select:Hide()
@@ -1195,7 +1154,58 @@ function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 	return num
 end
 
-function _QY.ShowTip(qiyu_id, rect)
+function _QY.ShowTip(v)
+	local nMouseX, nMouseY =  Cursor.GetPos()
+	local szTipInfo = {}
+	local szPath, nFrame = GetForceImage(v.dwForceID)
+	local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
+	local QY_Record = _QY.AllUsrData[szKey].qiyu_data or {}
+	local QY_Achievement  = _QY.AllUsrData[szKey].qiyu_achievement or {}
+	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
+	szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
+	local tList = _QY.GetQYList()
+	for k, v in pairs(tList) do
+		local times = QY_Record[v.k] or 0
+		local text = ""
+		local font = 17
+		if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v.k])] then
+			text = _L["Achievement done"]
+			font = 47
+		else
+			if times>= 3 then
+				text = _L["Done"]
+				font = 47
+			elseif times>0 then
+				text = times
+				font = 31
+			else
+				text = times
+				font = 17
+			end
+		end
+		local dwTabType = QIYU_PET[v.k].dwTabType
+		local dwIndex = QIYU_PET[v.k].dwIndex
+		local itemInfo = GetItemInfo(dwTabType, dwIndex)
+		if itemInfo then
+			local dwIconID = Table_GetItemIconID(itemInfo.nUiId)
+			local r, g, b = GetItemFontColorByQuality(itemInfo.nQuality)
+			szTipInfo[#szTipInfo+1] = LR.GetFormatImageByID(dwIconID, 24, 24)
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s", itemInfo.szName), nil, r, g, b)
+		end
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" (%s) ", Table_GetMapName(QIYU_MAP[v.k])))
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" %s:", QIYU_NAME[v.k]), 224)
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\t%s\n", text), font)
+
+	end
+	local szOutputTip = tconcat(szTipInfo)
+	OutputTip(szOutputTip, 330, {nMouseX, nMouseY, 0, 0})
+end
+
+
+function _QY.ShowTip2(qiyu_id, rect)
 	local szXml = {}
 	local dwTabType = QIYU_PET[qiyu_id].dwTabType
 	local dwIndex = QIYU_PET[qiyu_id].dwIndex
@@ -1475,7 +1485,7 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 		hIconViewContent.OnEnter = function()
 			local x, y = Text_break2:GetAbsPos()
 			local rect = {x, y, 140, 0}
-			_QY.ShowTip(v.k, rect)
+			_QY.ShowTip2(v.k, rect)
 			Image_Hover:Show()
 		end
 
@@ -2070,6 +2080,7 @@ LR_AS_Module.QY.ResetDataEveryDay = _QY.ResetDataEveryDay
 LR_AS_Module.QY.AddPage = _QY.AddPage
 LR_AS_Module.QY.RefreshPage = _QY.RefreshPage
 LR_AS_Module.QY.FIRST_LOADING_END = _QY.LoadData
+LR_AS_Module.QY.ShowTip = _QY.ShowTip
 
 
 

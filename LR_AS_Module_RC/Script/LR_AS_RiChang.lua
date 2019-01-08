@@ -501,6 +501,8 @@ _RC.QinXiu = {
 	[14732] = true, 		-----长歌
 	[16205] = true, 		-----霸刀
 	[16206] = true, 		-----霸刀
+	[19225] = true,		-----蓬莱
+	[19226] = true,		-----蓬莱
 }
 ADD2MONITED_QUEST_LIST(_RC.QinXiu)
 -----检查勤修不辍
@@ -1445,67 +1447,7 @@ function _RC.ShowItem(t_Table, Alpha, bCal, _num)
 		handle:RegisterEvent(304)
 		handle.OnItemMouseEnter = function ()
 			item_Select:Show()
-			local nMouseX, nMouseY =  Cursor.GetPos()
-			local szTipInfo = {}
-			local szPath, nFrame = GetForceImage(v.dwForceID)
-			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
-			--szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\Common\\Money.uitex", 246, 260, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 260, 27)
-			szTipInfo[#szTipInfo+1] = GetFormatText("\n", 62)
-			local List = _RC.List
-			for i = 1, #List, 1 do
-				if RC_Record[List[i].order] then
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：\t", List[i].szName), 224)
-					if RC_Record[List[i].order].finished then
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
-					elseif RC_Record[List[i].order].eQuestPhase ==  0 or RC_Record[List[i].order].eQuestPhase ==  -1 then
-						szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
-					elseif RC_Record[List[i].order].eQuestPhase ==  1 then
-						if RC_Record[List[i].order].have == 0 and List[i].szName ~=  _L["MI"] then
-							szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Accepted"]), 31)
-						else
-							szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s / %s\n", tostring(RC_Record[List[i].order].have or 0), tostring(RC_Record[List[i].order].need or 0)), 31)
-						end
-					elseif RC_Record[List[i].order].eQuestPhase ==  2 then
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Finished but not pay"]), 17)
-					elseif RC_Record[List[i].order].eQuestPhase ==  3 then			------这个基本没用
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
-					end
-				end
-			end
-
-			------自定义任务
-			local CustomQuestList = LR_AS_RC.CustomQuestList or {}
-			local CUSTOM_QUEST = RC_Record.CUSTOM_QUEST or {}
-			if next(CustomQuestList) ~= nil then
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Custom quest under"]), 47)
-			end
-			for k, v in pairs(CustomQuestList) do
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：\t", v.szName), 224)
-				if CUSTOM_QUEST[tostring(v.dwID)] then
-					if CUSTOM_QUEST[tostring(v.dwID)].full then
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
-					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 1 then
-						if CUSTOM_QUEST[tostring(v.dwID)].have == 0 then
-							szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Accepted"]), 31)
-						else
-							szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s / %s\n", tostring(CUSTOM_QUEST[tostring(v.dwID)].have or 0), tostring(CUSTOM_QUEST[tostring(v.dwID)].need or 0)), 31)
-						end
-					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 2 then
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Finished but not pay"]), 17)
-					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 3 then
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
-					else
-						szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
-					end
-				else
-					szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
-				end
-			end
-
-			OutputTip(tconcat(szTipInfo), 250, {nMouseX, nMouseY, 0, 0})
+			_RC.ShowTip(v)
 		end
 		handle.OnItemMouseLeave = function()
 			item_Select:Hide()
@@ -1521,6 +1463,73 @@ function _RC.ShowItem(t_Table, Alpha, bCal, _num)
 	end
 	return num
 end
+
+function _RC.ShowTip(v)
+	local nMouseX, nMouseY =  Cursor.GetPos()
+	local szTipInfo = {}
+	local szPath, nFrame = GetForceImage(v.dwForceID)
+	local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
+	local RC_Record = _RC.AllUsrData[szKey] or {}
+	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
+	szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 260, 27)
+	szTipInfo[#szTipInfo+1] = GetFormatText("\n", 62)
+	local List = _RC.List
+	for i = 1, #List, 1 do
+		if RC_Record[List[i].order] then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：\t", List[i].szName), 224)
+			if RC_Record[List[i].order].finished then
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
+			elseif RC_Record[List[i].order].eQuestPhase ==  0 or RC_Record[List[i].order].eQuestPhase ==  -1 then
+				szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
+			elseif RC_Record[List[i].order].eQuestPhase ==  1 then
+				if RC_Record[List[i].order].have == 0 and List[i].szName ~=  _L["MI"] then
+					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Accepted"]), 31)
+				else
+					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s / %s\n", tostring(RC_Record[List[i].order].have or 0), tostring(RC_Record[List[i].order].need or 0)), 31)
+				end
+			elseif RC_Record[List[i].order].eQuestPhase ==  2 then
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Finished but not pay"]), 17)
+			elseif RC_Record[List[i].order].eQuestPhase ==  3 then			------这个基本没用
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
+			end
+		end
+	end
+
+	------自定义任务
+	local CustomQuestList = LR_AS_RC.CustomQuestList or {}
+	local CUSTOM_QUEST = RC_Record.CUSTOM_QUEST or {}
+	if next(CustomQuestList) ~= nil then
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Custom quest under"]), 47)
+	end
+	for k, v in pairs(CustomQuestList) do
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：\t", v.szName), 224)
+		if CUSTOM_QUEST[tostring(v.dwID)] then
+			if CUSTOM_QUEST[tostring(v.dwID)].full then
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
+			elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 1 then
+				if CUSTOM_QUEST[tostring(v.dwID)].have == 0 then
+					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Accepted"]), 31)
+				else
+					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s / %s\n", tostring(CUSTOM_QUEST[tostring(v.dwID)].have or 0), tostring(CUSTOM_QUEST[tostring(v.dwID)].need or 0)), 31)
+				end
+			elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 2 then
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Finished but not pay"]), 17)
+			elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 3 then
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
+			else
+				szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
+			end
+		else
+			szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
+		end
+	end
+
+	OutputTip(tconcat(szTipInfo), 250, {nMouseX, nMouseY, 0, 0})
+end
+
 
 function _RC.AddPageButton()
 	local frame = Station.Lookup("Normal/LR_AS_Panel")
@@ -1933,4 +1942,6 @@ LR_AS_Module.RC.ResetDataMonday = _RC.ResetDataMonday		--包含了清考试记录
 LR_AS_Module.RC.ResetDataEveryDay = _RC.ResetDataEveryDay
 LR_AS_Module.RC.AddPage = _RC.AddPage
 LR_AS_Module.RC.RefreshPage = _RC.RefreshPage
+LR_AS_Module.RC.ShowTip = _RC.ShowTip
+LR_AS_Module.RC.FIRST_LOADING_END = _RC.LoadData2
 

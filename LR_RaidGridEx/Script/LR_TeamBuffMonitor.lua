@@ -528,6 +528,7 @@ function LR_TeamEdgeIndicator.FIRST_LOADING_END()
 	LR_TeamEdgeIndicator.add2bufflist()
 end
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_TeamEdgeIndicator.FIRST_LOADING_END() end)
+--LR.RegisterEvent("LOADING_END", function() LR_TeamBuffSettingPanel.FormatDebuffNameList() end)
 ----------------------------------------------------------------
 ----Debuff设置
 ----------------------------------------------------------------
@@ -560,6 +561,23 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 			end
 		end
 	end
+
+	local me = GetClientPlayer()
+	local scene = me.GetScene()
+	local dwMapID = scene.dwMapID
+	if scene.nType ==  MAP_TYPE.DUNGEON then
+		local data = LR_Team_Map[LR.MapType[dwMapID].szOtherName] or {enable = true, dwMapID = {}, data = {}, level = 1}
+		for k, buff in pairs(data.data) do
+			if buff.nMonitorLevel > 0 then
+				local szKey = sformat("%d_L%d", buff.dwID, buff.nMonitorLevel)
+				tBuff[szKey] = LR_TeamBuffSettingPanel.FormatMonitorBuff(buff)
+			else
+				local szKey = sformat("%d", buff.dwID)
+				tBuff[szKey] = LR_TeamBuffSettingPanel.FormatMonitorBuff(buff)
+			end
+		end
+	end
+
 	LR_TeamBuffSettingPanel.BuffList = clone(tBuff)
 	LR_TeamEdgeIndicator.add2bufflist()
 
@@ -596,6 +614,80 @@ local SOUND_TYPE = {
 	g_sound.PickupRing,
 	g_sound.PickupWater,
 }
+
+----------------------------------------------------------------
+----地图缓存数据
+----------------------------------------------------------------
+LR_Team_Map = {}	--用于存地图BUFF信息
+LR_Team_Map_Sorted =  {}	--按年代排序地图信息
+
+local map_initial = function()
+	local fenlei = {
+		[25] = {},
+		[10] = {},
+		[5] = {},
+	}
+	for dwMapID, v in pairs (LR.MapType) do
+		if fenlei[v.nMaxPlayerCount] then
+			fenlei[v.nMaxPlayerCount][#fenlei[v.nMaxPlayerCount]+1] = {dwMapID = dwMapID, Level = v.Level, szName = v.szName, szVersionName = v.szVersionName, szOtherName = v.szOtherName}
+		end
+	end
+	tsort(fenlei[25], function(a, b) return a.dwMapID > b.dwMapID end)
+	tsort(fenlei[10], function(a, b) return a.dwMapID > b.dwMapID end)
+	tsort(fenlei[5], function(a, b) return a.dwMapID > b.dwMapID end)
+
+	--以["三才阵"]这种类型分类
+	local data = {}
+	for k, v in pairs(fenlei[25]) do
+		data[v.szOtherName] = data[v.szOtherName] or {enable = true, dwMapID = {}, data = {}, level = 1}
+		tinsert(data[v.szOtherName].dwMapID, v.dwMapID)
+	end
+	for k, v in pairs(fenlei[10]) do
+		data[v.szOtherName] = data[v.szOtherName] or {enable = true, dwMapID = {}, data = {}, level = 1}
+		tinsert(data[v.szOtherName].dwMapID, v.dwMapID)
+	end
+	for k, v in pairs(fenlei[5]) do
+		data[v.szOtherName] = data[v.szOtherName] or {enable = true, dwMapID = {}, data = {}, level = 2}
+		tinsert(data[v.szOtherName].dwMapID, v.dwMapID)
+	end
+
+	--按时代进行分类
+	--获取分类中最大的dwMap数字
+	for k, v in pairs(data) do
+		v.nMaxdwMapID = mmax(unpack(v.dwMapID))
+	end
+
+	local list, szVersionName = {}, {}
+	for k, v in pairs(data) do
+		if not szVersionName[LR.MapType[v.nMaxdwMapID].szVersionName] then
+			tinsert(list, {szVersionName = LR.MapType[v.nMaxdwMapID].szVersionName, nMaxdwMapID = 0, data = {}})
+			szVersionName[LR.MapType[v.nMaxdwMapID].szVersionName] = #list
+		end
+
+		tinsert(list[szVersionName[LR.MapType[v.nMaxdwMapID].szVersionName]].data, {nMaxdwMapID = v.nMaxdwMapID, szOtherName = LR.MapType[v.nMaxdwMapID].szOtherName, level = v.level, dwMapID = clone(v.dwMapID), enable = v.enable, data = clone(v.data)})
+		list[szVersionName[LR.MapType[v.nMaxdwMapID].szVersionName]].nMaxdwMapID = mmax(list[szVersionName[LR.MapType[v.nMaxdwMapID].szVersionName]].nMaxdwMapID, v.nMaxdwMapID)
+	end
+	tsort(list, function(a, b) return a.nMaxdwMapID > b.nMaxdwMapID end)
+	for k, v in pairs(list) do
+		tsort(v.data, function(a, b)
+			if a.level == b.level then
+				return a.nMaxdwMapID > b.nMaxdwMapID
+			else
+				return a.level < b.level
+			end
+		end)
+	end
+	for k, v in pairs(list) do
+		for k2, v2 in pairs(v.data) do
+			tsort(v2.dwMapID, function(a, b) return a > b end)
+		end
+	end
+
+	LR_Team_Map = clone(data)
+	LR_Team_Map_Sorted = clone(list)
+end
+map_initial()
+
 ----------------------------------------------------------------
 ----Debuff监控
 ----------------------------------------------------------------

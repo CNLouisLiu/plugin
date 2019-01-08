@@ -122,33 +122,62 @@ LR_TeamTools.DeathRecord = {
 	tDamage = {},
 	tDeath = {}
 }
-local NPC_Cache = {}
+local NPC_Cache = {
+	[0] = {szName = "NPC#0", dwTemplateID = 0, dwMapID = 0, nType = TARGET.NPC, obj = nil}
+}
 local Player_Cache = {}
 
 function LR_TeamTools.DeathRecord.NPC_ENTER_SCENE()
 	local dwID = arg0
+	local npc = GetNpc(dwID)
 	if not NPC_Cache[dwID] then
-		local npc = GetNpc(dwID)
 		if npc then
 			local szName = LR.Trim(npc.szName)
 			if szName ==  "" then
 				szName = LR.Trim(Table_GetNpcTemplateName(npc.dwTemplateID))
 			end
 			if szName ==  "" then
-				szName = sformat("#%d", npc.dwTemplateID)
+				szName = sformat("NPC#%d", npc.dwTemplateID)
 			end
-			NPC_Cache[npc.dwID] = {szName = szName}
+			local scene = npc.GetScene()
+			local bPet = false
+			if npc.dwEmployer > 0 and IsPlayer(npc.dwEmployer) then
+				bPet = true
+			end
+			NPC_Cache[npc.dwID] = {szName = szName, bPet = bPet, dwTemplateID = npc.dwTemplateID, dwMapID = scene.dwMapID, nType = TARGET.NPC, obj = npc, nX = npc.nX, nY = npc.nY, nZ = npc.nZ}
 		end
+	else
+		if npc then
+			NPC_Cache[dwID].obj = npc
+		end
+	end
+end
+
+function LR_TeamTools.DeathRecord.NPC_LEAVE_SCENE()
+	local dwID = arg0
+	if NPC_Cache[dwID] then
+		NPC_Cache[dwID].obj = nil
 	end
 end
 
 function LR_TeamTools.DeathRecord.PLAYER_ENTER_SCENE()
 	local dwID = arg0
+	local player = GetPlayer(dwID)
 	if not Player_Cache[dwID] then
-		local player = GetPlayer(dwID)
 		if player then
-			Player_Cache[player.dwID] = {szName = player.szName}
+			Player_Cache[dwID] = {szName = player.szName, nType = TARGET.PLAYER, obj = player}
 		end
+	else
+		if player then
+			Player_Cache[dwID].obj = player
+		end
+	end
+end
+
+function LR_TeamTools.DeathRecord.PLAYER_LEAVE_SCENE()
+	local dwID = arg0
+	if Player_Cache[dwID] then
+		Player_Cache[dwID].obj = nil
 	end
 end
 
@@ -158,14 +187,16 @@ function LR_TeamTools.DeathRecord.GetName(nType, dwID)
 		if NPC_Cache[dwID] then
 			szKillerName = NPC_Cache[dwID].szName
 		else
-			szKillerName = sformat("NPC#%d", dwID)
+			szKillerName = sformat("NPC?#%d", dwID)
 		end
+		return szKillerName, NPC_Cache[dwID]
 	elseif nType ==  TARGET.PLAYER then
 		if Player_Cache[dwID] then
 			szKillerName = Player_Cache[dwID].szName
 		else
-			szKillerName = sformat("PLAYER#%d", dwID)
+			szKillerName = sformat("PLAYER?#%d", dwID)
 		end
+		return szKillerName, Player_Cache[dwID]
 	end
 	return szKillerName
 end
@@ -347,7 +378,9 @@ function LR_TeamTools.DeathRecord.OutputDeathRecord(dwID, rc)
 end
 
 LR.RegisterEvent("NPC_ENTER_SCENE", function() LR_TeamTools.DeathRecord.NPC_ENTER_SCENE() end)
+LR.RegisterEvent("NPC_LEAVE_SCENE", function() LR_TeamTools.DeathRecord.NPC_LEAVE_SCENE() end)
 LR.RegisterEvent("PLAYER_ENTER_SCENE", function() LR_TeamTools.DeathRecord.PLAYER_ENTER_SCENE() end)
+LR.RegisterEvent("PLAYER_LEAVE_SCENE", function() LR_TeamTools.DeathRecord.PLAYER_LEAVE_SCENE() end)
 
 --------------------------------------------------------------------------------------------------------------------
 -----------√≈≈…»À ˝

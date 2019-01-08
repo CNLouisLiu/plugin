@@ -292,59 +292,7 @@ function _C.ShowItem(t_Table, Alpha, bCal, _num, _money)
 		items:RegisterEvent(818)
 		items.OnItemMouseEnter = function ()
 			item_Select:Show()
-			local nMouseX, nMouseY =  Cursor.GetPos()
-			local szTipInfo = {}
-			local szPath, nFrame = GetForceImage(v.dwForceID)
-			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s(%d)\n", v.szName, v.nLevel), 62, r, g, b)
-			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 365, 27)
-			szTipInfo[#szTipInfo+1] = GetFormatText("\n", 224)
-			--szTipInfo[#szTipInfo+1] = GetFormatText(" ================================ \n", 17)
---[[			szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("金钱：", 224) ..  GetFormatText(sformat("%d 金 %d 银 %d 铜\n", nGold, nSilver, nCopper), 41)
-			szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("监本：", 224) ..  GetFormatText(v.JianBen.."\n", 41)
-			szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("江湖贡献值：", 224) ..  GetFormatText(v.BangGong.."\n", 41)
-			szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("侠义值：", 224) ..  GetFormatText(v.XiaYi.."\n", 41)
-			szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("威望值：", 224) ..  GetFormatText(v.WeiWang.."\n", 41)
-			szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("战阶积分：", 224) ..  GetFormatText(v.ZhanJieJiFen.."\n", 41)
-			szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("战阶等级：", 224) ..  GetFormatText(v.ZhanJieDengJi.."\n", 41)
-			szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("名剑币：", 224) ..  GetFormatText(v.MingJianBi.."\n", 41)]]
-			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Login Server:"], 224)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s[%s]\n", v.loginServer or "--", v.loginArea or "--"), 18)
-			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Tong:"], 224)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.szTongName or "--"), 18)
-			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Title:"], 224)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.szTitle or "--"), 18)
-
-			if PlayerInfo.nCamp ~=  nil then
-				szTipInfo[#szTipInfo+1] = GetFormatText(_L["Camp:"], 224)
-				if v.nCamp  ==  0 then
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", g_tStrings.STR_CAMP_TITLE[PlayerInfo.nCamp]), 27)
-				elseif v.nCamp  ==  1 then
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", g_tStrings.STR_CAMP_TITLE[PlayerInfo.nCamp]), 206)
-				elseif v.nCamp  ==  2 then
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n",g_tStrings.STR_CAMP_TITLE[PlayerInfo.nCamp]), 102)
-				end
-			end
-
-			szTipInfo[#szTipInfo+1] = GetFormatText(_L["TrainValue:"], 224)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.nCurrentTrainValue or "--"), 18)
-
-			if PlayerInfo.remainJianBen then
-				szTipInfo[#szTipInfo+1] = GetFormatText(_L["JianBen this week remain:"], 224)
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.remainJianBen), 18)
-			end
-
-			if LR_AS_Group.AllUsrGroup[szKey] and LR_AS_Group.AllUsrGroup[szKey].groupID and LR_AS_Group.AllUsrGroup[szKey].groupID > 0 then
-				szTipInfo[#szTipInfo+1] = GetFormatText(_L["Group name:"], 224)
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", LR_AS_Group.AllUsrGroup[szKey].szName), 18)
-			end
-
-			if IsCtrlKeyDown() then
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("dwID：%d\n", v.dwID), 71)
-			end
-
-			local text = tconcat(szTipInfo)
-			OutputTip(text, 360, {nMouseX, nMouseY, 0, 0})
+			_C.ShowTip(v)
 		end
 		items.OnItemMouseLeave = function()
 			item_Select:Hide()
@@ -363,6 +311,67 @@ function _C.ShowItem(t_Table, Alpha, bCal, _num, _money)
 		end
 	end
 	return num, AllMoney
+end
+
+function _C.ShowTip(v)
+	local nMouseX, nMouseY =  Cursor.GetPos()
+	local szTipInfo = {}
+	local szPath, nFrame = GetForceImage(v.dwForceID)
+	local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
+	local PlayerInfo = LR_AS_Data.AllPlayerInfo[szKey] or {}
+	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s(%d)\n", v.szName, v.nLevel), 62, r, g, b)
+	szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 365, 27)
+	szTipInfo[#szTipInfo+1] = GetFormatText("\n", 224)
+	--szTipInfo[#szTipInfo+1] = GetFormatText(" ================================ \n", 17)
+--[[			szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("金钱：", 224) ..  GetFormatText(sformat("%d 金 %d 银 %d 铜\n", nGold, nSilver, nCopper), 41)
+	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("监本：", 224) ..  GetFormatText(v.JianBen.."\n", 41)
+	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("江湖贡献值：", 224) ..  GetFormatText(v.BangGong.."\n", 41)
+	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("侠义值：", 224) ..  GetFormatText(v.XiaYi.."\n", 41)
+	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("威望值：", 224) ..  GetFormatText(v.WeiWang.."\n", 41)
+	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("战阶积分：", 224) ..  GetFormatText(v.ZhanJieJiFen.."\n", 41)
+	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("战阶等级：", 224) ..  GetFormatText(v.ZhanJieDengJi.."\n", 41)
+	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("名剑币：", 224) ..  GetFormatText(v.MingJianBi.."\n", 41)]]
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["Login Server:"], 224)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s[%s]\n", v.loginServer or "--", v.loginArea or "--"), 18)
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["Tong:"], 224)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.szTongName or "--"), 18)
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["Title:"], 224)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.szTitle or "--"), 18)
+
+	if PlayerInfo.nCamp ~=  nil then
+		szTipInfo[#szTipInfo+1] = GetFormatText(_L["Camp:"], 224)
+		if v.nCamp  ==  0 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", g_tStrings.STR_CAMP_TITLE[PlayerInfo.nCamp]), 27)
+		elseif v.nCamp  ==  1 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", g_tStrings.STR_CAMP_TITLE[PlayerInfo.nCamp]), 206)
+		elseif v.nCamp  ==  2 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n",g_tStrings.STR_CAMP_TITLE[PlayerInfo.nCamp]), 102)
+		else
+			szTipInfo[#szTipInfo+1] = GetFormatText("\n")
+		end
+	end
+
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["TrainValue:"], 224)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.nCurrentTrainValue or "--"), 18)
+
+	if PlayerInfo.remainJianBen then
+		szTipInfo[#szTipInfo+1] = GetFormatText(_L["JianBen this week remain:"], 224)
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.remainJianBen), 18)
+	end
+
+	if LR_AS_Group.AllUsrGroup[szKey] and LR_AS_Group.AllUsrGroup[szKey].groupID and LR_AS_Group.AllUsrGroup[szKey].groupID > 0 then
+		szTipInfo[#szTipInfo+1] = GetFormatText(_L["Group name:"], 224)
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", LR_AS_Group.AllUsrGroup[szKey].szName), 18)
+	end
+
+	if IsCtrlKeyDown() then
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat("dwID：%d\n", v.dwID), 71)
+	end
+
+	local text = tconcat(szTipInfo)
+	OutputTip(text, 360, {nMouseX, nMouseY, 0, 0})
 end
 
 --添加底部按钮
@@ -396,6 +405,7 @@ LR_AS_Module.PlayerInfo.ResetDataMonday = _C.ResetDataMonday
 LR_AS_Module.PlayerInfo.AddPage = _C.AddPage
 LR_AS_Module.PlayerInfo.RefreshPage = _C.RefreshPage
 LR_AS_Module.PlayerInfo.FIRST_LOADING_END = _C.LoadData
+LR_AS_Module.PlayerInfo.ShowTip = _C.ShowTip
 
 
 
