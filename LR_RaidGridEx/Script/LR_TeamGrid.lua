@@ -1324,7 +1324,7 @@ function _RoleGrid:DrawLifeText()
 	local MemberInfo = _Members[dwID]
 	local nCurrentLife = MemberInfo.nCurrentLife
 	local nMaxLife = MemberInfo.nMaxLife
-	local player = GetPlayer()
+	local player = GetPlayer(dwID)
 	if player then
 		nCurrentLife = player.nCurrentLife
 		nMaxLife = player.nMaxLife
@@ -1345,7 +1345,7 @@ function _RoleGrid:DrawLifeText()
 	if not MemberInfo.bDeathFlag then
 		handle.bDeathFlag = false	--ÓÃÓÚÏû³ýBOSS_FOCUS
 	end
-	if (MemberInfo.bDeathFlag and nCurrentLife == 0) or not MemberInfo.bIsOnLine or nMaxLife == 0 then
+	if (MemberInfo.bDeathFlag) or not MemberInfo.bIsOnLine or nMaxLife == 0 then
 		if not MemberInfo.bIsOnLine then
 			nCurrentLife = _L["Offline"]
 			r, g, b = 96, 96, 96
@@ -3967,15 +3967,6 @@ function LR_TeamGrid.ON_FRAME_CREATE()
 		if frame then
 			HookTableFunc(frame, "OnCheckBoxCheck", HookCheck, false, true)
 			HookTableFunc(frame, "OnCheckBoxUncheck", HookUncheck, false, true)
-			--HookTableFunc(frame, "OnFrameDragEnd", hook, false, true)
-			--HookTableFunc(frame, "OnItemRButtonClick", hook, false, true)
-
-			--HookTableFunc(frame, "OnItemLButtonClick", hook, false, true)
-			--HookTableFunc(frame, "OnLButtonClick", hook, true, true)
-			--HookTableFunc(frame, "OnRButtonClick", hook, false, true)
-
-			--HookTableFunc(frame, "OnActivePage", hook, false, true)
-			--HookTableFunc(frame, "OnRButtonClick", hook, true, true, true)
 		end
 	end
 end

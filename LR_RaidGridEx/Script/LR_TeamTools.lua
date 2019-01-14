@@ -42,33 +42,37 @@ function LR_TeamTools.DPS.FIGHT_HINT()
 	--Output(Damage)
 	for k, v in pairs (Damage) do
 		local dwID = k
-		local nTotalEffect = v["nTotalEffect"]
-		if LR_TeamTools.DPS.Record[k] ==  nil then
-			LR_TeamTools.DPS.Record[k] = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,DPS = {nTotalEffect = nTotalEffect},}}
-		else
-			local t = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,DPS = {nTotalEffect = nTotalEffect},}}
-			for i = 1,#LR_TeamTools.DPS.Record[k] do
-				tinsert(t,LR_TeamTools.DPS.Record[k][i])
+		if type(v) == "table" then
+			local nTotalEffect = v["nTotalEffect"]
+			if LR_TeamTools.DPS.Record[k] ==  nil then
+				LR_TeamTools.DPS.Record[k] = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,DPS = {nTotalEffect = nTotalEffect},}}
+			else
+				local t = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,DPS = {nTotalEffect = nTotalEffect},}}
+				for i = 1,#LR_TeamTools.DPS.Record[k] do
+					tinsert(t,LR_TeamTools.DPS.Record[k][i])
+				end
+				LR_TeamTools.DPS.Record[k] = t
+				--tinsert (LR_TeamTools.DPS.Record[k],{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,DPS = {nTotalEffect = nTotalEffect,},})
 			end
-			LR_TeamTools.DPS.Record[k] = t
-			--tinsert (LR_TeamTools.DPS.Record[k],{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,DPS = {nTotalEffect = nTotalEffect,},})
 		end
 	end
 	local Heal = DPS_Last["Heal"]
 	for k,v in pairs (Heal) do
-		local dwID = k
-		local nTotalEffect = v["nTotalEffect"]
-		if LR_TeamTools.DPS.Record[k] ==  nil then
-			LR_TeamTools.DPS.Record[k] = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,HPS = {nTotalEffect = nTotalEffect,},}}
-		elseif LR_TeamTools.DPS.Record[k][1]["FightUIID"] ~=  FightUIID then
-			local t = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,HPS = {nTotalEffect = nTotalEffect},}}
-			for i = 1,#LR_TeamTools.DPS.Record[k] do
-				tinsert(t,LR_TeamTools.DPS.Record[k][i])
+		if type(v) == "table" then
+			local dwID = k
+			local nTotalEffect = v["nTotalEffect"]
+			if LR_TeamTools.DPS.Record[k] ==  nil then
+				LR_TeamTools.DPS.Record[k] = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,HPS = {nTotalEffect = nTotalEffect,},}}
+			elseif LR_TeamTools.DPS.Record[k][1]["FightUIID"] ~=  FightUIID then
+				local t = {{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,HPS = {nTotalEffect = nTotalEffect},}}
+				for i = 1,#LR_TeamTools.DPS.Record[k] do
+					tinsert(t,LR_TeamTools.DPS.Record[k][i])
+				end
+				LR_TeamTools.DPS.Record[k] = t
+				--tinsert (LR_TeamTools.DPS.Record[k],{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,HPS = {nTotalEffect = nTotalEffect,},})
+			else
+				LR_TeamTools.DPS.Record[k][1]["HPS"] = {nTotalEffect = nTotalEffect,}
 			end
-			LR_TeamTools.DPS.Record[k] = t
-			--tinsert (LR_TeamTools.DPS.Record[k],{FightUIID = FightUIID,nTimeBegin = nTimeBegin,nTimeDuring = nTimeDuring,szBossName = szBossName,HPS = {nTotalEffect = nTotalEffect,},})
-		else
-			LR_TeamTools.DPS.Record[k][1]["HPS"] = {nTotalEffect = nTotalEffect,}
 		end
 	end
 end
@@ -122,10 +126,10 @@ LR_TeamTools.DeathRecord = {
 	tDamage = {},
 	tDeath = {}
 }
-local NPC_Cache = {
-	[0] = {szName = "NPC#0", dwTemplateID = 0, dwMapID = 0, nType = TARGET.NPC, obj = nil}
+local NPC_Cache = {}
+local Player_Cache = {
+	[0] = {szName = "PLAYER#0", dwMapID = 0, nType = TARGET.PLAYER, obj = nil}
 }
-local Player_Cache = {}
 
 function LR_TeamTools.DeathRecord.NPC_ENTER_SCENE()
 	local dwID = arg0
@@ -144,7 +148,8 @@ function LR_TeamTools.DeathRecord.NPC_ENTER_SCENE()
 			if npc.dwEmployer > 0 and IsPlayer(npc.dwEmployer) then
 				bPet = true
 			end
-			NPC_Cache[npc.dwID] = {szName = szName, bPet = bPet, dwTemplateID = npc.dwTemplateID, dwMapID = scene.dwMapID, nType = TARGET.NPC, obj = npc, nX = npc.nX, nY = npc.nY, nZ = npc.nZ}
+			local nIntensity = GetNpcIntensity(npc)
+			NPC_Cache[npc.dwID] = {szName = szName, nIntensity = nIntensity, bPet = bPet, dwTemplateID = npc.dwTemplateID, dwMapID = scene.dwMapID, nType = TARGET.NPC, obj = npc, nX = npc.nX, nY = npc.nY, nZ = npc.nZ}
 		end
 	else
 		if npc then
@@ -165,7 +170,7 @@ function LR_TeamTools.DeathRecord.PLAYER_ENTER_SCENE()
 	local player = GetPlayer(dwID)
 	if not Player_Cache[dwID] then
 		if player then
-			Player_Cache[dwID] = {szName = player.szName, nType = TARGET.PLAYER, obj = player}
+			Player_Cache[dwID] = {szName = player.szName, nType = TARGET.PLAYER, obj = player, dwForceID = player.dwForceID}
 		end
 	else
 		if player then

@@ -16,6 +16,8 @@ local LOG_TYPE = {
 	MSG_NPC_NEARBY = 4,
 	NPC_ENTER_SCENE = 5,
 	MSG_NPC_SCENE = 6,
+	MSG_NPC_YELL_TO = 7,
+	MSG_NPC_WHISPER = 8,
 }
 
 local _C = {}
@@ -235,6 +237,31 @@ function _C.CheckOTState()
 	end
 end
 
+function _C.NPC_TALK()
+	local dwNpcID = arg0
+	local szContent = arg1
+	local nChannel = arg2
+	local szMsg = nil
+	local hNpc = GetNpc(dwNpcID)
+	local szName = Table_GetNpcTemplateName(hNpc.dwTemplateID)
+    if nChannel == PLAYER_TALK_CHANNEL.WHISPER then
+    	szChannel = "MSG_NPC_WHISPER"
+    	szMsg = "["..szName.."]"..g_tStrings.STR_TALK_HEAD_WHISPER..szText.."\n"
+    elseif nChannel == PLAYER_TALK_CHANNEL.NEARBY then
+    	szChannel = "MSG_NPC_NEARBY"
+    	szMsg = "["..szName.."]"..g_tStrings.STR_TALK_HEAD_SAY..szText.."\n"
+    elseif nChannel == PLAYER_TALK_CHANNEL.SENCE then
+    	szChannel = "MSG_NPC_YELL"
+    	szMsg = "["..szName.."]"..g_tStrings.STR_TALK_HEAD_SAY2..szText.."\n"
+    else
+    	szChannel = "MSG_NPC_NEARBY"
+    	szMsg = "["..szName.."]"..g_tStrings.STR_TALK_HEAD_SAY..szText.."\n"
+    end
+	Output("NPC_TALK", szMsg)
+
+end
+
+
 function _C.PLAYER_SAY()
 	if not LR_FIGHT_LOG.UserData.bOn then
 		return
@@ -246,7 +273,7 @@ function _C.PLAYER_SAY()
 		return
 	end
 
-	if nChannel == PLAYER_TALK_CHANNEL.NPC_NEARBY or nChannel == PLAYER_TALK_CHANNEL.NPC_SENCE then
+	if nChannel == PLAYER_TALK_CHANNEL.NPC_NEARBY or nChannel == PLAYER_TALK_CHANNEL.NPC_SENCE or nChannel == PLAYER_TALK_CHANNEL.MSG_NPC_YELL then
 		local szName, data = LR_TeamTools.DeathRecord.GetName(TARGET.NPC, dwID)
 		local dwTemplateID, blood_fp = 0, 1
 		if data then
@@ -266,11 +293,15 @@ function _C.PLAYER_SAY()
 			dwTemplateID = data.dwTemplateID
 		end
 		local text = GetPureText(szContent)
-		local tab = {nType = LOG_TYPE.MSG_NPC_NEARBY, szText = text, caster = {szName = szName, dwTemplateID = dwTemplateID, blood_fp = blood_fp}, nTime = GetTickCount() - BEGIN_TIME}
+		local tab = {nType = LOG_TYPE.MSG_NPC_NEARBY, szText = text, OriginalText = szContent, caster = {szName = szName, dwTemplateID = dwTemplateID, blood_fp = blood_fp}, nTime = GetTickCount() - BEGIN_TIME}
 		if nChannel == PLAYER_TALK_CHANNEL.NPC_NEARBY then
 			tab.nType = LOG_TYPE.MSG_NPC_NEARBY
-		else
+		elseif nChannel == PLAYER_TALK_CHANNEL.NPC_SENCE then
 			tab.nType = LOG_TYPE.MSG_NPC_SCENE
+		elseif nChannel == PLAYER_TALK_CHANNEL.NPC_SAY_TO then
+			tab.nType = LOG_TYPE.MSG_NPC_WHISPER
+		elseif nChannel == PLAYER_TALK_CHANNEL.NPC_YELL_TO then
+			tab.nType = LOG_TYPE.MSG_NPC_YELL_TO
 		end
 		tinsert(FIGHT_LOG_CACHE[KEY], tab)
 		LR_FIGHT_LOG.AppendLog(tab, true)
@@ -317,6 +348,7 @@ RegisterMsgMonitor(_C.MsgMonitor, {"MSG_NPC_NEARBY", "MSG_NPC_YELL", "MSG_NPC_PA
 LR.RegisterEvent("FIGHT_HINT", function() _C.FIGHT_HINT() end)
 LR.RegisterEvent("DO_SKILL_CAST", function() _C.DO_SKILL_CAST() end)
 LR.RegisterEvent("PLAYER_SAY", function() _C.PLAYER_SAY() end)
+LR.RegisterEvent("NPC_TALK", function() _C.NPC_TALK() end)
 LR.RegisterEvent("NPC_ENTER_SCENE", function() _C.NPC_ENTER_SCENE() end)
 
 ----------------

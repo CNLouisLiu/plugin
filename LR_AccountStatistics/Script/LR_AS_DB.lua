@@ -9,7 +9,7 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20181225a"
+local VERSION = "20190113"
 -------------------------------------------------------------
 LR_AS_DB = LR_AS_DB or {}
 LR_AS_DEBUG = false
@@ -111,6 +111,7 @@ local schema_richang_data = {
 		{name = "XUN", 	sql = "XUN TEXT DEFAULT('{}')"},
 		{name = "TU", 	sql = "TU TEXT DEFAULT('{}')"},
 		{name = "MI", 	sql = "MI TEXT DEFAULT('{}')"},
+		{name = "ZHENYINGRICHANG", 	sql = "ZHENYINGRICHANG TEXT DEFAULT('{}')"},
 		{name = "HUIGUANG", 	sql = "HUIGUANG TEXT DEFAULT('{}')"},
 		{name = "HUASHAN", 	sql = "HUASHAN TEXT DEFAULT('{}')"},
 		{name = "LONGMENJUEJING", 	sql = "LONGMENJUEJING TEXT DEFAULT('{}')"},

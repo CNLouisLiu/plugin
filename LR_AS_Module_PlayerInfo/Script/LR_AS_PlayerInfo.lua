@@ -320,26 +320,25 @@ function _C.ShowTip(v)
 	local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
 	local PlayerInfo = LR_AS_Data.AllPlayerInfo[szKey] or {}
 	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if v.dwID == me.dwID and v.realArea == realArea and v.realServer == realServer then
+		local myself = _C.GetSelfData()
+		PlayerInfo = clone(myself)
+	end
+
 	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s(%d)\n", v.szName, v.nLevel), 62, r, g, b)
 	szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 365, 27)
 	szTipInfo[#szTipInfo+1] = GetFormatText("\n", 224)
 	--szTipInfo[#szTipInfo+1] = GetFormatText(" ================================ \n", 17)
---[[			szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("金钱：", 224) ..  GetFormatText(sformat("%d 金 %d 银 %d 铜\n", nGold, nSilver, nCopper), 41)
-	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("监本：", 224) ..  GetFormatText(v.JianBen.."\n", 41)
-	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("江湖贡献值：", 224) ..  GetFormatText(v.BangGong.."\n", 41)
-	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("侠义值：", 224) ..  GetFormatText(v.XiaYi.."\n", 41)
-	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("威望值：", 224) ..  GetFormatText(v.WeiWang.."\n", 41)
-	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("战阶积分：", 224) ..  GetFormatText(v.ZhanJieJiFen.."\n", 41)
-	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("战阶等级：", 224) ..  GetFormatText(v.ZhanJieDengJi.."\n", 41)
-	szTipInfo[#szTipInfo+1] = szTipInfo .. GetFormatText("名剑币：", 224) ..  GetFormatText(v.MingJianBi.."\n", 41)]]
 	szTipInfo[#szTipInfo+1] = GetFormatText(_L["Login Server:"], 224)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s[%s]\n", v.loginServer or "--", v.loginArea or "--"), 18)
 	szTipInfo[#szTipInfo+1] = GetFormatText(_L["Tong:"], 224)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.szTongName or "--"), 18)
 	szTipInfo[#szTipInfo+1] = GetFormatText(_L["Title:"], 224)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.szTitle or "--"), 18)
-
 	if PlayerInfo.nCamp ~=  nil then
 		szTipInfo[#szTipInfo+1] = GetFormatText(_L["Camp:"], 224)
 		if v.nCamp  ==  0 then
@@ -352,13 +351,37 @@ function _C.ShowTip(v)
 			szTipInfo[#szTipInfo+1] = GetFormatText("\n")
 		end
 	end
+	local nGoldBrick, nGold, nSilver, nCopper = LR.MoneyToGoldSilverAndCopper(PlayerInfo.nMoney or 0)
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["Money:"], 224) ..  GetFormatText(sformat("%d %s %d %s %d %s\n", nGold, _L["Gold"], nSilver, _L["Silver"], nCopper, _L["Copper"]), 41)
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["BangGong:"], 224) ..  GetFormatText(PlayerInfo.BangGong.."\n", 41)
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["XiaYi:"], 224) ..  GetFormatText(PlayerInfo.XiaYi.."\n", 41)
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["WeiWang:"], 224) ..  GetFormatText(PlayerInfo.WeiWang.."\n", 41)
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["ZhanJieJiFen:"], 224) ..  GetFormatText(PlayerInfo.ZhanJieJiFen.."\n", 41)
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["ZhanJieDengJi:"], 224) ..  GetFormatText(PlayerInfo.ZhanJieDengJi.."\n", 41)
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["MingJianBi:"], 224) ..  GetFormatText(PlayerInfo.MingJianBi.."\n", 41)
 
 	szTipInfo[#szTipInfo+1] = GetFormatText(_L["TrainValue:"], 224)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.nCurrentTrainValue or "--"), 18)
 
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["JingLi:"], 224) ..  GetFormatText(PlayerInfo.nVigor.."\n", 41)
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["JingLi remain:"], 224) ..  GetFormatText(PlayerInfo.nVigorRemainSpace.."\n", 41)
+
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["JianBen:"], 224) ..  GetFormatText(PlayerInfo.JianBen.."\n", 41)
 	if PlayerInfo.remainJianBen then
 		szTipInfo[#szTipInfo+1] = GetFormatText(_L["JianBen this week remain:"], 224)
 		szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", PlayerInfo.remainJianBen), 18)
+	end
+
+	local examData = LR_AS_Data.ExamData[szKey] or {["ShengShi"] = 0, ["HuiShi"] = 0, }
+	if examData["HuiShi"] == 1 or examData["ShengShi"] == 1 then
+		if examData["HuiShi"] == 1 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Finished HuiShi exam(6-7)\n"], 224)
+		end
+		if examData["ShengShi"] == 1 then
+			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Finished ShengShi exam(1-7)\n"], 224)
+		end
+	else
+		szTipInfo[#szTipInfo+1] = GetFormatText(_L["Haven't had any exam yet\n"], 224)
 	end
 
 	if LR_AS_Group.AllUsrGroup[szKey] and LR_AS_Group.AllUsrGroup[szKey].groupID and LR_AS_Group.AllUsrGroup[szKey].groupID > 0 then

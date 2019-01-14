@@ -1429,6 +1429,11 @@ function WndScroll:GetHandle()
 	return self.__handle
 end
 
+function WndScroll:AppendItemFromIni(...)
+	local __item = self.__handle:AppendItemFromIni(...)
+	return __item
+end
+
 function WndScroll:AddItem(__name)
 	local __item = ScrollItems.new(self:GetHandle(), "Handle_Item", "Item_" .. __name)
 	__item:Show()
@@ -1526,7 +1531,6 @@ local _AppendItem = function(__parent, __string, __name)
 
 		end
 	end
-
 
 	local __count = __parent:GetItemCount()
 	__parent:AppendItemFromString(__string)
@@ -1693,7 +1697,7 @@ local ItemHandle = class(ItemBase)
 function ItemHandle:ctor(__parent, __name, __data)
 	assert(__parent ~= nil, "parent can not be null.")
 	__data = __data or {}
-	local __string = "<handle>w=10 h=10 handletype=0 postype=0 eventid=272 firstpostype=0</handle>"
+	local __string = "<handle>w=10 h=10 handletype=0 postype=0 eventid=272 firstpostype=0 hover=0 </handle>"
 	if __data.w then
 		__string = string.gsub(__string, "w=%d+", string.format("w=%d", __data.w))
 	end
@@ -1711,6 +1715,9 @@ function ItemHandle:ctor(__parent, __name, __data)
 	end
 	if __data.eventid then
 		__string = string.gsub(__string, "eventid=%d+", string.format("eventid=%d", __data.eventid))
+	end
+	if __data.hover then
+		__string = string.gsub(__string, "hover=%d+", string.format("hover=%s", __data.hover))
 	end
 	--Output(__string)
 	local hwnd = _AppendItem(__parent, __string, __name)

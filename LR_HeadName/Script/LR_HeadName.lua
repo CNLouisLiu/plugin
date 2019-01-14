@@ -27,8 +27,8 @@ local ROLETYPE_TEXT = {
 	[6] = _L["Loli"],
 }
 
-local function _D(dwDoodadID)
-	return Table_GetDoodadTemplateName(dwDoodadID)
+local function _D(dwDoodadTemplateID)
+	return LR.TABLE_GetDoodadTemplateName(dwDoodadTemplateID)
 end
 
 HEAD_NAME_MINERAL = {
@@ -977,7 +977,7 @@ end
 
 ------ÈÎÎñ×´Ì¬
 function _Role:SetIsMissionObj()
-	self.IsMissionObj = LR_HeadName.IsMissionObj({szName = self.szName, nType = self.nType, dwTemplateID = self.dwTemplateID, nX = self.self.nX, nY = self.self.nY})
+	self.IsMissionObj = LR_HeadName.IsMissionObj({szName = self.szName, dwID = self.dwID, nType = self.nType, dwTemplateID = self.dwTemplateID, nX = self.self.nX, nY = self.self.nY})
 	return self
 end
 function _Role:GetIsMissionObj()
@@ -1498,7 +1498,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 	if LR_HeadName._Role[dwID] then
 		if LR_HeadName.UsrData.bDisLimit then
 			local distance = LR.GetDistance(obj)
-			if (distance > LR_HeadName.UsrData.distanceMax and nType~= TARGET.DOODAD) or (nType == TARGET.Doodad and distance>150 ) then
+			if (distance > LR_HeadName.UsrData.distanceMax and nType ~= TARGET.DOODAD) or (nType == TARGET.Doodad and distance>150 ) then
 				if LR_HeadName._Role[dwID] then
 					local h = LR_HeadName._Role[dwID]:GetHandle()
 					if h then
@@ -1859,10 +1859,14 @@ function LR_HeadName.Check(dwID, nType, bForced)
 			local bFresh = false
 			local _Role = LR_HeadName._Role[dwID]
 			local szName = _Role:GetName()
+			local _szName = LR.Trim(obj.szName)
+			if _szName == "" and LR_HeadName.IsMissionObj({dwID = obj.dwID, dwTemplateID = obj.dwTemplateID, nType = TARGET.DOODAD, szName = LR.Trim(obj.szName)}) then
+				_szName = LR.TABLE_GetDoodadTemplateName(obj.dwTemplateID)
+			end
 
-			if szName ~=  LR.Trim(obj.szName) and LR.Trim(obj.szName) ~=  "" then
-				_Role:SetName(LR.Trim(obj.szName))
-				szName = LR.Trim(obj.szName)
+			if szName ~= _szName then
+				_Role:SetName(_szName)
+				szName = _szName
 				LR_HeadName.OnEventCheckMission(dwID)
 				bFresh = true
 			end
@@ -2115,7 +2119,12 @@ function LR_HeadName.Check(dwID, nType, bForced)
 		end
 		if nType == TARGET.DOODAD then
 			if LR_HeadName.DoodadTemplateSee[obj.dwTemplateID] then
-				szName = LR.Trim(Table_GetDoodadTemplateName(obj.dwTemplateID))
+				szName = LR.Trim(LR.TABLE_GetDoodadTemplateName(obj.dwTemplateID))
+			end
+			if LR_HeadName.IsMissionObj({dwTemplateID = obj.dwTemplateID, dwID = obj.dwID, nType = TARGET.DOODAD, szName = LR.Trim(obj.szName)}) then
+				if LR.Trim(obj.szName) == "" then
+					szName = LR.Trim(LR.TABLE_GetDoodadTemplateName(obj.dwTemplateID))
+				end
 			end
 		end
 		if szName ~= "" then
@@ -2755,7 +2764,7 @@ end
 
 function LR_HeadName.RefreshAllNPCQuest()
 	local dwQuestID = dwQuestID
-	local me = GetControlPlayer()
+	local me = GetClientPlayer()
 	if not me then
 		return
 	end
@@ -2813,7 +2822,7 @@ function LR_HeadName.AddSingleDoodad2AllList(dwID)
 		end
 		local bAdd = false
 		local szName = LR.Trim(obj.szName)
-		local IsMissionObj = LR_HeadName.IsMissionObj({dwTemplateID = obj.dwTemplateID, nType = TARGET.DOODAD, szName = LR.Trim(obj.szName)})
+		local IsMissionObj = LR_HeadName.IsMissionObj({dwID = obj.dwID, dwTemplateID = obj.dwTemplateID, nType = TARGET.DOODAD, szName = LR.Trim(obj.szName)})
 		local HasQuest = false
 		if next(LR_HeadName.GetDoodadQuest(obj.dwTemplateID)) ~= nil then
 			HasQuest = true
@@ -2956,6 +2965,16 @@ function LR_HeadName.IsMissionObj(t)
 			end
 		end
 	end
+
+	if t.nType == TARGET.DOODAD then
+		local doodad = GetDoodad(t.dwID)
+		if doodad then
+			if doodad.HaveQuest(me.dwID) then
+				return true
+			end
+		end
+	end
+
 	return false
 end
 
@@ -3359,6 +3378,10 @@ function LR_HeadName.LOADING_END()
 	if not LR_HeadName.bOn then
 		return
 	end
+
+	NPC_CAN_ACCEPT_QUEST = {}
+	NPC_CAN_FINISH_QUEST = {}
+	LR_HeadName.RefreshAllNPCQuest()
 	LR_HeadName.GetAllMissionNeed()
 	LR_HeadName.Tree()
 	LR_HeadName.OpenFrame()

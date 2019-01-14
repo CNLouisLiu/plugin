@@ -524,6 +524,14 @@ function _C.ShowTip(v)
 	end
 	ALL_USER_DATA[szKey] = ALL_USER_DATA[szKey] or {}
 
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if v.dwID == me.dwID and v.realArea == realArea and v.realServer == realServer then
+		_C.GetData()
+		ALL_USER_DATA[szKey] = clone(SELF_DATA)
+	end
+
 	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
@@ -544,7 +552,24 @@ function _C.ShowTip(v)
 					elseif v.eCanAccept == 7 then
 						----3: 表示已完成任务0: 表示任务不存在1: 表示任务正在进行中，2: 表示任务已完成但还没有交-1: 表示任务id非法
 						if v.nQuestPhase == 1 then
-							szTipInfo[#szTipInfo+1] = GetFormatText(_L["Doing"], 16)
+							local have, need = 0, 0
+							local ccc = {"kill_npc", "quest_state", "need_item"}
+							for k4, v4 in pairs(ccc) do
+								for k5, v5 in pairs(v[v4]) do
+									if v5.have == v5.need then
+										have = have + 1
+									end
+									need = need + 1
+								end
+							end
+							if have == 0 then
+								szTipInfo[#szTipInfo+1] = GetFormatText(_L["Accepted"], 16)
+							elseif have < need then
+								szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%d / %d"], have, need), 16)
+							else
+								szTipInfo[#szTipInfo+1] = GetFormatText(_L["Not submit"], 16)
+							end
+							--szTipInfo[#szTipInfo+1] = GetFormatText(_L["Doing"], 16)
 						elseif v.nQuestPhase == 2 then
 							szTipInfo[#szTipInfo+1] = GetFormatText(_L["Not submit"], 17)
 						end

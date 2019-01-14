@@ -1727,6 +1727,8 @@ RegisterEvent("FIRST_LOADING_END", function() LR.GetAllSceneQuest() end)
 function LR.TABLE_GetDoodadTemplateName(dwTemplateID)
 	if dwTemplateID == 5402 then
 		return "มมา๘วนอท"
+	elseif dwTemplateID == 7425 then
+		--return _L["LANJINGKUANG"]
 	end
 	local RowCount = g_tTable.DoodadTemplate:GetRowCount()
 	local i = 1
@@ -1735,7 +1737,7 @@ function LR.TABLE_GetDoodadTemplateName(dwTemplateID)
 		if dwTemplateID == t.nID then
 			return t.szName
 		end
-		i = i+1
+		i = i + 1
 	end
 	return ""
 end

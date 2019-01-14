@@ -616,4 +616,13 @@ data={
 	["Load history"]="载入历史记录",
 	["time"]="时间",
 
+	["ShowBuffOnNPC"]="显示NPC身上的BUFF",
+	["ShowBuffOnPlayer"]="显示玩家身上的BUFF",
+	["bShowRefreshBuff"]="显示刷新的BUFF",
+	["bShowBuffOnlyFromNPC"]="只显示来自NPC的BUFF",
+	["bShowNormalBuff"]="显示一般BUFF",
+	["bShowHideBuff"]="显示隐藏BUFF",
+	["bShowBUFFGood"]="显示增益BUFF",
+	["bShowBUFFBad"]="显示减益BUFF",
+
 }

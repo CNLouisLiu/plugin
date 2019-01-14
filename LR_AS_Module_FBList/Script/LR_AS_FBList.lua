@@ -553,6 +553,14 @@ function _FBList.ShowTip(v)
 	local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
 	local FB_Record = _FBList.AllUsrData[szKey] or {}
 	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if v.dwID == me.dwID and v.realArea == realArea and v.realServer == realServer then
+		FB_Record = _FBList.SelfData
+	end
+
 	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))

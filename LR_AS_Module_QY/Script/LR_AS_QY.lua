@@ -59,6 +59,9 @@ local QIYU = {
 	GUI_AN_ZHI_AN = 30,		--天天8 22534
 	GUI_AN_ZHI_ZHI = 31,	--吉瑞8 22533
 	GUI_AN_ZHI_GUI = 32,
+	TAI_XING_DAO = 33,	--太行道
+	MI_BAO_TU = 34,		--
+	KE_JIANG_GAN = 35, ---
 }
 
 local QIYU_NAME = {}	--名字
@@ -517,7 +520,47 @@ QIYU_WARNING_MSG[QIYU.GUI_AN_ZHI_GUI] = {
 QIYU_ACHIEVEMENT[QIYU.GUI_AN_ZHI_GUI] = 6187
 QIYU_PET[QIYU.GUI_AN_ZHI_GUI] = {dwTabType = 8, dwIndex = 21060}
 
+--太行道
+QIYU_NAME[QIYU.TAI_XING_DAO] = _L["TAI_XING_DAO"]
+QIYU_MNTP[QIYU.TAI_XING_DAO] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.TAI_XING_DAO] = 243
+QIYU_NPC[QIYU.TAI_XING_DAO] = 62005
+QIYU_WINDOW_DIALOG[QIYU.TAI_XING_DAO] = {
+	{szText = _L["DIALOG_TAI_XING_DAO_01"], bFinish = true, }, 		--满次数
+}
+QIYU_ITEM[QIYU.TAI_XING_DAO] = {
+	{dwTabType = 5, dwIndex = 30745, },
+}
+QIYU_ACHIEVEMENT[QIYU.TAI_XING_DAO] = 6695
+QIYU_PET[QIYU.TAI_XING_DAO] = {dwTabType = 8, dwIndex = 22538}
 
+--秘宝图
+QIYU_NAME[QIYU.MI_BAO_TU] = _L["MI_BAO_TU"]
+QIYU_MNTP[QIYU.MI_BAO_TU] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.MI_BAO_TU] = 332
+QIYU_NPC[QIYU.MI_BAO_TU] = 62788
+QIYU_WINDOW_DIALOG[QIYU.MI_BAO_TU] = {
+	{szText = _L["DIALOG_MI_BAO_TU_01"], bFinish = true, }, 		--满次数
+}
+QIYU_ITEM[QIYU.MI_BAO_TU] = {
+	{dwTabType = 5, dwIndex = 7843, },
+}
+QIYU_ACHIEVEMENT[QIYU.MI_BAO_TU] = 6696
+QIYU_PET[QIYU.MI_BAO_TU] = {dwTabType = 8, dwIndex = 22537}
+
+--客江干
+QIYU_NAME[QIYU.KE_JIANG_GAN] = _L["KE_JIANG_GAN"]
+QIYU_MNTP[QIYU.KE_JIANG_GAN] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.KE_JIANG_GAN] = 330
+QIYU_NPC[QIYU.KE_JIANG_GAN] = 62806
+QIYU_WINDOW_DIALOG[QIYU.KE_JIANG_GAN] = {
+	{szText = _L["DIALOG_KE_JIANG_GAN_01"], bFinish = true, }, 		--满次数
+}
+QIYU_ITEM[QIYU.KE_JIANG_GAN] = {
+	{dwTabType = 5, dwIndex = 30965, },
+}
+QIYU_ACHIEVEMENT[QIYU.KE_JIANG_GAN] = 6697
+QIYU_PET[QIYU.KE_JIANG_GAN] = {dwTabType = 8, dwIndex = 22539}
 --------------------------------------------------------------------
 LR_AS_QY = {}
 local Default = {
@@ -1162,6 +1205,14 @@ function _QY.ShowTip(v)
 	local QY_Record = _QY.AllUsrData[szKey].qiyu_data or {}
 	local QY_Achievement  = _QY.AllUsrData[szKey].qiyu_achievement or {}
 	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if v.dwID == me.dwID and v.realArea == realArea and v.realServer == realServer then
+		QY_Record = clone(_QY.SelfData)
+	end
+
 	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
