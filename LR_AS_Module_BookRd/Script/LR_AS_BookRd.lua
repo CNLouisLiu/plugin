@@ -762,24 +762,44 @@ function LR_BookRd_Panel:GetSource(hWin)
 	szBookName = LR.Trim(szBookName)
 
 	------任务
-	for i = 1, #_BookRd.MissionData, 1 do
-		if _BookRd.MissionData[i].szBookName ==  szBookName then
-			--背景条
-			local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", m), {x = 0, y = 0, w = 396, h = 30})
-			local Image_Line = self:Append("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 0, y = 0, w = 396, h = 30})
-			Image_Line:FromUITex("ui\\Image\\button\\ShopButton.UITex", 75)
-			Image_Line:SetImageType(10)
-			Image_Line:SetAlpha(200)
-
+	local MissionData = _BookRd.MissionData[sformat("%d_%d", LR_BookRd_Panel.BookSuitID, LR_BookRd_Panel.BookNameID)] or {}
+	if next(MissionData) ~= nil then
+		local Quests = MissionData.Quests or {}
+		for dwQuestID, v4 in pairs(Quests) do
 			--任务名称
-			local szName = _BookRd.MissionData[i].szQuestName
-			local szMapName = Table_GetMapName(_BookRd.MissionData[i].dwMapID)
-			local szAcceptNpcName = _BookRd.MissionData[i].szAcceptNpcName
-			local Text_break2 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 396, h = 30, x  = 15, y = 2, text  = sformat("%s%s（%s）%s", _L["[Quest]"], szName, szMapName, szAcceptNpcName), font = 31})
-			Text_break2:SetHAlign(0)
-			Text_break2:SetVAlign(1)
+			local tQuestStringInfo = LR.Table_GetQuestStringInfo(tonumber(dwQuestID))
+			local szName = tQuestStringInfo.szName
 
-			m = m+1
+			local _s, _e = string.find(szName, _L["discard"])
+			if not _s then
+			--背景条
+				local hIconViewContent = self:Append("Handle", hWin, sformat("IconViewContent_%d", m), {x = 0, y = 0, w = 396, h = 30})
+				local Image_Line = self:Append("Image", hIconViewContent, sformat("Image_Line_%d", m), {x = 0, y = 0, w = 396, h = 30})
+				Image_Line:FromUITex("ui\\Image\\button\\ShopButton.UITex", 75)
+				Image_Line:SetImageType(10)
+				Image_Line:SetAlpha(200)
+
+				--任务名称
+				local tQuestStringInfo = LR.Table_GetQuestStringInfo(tonumber(dwQuestID))
+				local szName = tQuestStringInfo.szName
+				local Text_break2 = LR.AppendUI("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 396, h = 30, x  = 15, y = 2, text  = sformat("%s%s", _L["[Quest]"], szName), font = 31})
+				Text_break2:SetHAlign(0)
+				Text_break2:SetVAlign(1)
+				m = m + 1
+				hIconViewContent.OnEnter = function()
+					local x, y = this:GetAbsPos()
+					local w, h = this:GetSize()
+					OutputQuestTip(dwQuestID, {x, y, w, h})
+				end
+				hIconViewContent.OnLeave = function()
+					HideTip()
+				end
+				hIconViewContent.OnClick = function()
+					local x, y = this:GetAbsPos()
+					local w, h = this:GetSize()
+					OutputQuestTip(dwQuestID, {x, y, w, h}, true)
+				end
+			end
 		end
 	end
 
@@ -823,7 +843,7 @@ function LR_BookRd_Panel:GetSource(hWin)
 				Text_break2:SetHAlign(0)
 				Text_break2:SetVAlign(1)
 
-				m = m+1
+				m = m + 1
 			end
 		end
 	end

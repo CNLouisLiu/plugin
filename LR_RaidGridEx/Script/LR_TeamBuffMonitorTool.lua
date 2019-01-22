@@ -30,6 +30,13 @@ local BUFF_CACHE_MAP_TEMP = {}
 local BUFF_TOTAL_TIME = {}
 local BUFF_INDEX_CACHE = {}
 
+local BUFF_FIGHT_CACHE = {}
+local NearestNPC = {szName = "#NoNPC", nIntensity = 0, dwTemplateID = 0, distance = 0}
+local LOG_TIME = 0
+local BEGIN_TIME = 0
+local KEY = ""
+local BUFF_FIGHT_LOAD = {}
+
 function LR_TeamBuffTool.SaveBuffCache(skip_check)
 	if not LR_TeamBuffTool_Panel.bOnCollect and not skip_check then
 		return
@@ -39,7 +46,6 @@ function LR_TeamBuffTool.SaveBuffCache(skip_check)
 	for i = 1, 1500, 1 do
 		data[#data + 1] = clone(BUFF_CACHE[i])
 	end
-
 	for k, v in pairs(data) do
 		for dwCaster, v2 in pairs(v.temp_caster or {}) do
 			if v2.nType == TARGET.NPC then
@@ -81,7 +87,55 @@ function LR_TeamBuffTool.SaveBuffCache(skip_check)
 	end
 	BUFF_CACHE_MAP = clone(data2)
 	LR.SaveLUAData(path2, data2)
+
+	if LR_TeamBuffTool_Panel.bLogByFight and KEY ~= "" and GetCurrentTime() - LOG_TIME >= 30 then
+		local _date = TimeToDate(LOG_TIME)
+		local me = GetClientPlayer()
+		local scene = me.GetScene()
+		local path = sformat("%s\\BUFF_FIGHT_LOG\\%04d%02d%02d_%02d%02d%02d_%s_%s_%s(#%d)", SaveDataPath, _date["year"], _date["month"], _date["day"], _date["hour"], _date["minute"], _date["second"], me.szName, Table_GetMapName(scene.dwMapID), NearestNPC.szName, NearestNPC.dwTemplateID )
+		local data = clone(BUFF_FIGHT_CACHE[KEY] or {})
+		for k, v in pairs(data) do
+			for dwCaster, v2 in pairs(v.temp_caster or {}) do
+				if v2.nType == TARGET.NPC then
+					local _, obj = LR_TeamTools.DeathRecord.GetName(TARGET.NPC, tonumber(dwCaster))
+					if obj then
+						v.caster[sformat("%d_%d", obj.dwTemplateID, obj.dwMapID)] = clone(obj)
+						v.temp_caster[k2] = nil
+					end
+				else
+					local _, obj = LR_TeamTools.DeathRecord.GetName(TARGET.PLAYER, tonumber(dwCaster))
+					if obj then
+						v.caster[sformat("%d_%d", obj.dwID, obj.dwMapID)] = clone(obj)
+						v.temp_caster[k2] = nil
+					end
+				end
+			end
+			v.temp_caster = {}
+		end
+		data.key = "BUFF_FIGHT_LOG"
+		LR.SaveLUAData(path, data)
+	end
 end
+
+function LR_TeamBuffTool.LoadBuffFightLog()
+	BUFF_FIGHT_LOAD = {}
+	local szFile = GetOpenFileName(sformat("%s", _L["Choose file"]), "Save data File(*.jx3dat)\0*.jx3dat\0All Files(*.*)\0*.*\0")
+	if szFile == "" then
+		return false
+	end
+	local _s, _e, szFileName = sfind(szFile,"interface(.+)")
+	local path = sformat("interface%s", szFileName)
+	local data = LoadLUAData(path) or {}
+	if data and data.key and data.key == "BUFF_FIGHT_LOG" then
+		data.key = nil
+		BUFF_FIGHT_LOAD = clone(data)
+		return true
+	else
+		BUFF_FIGHT_LOAD = {}
+		return false
+	end
+end
+
 
 function LR_TeamBuffTool.LoadBuffCache()
 	local path = sformat("%s\\BUFF_CACHE\\buffcache.dat", SaveDataPath)
@@ -365,6 +419,9 @@ LR_TeamBuffTool_Panel.bShowNormalBuff = true
 LR_TeamBuffTool_Panel.bShowBUFFGood = true
 LR_TeamBuffTool_Panel.bShowBUFFBad = true
 
+LR_TeamBuffTool_Panel.bLogByFight = false
+LR_TeamBuffTool_Panel.bShowLogByFight = false
+
 
 local BuffListBoxUI = {}
 local ResultBoxHover_Cache = {}
@@ -383,6 +440,9 @@ function LR_TeamBuffTool_Panel:OnCreate()
 	LR_TeamBuffTool_Panel.szCasterName = ""
 
 	LR_TeamBuffTool_Panel.LoadType = "by dungeon"
+
+	LR_TeamBuffTool_Panel.bLogByFight = false
+	LR_TeamBuffTool_Panel.bShowLogByFight = false
 
 	LR_TeamBuffTool.LoadBuffCache()
 	LR_TeamBuffTool.SaveBuffCache()
@@ -435,15 +495,6 @@ function LR_TeamBuffTool_Panel.OnMouseLeave()
 		LR_TeamBuffTool_Panel.bAdd = false
 	end
 end
-
-LR_TeamBuffTool_Panel.ShowBuffOnNPC = true
-LR_TeamBuffTool_Panel.ShowBuffOnPlayer = true
-
-LR_TeamBuffTool_Panel.bShowRefreshBuff = false
-LR_TeamBuffTool_Panel.bShowBuffOnlyFromNPC = false
-
-LR_TeamBuffTool_Panel.bShowBUFFGood = true
-LR_TeamBuffTool_Panel.bShowBUFFBad = true
 
 function LR_TeamBuffTool_Panel.CanBuffShow(v)
 	if v.target_type == TARGET.NPC and not LR_TeamBuffTool_Panel.ShowBuffOnNPC then
@@ -565,6 +616,11 @@ function LR_TeamBuffTool_Panel:Init()
 	CheckBox_EnableCollect:Check(LR_TeamBuffTool_Panel.bOnCollect)
 	CheckBox_EnableCollect.OnCheck = function(arg0)
 		LR_TeamBuffTool_Panel.bOnCollect = arg0
+		if LR_TeamBuffTool_Panel.bOnCollect then
+			LR_TeamBuffTool.BeginLog()
+		else
+			LR_TeamBuffTool.EndLog()
+		end
 	end
 
 	local CheckBox_Selected = LR.AppendUI("CheckBox", frame, "CheckBox_Selected", {w = 150, h = 30, x = 240, y = 92, text = _L["Show select group npc buff"]})
@@ -604,10 +660,35 @@ function LR_TeamBuffTool_Panel:Init()
 				LR_TeamBuffTool_Panel.bCollectOnlyFromNpc = not LR_TeamBuffTool_Panel.bCollectOnlyFromNpc
 			end,
 		}
+
+		menu[#menu + 1] = {bDevide = true}
+		menu[#menu + 1] = {szOption = _L["Log by fight"], bCheck = true, bChecked = function() return LR_TeamBuffTool_Panel.bLogByFight end,
+			fnAction = function()
+				LR_TeamBuffTool_Panel.bLogByFight = not LR_TeamBuffTool_Panel.bLogByFight
+				self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
+				self:LoadSearchResultBox()
+				Wnd.CloseWindow(GetPopupMenu())
+			end,
+		}
+		menu[#menu + 1] = {szOption = _L["Load history"],
+			fnAction = function()
+				if LR_TeamBuffTool.LoadBuffFightLog() then
+					LR_TeamBuffTool_Panel.bShowMapBuffCache = false
+					LR_TeamBuffTool_Panel.bShowLogByFight = true
+					self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
+					self:LoadSearchResultBox()
+					Wnd.CloseWindow(GetPopupMenu())
+				end
+			end,
+		}
+
 		menu[#menu + 1] = {bDevide = true}
 		menu[#menu + 1] = {szOption = _L["Show map buff cache"], bCheck = true, bChecked = function() return LR_TeamBuffTool_Panel.bShowMapBuffCache end,
 			fnAction = function()
 				LR_TeamBuffTool_Panel.bShowMapBuffCache = not LR_TeamBuffTool_Panel.bShowMapBuffCache
+				if LR_TeamBuffTool_Panel.bShowMapBuffCache then
+					LR_TeamBuffTool_Panel.bShowLogByFight = false
+				end
 				self:ClearHandle(self:Fetch("ScrollSearchBuffBox"))
 				self:LoadSearchResultBox()
 				Wnd.CloseWindow(GetPopupMenu())
@@ -683,7 +764,16 @@ function LR_TeamBuffTool_Panel:Init()
 				end
 			end
 		else
-			if LR_TeamBuffTool_Panel.bShowMapBuffCache then
+			if LR_TeamBuffTool_Panel.bShowLogByFight then
+				for k, v in pairs(BUFF_FIGHT_LOAD) do
+					for k2, v2 in pairs(v.caster) do
+						if not tTemp[v2.szName] then
+							tinsert(tCasterName, {nType = v2.nType, nIntensity = v2.nIntensity or 1, szName = v2.szName, dwForceID = v2.dwForceID or 0})
+							tTemp[v2.szName] = true
+						end
+					end
+				end
+			elseif LR_TeamBuffTool_Panel.bShowMapBuffCache then
 				for k, v in pairs(BUFF_CACHE_MAP) do
 					for k2, v2 in pairs(v.caster) do
 						if not tTemp[v2.szName] then
@@ -1417,7 +1507,24 @@ function LR_TeamBuffTool_Panel:LoadSearchResultBox()
 			end
 			return
 		else
-			if LR_TeamBuffTool_Panel.bShowMapBuffCache then
+			if LR_TeamBuffTool_Panel.bShowLogByFight then
+				for k, v in pairs(BUFF_FIGHT_LOAD) do
+					local flag = false
+					for k2, v2 in pairs(v.caster) do
+						if v2.szName == LR_TeamBuffTool_Panel.szCasterName then
+							flag = true
+						end
+					end
+
+					if LR_TeamBuffTool_Panel.szCasterName == "" or flag then
+						if LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(false, v, m, "h") then
+							m = m + 1
+						end
+					end
+				end
+				hWin:UpdateList()
+				return
+			elseif LR_TeamBuffTool_Panel.bShowMapBuffCache then
 				for k, v in pairs(BUFF_CACHE_MAP) do
 					local flag = false
 					for k2, v2 in pairs(v.caster) do
@@ -1921,6 +2028,54 @@ function LR_TeamBuffTool.MonitorTargetNPC()
 						end
 					end
 					LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, BUFF_CACHE_MAP[szKey], 1, "h")
+
+					local szCasterName, obj, nType = "", nil, TARGET.NPC
+					if IsPlayer(dwCaster) then
+						szCasterName, obj = LR_TeamTools.DeathRecord.GetName(TARGET.PLAYER, dwCaster)
+						nType = TARGET.PLAYER
+					else
+						szCasterName, obj = LR_TeamTools.DeathRecord.GetName(TARGET.NPC, dwCaster)
+					end
+					local data = {
+						dwID = v.dwID,
+						nLevel = v.nLevel,
+						bCanCancel = v.bCanCancel,
+						nStackNum = v.nStackNum,
+						bDelete = false,
+						bHideBuff = false,
+						bFresh = false,
+						caster = {},
+						temp_caster = {},
+						szCasterName = "",
+						target_type = TARGET.NPC,
+						nTotalFrame = v.nEndFrame - GetLogicFrameCount(),
+					}
+					if not Table_BuffIsVisible(v.dwID, v.nLevel) then
+						data.bHideBuff = true
+					end
+
+					local dwCaster = v.dwSkillSrcID
+					if not IsPlayer(dwCaster) then
+						if obj then
+							data.caster[sformat("d_%d", dwCaster, dwMapID_now)] = {szName = szCasterName, dwTemplateID = obj.dwTemplateID, nIntensity = obj.nIntensity, dwMapID = dwMapID_now, nType = TARGET.NPC}
+						else
+							data.temp_caster[tostring(dwCaster)] = {dwMapID = dwMapID_now, nType = TARGET.NPC, dwID = dwCaster}
+						end
+					else
+						if obj then
+							data.caster[sformat("%d_%d", dwCaster, dwMapID_now)] = {szName = szCasterName, dwMapID = dwMapID_now, dwID = dwCaster, dwForceID = obj.dwForceID, nType = TARGET.PLAYER}
+						else
+							data.temp_caster[tostring(dwCaster)] = {dwMapID = dwMapID_now, nType = TARGET.PLAYER, dwID = dwCaster}
+						end
+					end
+					tinsert(BUFF_CACHE, data)
+					if not LR_TeamBuffTool_Panel.bShowMapBuffCache then
+						LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, data, 1, "h")
+					end
+					if KEY ~= "" then
+						data.nTime = GetTickCount() - BEGIN_TIME
+						tinsert(BUFF_FIGHT_CACHE[KEY], data)
+					end
 				end
 			end
 		end
@@ -1997,6 +2152,10 @@ function LR_TeamBuffTool.BUFF_UPDATE()
 	if not LR_TeamBuffTool_Panel.bShowMapBuffCache then
 		LR_TeamBuffTool_Panel:ResultBoxLoadOneBuff(true, data, 1, "h")
 	end
+	if KEY ~= "" then
+		data.nTime = GetTickCount() - BEGIN_TIME
+		tinsert(BUFF_FIGHT_CACHE[KEY], data)
+	end
 
 	if not IsPlayer(dwCaster) or dwCaster == 0 then
 		BUFF_CACHE_MAP[szKey] = BUFF_CACHE_MAP[szKey] or {dwID = dwID, bHideBuff = data.bHideBuff, nLevel = nLevel, bDelete = bDelete, bCanCancel = bCanCancel, target_type = TARGET.PLAYER, caster = {}, temp_caster = {}, nMaxStackNum = 0, nTotalFrame = nEndFrame - GetLogicFrameCount()}
@@ -2034,10 +2193,38 @@ function LR_TeamBuffTool.ON_FRAME_CREATE()
 	end
 end
 
+function LR_TeamBuffTool.BeginLog()
+	local me = GetClientPlayer()
+	if not me or not me.bFightState then
+		return
+	end
+	KEY = sformat("KEY_%d", GetCurrentTime())
+	LOG_TIME = GetCurrentTime()
+	BUFF_FIGHT_CACHE[KEY] = {}
+	BEGIN_TIME = GetTickCount()
+	NearestNPC = LR_TeamTools.DeathRecord.GetNearestNPC()
+end
+
+function LR_TeamBuffTool.EndLog()
+	if KEY ~= "" then
+		LR_TeamBuffTool.SaveBuffCache()
+	end
+	KEY = ""
+	LOG_TIME = 0
+	BEGIN_TIME = 0
+	NearestNPC = {szName = "#NoNPC", nIntensity = 0, dwTemplateID = 0, distance = 0}
+end
+
 function LR_TeamBuffTool.FIGHT_HINT()
 	local bFight = arg0
-	if not bFight then
-		LR_TeamBuffTool.SaveBuffCache()
+	if not LR_TeamBuffTool_Panel.bOnCollect then
+		return
+	end
+
+	if bFight then
+		LR_TeamBuffTool.BeginLog()
+	else
+		LR_TeamBuffTool.EndLog()
 	end
 end
 

@@ -1,0 +1,8 @@
+data = {
+	{dwTemplateID = 7724, szText = "恭迎$name回帮！", nType = 1, t = 8},
+	{dwTemplateID = 55542, szText = "$name,试试我的刀法吧！", nType = 1, t = 15},
+	{dwTemplateID = 8120, szText = "$name!莫要阻拦我与爱妻的重逢！", nType = 1, t = 8},
+	{dwTemplateID = 8124, szText = "吾之身躯让尔等如此胆怯？", nType = 2, t = 8},
+
+
+}

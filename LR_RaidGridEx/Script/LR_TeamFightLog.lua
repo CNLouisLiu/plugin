@@ -32,13 +32,14 @@ local KEY_LIST = {}
 local OTBAR_VISIABLE = false
 local SKILL_CACHE = {}
 local nMaxDistance = 45
+local NearestNPC = {szName = "#NoNPC", nIntensity = 0, dwTemplateID = 0, distance = 0}
 
 function _C.SaveLog()
 	if GetCurrentTime() - LOG_TIME >= 30 then
 		local _date = TimeToDate(LOG_TIME)
 		local me = GetClientPlayer()
 		local scene = me.GetScene()
-		local path = sformat("%s\\FIGHT_LOG\\%04d%02d%02d_%02d%02d%02d_%s_%s", SaveDataPath, _date["year"], _date["month"], _date["day"], _date["hour"], _date["minute"], _date["second"], me.szName, Table_GetMapName(scene.dwMapID) )
+		local path = sformat("%s\\FIGHT_LOG\\%04d%02d%02d_%02d%02d%02d_%s_%s_%s(#%d)", SaveDataPath, _date["year"], _date["month"], _date["day"], _date["hour"], _date["minute"], _date["second"], me.szName, Table_GetMapName(scene.dwMapID), NearestNPC.szName, NearestNPC.dwTemplateID )
 		local data = clone(FIGHT_LOG_CACHE[KEY])
 		data.key = "FIGHT_LOG_SAVE"
 		LR.SaveLUAData(path, data)
@@ -68,6 +69,7 @@ function _C.BeginLog()
 	LOG_TIME = GetCurrentTime()
 	FIGHT_LOG_CACHE[KEY] = {}
 	BEGIN_TIME = GetTickCount()
+	NearestNPC = LR_TeamTools.DeathRecord.GetNearestNPC()
 	tinsert(KEY_LIST, KEY)
 
 	local frame = Station.Lookup("Normal/LR_FIGHT_LOG")
@@ -84,6 +86,7 @@ function _C.EndLog()
 	KEY = ""
 	LOG_TIME = 0
 	BEGIN_TIME = 0
+	NearestNPC = {szName = "#NoNPC", nIntensity = 0, dwTemplateID = 0, distance = 0}
 end
 
 -------------------------------------------

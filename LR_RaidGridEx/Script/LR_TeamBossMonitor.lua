@@ -24,6 +24,8 @@ local _OTMonitorList = {
 	--[165905]={nType=TARGET.PLAYER,nActionState=ACTION_STATE.NONE,},
 }
 local _OTBarHandle ={}
+local _TALK_FOCUS = {}
+local _C = {}
 ---------------------------------------------------------------
 local _BossOTBar={
 	handle=nil,
@@ -185,8 +187,9 @@ function LR_TeamBossMonitor.SplitBossName(szName)
 	end
 	return names
 end
+
 -------------------------------
---BOSS¶ÁÌõ¼à¿Ø
+--NPC¶ÁÌõ¸´ÖÆ
 -------------------------------
 function LR_TeamBossMonitor.CheckOTState2()
 	local me = GetClientPlayer()
@@ -261,84 +264,6 @@ function LR_TeamBossMonitor.CheckOTState2()
 	LR_TeamBossMonitor.ReLoadOTBarPosition()
 end
 
-
-function LR_TeamBossMonitor.CheckOTState(dwID)
-	local dwID = dwID
-	if not _OTMonitorList[dwID] then
-		return
-	end
-	local v = _OTMonitorList[dwID]
-	local nType = v.nType
-	local obj = nil
-	if nType == TARGET.NPC then
-		obj = GetNpc(dwID)
-	elseif nType == TARGET.PLAYER then
-		obj = GetPlayer(dwID)
-	end
-	if not obj then
-		return
-	end
-	local me = GetClientPlayer()
-	if not me then
-		return
-	end
-	if not (IsEnemy(obj.dwID, me.dwID) and obj.bFightState) then
-		--return
-	end
-	--local nType, dwSkillID, dwSkillLevel, fP = obj.GetSkillOTActionState()
-	local nType, dwSkillID, dwSkillLevel, fP = obj.GetSkillPrepareState()
-	local OTBar = _OTBarHandle[dwID]
-
-
-	--Output(obj.szName, nType, dwSkillID, dwSkillLevel, fP)
-
-	if nType  and v.nActionState ~= ACTION_STATE.PREPARE then
-		if not OTBar then
-			local h = _BossOTBar:new(dwID)
-			h:Create():SetAlpha(255):SetPercentage(0):SetSkillName(LR.Trim(Table_GetSkillName(dwSkillID, dwSkillLevel))):SetCasterName(LR.Trim(obj.szName)):SetText()
-			_OTBarHandle[dwID] = h
-		end
-		OTBar = _OTBarHandle[dwID]
-		v.nActionState = ACTION_STATE.PREPARE
-		LR_TeamBossMonitor.ReLoadOTBarPosition()
-	elseif not nType and v.nActionState == ACTION_STATE.PREPARE then
-		v.nActionState = ACTION_STATE.DONE
-		if OTBar then
-			OTBar:Remove()
-			_OTBarHandle[dwID] = nil
-			OTBar = nil
-			LR_TeamBossMonitor.ReLoadOTBarPosition()
-		end
-	end
-
-	if not OTBar then
-		return
-	end
-
-	if v.nActionState == ACTION_STATE.PREPARE then
-		OTBar:SetPercentage(fP)
-	elseif v.nActionState == ACTION_STATE.DONE then
-		OTBar:OTSucess()
-		v.nActionState = ACTION_STATE.FADE
-	elseif v.nActionState == ACTION_STATE.BREAK then
-		OTBar:OTFail()
-		v.nActionState = ACTION_STATE.FADE
-	elseif v.nActionState == ACTION_STATE.FADE then
-		local nAlpha = OTBar:GetAlpha()
-		nAlpha = nAlpha - 10
-		if nAlpha > 0 then
-			OTBar:SetAlpha(nAlpha)
-		else
-			v.nActionState = ACTION_STATE.NONE
-		end
-	else
-		OTBar:Remove()
-		_OTBarHandle[dwID] = nil
-		OTBar = nil
-		LR_TeamBossMonitor.ReLoadOTBarPosition()
-	end
-end
-
 function LR_TeamBossMonitor.ReLoadOTBarPosition()
 	local Handle_BossOTBar=LR_TeamGrid.Handle_BossOTBar
 	local num=Handle_BossOTBar:GetItemCount()
@@ -358,21 +283,16 @@ end
 function LR_TeamBossMonitor.CheckAllOTState()
 	--10028ÄÌ»¨ 10080ÄÌÐã 10176ÄÌ¶¾ 10448ÄÌÇÙ
 	------Boss¶ÁÌõ¼à¿Ø
-	LR_TeamBossMonitor.CheckOTState2()
 	if not GetClientPlayer() then
 		return
 	end
 	if LR_TeamGrid.UsrData.CommonSettings.bShowBossOT then
 		if LR_TeamGrid.UsrData.CommonSettings.bShowBossOTOnlyInCure then
 			if LR.IsNurse() then
-				for dwID, v in pairs (_OTMonitorList) do
-					LR_TeamBossMonitor.CheckOTState(dwID)
-				end
+				LR_TeamBossMonitor.CheckOTState2()
 			end
 		else
-			for dwID, v in pairs (_OTMonitorList) do
-				LR_TeamBossMonitor.CheckOTState(dwID)
-			end
+			LR_TeamBossMonitor.CheckOTState2()
 		end
 	end
 end
@@ -392,7 +312,6 @@ function LR_TeamBossMonitor.DrawAllBossTarget()
 		end
 	end
 end
-
 
 function LR_TeamBossMonitor.ShowBossTargetImage(dwID)
 	if not (LR_TeamGrid.UsrData.CommonSettings.bShowBossTarget or LR_TeamGrid.UsrData.CommonSettings.bShowSmallBossTarget) then
@@ -457,6 +376,62 @@ function LR_TeamBossMonitor.ShowBossTargetImage(dwID)
 end
 
 -------------------------------------------------------------
+function _C.LoadData()
+	local _, _, szLang = GetVersion()
+	local path = sformat("%s\\DefaultData\\TalkFocusMon_%s", AddonPath, szLang)
+	local data = LoadLUAData(path) or {}
+	for k, v in pairs(data) do
+		v.szText = sgsub(v.szText, "$name", "(.+)")
+	end
+	_TALK_FOCUS = clone(data)
+end
+
+function _C.PLAYER_SAY()
+	local szContent = arg0
+	local dwID = arg1
+	local nChannel = arg2
+	if IsPlayer(dwID) and dwID ~= 0 then
+		return
+	end
+	if not (nChannel == PLAYER_TALK_CHANNEL.NPC_NEARBY or nChannel == PLAYER_TALK_CHANNEL.NPC_SENCE or nChannel == PLAYER_TALK_CHANNEL.MSG_NPC_YELL) then
+		return
+	end
+	local szText = GetPureText(szContent)
+	local szName, data = LR_TeamTools.DeathRecord.GetName(TARGET.NPC, dwID)
+	if not data or next(data) == nil then
+		return
+	end
+	for k, v in pairs(_TALK_FOCUS) do
+		if v.dwTemplateID == data.dwTemplateID then
+			if v .nType == 1 then
+				local _s, _e, name = sfind(szText, v.szText)
+				if _s then
+					FireEvent("LR_TEAM_TALK_FOCUS", true, name)
+					LR.DelayCall(8000, function() FireEvent("LR_TEAM_TALK_FOCUS", false, name) end)
+				end
+			elseif v.nType == 2 then
+				local _s, _e, name = sfind(szText, v.szText)
+				if _s then
+					local npc = GetNpc(dwID)
+					local _type, _dwID = npc.GetTarget()
+					if _type == TARGET.PLAYER then
+						local player = GetPlayer(_dwID)
+						if player then
+							local name = player.szName
+							FireEvent("LR_TEAM_TALK_FOCUS", true, name)
+							LR.DelayCall(8000, function() FireEvent("LR_TEAM_TALK_FOCUS", false, name) end)
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
+function _C.FIRST_LOADING_END()
+	_C.LoadData()
+end
+-------------------------------------------------------------
 function LR_TeamBossMonitor.NPC_ENTER_SCENE()
 	local dwID=arg0
 	local npc=GetNpc(dwID)
@@ -487,7 +462,7 @@ function LR_TeamBossMonitor.NPC_ENTER_SCENE()
 end
 
 function LR_TeamBossMonitor.NPC_LEAVE_SCENE()
-	local dwID=arg0
+	local dwID = arg0
 	if _BossList[dwID] then
 		local v = clone(_BossList[dwID])
 		local handleRole = LR_TeamGrid.GetRoleHandle(v.OldTarget)
@@ -509,5 +484,8 @@ function LR_TeamBossMonitor.NPC_LEAVE_SCENE()
 	end
 end
 
+LR_TeamBossMonitor.PLAYER_SAY = _C.PLAYER_SAY
+
 LR.RegisterEvent("NPC_ENTER_SCENE", function() LR_TeamBossMonitor.NPC_ENTER_SCENE() end)
 LR.RegisterEvent("NPC_LEAVE_SCENE", function() LR_TeamBossMonitor.NPC_LEAVE_SCENE() end)
+LR.RegisterEvent("FIRST_LOADING_END", function() _C.FIRST_LOADING_END() end)

@@ -566,28 +566,44 @@ function _FBList.ShowTip(v)
 	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
 	szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
 	szTipInfo[#szTipInfo+1] = GetFormatText("\n", 41)
-	for dwMapID, v in pairs (FB_Record) do
-		szTipInfo[#szTipInfo+1] = GetFormatText(Table_GetMapName(dwMapID), 224)
-		local str = ""
-		if INDEPENDENT_MAP[dwMapID] then
-			local tBossList = Table_GetCDProcessBoss and Table_GetCDProcessBoss(dwMapID) or {}
-			if false then
-				tBossList = {{dwProgressID = 1}, {dwProgressID = 2}, {dwProgressID = 3}, {dwProgressID = 4}, {dwProgressID = 5}, }
-			end
-			tsort(tBossList, function(a, b) return a.dwProgressID < b.dwProgressID end)
-			local szText = ""
-			for k2, v2 in pairs(tBossList) do
-				if FB_Record[dwMapID][tostring(v2.dwProgressID)] then
-					szText = sformat("%s%s", szText, _L["<SYMBOL_DONE>"])
+
+	local tList = {["25"] = {}, ["10"] = {}, ["5"] = {}}
+	for dwMapID, v2 in pairs(FB_Record) do
+		local data = clone(LR.MapType[tonumber(dwMapID)])
+		tinsert(tList[tostring(data.nMaxPlayerCount)], {dwMapID = dwMapID, nCopyIndex = v2[1]})
+	end
+	local keys = {"25", "10", "5"}
+	for k2, v2 in pairs(keys) do
+		tsort(tList[v2], function(a, b) return a.dwMapID > b.dwMapID end)
+	end
+	for k2, v2 in pairs(keys) do
+		if next(tList[v2]) ~= nil then
+			szTipInfo[#szTipInfo + 1] = GetFormatText(sformat(_L["===%s People Dungeon===\n"], v2), 59)
+			for k3, v3 in pairs(tList[v2]) do
+				local dwMapID = v3.dwMapID
+				szTipInfo[#szTipInfo + 1] = GetFormatText(Table_GetMapName(dwMapID), 224)
+				local str = ""
+				if INDEPENDENT_MAP[dwMapID] then
+					local tBossList = Table_GetCDProcessBoss and Table_GetCDProcessBoss(dwMapID) or {}
+					if false then
+						tBossList = {{dwProgressID = 1}, {dwProgressID = 2}, {dwProgressID = 3}, {dwProgressID = 4}, {dwProgressID = 5}, }
+					end
+					tsort(tBossList, function(a, b) return a.dwProgressID < b.dwProgressID end)
+					local szText = ""
+					for k4, v4 in pairs(tBossList) do
+						if FB_Record[dwMapID][tostring(v4.dwProgressID)] then
+							szText = sformat("%s%s", szText, _L["<SYMBOL_DONE>"])
+						else
+							szText = sformat("%s%s", szText, _L["<SYMBOL_NOT>"])
+						end
+					end
+					str = sformat(_L["\tKill status£º%s \n"], szText)
 				else
-					szText = sformat("%s%s", szText, _L["<SYMBOL_NOT>"])
+					str = sformat(_L["\tID:%6d \n"], v3.nCopyIndex)
 				end
+				szTipInfo[#szTipInfo+1] = GetFormatText(str, 27)
 			end
-			str = sformat(_L["\tKill status£º%s \n"], szText)
-		else
-			str = sformat(_L["\tID:%6d \n"], v[1] or -1)
 		end
-		szTipInfo[#szTipInfo+1] = GetFormatText(str, 27)
 	end
 	--szTipInfo = szTipInfo .. GetFormatText("¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ¡þ\n", 41)
 	szTipInfo[#szTipInfo+1] = GetFormatText("\t \n", 41)

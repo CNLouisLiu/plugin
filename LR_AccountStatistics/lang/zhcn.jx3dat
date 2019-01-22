@@ -779,4 +779,8 @@ data={
 	["Copper"]="铜",
 	["ZHENYINGRICHANG"]="阵营日常",
 
+
+	["===%s People Dungeon===\n"]="=== %s人副本 ===\n",
+	["discard"]="（废弃）",
+
 }

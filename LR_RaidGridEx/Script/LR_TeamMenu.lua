@@ -926,6 +926,16 @@ function LR_TeamMenu.PopOptions()
 		menu = tOptions[#tOptions]
 		menu[#menu+1] = {szOption = _L["Start position confirmation"], bCheck = false, bChecked = false,
 			fnAction = function()
+				local tMsg2 = {
+					szMessage = _L["Reset position confirmation"],
+					szName = "ClearReadyConfirm",
+					{szOption = g_tStrings.STR_HOTKEY_SURE,
+						fnAction = function()
+							LR_TeamGrid.ClearReadyConfirm()
+						end,},
+					{szOption = g_tStrings.STR_HOTKEY_CANCEL, },
+				}
+
 				local tMsg  =
 				{
 					szMessage = g_tStrings.STR_RAID_MSG_START_READY_CONFIRM,
@@ -934,6 +944,7 @@ function LR_TeamMenu.PopOptions()
 						fnAction = function()
 							LR_TeamGrid.StartReadyConfirmCheck()
 							Send_RaidReadyConfirm()
+							LR.DelayCall(5000, function() MessageBox(tMsg2) end)
 						end,},
 					{szOption = g_tStrings.STR_HOTKEY_CANCEL, },
 				}

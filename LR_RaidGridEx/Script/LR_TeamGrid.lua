@@ -215,6 +215,7 @@ local _tPartyMark = {}	--存放标记
 local bDraged = false
 local _JCG = {}	--用于存放切了剑的长歌
 local _tBossFocusList = {}
+local _Name2ID = {}
 --存放npc,player缓存
 LR_TeamGrid.NPC_Cache = {}
 LR_TeamGrid.Player_Cache = {}
@@ -764,6 +765,11 @@ function _RoleGrid:DrawLifeBar()
 	local nLifePercentage = 1.0
 	local r, g, b = unpack(LR_TeamGrid.UsrData.CommonSettings.distanceColor[5])
 	local a = LR_TeamGrid.UsrData.CommonSettings.distanceAlpha[5]
+	local p = GetPlayer(dwID)
+	if p and p.nMaxLife > 1000 then
+		nCurrentLife = p.nCurrentLife
+		nMaxLife = p.nMaxLife
+	end
 	if _JCG[dwID] then
 		local npc = GetNpc(_JCG[dwID])
 		if npc then
@@ -771,8 +777,10 @@ function _RoleGrid:DrawLifeBar()
 			nMaxLife = npc.nMaxLife
 		end
 	end
+
+
 	if nMaxLife > 0 then
-		nLifePercentage = nCurrentLife / nMaxLife
+		nLifePercentage = mmin(1, (nCurrentLife / nMaxLife))
 	end
 
 	local width, height = handle:Lookup("Image_LifeBG"):GetSize()
@@ -1325,7 +1333,7 @@ function _RoleGrid:DrawLifeText()
 	local nCurrentLife = MemberInfo.nCurrentLife
 	local nMaxLife = MemberInfo.nMaxLife
 	local player = GetPlayer(dwID)
-	if player then
+	if player and player.nMaxLife > 1000 then
 		nCurrentLife = player.nCurrentLife
 		nMaxLife = player.nMaxLife
 	end
@@ -1858,7 +1866,7 @@ function LR_TeamGrid.OnFrameCreate()
 	this:RegisterEvent("PARTY_ROLL_QUALITY_CHANGED")		--Roll等级改变
 	this:RegisterEvent("PARTY_SET_MEMBER_ONLINE_FLAG")		--Roll等级改变
 	this:RegisterEvent("PARTY_DISBAND")	--队伍解散
-	--this:RegisterEvent("PARTY_LEVEL_UP_RAID")	--升级为团队模式
+	this:RegisterEvent("PARTY_LEVEL_UP_RAID")	--升级为团队模式
 	this:RegisterEvent("PARTY_SET_MARK")
 	this:RegisterEvent("RIAD_READY_CONFIRM_RECEIVE_ANSWER")	--团队就位确认响应
 	this:RegisterEvent("TEAM_VOTE_REQUEST")	--踢人、是否同意发工资请求
@@ -1886,7 +1894,6 @@ function LR_TeamGrid.OnFrameCreate()
 	this:RegisterEvent("DO_SKILL_CAST")
 
 	this:RegisterEvent("FIGHT_HINT")
-	this:RegisterEvent("MONEY_UPDATE")
 
 	--46140这两个事件用于长歌切剑
 	this:RegisterEvent("NPC_ENTER_SCENE")
@@ -1894,6 +1901,9 @@ function LR_TeamGrid.OnFrameCreate()
 
 	--BOSS点名
 	this:RegisterEvent("ON_BOSS_FOCUS")
+	this:RegisterEvent("LR_TEAM_TALK_FOCUS")
+	this:RegisterEvent("PLAYER_SAY")
+	this:RegisterEvent("LR_TEAMGRID_FLASH_TITLE")
 
 	this:RegisterEvent("LOADING_END")	--载入完成
 	this:RegisterEvent(12787)
@@ -1943,8 +1953,8 @@ function LR_TeamGrid.OnEvent(szEvent)
 		LR_TeamGrid.PARTY_SET_MEMBER_ONLINE_FLAG()
 	elseif szEvent == "PARTY_DISBAND" then
 		LR_TeamGrid.PARTY_DISBAND()
-	--elseif szEvent == "PARTY_LEVEL_UP_RAID" then
-		--LR_TeamGrid.PARTY_LEVEL_UP_RAID()
+	elseif szEvent == "PARTY_LEVEL_UP_RAID" then
+		LR_TeamGrid.PARTY_LEVEL_UP_RAID()
 	elseif szEvent == "PARTY_SET_MARK" then
 		LR_TeamGrid.PARTY_SET_MARK()
 	elseif szEvent == "RIAD_READY_CONFIRM_RECEIVE_ANSWER" then
@@ -1978,8 +1988,6 @@ function LR_TeamGrid.OnEvent(szEvent)
 	elseif szEvent == "FIGHT_HINT" then
 		LR_TeamTools.DistributeAttention.FIGHT_HINT()
 		LR_TeamGrid.FIGHT_HINT()
-	elseif szEvent == "MONEY_UPDATE" then
-		LR_TeamGrid.MONEY_UPDATE()
 	elseif szEvent == "LOADING_END" then
 		LR_TeamGrid.LOADING_END()
 	elseif szEvent == "GVOICE_ON_JOIN_ROOM" then
@@ -1998,6 +2006,12 @@ function LR_TeamGrid.OnEvent(szEvent)
 		LR_TeamGrid.PLAYER_ENTER_SCENE()
 	elseif szEvent == "ON_BOSS_FOCUS" then
 		LR_TeamGrid.ON_BOSS_FOCUS()
+	elseif szEvent == "LR_TEAM_TALK_FOCUS" then
+		LR_TeamGrid.LR_TEAM_TALK_FOCUS()
+	elseif szEvent == "LR_TEAMGRID_FLASH_TITLE" then
+		LR_TeamGrid.LR_TEAMGRID_FLASH_TITLE()
+	elseif szEvent == "PLAYER_SAY" then
+		LR_TeamBossMonitor.PLAYER_SAY()
 	end
 end
 
@@ -2623,6 +2637,7 @@ function LR_TeamGrid.UpdateSingleMemberInfo(dwID)
 	if not team then return end
 	local MemberInfo = team.GetMemberInfo(dwID)
 	_Members[dwID] = clone (MemberInfo)
+	_Name2ID[MemberInfo.szName] = dwID
 end
 
 function LR_TeamGrid.UpdateTeamMember()
@@ -2643,6 +2658,7 @@ function LR_TeamGrid.UpdateTeamMember()
 		end
 	end
 	LR_TeamGrid.tGroupMembers = clone(tGroupMembers)
+	_Name2ID = {}
 	for nCol , v in pairs(tGroupMembers) do
 		local MemberList = v.MemberList
 		if next(MemberList) ~= nil then
@@ -3078,6 +3094,7 @@ function LR_TeamGrid.ResizeTitle()
 	Handle_Title = Wnd_Title:Lookup("","")
 	Handle_Title:Lookup("Image_TitleBg"):SetSize(w, 30)
 	Handle_Title:Lookup("Image_Title"):SetSize(w, 30)
+	Handle_Title:Lookup("Animate_Title"):SetSize(w, 30)
 	hFrame:SetDragArea(0, 0, w, 30)
 
 	if LR_TeamGrid.bMiniPanel then
@@ -3786,18 +3803,22 @@ function LR_TeamGrid.PARTY_SET_MARK()
 	end
 end
 
-function LR_TeamGrid.MONEY_UPDATE()
-	LR.DelayCall(100, function()
-		local handle = Station.Lookup("Topmost2/Announce", "")
-		if  handle then
-			local text = handle:Lookup(4)
-			local t = LR.Trim(text:GetText())
-			if t==_L["End GoldTeam"] then
-				LR_TeamGrid.ClearVoteImage()
-			end
+--拍团分配先发钱，再发公告
+function LR_TeamGrid.MsgMonitor(szMsg, nFont, bRich, r, g, b, szType)
+	if bRich then
+		szMsg = GetPureText(szMsg)
+	end
+	if not szMsg or szMsg == "" then
+		return
+	end
+	if szType == "MSG_ANNOUNCE_YELLOW" then
+		if szMsg == _L["End GoldTeam"] then
+			LR_TeamGrid.ClearVoteImage()
 		end
-	end)
+	end
 end
+
+RegisterMsgMonitor(LR_TeamGrid.MsgMonitor, {"MSG_ANNOUNCE_YELLOW"})
 
 function LR_TeamGrid.SYS_MSG()
 	if arg0 == "UI_OME_BUFF_LOG" then
@@ -3927,8 +3948,37 @@ function LR_TeamGrid.ON_BOSS_FOCUS()
 	local dwPlayerID = arg0
 	local bFlash = arg1
 	_tBossFocusList[dwPlayerID] = bFlash
+	if dwPlayerID == GetClientPlayer().dwID then
+		FireEvent("LR_TEAMGRID_FLASH_TITLE", bFlash)
+		LR.DelayCall(15000, function() FireEvent("LR_TEAMGRID_FLASH_TITLE", false) end)
+	end
 end
 
+function LR_TeamGrid.LR_TEAM_TALK_FOCUS()
+	local bFlash = arg0
+	local szName = arg1
+	if _Name2ID[szName] then
+		FireEvent("ON_BOSS_FOCUS", _Name2ID[szName], bFlash)
+		if szName == GetClientPlayer().szName then
+			FireEvent("LR_TEAMGRID_FLASH_TITLE", bFlash)
+		end
+	end
+end
+
+function LR_TeamGrid.LR_TEAMGRID_FLASH_TITLE()
+	local bFlash = arg0
+	local frame = Station.Lookup("Normal/LR_TeamGrid")
+	if not frame then
+		return
+	end
+	local Handle_Title = frame:Lookup("Wnd_Title"):Lookup("","")
+	local Animate_Title = Handle_Title:Lookup("Animate_Title")
+	if bFlash then
+		Animate_Title:Show()
+	else
+		Animate_Title:Hide()
+	end
+end
 
 function LR_TeamGrid.FIGHT_HINT()
 	local bFight = arg0
@@ -3984,12 +4034,16 @@ end
 --    利用外面的注册的[LOADING_END]来打开
 --    利用UI注册的[LOADING_END]来刷新
 --    避免多次重复刷新面板浪费开销
-
-function LR_TeamGrid.PARTY_UPDATE_BASE_INFO()
-	LR_TeamBuffMonitor.ClearAllCache()
+function LR_TeamGrid.Check()
 	if LR_TeamGrid.CheckIsbOpenPanel() then
 		LR_TeamGrid.SwitchPanel()
 	end
+end
+
+function LR_TeamGrid.PARTY_UPDATE_BASE_INFO()
+	LR_TeamBuffMonitor.ClearAllCache()
+	LR_TeamGrid.Check()
+	LR.DelayCall(250,function() LR_TeamGrid.Check() end)
 end
 
 function LR_TeamGrid.LOADING_END()

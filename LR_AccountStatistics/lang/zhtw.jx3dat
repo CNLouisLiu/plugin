@@ -749,4 +749,38 @@ data={
 	--20190101add--
 	["WLTJ"]="武林通鑒",
 
+	["PlayerInfo"]="角色",
+	["FBList"]="副本",
+	["RC"]="日常",
+	["QY"]="奇遇",
+
+	["TAI_XING_DAO"]="太行道",
+	["DIALOG_TAI_XING_DAO_01"]="今天我收到的寒泉岩已經足夠了",
+	["MI_BAO_TU"]="秘寶圖",
+	["DIALOG_MI_BAO_TU_01"]="今天我收到的魚餌已經足夠了",
+	["KE_JIANG_GAN"]="客江乾",
+	["DIALOG_KE_JIANG_GAN_01"]="貧僧今日已有足夠的野菜了",
+
+	["Money:"]="金錢：",
+	["BangGong:"]="江湖貢獻值：",
+	["XiaYi:"]="俠義值：",
+	["WeiWang:"]="威望值：",
+	["ZhanJieJiFen:"]="戰階積分：",
+	["ZhanJieDengJi:"]="戰階等級：",
+	["MingJianBi:"]="名劍幣：",
+	["JianBen:"]="監本：",
+	["Finished HuiShi exam(6-7)\n"]="完成了會試(周六至周日)\n",
+	["Finished ShengShi exam(1-7)\n"]="完成了省試(周一至周日)\n",
+	["Haven't had any exam yet\n"]="還沒有考試\n",
+	["JingLi:"]="精力：",
+	["JingLi remain:"]="還可獲得精力：",
+	["Gold"]="金",
+	["Silver"]="銀",
+	["Copper"]="銅",
+	["ZHENYINGRICHANG"]="陣營日常",
+
+
+	["===%s People Dungeon===\n"]="=== %s人副本 ===\n",
+	["discard"]="（廢棄）",
+
 }

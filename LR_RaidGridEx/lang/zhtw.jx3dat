@@ -580,4 +580,52 @@ data={
 	["Auto change color in common quest"]="世界公共任務自動切換顏色",
 	["Name text tip01"]="1、需要開啟系統的任務追蹤面板\n2、當系統的任務追蹤面板切換到世界任務頁時，會自動切換成按陣營著色\n3、在野外地圖時，請調整相同陣營的人員到相同小隊，以便激活陣眼以及奶媽操作",
 	["Clear history"]="清除歷史記錄",
+
+	--20190103add--
+	["Dungeon data"]="副本數據",
+	["Custom data"]="自定義數據",
+	["Sure to delete group: %s ?"]="確定要刪除分組：%s？",
+	["Sure delete buff: %s"]="確定要刪除BUFF：%s？",
+
+	["Show map buff cache"]="顯示當前地圖NPC的BUFF數據",
+	["Show select group npc buff"]="地圖數據",
+	["Clear choose"]="清除選擇",
+
+	--20190105add--
+	["IconID: %d\n"]="圖標ID：%d\n",
+	["Total time:%fs\n"]="持續時間：%fs\n",
+	["NPC self buff\n"]="  NPC自身的BUFF\n",
+	["From npc:\n"]="來自NPC：\n",
+	["From :\n"]="來自：\n",
+	["%s (Player) %s\n"]="%s (玩家) %s\n",
+	
+	["%s cast skill %s"]="%s 釋放了技能 %s",
+	["dwTemplateID:%d\n"]="模版ID：%d\n",
+	[" cast skill: "]=" 釋放了技能：",
+	[" cast ot skill: "]=" 開始技能讀條：",
+	[" ends ot skill."]=" 結束了技能讀條。",
+	[" say: "]=" 說：",
+	[" enter the scene."]="出現在了場景里",
+	["Blood :%d%%\n"]="血量：%d%%",
+	["[MAP] "]="[地圖] ",
+
+	["LR_FIGHT_LOG"]="懶人戰鬥記錄",
+	["Option"]="選項",
+	["Begin log"]="開始記錄",
+	["Load current data"]="顯示當前記錄",
+	["Load history"]="載入歷史記錄",
+	["time"]="時間",
+
+	["ShowBuffOnNPC"]="顯示NPC身上的BUFF",
+	["ShowBuffOnPlayer"]="顯示玩家身上的BUFF",
+	["bShowRefreshBuff"]="顯示刷新的BUFF",
+	["bShowBuffOnlyFromNPC"]="只顯示來自NPC的BUFF",
+	["bShowNormalBuff"]="顯示一般BUFF",
+	["bShowHideBuff"]="顯示隱藏BUFF",
+	["bShowBUFFGood"]="顯示增益BUFF",
+	["bShowBUFFBad"]="顯示減益BUFF",
+
+	["GOLD_TEXT"]="收入已發放，請查看！",
+	["Log by fight"]="每場戰鬥分開記錄",
+
 }

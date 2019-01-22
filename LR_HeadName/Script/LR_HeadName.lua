@@ -1584,7 +1584,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 					szTongName =  LR_HeadName.GetTongName(obj)
 					bFresh = true
 				elseif (obj.bFightState and nShip ==  "Enemy" )
-				or (nShip ==  "Ally" and obj.nCurrentLife<obj.nMaxLife and nType ==  TARGET.NPC)
+				or (nShip ==  "Ally" and obj.nCurrentLife < obj.nMaxLife and nType ==  TARGET.NPC)
 				then
 					bFresh = true
 				elseif _tarid == obj.dwID and LR_HeadName.UsrData.bShowTargetFace then
@@ -1711,10 +1711,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 						if (obj.bFightState and nShip == "Enemy" and LR_HeadName.GetbShow(obj, nType, "bShowLifePer", nShip)) or
 							(nShip ==  "Ally" and obj.nCurrentLife < obj.nMaxLife and nType ==  TARGET.NPC)
 						then
-							local LifePer = obj.nCurrentLife/obj.nMaxLife
-							if not LifePer or  LifePer>1 then
-								LifePer = 1
-							end
+							local LifePer = mmin(1, obj.nCurrentLife / GetTargetMaxLife(TARGET.NPC, obj.dwID))
 							temp = sformat("%s (%0.1f%%)", temp, LifePer * 100)
 						end
 						local _, _dwID = me.GetTarget()
@@ -1830,11 +1827,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 						rgb = LR_HeadName.FixColor(obj, rgb, nShip)
 					end
 
-					local LifePer = obj.nCurrentLife/obj.nMaxLife
-					if not LifePer or LifePer>1 then
-						LifePer = 1
-					end
-
+					local LifePer = mmin(1, obj.nCurrentLife / GetTargetMaxLife(nType, obj.dwID))
 					handle:DrawLife({dwID = dwID, rgb = rgb, LifePer = LifePer, })
 					handle:ShowLifeBar()
 				else

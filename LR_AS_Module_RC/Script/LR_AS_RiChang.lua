@@ -1848,6 +1848,8 @@ function LR_QuestTools:LoadItemBox()
 				elseif questInfo.dwStartNpcTemplateID ~= 0 then
 
 				end
+				local Hortation = questInfo.GetHortation()
+				Output("Hortation", Hortation)
 			end
 			local tQuest = g_tTable.Quest:Search(dwQuestID)
 			if tQuest then

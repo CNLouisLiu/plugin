@@ -186,6 +186,31 @@ function LR_TeamTools.DeathRecord.PLAYER_LEAVE_SCENE()
 	end
 end
 
+function LR_TeamTools.DeathRecord.GetNearestNPC()
+	local npcs = {}
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	for k, v in pairs(NPC_Cache) do
+		if v.obj and not v.bPet and IsEnemy(k, me.dwID) then
+			tinsert(npcs, {szName = v.szName, nIntensity = v.nIntensity, dwTemplateID = v.dwTemplateID, distance = LR.GetDistance(v.obj)})
+		end
+	end
+	if next(npcs) == nil then
+		return {szName = "#NoNPC", nIntensity = 0, dwTemplateID = 0, distance = 0}
+	else
+		tsort(npcs, function(a, b)
+			if a.nIntensity == b.nIntensity then
+				return a.distance < b.distance
+			else
+				return a.nIntensity > b.nIntensity
+			end
+		end)
+		return npcs[1]
+	end
+end
+
 function LR_TeamTools.DeathRecord.GetName(nType, dwID)
 	local szKillerName = ""
 	if nType ==  TARGET.NPC then
@@ -455,14 +480,16 @@ function LR_TeamTools.DistributeAttention.FIGHT_HINT()
 			if me.IsInRaid() then
 				if team.nLootMode ~=  2 then
 					LR_TeamGrid.SetTitleText(sformat(_L["Warning: You are in [%s] loot mode"], szLootMode[team.nLootMode]))
+					FireEvent("LR_TEAMGRID_FLASH_TITLE", true)
 					--LR.SysMsg(sformat(_L["Warning: You are in [%s] loot mode"] .. "\n", szLootMode[team.nLootMode]))
-					LR.DelayCall(12000, function() LR_TeamGrid.SetTitleText("") end)
+					LR.DelayCall(12000, function() LR_TeamGrid.SetTitleText(""); FireEvent("LR_TEAMGRID_FLASH_TITLE", false) end)
 				end
 			else
 				if team.nLootMode ~=  3 then
 					LR_TeamGrid.SetTitleText(sformat(_L["Warning: You are in [%s] loot mode"], szLootMode[team.nLootMode]))
+					FireEvent("LR_TEAMGRID_FLASH_TITLE", true)
 					--LR.SysMsg(sformat(_L["Warning: You are in [%s] loot mode"] .. "\n", szLootMode[team.nLootMode]))
-					LR.DelayCall(12000,function() LR_TeamGrid.SetTitleText("") end)
+					LR.DelayCall(12000,function() LR_TeamGrid.SetTitleText(""); FireEvent("LR_TEAMGRID_FLASH_TITLE", false) end)
 				end
 			end
 		end
@@ -732,8 +759,4 @@ function LR_EdgeIndicator_Panel.OpenFrame()
 		Wnd.CloseWindow("LR_EdgeIndicator_Panel")
 	end
 end
-
-
-
-
 

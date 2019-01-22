@@ -387,7 +387,7 @@ BossFocusBuff =
 		}
 	}
 
-local x3=KG_Table.Load(BossFocusBuff.Path, BossFocusBuff.Title)
+local x3 = KG_Table.Load(BossFocusBuff.Path, BossFocusBuff.Title)
 local RowCount = x3:GetRowCount()
 for i = 1, RowCount, 1 do
 	local x = x3:GetRow(i)
@@ -396,7 +396,6 @@ end
 --_BossFocus[208] = {dwID = 208, nLevel = 11, nStackNum = 1}	--·öÒ¡
 --_BossFocus[680] = {dwID = 680, nLevel = 29, nStackNum = 1}	--ÏèÎè
 --_BossFocus[103] = {dwID = 103, nLevel = 1, nStackNum = 1}	--´ò×ø
-
 
 ----------------------------------------------------------------
 ----±ß½ÇÖ¸Ê¾Æ÷buff
@@ -1000,11 +999,12 @@ function LR_TeamBuffMonitor.BUFF_UPDATE2()
 		if _BossFocus[dwID].nLevel == nLevel then
 			if bDelete then
 				FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
-			end
-			if  nStackNum >= _BossFocus[dwID].nStackNum then
-				FireEvent("ON_BOSS_FOCUS", dwPlayerID, true)
 			else
-				FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
+				if nStackNum >= _BossFocus[dwID].nStackNum then
+					FireEvent("ON_BOSS_FOCUS", dwPlayerID, true)
+				else
+					FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
+				end
 			end
 		else
 			FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
@@ -1746,5 +1746,9 @@ function LR_TeamBuffMonitor.SortBuff(dwPlayerID)
 		end
 		BuffHandle:FormatAllItemPos()
 	end
+end
+
+function LR_TeamBuffMonitor.OutputBossFocusBuff()
+	Output(_BossFocus)
 end
 
