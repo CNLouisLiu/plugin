@@ -1201,6 +1201,26 @@ end })
 
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() infopanel.ON_BG_CHANNEL_MSG() end)
 
+local _C3 = {}
+function _C3.ON_FRAME_CREATE()
+	local frame = arg0
+	local szName = frame:GetName()
+	if szName == "GuildListPanel" then
+		local edit = frame:Lookup("Edit_JoinGuild")
+		local OnSetFocus = function()
+			local edit = frame:Lookup("Edit_JoinGuild")
+			local w, h = edit:GetSize()
+			local x, y = edit:GetAbsPos()
+			local m = {nMiniWidth = w, x = x, y = y + h, bDisableSound = true, bShowKillFocus = true}
+			m[#m + 1] = {	szOption = _L["Tips4"], fnAction = function() edit:SetText(_L["m"]) end,}
+			PopupMenu(m)
+		end
+		if LR_TOOLS.CheckS() then
+			HookTableFunc(edit, "OnSetFocus", function() OnSetFocus() end)
+		end
+	end
+end
+LR.RegisterEvent("ON_FRAME_CREATE", function() _C3.ON_FRAME_CREATE() end)
 ----------------------------------------------------------
 ----团队告示
 ----------------------------------------------------------

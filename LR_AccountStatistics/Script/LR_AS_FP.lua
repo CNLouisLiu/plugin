@@ -67,9 +67,9 @@ function LR_AS_FP.OnFrameCreate()
 end
 
 function LR_AS_FP.AppendBlock()
-	local WndWindow = LR.AppendUI("Window", this, "WNd_D", {x = 0, y = 30, w = 300, h = 30})
+	local WndWindow = LR.AppendUI("Window", this, "WNd_D", {x = 0, y = 30, w = 360, h = 30})
 	local keys = {"PlayerInfo", "FBList", "RC", "QY", "WLTJ"}
-	local hBar = LR.AppendUI("Handle", WndWindow, "WNd_D", {x = 0, y = 0, w = 300, h = 30})
+	local hBar = LR.AppendUI("Handle", WndWindow, "WNd_D", {x = 0, y = 0, w = 360, h = 30})
 	hBar:SetHandleStyle(3)
 	for k, v in pairs(keys) do
 		if LR_AS_Module[v] and LR_AS_Module[v].ShowTip then
@@ -77,7 +77,8 @@ function LR_AS_FP.AppendBlock()
 			hText:RegisterEvent(304)
 			hText:SetFontScheme(2)
 			hText.OnEnter = function()
-				hText:SetFontScheme(16)
+				hText:SetFontScheme(2)
+				hText:SetFontColor(255, 201, 14)
 				local ServerInfo = {GetUserServer()}
 				local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 				local me = GetClientPlayer()

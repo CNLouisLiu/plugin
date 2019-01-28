@@ -628,4 +628,7 @@ data={
 	["GOLD_TEXT"]="收入已发放，请查看！",
 	["Log by fight"]="每场战斗分开记录",
 
+	--20190128add--
+	["Disable dungeon data"]="禁用副本数据",
+
 }

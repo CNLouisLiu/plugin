@@ -564,15 +564,19 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 	local me = GetClientPlayer()
 	local scene = me.GetScene()
 	local dwMapID = scene.dwMapID
-	if scene.nType ==  MAP_TYPE.DUNGEON then
+	if scene.nType ==  MAP_TYPE.DUNGEON and not LR_TeamBuffTool_Panel.DisableDungeonData then
 		local data = LR_Team_Map[LR.MapType[dwMapID].szOtherName] or {enable = true, dwMapID = {}, data = {}, level = 1}
-		for k, buff in pairs(data.data) do
-			if buff.nMonitorLevel > 0 then
-				local szKey = sformat("%d_L%d", buff.dwID, buff.nMonitorLevel)
-				tBuff[szKey] = LR_TeamBuffSettingPanel.FormatMonitorBuff(buff)
-			else
-				local szKey = sformat("%d", buff.dwID)
-				tBuff[szKey] = LR_TeamBuffSettingPanel.FormatMonitorBuff(buff)
+		if data.enable then
+			for k, buff in pairs(data.data) do
+				if buff.enable then
+					if buff.nMonitorLevel > 0 then
+						local szKey = sformat("%d_L%d", buff.dwID, buff.nMonitorLevel)
+						tBuff[szKey] = LR_TeamBuffSettingPanel.FormatMonitorBuff(buff)
+					else
+						local szKey = sformat("%d", buff.dwID)
+						tBuff[szKey] = LR_TeamBuffSettingPanel.FormatMonitorBuff(buff)
+					end
+				end
 			end
 		end
 	end

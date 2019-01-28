@@ -3,7 +3,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 ---------------------------------------------------------------
-local VERSION = "20180815"		--修改此项可重置为默认数据
+local VERSION = "20190128"		--修改此项可重置为默认数据
 ---------------------------------------------------------------
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
@@ -232,7 +232,7 @@ function LR_TeamBuffTool.SaveData()
 	local data = {dungeon_data = {}, custom_data = {}, VERSION = VERSION}
 	for k, v in pairs(LR_Team_Map) do
 		if next(v.data) ~= nil then
-			tinsert(data.dungeon_data, {dwMapID = clone(v.dwMapID), data = clone(v.data)})
+			tinsert(data.dungeon_data, {dwMapID = clone(v.dwMapID), data = clone(v.data), enable = v.enable})
 		end
 	end
 	data.custom_data = LR_TeamBuffTool.FormatData(LR_TeamBuffTool.tBuffList)
@@ -422,6 +422,9 @@ LR_TeamBuffTool_Panel.bShowBUFFBad = true
 LR_TeamBuffTool_Panel.bLogByFight = false
 LR_TeamBuffTool_Panel.bShowLogByFight = false
 
+LR_TeamBuffTool_Panel.DisableDungeonData = false
+RegisterCustomData("LR_TeamBuffTool_Panel.DisableDungeonData", VERSION)
+
 
 local BuffListBoxUI = {}
 local ResultBoxHover_Cache = {}
@@ -610,6 +613,13 @@ function LR_TeamBuffTool_Panel:Init()
 	end
 	Btn_FAQ2.OnLeave = function()
 		HideTip()
+	end
+
+	local ComboBox_DisableDungeonData = LR.AppendUI("CheckBox", frame, "ComboBox_DisableDungeonData", {w = 150, h = 30, x = 20, y = 20, text = _L["Disable dungeon data"]})
+	ComboBox_DisableDungeonData:Check(LR_TeamBuffTool_Panel.DisableDungeonData)
+	ComboBox_DisableDungeonData.OnCheck = function(arg0)
+		LR_TeamBuffTool_Panel.DisableDungeonData = arg0
+		LR_TeamBuffSettingPanel.FormatDebuffNameList()
 	end
 
 	local CheckBox_EnableCollect = LR.AppendUI("CheckBox", frame, "ComboBox_Import", {w = 150, h = 30, x = 740, y = 51, text = _L["Begin buff collect"]})
