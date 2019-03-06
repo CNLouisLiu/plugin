@@ -381,7 +381,7 @@ end
 ----------------------------------------------------------------------------------------------
 ---------buff设置面板
 ----------------------------------------------------------------------------------------------
-LR_TeamBuffTool_Panel = CreateAddon("LR_TeamBuffTool_Panel")
+LR_TeamBuffTool_Panel = _G2.CreateAddon("LR_TeamBuffTool_Panel")
 LR_TeamBuffTool_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_TeamBuffTool_Panel.UsrData = {
@@ -2273,7 +2273,7 @@ end
 ---------------------------------------------------------------
 ---BUFF设置面板
 ---------------------------------------------------------------
-LR_Team_Buff_Setting_Panel = CreateAddon("LR_Team_Buff_Setting_Panel")
+LR_Team_Buff_Setting_Panel = _G2.CreateAddon("LR_Team_Buff_Setting_Panel")
 LR_Team_Buff_Setting_Panel.UsrData = {
 	Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0},
 }

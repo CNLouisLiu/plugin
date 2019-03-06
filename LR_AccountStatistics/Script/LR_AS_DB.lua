@@ -9,7 +9,7 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20190113"
+local VERSION = "20190203"
 -------------------------------------------------------------
 LR_AS_DB = LR_AS_DB or {}
 LR_AS_DEBUG = false
@@ -63,21 +63,26 @@ local schema_player_info = {
 		{name = "nGold", 	sql = "nGold INTEGER DEFAULT(0)"},
 		{name = "nSilver", 	sql = "nSilver INTEGER DEFAULT(0)"},
 		{name = "nCopper", 	sql = "nCopper INTEGER DEFAULT(0)"},
-		{name = "JianBen", 	sql = "JianBen INTEGER DEFAULT(0)"},
-		{name = "BangGong", 	sql = "BangGong INTEGER DEFAULT(0)"},
-		{name = "XiaYi", 	sql = "XiaYi INTEGER DEFAULT(0)"},
-		{name = "WeiWang", 	sql = "WeiWang INTEGER DEFAULT(0)"},
-		{name = "ZhanJieJiFen", 	sql = "ZhanJieJiFen INTEGER DEFAULT(0)"},
+		{name = "JianBen", 	sql = "JianBen INTEGER DEFAULT(0)"},		--监本
+		{name = "remainJianBen", 	sql = "remainJianBen INTEGER DEFAULT(1500)"},		--可获取监本
+		{name = "BangGong", 	sql = "BangGong INTEGER DEFAULT(0)"},	--帮贡
+		{name = "remainBangGong", 	sql = "remainBangGong INTEGER DEFAULT(200000)"},	--可获帮贡
+		{name = "XiaYi", 	sql = "XiaYi INTEGER DEFAULT(0)"},		--狭义
+		{name = "remainXiaYi", 	sql = "remainXiaYi INTEGER DEFAULT(9000)"},		--可获狭义
+		{name = "WeiWang", 	sql = "WeiWang INTEGER DEFAULT(0)"},	--威望
+		{name = "remainWeiWang", 	sql = "remainWeiWang INTEGER DEFAULT(200000)"},	--可获威望
+		{name = "ZhanJieJiFen", 	sql = "ZhanJieJiFen INTEGER DEFAULT(0)"},	--战阶积分
+		{name = "remainZhanJieJiFen", 	sql = "remainZhanJieJiFen INTEGER DEFAULT(0)"},	--战阶升级百分比
 		{name = "ZhanJieDengJi", 	sql = "ZhanJieDengJi INTEGER DEFAULT(0)"},
-		{name = "MingJianBi", 	sql = "MingJianBi INTEGER DEFAULT(0)"},
+		{name = "MingJianBi", 	sql = "MingJianBi INTEGER DEFAULT(0)"},		--名剑币
+		{name = "remainMingJianBi", 	sql = "remainMingJianBi INTEGER DEFAULT(2400)"},		--可获名剑币
 		{name = "szTitle", sql = "szTitle VARCHAR(20) DEFAULT('')"},
 		{name = "nCurrentTrainValue", 	sql = "nCurrentTrainValue INTEGER DEFAULT(0)"},
 		{name = "nCamp", 	sql = "nCamp INTEGER DEFAULT(0)"},
 		{name = "szTongName", sql = "szTongName VARCHAR(20) DEFAULT('')"},
-		{name = "remainJianBen", 	sql = "remainJianBen INTEGER DEFAULT(0)"},
 		{name = "nVigor", 	sql = "nVigor INTEGER DEFAULT(0)"},			--100级新版精力
-		{name = "nMaxVigor", 	sql = "nMaxVigor INTEGER DEFAULT(10000)"},			--100级新版精力
-		{name = "nVigorRemainSpace", 	sql = "nVigorRemainSpace INTEGER DEFAULT(3000)"},			--100级新版精力
+		{name = "nMaxVigor", 	sql = "nMaxVigor INTEGER DEFAULT(10000)"},			--100级新版最大精力
+		{name = "nVigorRemainSpace", 	sql = "nVigorRemainSpace INTEGER DEFAULT(3000)"},			--100级新版精力，可获
 		{name = "SaveTime", sql = "SaveTime INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},

@@ -2522,7 +2522,7 @@ LR.RegisterEvent("QUEST_FINISHED", function() LR_AS_Trade.QUEST_FINISHED() end)
 ----------------------------------------------------------------
 ------界面
 ----------------------------------------------------------------
-LR_Acc_Trade_Panel = CreateAddon("LR_Acc_Trade_Panel")
+LR_Acc_Trade_Panel = _G2.CreateAddon("LR_Acc_Trade_Panel")
 LR_Acc_Trade_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_Acc_Trade_Panel.UsrData = {
@@ -3530,7 +3530,7 @@ function LR_Acc_Trade_Panel:RefreshBTN_PAGE()
 end
 -------------------------------------------------------------
 -- 创建插件
-LR_Acc_Trade_ChooseDate_Panel = CreateAddon("LR_Acc_Trade_ChooseDate_Panel")
+LR_Acc_Trade_ChooseDate_Panel = _G2.CreateAddon("LR_Acc_Trade_ChooseDate_Panel")
 LR_Acc_Trade_ChooseDate_Panel.UserData = {
 	Anchor = {s = "CENTER", r = "CENTER", x = 0, y = 0},
 }

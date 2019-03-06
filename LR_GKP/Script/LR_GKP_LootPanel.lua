@@ -92,7 +92,7 @@ end
 ---------------------------------------------------------------
 local ONE_KEY_CACHE = {}
 
-LR_GKP_Loot = CreateAddon("LR_GKP_Loot")
+LR_GKP_Loot = _G2.CreateAddon("LR_GKP_Loot")
 LR_GKP_Loot.UsrData = {
 	Anchor = {s = "CENTER", r = "CENTER",  x = 500, y = 500},
 }
@@ -445,7 +445,9 @@ function LR_GKP_Loot:LoadGroupWindow(parent, items, dwDoodadID, key)
 	local TextTitle = LR.AppendUI("Text", Handle_Group, "TextTitle", {w = 180, h = 26, x = 25, y = 2})
 	TextTitle:SetText(_L[key]):SetHAlign(1):SetVAlign(1):SetFontScheme(2)
 
+	Output("dd")
 	for k, item in pairs(items) do
+		Output(item)
 		LR_GKP_Loot:LoadOneItem(WndContainer_Group, item, dwDoodadID)
 	end
 
@@ -899,7 +901,7 @@ end
 ----------------------------------------------------------------
 ------∑÷≈‰ΩÁ√Ê
 ----------------------------------------------------------------
-LR_GKP_Distribute_Panel = CreateAddon("LR_GKP_Distribute_Panel")
+LR_GKP_Distribute_Panel = _G2.CreateAddon("LR_GKP_Distribute_Panel")
 LR_GKP_Distribute_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_GKP_Distribute_Panel.UsrData = {

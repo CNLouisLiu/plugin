@@ -32,7 +32,7 @@ LR_TLHelper={
 	GuiFuEndFrame=0,
 }
 
-LR_TLHelper.UsrData={
+LR_TLHelper.UsrData = {
 	on=false,
 	Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0,},
 	Alpha= 80,
@@ -41,14 +41,30 @@ LR_TLHelper.UsrData={
 	showTargetLine=false,
 	showMeLine=false,
 	showSelf=false,
+	HideS = false,
 }
 
 LR_TLHelper.Bombs={}
 LR_TLHelper.SelectSelf=true
 
-local CustomVersion = "20170111"
+local CustomVersion = "20190306"
 RegisterCustomData("LR_TLHelper.UsrData", CustomVersion)
 
+function LR_TLHelper.HideSwitch()
+	local frame = Station.Lookup("Normal/LR_TLHelper")
+	if not frame then
+		return
+	end
+	local Handle_Energy = frame:Lookup("",""):Lookup("Handle_TM")
+	local Handle_Skill = frame:Lookup("",""):Lookup("Handle_Skill")
+	if LR_TLHelper.UsrData.HideS then
+		Handle_Energy:Hide()
+		Handle_Skill:Hide()
+	else
+		Handle_Energy:Show()
+		Handle_Skill:Show()
+	end
+end
 
 function LR_TLHelper.OnFrameCreate()
 	this:RegisterEvent("UI_SCALED")
@@ -140,6 +156,8 @@ function LR_TLHelper.OnFrameCreate()
 
 	LR_TLHelper.UpdateAnchor(this)
 	LR_TLHelper.ScaleFont()
+
+	LR_TLHelper.HideSwitch()
 end
 
 function LR_TLHelper.ScaleFont ()

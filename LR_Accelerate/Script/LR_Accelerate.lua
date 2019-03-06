@@ -194,7 +194,7 @@ LR_Accelerate.YuShe = {
 ------------------------------------------
 --ΩÁ√Ê
 ------------------------------------------
-LR_Accelerate_Panel = CreateAddon("LR_Accelerate_Panel")
+LR_Accelerate_Panel = _G2.CreateAddon("LR_Accelerate_Panel")
 LR_Accelerate_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_Accelerate_Panel.UsrData = {

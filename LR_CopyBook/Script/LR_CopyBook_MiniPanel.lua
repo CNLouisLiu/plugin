@@ -11,7 +11,7 @@ local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remov
 
 -------------------------------------------------------------
 -- ´´½¨²å¼þ
-LR_CopyBook_MiniPanel = CreateAddon("LR_CopyBook_MiniPanel")
+LR_CopyBook_MiniPanel = _G2.CreateAddon("LR_CopyBook_MiniPanel")
 LR_CopyBook_MiniPanel.UserData = {
 	Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0},
 }

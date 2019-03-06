@@ -201,7 +201,7 @@ LR.RegisterEvent("LOGIN_GAME", function() _BookRd.LOGIN_GAME() end)
 ------------------------------------------------------------------------------------
 -----ÔÄ¶ÁÐ¡´°¿Ú
 ------------------------------------------------------------------------------------
-LR_BookRd_Panel = CreateAddon("LR_BookRd_Panel")
+LR_BookRd_Panel = _G2.CreateAddon("LR_BookRd_Panel")
 LR_BookRd_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_BookRd_Panel.UserData = {

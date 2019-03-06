@@ -1180,6 +1180,7 @@ function _Exam.CheckExam()
 	end
 
 	_Exam.AllUsrData[szKey] = clone(_Exam.SelfData)
+	LR_AS_Data.ExamData[szKey] = clone(_Exam.SelfData)
 end
 
 -----------------------------------
@@ -1547,6 +1548,7 @@ function _RC.ShowTip(v)
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	if v.dwID == me.dwID and v.realArea == realArea and v.realServer == realServer then
 		_RC.CheckAll()
+		_Exam.CheckExam()
 		RC_Record = clone(_RC.SelfData)
 	end
 
@@ -1632,7 +1634,7 @@ end
 
 
 -----------------------------------------------------------------
-LR_QuestTools = CreateAddon("LR_QuestTools")
+LR_QuestTools = _G2.CreateAddon("LR_QuestTools")
 LR_QuestTools:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_QuestTools.UsrData = {
@@ -2027,4 +2029,5 @@ LR_AS_Module.RC.AddPage = _RC.AddPage
 LR_AS_Module.RC.RefreshPage = _RC.RefreshPage
 LR_AS_Module.RC.ShowTip = _RC.ShowTip
 LR_AS_Module.RC.FIRST_LOADING_END = _RC.LoadData2
+LR_AS_Module.RC.CheckExam = _Exam.CheckExam
 

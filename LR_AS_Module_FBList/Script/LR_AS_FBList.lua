@@ -614,7 +614,7 @@ end
 ------------------------------------------------------------------------------------
 -----Ã÷Ï¸Ð¡´°¿Ú
 ------------------------------------------------------------------------------------
-LR_AS_FB_Detail_Panel = CreateAddon("LR_AS_FB_Detail_Panel")
+LR_AS_FB_Detail_Panel = _G2.CreateAddon("LR_AS_FB_Detail_Panel")
 LR_AS_FB_Detail_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_AS_FB_Detail_Panel.UsrData = {

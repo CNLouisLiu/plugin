@@ -4,5 +4,6 @@ data = {
 	{dwTemplateID = 8120, szText = "$name!莫要阻拦我与爱妻的重逢！", nType = 1, t = 8},
 	{dwTemplateID = 8124, szText = "吾之身躯让尔等如此胆怯？", nType = 2, t = 8},
 	{dwTemplateID = 63188, szText = "谁敢与我一战！$name，是你吗？", nType = 1, t = 8},
+	{dwTemplateID = 51385, szText = "$name,让你见识一下我这蔷薇剑的威力！", nType = 1, t = 8},
 
 }

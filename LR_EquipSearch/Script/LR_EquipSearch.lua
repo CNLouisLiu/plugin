@@ -395,7 +395,7 @@ end
 ----------------------------------------------------------------
 ------ΩÁ√Ê
 ----------------------------------------------------------------
-LR_EquipSearch_Panel = CreateAddon("LR_EquipSearch_Panel")
+LR_EquipSearch_Panel = _G2.CreateAddon("LR_EquipSearch_Panel")
 LR_EquipSearch_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_EquipSearch_Panel.UsrData = {

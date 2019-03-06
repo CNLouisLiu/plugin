@@ -762,9 +762,9 @@ data={
 	["DIALOG_KE_JIANG_GAN_01"]="贫僧今日已有足够的野菜了",
 
 	["Money:"]="金钱：",
-	["BangGong:"]="江湖贡献值：",
-	["XiaYi:"]="侠义值：",
-	["WeiWang:"]="威望值：",
+	["BangGong:"]="江湖贡献值",
+	["XiaYi:"]="侠义值",
+	["WeiWang:"]="威望值",
 	["ZhanJieJiFen:"]="战阶积分：",
 	["ZhanJieDengJi:"]="战阶等级：",
 	["MingJianBi:"]="名剑币：",
@@ -782,5 +782,29 @@ data={
 
 	["===%s People Dungeon===\n"]="=== %s人副本 ===\n",
 	["discard"]="（废弃）",
+
+	--20190203add--
+	["remainBangGong:"]="可获得江湖贡献值：",
+	["remainXiaYi:"]="可获得狭义值：",
+	["remainWeiWang:"]="可获得威望值：",
+	["remainZhanJieJiFen:"]="战阶百分比：",
+	["JianTouShang"]="↑",
+	["JianTouXia"]="↓",
+	["nMoney"]="金钱",
+	["BangGong"]="江贡值",
+	["remainBangGong"]="可获江贡",
+	["remainXiaYi"]="可获狭义",
+	["remainZhanJieJiFen"]="战阶百分比",
+	["ZhanJieDengJi"]="战阶等级",
+	["JianBen"]="监本印文",
+	["MingJianBi"]="名剑币",
+	["nVigor"]="精力",
+	["nVigorRemainSpace"]="可获精力",
+	["remainWeiWang"]="可获威望",
+	["H%sH"]="▲%s▲",
+	["S%sS"]="△%s△",
+	["Choose details"]="选择明细列",
+	["Reset"]="重置",
+	["Sure to reset?"]="    确定要重置吗？",
 
 }

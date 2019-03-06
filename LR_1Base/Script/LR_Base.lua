@@ -411,49 +411,51 @@ end
 function LR.AppendUI(__type, parent, szName, data)
 	local __h = nil
 	if __type == "Frame" then
-		__h = _G.CreateFrame(parent, szName, data)
+		__h = _G2.CreateFrame(parent, szName, data)
 	elseif __type == "Window" then
-		__h = _G.CreateWindow(parent, szName, data)
+		__h = _G2.CreateWindow(parent, szName, data)
 	elseif __type == "WndContainer" then
-		__h = _G.CreateWndContainer(parent, szName, data)
+		__h = _G2.CreateWndContainer(parent, szName, data)
 	elseif __type == "WndContainerScroll" then
-		__h = _G.CreateWndContainerScroll(parent, szName, data)
+		__h = _G2.CreateWndContainerScroll(parent, szName, data)
 	elseif __type == "PageSet" then
-		__h = _G.CreatePageSet(parent, szName, data)
+		__h = _G2.CreatePageSet(parent, szName, data)
 	elseif __type == "Button" then
-		__h = _G.CreateButton(parent, szName, data)
+		__h = _G2.CreateButton(parent, szName, data)
 	elseif __type == "Edit" then
-		__h = _G.CreateEdit(parent, szName, data)
+		__h = _G2.CreateEdit(parent, szName, data)
 	elseif __type == "CheckBox" then
-		__h = _G.CreateCheckBox(parent, szName, data)
+		__h = _G2.CreateCheckBox(parent, szName, data)
 	elseif __type == "UICheckBox" then
-		__h = _G.CreateUICheckBox(parent, szName, data)
+		__h = _G2.CreateUICheckBox(parent, szName, data)
 	elseif __type == "ComboBox" then
-		__h = _G.CreateComboBox(parent, szName, data)
+		__h = _G2.CreateComboBox(parent, szName, data)
 	elseif __type == "RadioBox" then
-		__h = _G.CreateRadioBox(parent, szName, data)
+		__h = _G2.CreateRadioBox(parent, szName, data)
 	elseif __type == "CSlider" then
-		__h = _G.CreateCSlider(parent, szName, data)
+		__h = _G2.CreateCSlider(parent, szName, data)
 	elseif __type == "ColorBox" then
-		__h = _G.CreateColorBox(parent, szName, data)
+		__h = _G2.CreateColorBox(parent, szName, data)
 	elseif __type == "Scroll" then
-		__h = _G.CreateScroll(parent, szName, data)
+		__h = _G2.CreateScroll(parent, szName, data)
 	elseif __type == "UIButton" then
-		__h = _G.CreateUIButton(parent, szName, data)
+		__h = _G2.CreateUIButton(parent, szName, data)
 	elseif __type == "Handle" then
-		__h = _G.CreateHandle(parent, szName, data)
+		__h = _G2.CreateHandle(parent, szName, data)
+	elseif __type == "HoverHandle" then
+		__h = _G2.CreateHoverHandle(parent, szName, data)
 	elseif __type == "Text" then
-		__h = _G.CreateText(parent, szName, data)
+		__h = _G2.CreateText(parent, szName, data)
 	elseif __type == "Image" then
-		__h = _G.CreateImage(parent, szName, data)
+		__h = _G2.CreateImage(parent, szName, data)
 	elseif __type == "Animate" then
-		__h = _G.CreateAnimate(parent, szName, data)
+		__h = _G2.CreateAnimate(parent, szName, data)
 	elseif __type == "Shadow" then
-		__h = _G.CreateShadow(parent, szName, data)
+		__h = _G2.CreateShadow(parent, szName, data)
 	elseif __type == "Box" then
-		__h = _G.CreateBox(parent, szName, data)
+		__h = _G2.CreateBox(parent, szName, data)
 	elseif __type == "TreeLeaf" then
-		__h = _G.CreateTreeLeaf(parent, szName, data)
+		__h = _G2.CreateTreeLeaf(parent, szName, data)
 	end
 
 	return __h
@@ -466,9 +468,9 @@ end
 function LR.GetSelfXiaYi()
 	local player = GetClientPlayer()
 	if not player then
-		return 0
+		return 0, 0, 0
 	end
-	return player.nJustice
+	return player.nJustice, player.GetJusticeRemainSpace(), player.GetMaxJustice()
 end
 
 ---帮贡
@@ -477,7 +479,9 @@ function LR.GetSelfJiangGong()
 	if not player then
 		return 0
 	end
-	return player.nContribution
+	local levelUp = GetLevelUpData(player.nRoleType, player.nLevel)
+	local nMaxContribution = levelUp['MaxContribution'] or 0
+	return player.nContribution, player.GetContributionRemainSpace(), nMaxContribution
 end
 
 
@@ -487,7 +491,7 @@ function LR.GetSelfJianBen()
 	if not player then
 		return 0
 	end
-	return player.nExamPrint
+	return player.nExamPrint, player.GetExamPrintRemainSpace(), player.GetMaxExamPrint()
 end
 
 ---威望
@@ -496,7 +500,7 @@ function LR.GetSelfWeiWang()
 	if not player then
 		return 0
 	end
-	return player.nCurrentPrestige
+	return player.nCurrentPrestige, player.GetPrestigeRemainSpace(), player.GetMaxPrestige()
 end
 
 ----战阶积分
@@ -505,7 +509,7 @@ function LR.GetSelfZhanJieJiFen()
 	if not player then
 		return 0
 	end
-	return player.nTitlePoint
+	return player.nTitlePoint, player.GetRankPointPercentage()
 end
 
 ----战阶等级
@@ -523,7 +527,7 @@ function LR.GetSelfMingJianBi()
 	if not player then
 		return 0
 	end
-	return player.nArenaAward
+	return player.nArenaAward, player.GetArenaAwardRemainSpace(), player.GetMaxArenaAward()
 end
 
 ---------------------------------------------------

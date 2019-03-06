@@ -60,7 +60,7 @@ HEAD_NAME_AGRICULTURE = {
 
 
 -----------------------------------------------
-LR_HeadName = LR_HeadName or {
+LR_HeadName = {
 	AllList = {},
 	_Role = {},
 	handle = nil,
@@ -2942,7 +2942,7 @@ function LR_HeadName.IsMissionObj(t)
 	end
 	local me = GetClientPlayer()
 	if not me then
-		return false
+		return false, 1
 	end
 	local scene = me.GetScene()
 	local dwMapID = scene.dwMapID
@@ -2951,18 +2951,18 @@ function LR_HeadName.IsMissionObj(t)
 		if MissionList[i].dwMapID == dwMapID then
 			if MissionList[i].nType == "N" then
 				if MissionList[i].dwTemplateID == t.dwTemplateID and t.nType == TARGET.NPC then
-					return true
+					return true, 2
 				end
 			elseif MissionList[i].nType == "D" then
 				if MissionList[i].dwTemplateID == t.dwTemplateID and t.nType == TARGET.DOODAD then
-					return true
+					return true, 3
 				elseif LR.Trim(MissionList[i].szName) == LR.Trim(t.szName) and t.nType == TARGET.DOODAD then		--???当初为啥要这样设计？忘了
 					--return true
 				end
 			elseif MissionList[i].nType == "P" then
 				if t.nX and t.nY and MissionList[i].nX and MissionList[i].nY then
 					if (MissionList[i].nX - t.nX) * (MissionList[i].nX - t.nX) + (MissionList[i].nY - t.nY) * (MissionList[i].nY - t.nY) < 55 then
-						return true
+						return true, 4
 					end
 				end
 			end
@@ -2973,12 +2973,12 @@ function LR_HeadName.IsMissionObj(t)
 		local doodad = GetDoodad(t.dwID)
 		if doodad then
 			if doodad.HaveQuest(me.dwID) then
-				return true
+				return true, 5
 			end
 		end
 	end
 
-	return false
+	return false, 6
 end
 
 function LR_HeadName.CheckQuestAccept(obj)

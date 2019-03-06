@@ -476,7 +476,7 @@ LR.RegisterEvent("FIRST_LOADING_END",function() LR_Balloon.LoadBlock() end)
 ------------------------------------------
 --ΩÁ√Ê
 ------------------------------------------
-LR_Balloon_Panel = CreateAddon("LR_Balloon_Panel")
+LR_Balloon_Panel = _G2.CreateAddon("LR_Balloon_Panel")
 LR_Balloon_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_Balloon_Panel.nChose=1

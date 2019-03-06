@@ -5,7 +5,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 -----
-LR_TOOLS = CreateAddon("LR_TOOLS")
+LR_TOOLS = _G2.CreateAddon("LR_TOOLS")
 LR_TOOLS:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_TOOLS.tAddonClass = LR_TOOLS.tAddonClass or {
@@ -630,7 +630,7 @@ RegisterEvent("FIRST_LOADING_END", function()
 			end
 		end
 
-		Btn_LR_TOOLS = CreateUIButton(hWnd, "Btn_LR_TOOLS", {w = 34, h = 40, x = Frame_w - 35, y = 5, ani = {"ui\\Image\\UICommon\\activepopularize.UITex", 35, 34, 41}})
+		Btn_LR_TOOLS = _G2.CreateUIButton(hWnd, "Btn_LR_TOOLS", {w = 34, h = 40, x = Frame_w - 35, y = 5, ani = {"ui\\Image\\UICommon\\activepopularize.UITex", 35, 34, 41}})
 		Btn_LR_TOOLS.OnClick = function()
 			LR_TOOLS:OpenPanel()
 		end
@@ -721,6 +721,7 @@ LR_TOOLS.menu = {
 	fnClickIcon = function ()
 		LR_TOOLS:OpenPanel()
 	end,
+--[[
 	fnMouseEnter = function()
 		if LR_TOOLS.CheckS() and LR_TOOLS.CheckX() then
 			local x, y = this:GetAbsPos()
@@ -731,7 +732,7 @@ LR_TOOLS.menu = {
 	fnMouseLeave = function()
 		HideTip()
 	end,
-
+]]
 	}
 
 ---Í·Ïñ²Ëµ¥

@@ -125,7 +125,7 @@ LR.RegisterEvent("LOGIN_GAME", function() _Achievement.LOGIN_GAME() end)
 ------------------------------
 --ΩÁ√Ê
 ------------------------------
-LR_Acc_Achievement_Panel  =  CreateAddon("LR_Acc_Achievement_Panel")
+LR_Acc_Achievement_Panel = _G2.CreateAddon("LR_Acc_Achievement_Panel")
 LR_Acc_Achievement_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_Acc_Achievement_Panel.Select = _L["MengHuiDaoXiang"]

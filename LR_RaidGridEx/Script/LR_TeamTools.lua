@@ -530,7 +530,7 @@ LR.RegisterEvent("ON_FRAME_CREATE", function() LR_TeamTools.HackSystemTeamPanel.
 ----------±ß½ÇÖ¸Ê¾Æ÷
 --------------------------------------------------------------------------------------------------------------------
 --LR_EdgeIndicator_Panel = {}
-LR_EdgeIndicator_Panel = CreateAddon("LR_EdgeIndicator_Panel")
+LR_EdgeIndicator_Panel = _G2.CreateAddon("LR_EdgeIndicator_Panel")
 LR_EdgeIndicator_Panel.Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0}
 function LR_EdgeIndicator_Panel.OnFrameCreate()
 	this:Lookup("",""):Lookup("Text_Title"):SetText(_L["Edge Indicator"])

@@ -26,18 +26,18 @@ local _C = {}
 function _C.GetIDCanDo(SkipLoad)
 	local me = GetClientPlayer()
 	if not me then
-		return
+		return {}
 	end
 	if not SkipLoad then
 		local path = sformat("%s\\WLTJ_ID.dat", SaveDataPath)
 		local data = LoadLUAData(path) or {}
 		if next(data) ~= nil then
 			ID_CAN_DO = clone(data)
-			return
+			return {}
 		end
 	end
 	if me.nLevel < 100 then
-		return
+		return {}
 	end
 	local _, _dwID = me.GetTarget()
 	local ids = {}

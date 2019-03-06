@@ -533,7 +533,7 @@ function LR.rgb2hsv(r, g, b)
 	return h, mfloor(s*100 + 0.5), mfloor(v*100 + 0.5)
 end
 
-ColorPanel = CreateAddon("ColorPanel")
+ColorPanel = _G2.CreateAddon("ColorPanel")
 ColorPanel:BindEvent("OnFrameDragEnd", "OnDragEnd")
 ColorPanel:BindEvent("OnFrameDestroy", "OnDestroy")
 
@@ -806,7 +806,7 @@ end
 
 
 ------字体面板
-_FontPanel = CreateAddon("_FontPanel")
+_FontPanel = _G2.CreateAddon("_FontPanel")
 _FontPanel:BindEvent("OnFrameDragEnd", "OnDragEnd")
 _FontPanel:BindEvent("OnFrameDestroy", "OnDestroy")
 
@@ -1201,7 +1201,7 @@ end })
 
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() infopanel.ON_BG_CHANNEL_MSG() end)
 
-local _C3 = {}
+--[[local _C3 = {}
 function _C3.ON_FRAME_CREATE()
 	local frame = arg0
 	local szName = frame:GetName()
@@ -1212,7 +1212,7 @@ function _C3.ON_FRAME_CREATE()
 			local w, h = edit:GetSize()
 			local x, y = edit:GetAbsPos()
 			local m = {nMiniWidth = w, x = x, y = y + h, bDisableSound = true, bShowKillFocus = true}
-			m[#m + 1] = {	szOption = _L["Tips4"], fnAction = function() edit:SetText(_L["m"]) end,}
+			m[#m + 1] = {	szOption = _L["Enter name"], fnAction = function() edit:SetText(_L["__blank"]) end,}
 			PopupMenu(m)
 		end
 		if LR_TOOLS.CheckS() then
@@ -1220,7 +1220,7 @@ function _C3.ON_FRAME_CREATE()
 		end
 	end
 end
-LR.RegisterEvent("ON_FRAME_CREATE", function() _C3.ON_FRAME_CREATE() end)
+LR.RegisterEvent("ON_FRAME_CREATE", function() _C3.ON_FRAME_CREATE() end)]]
 ----------------------------------------------------------
 ----团队告示
 ----------------------------------------------------------
@@ -1469,7 +1469,6 @@ function teamnotice.LR_TeamRequest()
 		LR.BgTalk(szTalkerName, "LR_TeamRequest", "ANSWER", t)
 	end
 end
-
 
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() teamnotice.ON_BG_CHANNEL_MSG() end)
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() teamnotice.LR_TeamRequest() end)

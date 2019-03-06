@@ -1324,7 +1324,7 @@ end
 ----------------------------------------------------
 ----小窗口
 ----------------------------------------------------
-LR_ACS_QiYu_Panel = CreateAddon("LR_ACS_QiYu_Panel")
+LR_ACS_QiYu_Panel = _G2.CreateAddon("LR_ACS_QiYu_Panel")
 LR_ACS_QiYu_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_ACS_QiYu_Panel.UsrData = {
@@ -1777,7 +1777,7 @@ LR.RegisterEvent("LOOT_ITEM", function() _Pet.LOOT_ITEM() end)
 ------------------------------------------
 ---世界奇遇事件面板
 ------------------------------------------
-QY_History_Panel = CreateAddon("QY_History_Panel")
+QY_History_Panel = _G2.CreateAddon("QY_History_Panel")
 QY_History_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 QY_History_Panel.UsrData = {
 	Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0},

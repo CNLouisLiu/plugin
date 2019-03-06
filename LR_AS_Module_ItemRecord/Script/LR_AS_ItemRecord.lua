@@ -786,7 +786,7 @@ end
 ------------------------------------------------------------------------------------------------------
 ----ΩÁ√Ê
 ------------------------------------------------------------------------------------------------------
-LR_AS_ItemRecord_Panel = CreateAddon("LR_AS_ItemRecord_Panel")
+LR_AS_ItemRecord_Panel = _G2.CreateAddon("LR_AS_ItemRecord_Panel")
 LR_AS_ItemRecord_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_AS_ItemRecord_Panel.UserData = {

@@ -216,7 +216,7 @@ end
 -------------------------------------------------------------------------
 ----------装备界面
 --------------------------------------------------------------------------
-LR_AS_Equip_Panel = CreateAddon("LR_AS_Equip_Panel")
+LR_AS_Equip_Panel = _G2.CreateAddon("LR_AS_Equip_Panel")
 LR_AS_Equip_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_AS_Equip_Panel.UserData = {

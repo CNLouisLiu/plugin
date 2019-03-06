@@ -1697,7 +1697,7 @@ local ItemHandle = class(ItemBase)
 function ItemHandle:ctor(__parent, __name, __data)
 	assert(__parent ~= nil, "parent can not be null.")
 	__data = __data or {}
-	local __string = "<handle>w=10 h=10 handletype=0 postype=0 eventid=272 firstpostype=0 hover=0 </handle>"
+	local __string = "<handle>w=10 h=10 handletype=0 postype=0 eventid=272 firstpostype=0 hover=Image_Hover </handle>"
 	if __data.w then
 		__string = string.gsub(__string, "w=%d+", string.format("w=%d", __data.w))
 	end
@@ -1717,7 +1717,7 @@ function ItemHandle:ctor(__parent, __name, __data)
 		__string = string.gsub(__string, "eventid=%d+", string.format("eventid=%d", __data.eventid))
 	end
 	if __data.hover then
-		__string = string.gsub(__string, "hover=%d+", string.format("hover=%s", __data.hover))
+		__string = string.gsub(__string, "hover=%d+", string.format("hover='%s'", __data.hover))
 	end
 	--Output(__string)
 	local hwnd = _AppendItem(__parent, __string, __name)
@@ -1754,7 +1754,6 @@ function ItemHandle:ChangeRelation(...)
 	self.__this:ChangeRelation(...)
 	return self
 end
-
 
 function ItemHandle:GetHandle()
 	return self.__this
@@ -1851,6 +1850,155 @@ end
 
 function ItemHandle:Clear()
 	self.__this:Clear()
+	return self
+end
+
+-- hoverhandle
+local ItemHoverHandle = class(ItemBase)
+function ItemHoverHandle:ctor(__parent, __name, __data)
+	assert(__parent ~= nil, "parent can not be null.")
+	__data = __data or {}
+
+	local hwnd = __parent:AppendItemFromIni(string.format(__ini, "ItemHoverHandle"), "HoverHandle", __name)
+	self.__this = hwnd
+	self:_SetSelf(self.__this)
+	self:_SetParent(__parent)
+	self:SetRelPos(__data.x or 0, __data.y or 0)
+	self:SetSize(__data.w, __data.h)
+
+	hwnd:SetName("dd")
+
+	if __parent.__addon then
+		__parent = __parent:GetHandle()
+	end
+
+	__parent:FormatAllItemPos()
+
+	--Bind Handle Events
+	self.__this.OnItemLButtonClick = function()
+		self:_FireEvent("OnClick")
+	end
+	self.__this.OnItemMouseEnter = function()
+		self:_FireEvent("OnEnter")
+	end
+	self.__this.OnItemMouseLeave = function()
+		self:_FireEvent("OnLeave")
+	end
+	self.__this.OnItemRButtonClick = function()
+		self:_FireEvent("OnRClick")
+	end
+end
+
+function ItemHoverHandle:Lookup(...)
+	return self.__this:Lookup(...)
+end
+
+function ItemHoverHandle:ChangeRelation(...)
+	self.__this:ChangeRelation(...)
+	return self
+end
+
+function ItemHoverHandle:GetHandle()
+	return self.__this
+end
+
+function ItemHoverHandle:RegisterEvent(...)
+	self.__this:RegisterEvent(...)
+	return self
+end
+
+function ItemHoverHandle:AppendItemFromString(...)
+	return self.__this:AppendItemFromString(...)
+end
+
+function ItemHoverHandle:AppendItemFromIni(...)
+	return self.__this:AppendItemFromIni(...)
+end
+
+function ItemHoverHandle:AppendItemFromData(...)
+	self.__this:AppendItemFromData(...)
+	return self
+end
+
+function ItemHoverHandle:FormatAllItemPos()
+	self.__this:FormatAllItemPos()
+	return self
+end
+
+function ItemHoverHandle:SetHandleStyle(...)
+	self.__this:SetHandleStyle(...)
+	return self
+end
+
+function ItemHoverHandle:GetItemStartRelPos()
+	return self.__this:GetItemStartRelPos()
+end
+
+function ItemHoverHandle:SetItemStartRelPos(...)
+	self.__this:SetItemStartRelPos(...)
+	return self
+end
+
+function ItemHoverHandle:SetSizeByAllItemSize()
+	self.__this:SetSizeByAllItemSize()
+	return self
+end
+
+function ItemHoverHandle:GetAllItemSize()
+	return self.__this:GetAllItemSize()
+end
+
+function ItemHoverHandle:GetVisibleItemCount()
+	return self.__this:GetVisibleItemCount()
+end
+
+function ItemHoverHandle:EnableFormatWhenAppend(...)
+	self.__this:EnableFormatWhenAppend(...)
+	return self
+end
+
+function ItemHoverHandle:ExchangeItemIndex(...)
+	self.__this:ExchangeItemIndex(...)
+	return self
+end
+
+function ItemHoverHandle:SetMinRowHeight(...)
+	self.__this:SetMinRowHeight(...)
+	return self
+end
+
+function ItemHoverHandle:SetMaxRowHeight(...)
+	self.__this:SetMaxRowHeight(...)
+	return self
+end
+
+function ItemHoverHandle:SetRowHeight(...)
+	self.__this:SetRowHeight(...)
+	return self
+end
+
+function ItemHoverHandle:Sort()
+	self.__this:Sort()
+	return self
+end
+
+function ItemHoverHandle:GetItemCount()
+	return self.__this:GetItemCount()
+end
+
+function ItemHoverHandle:ClearHandle()
+	self.__this:Clear()
+	return self
+end
+
+function ItemHoverHandle:Clear()
+	self.__this:Clear()
+	return self
+end
+
+function ItemHoverHandle:SetSize(...)
+	self.__this:SetSize(...)
+	self.__this:Lookup("Image_Hover"):SetSize(...)
 	return self
 end
 
@@ -2965,6 +3113,8 @@ function CreateAddon:Append(__type, ...)
 		__h = WndUICheckBox.new(...)
 	elseif __type == "Handle" then
 		__h = ItemHandle.new(...)
+	elseif __type == "HoverHandle" then
+		__h = ItemHoverHandle.new(...)
 	elseif __type == "Text" then
 		__h = ItemText.new(...)
 	elseif __type == "Image" then
@@ -3012,6 +3162,7 @@ local _API = {
 	CreateUIButton = WndUIButton.new,
 	CreateUICheckBox = WndUICheckBox.new,
 	CreateHandle = ItemHandle.new,
+	CreateHoverHandle = ItemHoverHandle.new,
 	CreateText = ItemText.new,
 	CreateImage = ItemImage.new,
 	CreateAnimate = ItemAnimate.new,
@@ -3021,9 +3172,13 @@ local _API = {
 	CreateAddon = CreateAddon_new,
 }
 
+_G2 = {}
 do
 	for k, v in pairs(_API) do
-		_G[k] = v
+		_G2[k] = v
 	end
 end
 
+_G2.test = function()
+	Output("dd")
+end
