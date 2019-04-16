@@ -88,6 +88,8 @@ LR.RegisterEvent("LOGIN_GAME", function() _C.LOGIN_GAME() end)
 ----------------------------------------------------
 ------数据获取保存
 ----------------------------------------------------
+local DATA2BSAVE = {}
+
 function _C.CheckTitleDisable(szName)
 	if LR_AS_Base.PlayerInfoUI.ShowData[szName] then
 		return false
@@ -139,12 +141,13 @@ function _C.GetSelfData()
 	return UserInfo
 end
 
+function _C.PrepareData()
+	DATA2BSAVE = _C.GetSelfData()
+end
+
 function _C.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
 	-------保存自身的属性数据
-	local v = _C.GetSelfData()
+	local v = clone(DATA2BSAVE) or {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, remainJianBen, BangGong, remainBangGong, XiaYi, remainXiaYi, WeiWang, remainWeiWang, ZhanJieJiFen, remainZhanJieJiFen, ZhanJieDengJi, MingJianBi, remainMingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.remainJianBen, v.BangGong, v.remainBangGong, v.XiaYi, v.remainXiaYi, v.WeiWang, v.remainWeiWang, v.ZhanJieJiFen, v.remainZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.remainMingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.nVigor, v.nMaxVigor, v.nVigorRemainSpace, v.SaveTime})))
@@ -162,6 +165,53 @@ function _C.LoadData(DB)
 	local myself = _C.GetSelfData()
 	AllUsrInfo[myself.szKey] = clone(myself)
 	LR_AS_Data.AllPlayerInfo = clone(AllUsrInfo)
+end
+
+function _C.RepairDB(DB)
+	--导入数据
+	_C.LoadData(DB)
+	local all_data = {}
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local value1 = function(value, default)
+		return value and value ~= "" and value or default
+	end
+	for szKey, v2 in pairs(AllPlayerList) do
+		local data = {}
+		local v = LR_AS_Data.AllPlayerInfo[szKey] or {}
+		data.szKey = szKey
+		data.nGold = value1(v.nGold, 0)
+		data.nSilver = value1(v.nSilver, 0)
+		data.nCopper = value1(v.nCopper, 0)
+		data.nMoney = data.nCopper + data.nSilver * 100 + data.nGold * 10000
+		data.JianBen, data.remainJianBen = value1(v.JianBen, 0), value1(v.remainJianBen, 1500)	--监本
+		data.BangGong, data.remainBangGong = value1(v.BangGong, 0), value1(v.remainBangGong, 170000)		--帮贡
+		data.XiaYi, data.remainXiaYi = value1(v.XiaYi, 0), value1(v.remainXiaYi, 9000)	--狭义
+		data.WeiWang, data.remainWeiWang = value1(v.WeiWang, 0), value1(v.remainWeiWang, 180000)	--威望
+		data.ZhanJieJiFen, data.remainZhanJieJiFen = value1(v.ZhanJieJiFen, 0), value1(v.remainZhanJieJiFen, 0)	--战阶积分
+		data.ZhanJieDengJi = value1(v.ZhanJieDengJi, 0)	--战阶等级
+		data.MingJianBi, data.remainMingJianBi = value1(v.MingJianBi, 0), value1(v.remainMingJianBi, 0)	--名剑币
+		data.szTitle = value1(v.szTitle, "")	--称号
+		data.nCurrentTrainValue = value1(v.nCurrentTrainValue, 0)	--修为
+		data.nCamp = value1(v.nCamp, 0)	--阵营
+		data.szTongName = value1(v.szTongName, "")	--帮会名称
+		data.SaveTime = GetCurrentTime()
+
+		--100级新版精力
+		data.nVigor = value1(v.nVigor, 0)
+		data.nMaxVigor = value1(v.nMaxVigor, 0)
+		data.nVigorRemainSpace = value1(v.nVigorRemainSpace, 0)
+		all_data[szKey] = clone(data)
+	end
+	--先清除数据库
+	local DB_DELETE = DB:Prepare("DELETE FROM player_info")
+	DB_DELETE:Execute()
+	--保存数据
+	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, remainJianBen, BangGong, remainBangGong, XiaYi, remainXiaYi, WeiWang, remainWeiWang, ZhanJieJiFen, remainZhanJieJiFen, ZhanJieDengJi, MingJianBi, remainMingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+	for k, v in pairs(all_data) do
+		DB_REPLACE:ClearBindings()
+		DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.remainJianBen, v.BangGong, v.remainBangGong, v.XiaYi, v.remainXiaYi, v.WeiWang, v.remainWeiWang, v.ZhanJieJiFen, v.remainZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.remainMingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.nVigor, v.nMaxVigor, v.nVigorRemainSpace, v.SaveTime})))
+		DB_REPLACE:Execute()
+	end
 end
 
 --每周重置可以获得的监本、精力数量
@@ -524,6 +574,7 @@ end
 
 --注册模块
 LR_AS_Module.PlayerInfo = {}
+LR_AS_Module.PlayerInfo.PrepareData = _C.PrepareData
 LR_AS_Module.PlayerInfo.SaveData = _C.SaveData
 LR_AS_Module.PlayerInfo.LoadData = _C.LoadData
 LR_AS_Module.PlayerInfo.ResetDataMonday = _C.ResetDataMonday
@@ -534,3 +585,4 @@ LR_AS_Module.PlayerInfo.ShowTip = _C.ShowTip
 LR_AS_Module.PlayerInfo.CheckTitleDisable = _C.CheckTitleDisable
 LR_AS_Module.PlayerInfo.CfgSave = _C.CfgSave
 LR_AS_Module.PlayerInfo.CfgReset = _C.CfgReset
+LR_AS_Module.PlayerInfo.RepairDB = _C.RepairDB

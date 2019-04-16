@@ -1093,6 +1093,20 @@ function LR.GreenAlert(...)
 	OutputWarningMessage("MSG_WARNING_GREEN", ...)
 end
 
+function LR.Log(arg0, ...)
+	if not arg0 then
+		return
+	end
+	if type(arg0) == "string" then
+		Log(arg0)
+	elseif type(arg0) == "table" then
+		for k, v in pairs(arg0) do
+			LR.Log(v)
+		end
+	end
+	LR.Log(...)
+end
+
 ---------------------------------------------
 ---发布频道喊话
 ---------------------------------------------

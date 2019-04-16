@@ -74,7 +74,7 @@ function LR_CopyBook_MiniPanel:Init()
 	local frame = self:Append("Frame", "LR_CopyBook_MiniPanel", {path = "interface\\LR_Plugin\\LR_CopyBook\\UI\\MiniUI2.ini"})
 	frame:Lookup("","Image_MainBg"):SetAlpha(220)
 
-	local Btn_Option = CreateUIButton(frame, "Btn_Option", {w = 34, h = 34, x = 5, y = 8, ani = {"ui\\Image\\Button\\SystemButton_1.UITex", 1, 2, 3}})
+	local Btn_Option = LR.AppendUI("UIButton", frame, "Btn_Option", {w = 34, h = 34, x = 5, y = 8, ani = {"ui\\Image\\Button\\SystemButton_1.UITex", 1, 2, 3}})
 	Btn_Option:SetAlpha(220)
 	Btn_Option.OnClick = function()
 		LR_TOOLS:OpenPanel(_L["LR Printing Machine"])
@@ -95,8 +95,8 @@ function LR_CopyBook_MiniPanel:Init()
 	end
 
 	---Need
-	WndWindow_Need = self:Append("Window", frame,"WndWindow_Need",{w = 290, h = 30, x = 20, y = 85, })
-	local Handle_Need = self:Append("Handle", WndWindow_Need,"Handle_Need",{w = 290, h = 30, x = 0, y = 0})
+	WndWindow_Need = self:Append("Window", frame, "WndWindow_Need", {w = 290, h = 30, x = 20, y = 85, })
+	local Handle_Need = self:Append("Handle", WndWindow_Need, "Handle_Need", {w = 290, h = 30, x = 0, y = 0})
 	Handle_Need:SetHandleStyle(3)
 
 	---Begin/Stop button

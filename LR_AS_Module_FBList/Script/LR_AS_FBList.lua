@@ -45,7 +45,7 @@ local DefaultUsrData = {
 	},
 	VERSION = VERSION,
 }
-LR_AS_FBList.UsrData = clone( DefaultUsrData )
+LR_AS_FBList.UsrData = clone(DefaultUsrData)
 RegisterCustomData("LR_AS_FBList.UsrData", VERSION)
 
 local _FBList = {}
@@ -177,21 +177,44 @@ function _FBList.ResetDataFriday(DB)
 end
 
 
-------↓↓↓获取副本CD（异步）
-function _FBList.GetFBList()
+------↓↓↓获取副本CD
+function _FBList.ApplyCDProgress()
+	--请求副本独立BOSS的CD
+	LR.Log("[LR] Apply dungeon role progress begin")
 	for dwMapID, v in pairs(INDEPENDENT_MAP) do
 		ApplyDungeonRoleProgress(dwMapID, GetClientPlayer().dwID)
 	end
+	LR.Log("[LR] Apply dungeon role progress end")
+	--请求通用副本的CD
+	LR.Log("[LR] Apply map savecopy begin")
 	ApplyMapSaveCopy()
+	LR.Log("[LR] Apply map savecopy end")
 end
 
 ------↓↓↓保存自己的副本CD数据
-function _FBList.SaveData2(DB)
-	LR.DelayCall(100, function() _FBList.GetFBList() end)
-	_FBList.SaveData(DB)
+local DATA2BSAVE = {}
+function _FBList.PrepareData()
+	_FBList.ApplyCDProgress()
+	local FB_Record = {}
+	for dwMapID, nCopyIndex in pairs (_FBList.SelfData) do
+		FB_Record[tostring(dwMapID)] = nCopyIndex
+	end
+	DATA2BSAVE = FB_Record
 end
 
 function _FBList.SaveData(DB)
+	local me = GetClientPlayer()
+	local serverInfo = {GetUserServer()}
+	local realArea, realServer = serverInfo[5], serverInfo[6]
+	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+	local FB_Record = clone(DATA2BSAVE)
+	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(FB_Record)})))
+	DB_REPLACE:Execute()
+end
+
+function _FBList.SaveData2(DB)
 	if not LR_AS_Base.UsrData.bRecord then
 		return
 	end
@@ -199,20 +222,8 @@ function _FBList.SaveData(DB)
 	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
-
-	local serverInfo = {GetUserServer()}
-	local realArea, realServer = serverInfo[5], serverInfo[6]
-	local dwID = me.dwID
-	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-
-	local FB_Record = {}
-	for dwMapID, nCopyIndex in pairs (_FBList.SelfData) do
-		FB_Record[tostring(dwMapID)] = nCopyIndex
-	end
-	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
-	DB_REPLACE:ClearBindings()
-	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(FB_Record)})))
-	DB_REPLACE:Execute()
+	_FBList.PrepareData()
+	_FBList.SaveData(DB)
 end
 
 function _FBList.LoadAllUsrData(DB)
@@ -238,7 +249,7 @@ function _FBList.LoadAllUsrData(DB)
 	_FBList.AllUsrData[szKey] = clone(_FBList.SelfData)
 
 	--将自己的数据加入列表
-	LR.DelayCall(500, function() _FBList.GetFBList() end)
+	LR.DelayCall(500, function() _FBList.ApplyCDProgress() end)
 end
 
 ------↓↓↓对服务器获取副本CD事件的响应
@@ -251,6 +262,7 @@ arg0 = {
 }
 ]]
 function _FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
+	LR.Log("[LR] COPY_RESPOND begin")
 	local FB_Record = arg0
 	--添加独立CD
 	for dwMapID, v in pairs(INDEPENDENT_MAP) do
@@ -274,29 +286,20 @@ function _FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
 		end
 	end
 
-	---讲数据添加进数据库
+	---讲数据添加进内存中所有人物副本信息
 	local ServerInfo = {GetUserServer()}
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, GetClientPlayer().dwID)
 	_FBList.SelfData = clone(FB_Record)
 	_FBList.AllUsrData[szKey] = clone(FB_Record)
 
-	--保存进数据库
-	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "FB_LIST_APPLY_RESPOND_SAVE_DE4533D93EA9A55619841F731C02064C")
-	_FBList.SaveData(DB)
-	LR.CloseDB(DB)
-
-	local frame = Station.Lookup("Normal/LR_AS_Panel")
-	if frame then
-		_FBList.ListFB()
-	end
+	LR.Log("[LR] COPY_RESPOND end")
 end
 
 
 function _FBList.FIRST_LOADING_END()
 	_FBList.LoadCommonSetting()
-	_FBList.GetFBList()
+	_FBList.ApplyCDProgress()
 end
 
 function _FBList.ResetData()
@@ -935,6 +938,7 @@ local LR_FB_Tips = {
 	tCopyID = {},
 }
 
+--进本检查CD情况
 function LR_FB_Tips.LOADING_END()
 	local me = GetClientPlayer()
 	if not me then
@@ -949,14 +953,10 @@ function LR_FB_Tips.LOADING_END()
 	end
 	LR_FB_Tips.FirstCheck = false
 	LR_FB_Tips.SecondCheck = false
-	LR.DelayCall(500, function() _FBList.GetFBList() end)
-	LR.DelayCall(3000, function() LR_FB_Tips.OutBlackCD() end)
-end
-
-function LR_FB_Tips.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
-	local tCopyID = arg0 or {}
-	LR_FB_Tips.tCopyID = clone(tCopyID)
-	LR.DelayCall(750, function() LR_FB_Tips.CheckCD() end)
+	LR.DelayCall(500, function()
+		_FBList.ApplyCDProgress()
+		LR_FB_Tips.CheckCD()
+	end)
 end
 
 function LR_FB_Tips.CheckCD()
@@ -1007,6 +1007,14 @@ function LR_FB_Tips.CheckCD()
 	end
 end
 
+----副本进度改变时输出被黑信息
+function LR_FB_Tips.ON_MAP_COPY_PROGRESS_UPDATE()
+	LR.DelayCall(150, function()
+		_FBList.ApplyCDProgress()
+		LR_FB_Tips.LR_FB_Tips.OutBlackCD()
+	end)
+end
+
 function LR_FB_Tips.OutBlackCD()
 	local me = GetClientPlayer()
 	if not me then
@@ -1037,14 +1045,8 @@ function LR_FB_Tips.OutBlackCD()
 	end
 end
 
-function LR_FB_Tips.ON_MAP_COPY_PROGRESS_UPDATE()
-	LR.DelayCall(150, function() _FBList.GetFBList() end)
-end
-
 LR.RegisterEvent("LOADING_END", function() LR_FB_Tips.LOADING_END() end)
 LR.RegisterEvent("ON_MAP_COPY_PROGRESS_UPDATE", function() LR_FB_Tips.ON_MAP_COPY_PROGRESS_UPDATE() end)
-LR.RegisterEvent("ON_APPLY_PLAYER_SAVED_COPY_RESPOND", function() LR_FB_Tips.ON_APPLY_PLAYER_SAVED_COPY_RESPOND() end)
-
 ------------------------------------------
 LR_AS_FBList.FB25R = _FBList.FB25R
 LR_AS_FBList.FB10R = _FBList.FB10R
@@ -1052,11 +1054,11 @@ LR_AS_FBList.FB5R = _FBList.FB5R
 LR_AS_FBList.SaveCommonSetting = _FBList.SaveCommonSetting
 LR_AS_FBList.LoadCommonSetting = _FBList.LoadCommonSetting
 
-
 ------------------------------------------
 --注册模块
 LR_AS_Module.FBList = {}
-LR_AS_Module.FBList.SaveData = _FBList.SaveData2
+LR_AS_Module.FBList.PrepareData = _FBList.PrepareData
+LR_AS_Module.FBList.SaveData = _FBList.SaveData
 LR_AS_Module.FBList.LoadData = _FBList.LoadAllUsrData
 LR_AS_Module.FBList.ResetDataMonday = _FBList.ResetDataMonday
 LR_AS_Module.FBList.ResetDataEveryDay = _FBList.ResetDataEveryDay

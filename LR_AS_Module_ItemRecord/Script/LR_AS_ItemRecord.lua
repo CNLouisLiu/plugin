@@ -103,6 +103,8 @@ end
 --记录背包物品
 -------------------------------------------------------------------
 local _Bag = {}
+local DATA2BSAVE_BAG = {}
+
 function _Bag.GetItemByGrid()
 	local me = GetClientPlayer()
 	local ItemInBag = {}
@@ -123,11 +125,12 @@ function _Bag.GetItemByGrid()
 	return ItemInBag
 end
 
+function _Bag.PrepareData()
+	DATA2BSAVE_BAG = _Bag.GetItemByGrid()
+end
+
 function _Bag.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
-	local data = _Bag.GetItemByGrid()
+	local data = clone(DATA2BSAVE_BAG)
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
@@ -147,10 +150,48 @@ function _Bag.SaveData(DB)
 	end
 end
 
+function _Bag.RepairDB(DB)
+	local DB_SELECT = DB:Prepare("SELECT belong FROM bag_item_data GROUP BY belong")
+	local result = DB_SELECT:GetAll()
+	--
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_DELETE = DB:Prepare("DELETE FROM bag_item_data WHERE belong = ?")
+	for k, v in pairs(result) do
+		if not AllPlayerList[d2g(v.belong)] then
+			DB_DELETE:ClearBindings()
+			DB_DELETE:BindAll(v.belong)
+			DB_DELETE:Execute()
+		end
+	end
+--[[	local all_data = {}
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_SELECT = DB:Prepare("SELECT * FROM bag_item_data WHERE belong = ?")
+	for szKey, v in pairs(AllPlayerList) do
+		DB_SELECT:ClearBindings()
+		DB_SELECT:BindAll(g2d(szKey))
+		local result = DB_SELECT:GetAll()
+		all_data[szKey] = clone(result)
+	end
+	--删除
+	local DB_DELETE = DB:Prepare("DELETE FROM bag_item_data")
+	DB_DELETE:Execute()
+	--添加
+	local DB_REPLACE = DB:Prepare("REPLACE INTO bag_item_data (szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+	for k2, v2 in pairs(all_data) do
+		for k, v in pairs(v2) do
+			DB_REPLACE:ClearBindings()
+			DB_REPLACE:BindAll(unpack({v.szKey, v.belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nSub, v.nDetail, v.nQuality, v.nStackNum}))
+			DB_REPLACE:Execute()
+		end
+	end]]
+end
+
 ------------------------------------------------------------------------------------------------------
 ---------记录仓库物品
 ------------------------------------------------------------------------------------------------------
 local _Bank = {}
+local DATA2BSAVE_BANK = {}
+
 function _Bank.GetItemByGrid()
 	local me = GetClientPlayer()
 	local ItemInBank = {}
@@ -172,11 +213,12 @@ function _Bank.GetItemByGrid()
 	return ItemInBank
 end
 
+function _Bank.PrepareData()
+	DATA2BSAVE_BANK = _Bank.GetItemByGrid()
+end
+
 function _Bank.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
-	local data = _Bank.GetItemByGrid()
+	local data = clone(DATA2BSAVE_BANK)
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
@@ -196,6 +238,29 @@ function _Bank.SaveData(DB)
 	end
 end
 
+function _Bank.RepairDB(DB)
+	local all_data = {}
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_SELECT = DB:Prepare("SELECT * FROM bank_item_data WHERE belong = ?")
+	for szKey, v in pairs(AllPlayerList) do
+		DB_SELECT:ClearBindings()
+		DB_SELECT:BindAll(g2d(szKey))
+		local result = DB_SELECT:GetAll()
+		all_data[szKey] = clone(result)
+	end
+	--删除
+	local DB_DELETE = DB:Prepare("DELETE FROM bank_item_data")
+	DB_DELETE:Execute()
+	--添加
+	local DB_REPLACE = DB:Prepare("REPLACE INTO bank_item_data (szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+	for k2, v2 in pairs(all_data) do
+		for k, v in pairs(v2) do
+			DB_REPLACE:ClearBindings()
+			DB_REPLACE:BindAll(unpack({v.szKey, v.belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nSub, v.nDetail, v.nQuality, v.nStackNum}))
+			DB_REPLACE:Execute()
+		end
+	end
+end
 ------------------------------------------------------------------------------------------------------
 ----记录邮件附件
 ------------------------------------------------------------------------------------------------------
@@ -481,6 +546,33 @@ function _Mail.SaveData()
 
 	LR.CloseDB(DB)
 	Log(sformat("[LR] AS mail save cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
+end
+
+function _Mail.RepairDB(DB)
+	--mail_item_data
+	local all_data = {}
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_SELECT = DB:Prepare("SELECT * FROM mail_item_data WHERE belong = ?")
+	for szKey, v in pairs(AllPlayerList) do
+		DB_SELECT:ClearBindings()
+		DB_SELECT:BindAll(g2d(szKey))
+		local result = DB_SELECT:GetAll()
+		all_data[szKey] = clone(result)
+	end
+	--删除
+	local DB_DELETE = DB:Prepare("DELETE FROM mail_item_data")
+	DB_DELETE:Execute()
+	--添加
+	local DB_REPLACE = DB:Prepare("REPLACE INTO mail_item_data (bDel, szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum, nBelongMailID) VALUES ( 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+	for k2, v2 in pairs(all_data) do
+		for k, v in pairs(v2) do
+			DB_REPLACE:ClearBindings()
+			DB_REPLACE:BindAll(unpack({v.szKey, v.belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nSub, v.nDetail, v.nQuality, v.nStackNum, v.nBelongMailID}))
+			DB_REPLACE:Execute()
+		end
+	end
+
+	--mail_data
 end
 
 function _Mail.Open_Window()
@@ -2103,9 +2195,22 @@ function _ItemRecord.SaveData(DB)
 	_Bag.SaveData(DB)
 	_Bank.SaveData(DB)
 end
-LR_AS_Module.ItemRecord = {}
-LR_AS_Module.ItemRecord.SaveData = _ItemRecord.SaveData
 
+function _ItemRecord.PrepareData()
+	_Bag.PrepareData()
+	_Bank.PrepareData()
+end
+
+function _ItemRecord.RepairDB(DB)
+	_Bag.RepairDB(DB)
+	_Bank.RepairDB(DB)
+	_Mail.RepairDB(DB)
+end
+
+LR_AS_Module.ItemRecord = {}
+LR_AS_Module.ItemRecord.PrepareData = _ItemRecord.PrepareData
+LR_AS_Module.ItemRecord.SaveData = _ItemRecord.SaveData
+LR_AS_Module.ItemRecord.RepairDB = _ItemRecord.RepairDB
 
 
 

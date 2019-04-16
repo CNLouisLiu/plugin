@@ -46,20 +46,24 @@ function _Achievement.GetSelfData()
 		end
 	end
 end
+
 --保存成就数据
-function _Achievement.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
-	local me = GetClientPlayer()
-	local ServerInfo = {GetUserServer()}
-	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+local DATA2BSAVE = {}
+function _Achievement.PrepareData()
 	local SelfData = {}
 	_Achievement.GetSelfData()
 	for achievement_id, v in pairs (_Achievement.SelfData) do
 		SelfData[tostring(achievement_id)] = v
 	end
+	DATA2BSAVE = SelfData
+end
+
+function _Achievement.SaveData(DB)
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+	local SelfData = clone(DATA2BSAVE)
 	local DB_REPLACE = DB:Prepare("REPLACE INTO achievement_data ( szKey, achievement_data, bDel ) VALUES ( ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(SelfData), 0})))
@@ -424,4 +428,5 @@ end
 
 --注册模块
 LR_AS_Module.AchievementRecord = {}
+LR_AS_Module.AchievementRecord.PrepareData = _Achievement.PrepareData
 LR_AS_Module.AchievementRecord.SaveData = _Achievement.SaveData

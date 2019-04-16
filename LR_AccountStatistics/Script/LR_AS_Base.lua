@@ -53,7 +53,7 @@ LR_AS_Data.ExamData = {}
 ---LoadData
 ---------------------------------
 function LR_AS_Base.LoadData()
-	Log("[LR] AS load begin\n")
+	LR.Log("[LR] AS load begin....")
 	local _begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "AS_BASE_LOAD_DATA_05DC638DAB8A11477BDFF035C167AFC9")
@@ -64,29 +64,49 @@ function LR_AS_Base.LoadData()
 		end
 	end
 	LR.CloseDB(DB)
-	Log(sformat("[LR] AS load cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
+	LR.Log(sformat("[LR] AS load end, cost %d ms", GetTickCount() - _begin_time))
 end
 
 ---------------------------------
 ---AutoSave
 ---------------------------------
 function LR_AS_Base.SaveData()
+	if not LR_AS_Base.UsrData.bRecord then
+		return
+	end
 	local me = GetClientPlayer()
 	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
-	--------------save
 	local _begin_time = GetTickCount()
+	--------------Prepare data
+	LR.Log("[LR] Preparing data....")
+	local text = {}
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].PrepareData then
+			local t = GetTickCount()
+			LR_AS_Module[v].PrepareData()
+			text[#text + 1] = sformat("[LR] %s, %0.3f s", v, (GetTickCount() - t) * 1.0 / 1000)
+		end
+	end
+	LR.Log(text)
+	LR.Log(sformat("[LR] Preparation is over, cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
+	--------------save
+	LR.Log("[LR] Begin save...")
+	_begin_time = GetTickCount()
+	text = {}
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "AS_BASE_SAVE_DATA_0D9F801993115A3C7F3EA6267F0AAA9C")
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].SaveData then
-			--Log(sformat("%s\n", v))
+			local t = GetTickCount()
 			LR_AS_Module[v].SaveData(DB)
+			text[#text + 1] = sformat("[LR] %s, %0.3f s", v, (GetTickCount() - t) * 1.0 / 1000)
 		end
 	end
+	LR.Log(text)
 	LR.CloseDB(DB)
-	Log(sformat("[LR] AS save cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
+	Log(sformat("[LR] AS save ends, cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
 end
 
 function LR_AS_Base.AutoSave()
@@ -229,6 +249,7 @@ end
 ---FirstLoadingEnd	--主要用于需要数据库的操作
 ---------------------------------
 function LR_AS_Base.FIRST_LOADING_END()
+	LR.Log("[LR] AS FIRST_LOADING_END load data begin ...")
 	local _begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "AS_BASE_FIRST_LOADING_END_AA481F7DB2E1EC1CBD53005AF1A11D3F")
@@ -238,7 +259,7 @@ function LR_AS_Base.FIRST_LOADING_END()
 		end
 	end
 	LR.CloseDB(DB)
-	Log(sformat("[LR] AS FIRST_LOADING_END load data cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
+	LR.Log(sformat("[LR] AS FIRST_LOADING_END load data cost %d ms", GetTickCount() - _begin_time))
 	--FireEvent("LR_ACS_REFRESH_FP")
 
 	if not LR_AS_Base.UsrData.bRecord and LR_AS_Base.UsrData.nUpdateDel ~= VERSION then
@@ -251,7 +272,12 @@ function LR_AS_Base.FIRST_LOADING_END()
 	end
 
 	LR_AS_Base.ResetData()
-	LR.DelayCall(6000, function() LR_AS_Base.AutoSave() end)
+	LR.DelayCall(6000, function()
+			local t = GetTickCount()
+			LR.Log("[LR] FIRST_LOADING_END AUTO SAVE BEGIN...")
+			LR_AS_Base.AutoSave()
+			LR.Log(sformat("[LR] FIRST_LOADING_END AUTO SAVE ENDS...., cost %d ms", GetTickCount() - t))
+		end)
 end
 
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_AS_Base.FIRST_LOADING_END() end)
@@ -274,8 +300,10 @@ function LR_AS_Base.ON_FRAME_CREATE()
 					frame:Lookup("Btn_Sure"):Enable(true)
 				end
 			end)
-			Log("[LR_AccountStatistics]:Exit save")
+			LR.Log("[LR_AccountStatistics]:Exit save begin....")
+			local t = GetTickCount()
 			LR_AS_Base.AutoSave()
+			LR.Log(sformat("[LR_AccountStatistics]:Exit save end, cost %d ms", GetTickCount() - t))
 			if LR_AS_Trade then
 				LR_AS_Trade.SaveTempData(true)
 				LR_AS_Trade.MoveData2MainTable()
@@ -288,8 +316,10 @@ function LR_AS_Base.ON_FRAME_CREATE()
 			local _now = GetTickCount()
 			if _now - _auto_save_lasttime2 > 3 * 60 * 1000 then
 				_auto_save_lasttime2 = _now
-				Log("[LR_AccountStatistics]:Esc save")
+				LR.Log("[LR_AccountStatistics]:Esc save begin ... ")
+				local t = GetTickCount()
 				LR_AS_Base.AutoSave()
+				LR.Log(sformat("[LR_AccountStatistics]:Esc save end, cost %d ms", GetTickCount() - t))
 			end
 		end
 		FireEvent("LR_ACS_REFRESH_FP")

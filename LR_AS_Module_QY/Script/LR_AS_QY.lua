@@ -642,7 +642,30 @@ function _QY.GetSelfQiYuAchievementData()
 	_QY.SelfAchievementData = clone(data)
 end
 
+----
+local DATA2BSAVE_QY = {}
+function _QY.PrepareData()
+	_QY.GetSelfQiYuAchievementData()
+	local SelfData = {}
+	for k, v in pairs(_QY.SelfData or {}) do
+		SelfData[tostring(k)] = v
+	end
+	DATA2BSAVE_QY = SelfData
+end
+
 function _QY.SaveData(DB)
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local realArea, realServer = ServerInfo[5], ServerInfo[6]
+	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_data ( szKey, qiyu_data, qiyu_achievement, bDel ) VALUES ( ?, ?, ?, ? )")
+	local SelfData = clone(DATA2BSAVE_QY)
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(SelfData), LR.JsonEncode(_QY.SelfAchievementData or {}), 0})))
+	DB_REPLACE:Execute()
+end
+
+function _QY.SaveData2()
 	if not LR_AS_Base.UsrData.bRecord then
 		return
 	end
@@ -650,29 +673,12 @@ function _QY.SaveData(DB)
 	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
-	_QY.GetSelfQiYuAchievementData()
-	local flag = false
-	local DB = DB
-	if not DB then
-		local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-		DB = LR.OpenDB(path, "QY_SAVE_DATA_29583960578E953B49032A172A76C5CA")
-		flag = true
-	end
-	local ServerInfo = {GetUserServer()}
-	local realArea, realServer = ServerInfo[5], ServerInfo[6]
-	local dwID = me.dwID
-	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_data ( szKey, qiyu_data, qiyu_achievement, bDel ) VALUES ( ?, ?, ?, ? )")
-	local SelfData = {}
-	for k, v in pairs(_QY.SelfData or {}) do
-		SelfData[tostring(k)] = v
-	end
-	DB_REPLACE:ClearBindings()
-	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(SelfData), LR.JsonEncode(_QY.SelfAchievementData or {}), 0})))
-	DB_REPLACE:Execute()
-	if flag then
-		LR.CloseDB(DB)
-	end
+	_QY.PrepareData()
+	--
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+	local DB = LR.OpenDB(path, "QY_SAVE_DATA_29583960578E953B49032A172A76C5CA")
+	_QY.SaveData(DB)
+	LR.CloseDB(DB)
 end
 
 function _QY.LoadData(DB)
@@ -797,7 +803,7 @@ function _QY.CheckItemNum(dwTabType, dwIndex)
 					if num < QIYU_ITEM_NUM[key] and flag then
 						_QY.SelfData[v] = _QY.SelfData[v] or 0
 						_QY.SelfData[v] = _QY.SelfData[v] + 1
-						_QY.SaveData()
+						_QY.SaveData2()
 						_QY.ListQY()
 					end
 					QIYU_ITEM_NUM[key] = num
@@ -897,7 +903,7 @@ function _QY.OPEN_WINDOW()
 					if bFinish then
 						_QY.SelfData[v] = 4
 					end
-					_QY.SaveData()
+					_QY.SaveData2()
 					_QY.ListQY()
 				end
 			end
@@ -936,7 +942,7 @@ function _QY.MSG_NPC_NEARBY(szMsg)
 					if bFinish then
 						_QY.SelfData[v] = 4
 					end
-					_QY.SaveData()
+					_QY.SaveData2()
 					_QY.ListQY()
 				end
 			end
@@ -979,7 +985,7 @@ function _QY.ON_WARNING_MESSAGE()
 					if bFinish then
 						_QY.SelfData[v] = 4
 					end
-					_QY.SaveData()
+					_QY.SaveData2()
 					_QY.ListQY()
 				end
 			end
@@ -2125,6 +2131,7 @@ LR_AS_QY.GetQYList = _QY.GetQYList
 -------------------------------
 --×¢²áÄ£¿é
 LR_AS_Module.QY = {}
+LR_AS_Module.QY.PrepareData = _QY.PrepareData
 LR_AS_Module.QY.SaveData = _QY.SaveData
 LR_AS_Module.QY.LoadData = _QY.LoadAllUsrData
 LR_AS_Module.QY.ResetDataEveryDay = _QY.ResetDataEveryDay

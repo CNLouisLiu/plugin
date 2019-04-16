@@ -279,19 +279,11 @@ function _RC.LoadAllUsrData(DB)
 	_RC.AllUsrData[szKey].CUSTOM_QUEST = clone(_RC.SelfCustomQuestStatus)
 end
 
-function _RC.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
-	local me = GetClientPlayer()
-	if not me or IsRemotePlayer(me.dwID) then
-		return
-	end
-	local serverInfo = {GetUserServer()}
-	local realArea, realServer = serverInfo[5], serverInfo[6]
-	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	_RC.CheckAll()
+local DATA2BSAVE_RC = {}
+function _RC.PrepareData()
 	local name, wen, value = {}, {}, {}
+	--默认日常数据
+	_RC.CheckAll()
 	for k, v in pairs(RI_CHANG) do
 		name[#name+1] = k
 		wen[#wen+1] = "?"
@@ -302,10 +294,22 @@ function _RC.SaveData(DB)
 	name[#name+1] = "CUSTOM_QUEST"
 	wen[#wen+1] = "?"
 	value[#value+1] = LR.JsonEncode(_RC.SelfCustomQuestStatus or {})
+	DATA2BSAVE_RC = {
+		name = name,
+		wen = wen,
+		value = value,
+	}
+end
 
-	local DB_REPLACE = DB:Prepare(sformat("REPLACE INTO richang_data ( bDel, szKey, %s ) VALUES ( ?, %s, ? )", tconcat(name, ", "), tconcat(wen, ", ")))
+function _RC.SaveData(DB)
+	local me = GetClientPlayer()
+	local serverInfo = {GetUserServer()}
+	local realArea, realServer = serverInfo[5], serverInfo[6]
+	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+	local Data = clone(DATA2BSAVE_RC)
+	local DB_REPLACE = DB:Prepare(sformat("REPLACE INTO richang_data ( bDel, szKey, %s ) VALUES ( ?, %s, ? )", tconcat(Data.name, ", "), tconcat(Data.wen, ", ")))
 	DB_REPLACE:ClearBindings()
-	DB_REPLACE:BindAll(unpack(g2d({0, szKey, unpack(value)})))
+	DB_REPLACE:BindAll(unpack(g2d({0, szKey, unpack(Data.value)})))
 	DB_REPLACE:Execute()
 end
 
@@ -1123,19 +1127,18 @@ function _Exam.LoadData(DB)
 	LR_AS_Data.ExamData = clone(_Exam.AllUsrData)
 end
 
-function _Exam.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
-	local me = GetClientPlayer()
-	if not me or IsRemotePlayer(me.dwID) then
-		return
-	end
+local DATA2BSAVE_Exam = {}
+function _Exam.PrepareData()
 	_Exam.CheckExam()
+	DATA2BSAVE_Exam = _Exam.SelfData
+end
+
+function _Exam.SaveData(DB)
+	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	local v = _Exam.SelfData or {}
+	local v = clone(DATA2BSAVE_Exam)
 	local DB_REPLACE = DB:Prepare("REPLACE INTO exam_data ( szKey, ShengShi, HuiShi, bDel ) VALUES ( ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({szKey, v.ShengShi, v.HuiShi, 0})))
@@ -1913,6 +1916,13 @@ end
 --------------------------------------
 local _quest_save_time = 0
 local function SAVE_QUEST(dwQuestID)
+	if not LR_AS_Base.UsrData.bRecord then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me or IsRemotePlayer(me.dwID) then
+		return
+	end
 	--非即时保存则返回
 	if not LR_AS_RC.UsrData.InstantSaving then
 		return
@@ -1927,6 +1937,7 @@ local function SAVE_QUEST(dwQuestID)
 	end
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "RC_SAVE_QUEST_C4C149DED36AB08F230374D361E4103E")
+	_RC.PrepareData()
 	_RC.SaveData(DB)
 	LR.CloseDB(DB)
 	Log("[LR] RI_CHANG_QUEST_EVENT_SAVE\n")
@@ -2008,6 +2019,12 @@ LR_AS_RC.RI_CHANG = RI_CHANG
 LR_AS_RC.RI_CHANG_NAME = RI_CHANG_NAME
 
 ------------------------------------------
+function _RC.PrepareData2()
+	_RC.PrepareData()
+	_Exam.PrepareData()
+	LR_WLTJ.PrepareData()
+end
+
 function _RC.SaveData2(DB)
 	_RC.SaveData(DB)
 	_Exam.SaveData(DB)
@@ -2021,6 +2038,7 @@ end
 
 --注册模块
 LR_AS_Module.RC = {}
+LR_AS_Module.RC.PrepareData = _RC.PrepareData2
 LR_AS_Module.RC.SaveData = _RC.SaveData2
 LR_AS_Module.RC.LoadData = _RC.LoadData2
 LR_AS_Module.RC.ResetDataMonday = _RC.ResetDataMonday		--包含了清考试记录

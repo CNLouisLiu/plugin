@@ -581,6 +581,21 @@ function LR_AS_DB.IniQYHistoryDB()
 	LR.IniDB(SaveDataPath, db_name, tTableConfig)
 end
 
+local Module_List = {
+	"PlayerList", "PlayerInfo", "Group", "ItemRecord", "EquipmentRecord", "BookRd", "AchievementRecord", "FBList", "RC", "QY",
+}
+function LR_AS_DB.RepairDB()
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
+	local DB = LR.OpenDB(path, "AS_DB_RepairDB_fkjsaldkjfljklasjdkfjlksadjflksadjflkdsjaf")
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].RepairDB then
+			LR_AS_Module[v].RepairDB(DB)
+		end
+	end
+	LR.CloseDB(DB)
+	LR_AS_DB.MainDBVacuum(true)
+end
+
 ----------------------------------------------
 ------------事件处理
 ----------------------------------------------

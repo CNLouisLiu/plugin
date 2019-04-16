@@ -138,24 +138,21 @@ function _C.LockIDList()
 	LR.SysMsg(_L["Lock!\n"])
 end
 
+local DATA2BSAVE = {}
+function _C.PrepareData()
+	_C.GetData()
+	DATA2BSAVE = SELF_DATA
+end
+
 function _C.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
 	local me = GetClientPlayer()
-	if not me or IsRemotePlayer(me.dwID) then
-		return
-	end
 	local serverInfo = {GetUserServer()}
 	local realArea, realServer = serverInfo[5], serverInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-
-	Log("[LR] WLTJ savedata begin\n")
-	_C.GetData()
-
-	local tCommon = SELF_DATA.tCommon
-	local t5R = SELF_DATA.t5R
-	local t10R = SELF_DATA.t10R
+	local data = clone(DATA2BSAVE)
+	local tCommon = data.tCommon
+	local t5R = data.t5R
+	local t10R = data.t10R
 	local DB_REPLACE = DB:Prepare("REPLACE INTO wltj_data ( szKey, tCommon, t5R, t10R ) VALUES ( ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(tCommon), LR.JsonEncode(t5R), LR.JsonEncode(t10R)})))
@@ -598,6 +595,7 @@ end
 
 LR_WLTJ.GetData = _C.GetData
 LR_WLTJ.GetIDCanDo = _C.GetIDCanDo
+LR_WLTJ.PrepareData = _C.PrepareData
 LR_WLTJ.SaveData = _C.SaveData
 LR_WLTJ.ClearWLTJdatMonday = _C.ClearWLTJdatMonday
 

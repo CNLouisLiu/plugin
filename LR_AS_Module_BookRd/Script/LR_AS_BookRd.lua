@@ -81,16 +81,9 @@ function _BookRd.HookBookExchangePanel()
 	end
 end
 
-function _BookRd.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
-	local me =  GetClientPlayer()
+local DATA2BSAVE = {}
+function _BookRd.PrepareData()
 	_BookRd.GetSelfBookRecord()
-	local ServerInfo = {GetUserServer()}
-	local realArea, realServer = ServerInfo[5], ServerInfo[6]
-	local dwID = me.dwID
-	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
 	local RecordList = {}
 	for dwBookID,  v in pairs (_BookRd.RecordList) do
 		RecordList[tostring(dwBookID)] = {}
@@ -98,12 +91,20 @@ function _BookRd.SaveData(DB)
 			RecordList[tostring(dwBookID)][tostring(dwSegmentID)] = true
 		end
 	end
+	DATA2BSAVE = RecordList
+end
+
+function _BookRd.SaveData(DB)
+	local me =  GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local realArea, realServer = ServerInfo[5], ServerInfo[6]
+	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+	local RecordList = clone(DATA2BSAVE)
 	local DB_REPLACE = DB:Prepare("REPLACE INTO bookrd_data ( szKey, bookrd_data, bDel ) VALUES ( ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(RecordList), 0})))
 	DB_REPLACE:Execute()
 end
---LR_AS_Base.Add2AutoSave({szKey = "SaveBookRdData", fnAction = _BookRd.SaveData, order = 40})
 
 function _BookRd.LoadAllUsrData(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM bookrd_data WHERE bDel = 0 AND szKey IS NOT NULL")
@@ -128,6 +129,50 @@ function _BookRd.LoadAllUsrData(DB)
 	AllUsrData[szKey] = clone(_BookRd.RecordList)
 	_BookRd.AllUsrData = clone(AllUsrData)
 	--Output(_BookRd.AllUsrData)
+end
+
+function _BookRd.RepairDB(DB)
+	_BookRd.LoadAllUsrData(DB)
+	--
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_SELECT = DB:Prepare("SELECT szKey FROM bookrd_data GROUP BY szKey")
+	DB_SELECT:ClearBindings()
+	local result = DB_SELECT:GetAll()
+	--
+	local DB_DELETE = DB:Prepare("DELETE FROM bookrd_data WHERE szKey = ?")
+	for k, v in pairs(result) do
+		if not AllPlayerList[d2g(v.szKey)] then
+			DB_DELETE:ClearBindings()
+			DB_DELETE:BindAll(v.szKey)
+			DB_DELETE:Execute()
+		end
+	end
+--[[	local all_data = {}
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local value1 = function(value, default)
+		return value and value ~= "" and value or default
+	end
+	for szKey, v2 in pairs(AllPlayerList) do
+		local v = _BookRd.AllUsrData[szKey] or {}
+		all_data[szKey] = clone(value1(v, {}))
+	end
+	--ÏÈÇå³ýÊý¾Ý¿â
+	local DB_DELETE = DB:Prepare("DELETE FROM bookrd_data")
+	DB_DELETE:Execute()
+	--
+	local DB_REPLACE = DB:Prepare("REPLACE INTO bookrd_data ( szKey, bookrd_data, bDel ) VALUES ( ?, ?, ? )")
+	for szKey, v2 in pairs(all_data) do
+		local RecordList = {}
+		for dwBookID,  v in pairs (v2) do
+			RecordList[tostring(dwBookID)] = {}
+			for dwSegmentID, v3 in pairs (v) do
+				RecordList[tostring(dwBookID)][tostring(dwSegmentID)] = true
+			end
+		end
+		DB_REPLACE:ClearBindings()
+		DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(RecordList), 0})))
+		DB_REPLACE:Execute()
+	end]]
 end
 
 function _BookRd.GetSelfBookRecord()
@@ -824,7 +869,6 @@ function LR_BookRd_Panel:GetSource(hWin)
 		end
 	end
 
-
 	------ÉÌµê
 	for i = 1, #_BookRd.BookShopData, 1 do
 		for k = 1, #_BookRd.BookShopData[i].tSellItem, 1 do
@@ -847,7 +891,6 @@ function LR_BookRd_Panel:GetSource(hWin)
 			end
 		end
 	end
-
 
 	---É±¹ÖµôÂä
 	for i = 1, #_BookRd.BookLootData, 1 do
@@ -890,5 +933,7 @@ end
 
 --×¢²áÄ£¿é
 LR_AS_Module.BookRd = {}
+LR_AS_Module.BookRd.PrepareData = _BookRd.PrepareData()
 LR_AS_Module.BookRd.SaveData = _BookRd.SaveData
+LR_AS_Module.BookRd.RepairDB = _BookRd.RepairDB
 

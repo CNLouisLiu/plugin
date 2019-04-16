@@ -445,9 +445,7 @@ function LR_GKP_Loot:LoadGroupWindow(parent, items, dwDoodadID, key)
 	local TextTitle = LR.AppendUI("Text", Handle_Group, "TextTitle", {w = 180, h = 26, x = 25, y = 2})
 	TextTitle:SetText(_L[key]):SetHAlign(1):SetVAlign(1):SetFontScheme(2)
 
-	Output("dd")
 	for k, item in pairs(items) do
-		Output(item)
 		LR_GKP_Loot:LoadOneItem(WndContainer_Group, item, dwDoodadID)
 	end
 
