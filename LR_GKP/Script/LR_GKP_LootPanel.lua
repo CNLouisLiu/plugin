@@ -510,7 +510,7 @@ function LR_GKP_Loot:LoadOneItem(parent, item, dwDoodadID)
 		UpdateBoxObject(box:GetSelf(), UI_OBJECT_ITEM_INFO, 1, v.dwTabType, v.dwIndex)
 		box:SetOverText(1, v.nStackNum)
 		box:SetOverTextFontScheme(1, 15)
-		box:SetOverTextPosition(1, IITEM_POSITION.RIGHT_BOTTOM)
+		box:SetOverTextPosition(1, ITEM_POSITION.RIGHT_BOTTOM)
 	end
 
 	--

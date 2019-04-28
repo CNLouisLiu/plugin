@@ -99,6 +99,7 @@ function _C.GetData()
 	local CurrentTime =  GetCurrentTime()
 	local _date = TimeToDate(CurrentTime)
 	if me.nLevel < 100 then
+		SELF_DATA = {}
 		return
 	end
 	local IDs = clone(WLTJ_ID)
@@ -599,7 +600,15 @@ LR_WLTJ.PrepareData = _C.PrepareData
 LR_WLTJ.SaveData = _C.SaveData
 LR_WLTJ.ClearWLTJdatMonday = _C.ClearWLTJdatMonday
 
-LR.RegisterEvent("FIRST_LOADING_END", function() LR.DelayCall(1000, function() _C.GetIDCanDo(); _C.LoadAllUsrData() end) end)
+function _C.FIRST_LOADING_END()
+	local t = GetTickCount()
+	LR.Log("[LR] WLTJ FIRST_LOADING_END begin...")
+	_C.GetIDCanDo()
+	_C.GetData()
+	LR.Log(sformat("[LR] WLTJ FIRST_LOADING_END end..., cost %d ms", GetTickCount() - t))
+end
+
+LR.RegisterEvent("FIRST_LOADING_END", function() _C.FIRST_LOADING_END() end)
 
 LR_AS_Module.WLTJ = {}
 LR_AS_Module.WLTJ.ShowTip = _C.ShowTip

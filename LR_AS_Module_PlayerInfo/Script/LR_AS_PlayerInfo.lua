@@ -517,6 +517,23 @@ function _C.ShowTip(v)
 
 	szTipInfo[#szTipInfo+1] = GetFormatText(_L["JingLi:"], 224) ..  GetFormatText(PlayerInfo.nVigor.."\n", 41)
 	szTipInfo[#szTipInfo+1] = GetFormatText(_L["JingLi remain:"], 224) ..  GetFormatText(PlayerInfo.nVigorRemainSpace.."\n", 41)
+	local AccountStamina = 0
+	if v.hash01 then
+		AccountStamina = All_Stamina[v.hash01][sformat("%s_%s", v.realArea, v.realServer)].nCurrentStamina
+	end
+	szTipInfo[#szTipInfo+1] = GetFormatText(_L["Account Stamina:"], 224) ..  GetFormatText(AccountStamina, 41)
+	if v.hash01 then
+		local nCurrentStamina = AccountStamina
+		local nMaxStamina = All_Stamina[v.hash01][sformat("%s_%s", v.realArea, v.realServer)].nMaxStamina
+		local SaveTime = All_Stamina[v.hash01][sformat("%s_%s", v.realArea, v.realServer)].SaveTime
+		if nCurrentStamina + (GetCurrentTime() - SaveTime) / 1000 / 3 * 9 > nMaxStamina then
+			szTipInfo[#szTipInfo+1] = GetFormatText(_L["Full\n"], 22)
+		else
+			szTipInfo[#szTipInfo+1] = GetFormatText("\n", 41)
+		end
+	else
+		szTipInfo[#szTipInfo+1] = GetFormatText("\n", 41)
+	end
 
 	szTipInfo[#szTipInfo+1] = GetFormatText(_L["JianBen:"], 224) ..  GetFormatText(PlayerInfo.JianBen.."\n", 41)
 	if PlayerInfo.remainJianBen then
@@ -572,6 +589,11 @@ function _C.RefreshPage()
 	_C.ListAS()
 end
 
+------------------
+function _C.FIRST_LOADING_END(DB)
+	_C.LoadData(DB)
+end
+
 --×¢²áÄ£¿é
 LR_AS_Module.PlayerInfo = {}
 LR_AS_Module.PlayerInfo.PrepareData = _C.PrepareData
@@ -580,7 +602,7 @@ LR_AS_Module.PlayerInfo.LoadData = _C.LoadData
 LR_AS_Module.PlayerInfo.ResetDataMonday = _C.ResetDataMonday
 LR_AS_Module.PlayerInfo.AddPage = _C.AddPage
 LR_AS_Module.PlayerInfo.RefreshPage = _C.RefreshPage
-LR_AS_Module.PlayerInfo.FIRST_LOADING_END = _C.LoadData
+LR_AS_Module.PlayerInfo.FIRST_LOADING_END = _C.FIRST_LOADING_END
 LR_AS_Module.PlayerInfo.ShowTip = _C.ShowTip
 LR_AS_Module.PlayerInfo.CheckTitleDisable = _C.CheckTitleDisable
 LR_AS_Module.PlayerInfo.CfgSave = _C.CfgSave

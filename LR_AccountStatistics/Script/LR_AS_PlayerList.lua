@@ -13,6 +13,8 @@ local VERSION = "20180403"
 -------------------------------------------------------------
 local _C = {}
 local DATA2BSAVE = {}
+AllUsrList = {}		--存放人物列表
+All_Stamina = {}	--存放精力
 
 function _C.GetSelfData()
 	local me = GetClientPlayer()
@@ -29,7 +31,14 @@ function _C.GetSelfData()
 		loginServer = loginServer,
 		realArea = realArea,
 		realServer = realServer,
+		hash01 = LR.GetAccountCode(),
+		hash02 = LR.GetUserCode(),
+		--
+		nCurrentStamina = me.nCurrentStamina,
+		nMaxStamina = me.nMaxStamina,
 	}
+	All_Stamina[data.hash01] = All_Stamina[data.hash01] or {}
+	All_Stamina[data.hash01][sformat("%s_%s", realArea, realServer)] = {nCurrentStamina = data.nCurrentStamina, nMaxStamina = data.nMaxStamina, SaveTime = GetCurrentTime()}
 	return data
 end
 
@@ -39,10 +48,15 @@ end
 
 function _C.SaveData(DB)
 	local v = clone(DATA2BSAVE) or {}
-	local DB_REPLACE = DB:Prepare("REPLACE INTO player_list ( szKey, dwID, szName, nLevel, dwForceID, loginArea, loginServer, realArea, realServer ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO player_list ( szKey, dwID, szName, nLevel, dwForceID, loginArea, loginServer, realArea, realServer, hash01, hash02 ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
-	DB_REPLACE:BindAll(unpack(g2d({ v.szKey, v.dwID, v.szName, v.nLevel, v.dwForceID, v.loginArea, v.loginServer, v.realArea, v.realServer })))
+	DB_REPLACE:BindAll(unpack(g2d({ v.szKey, v.dwID, v.szName, v.nLevel, v.dwForceID, v.loginArea, v.loginServer, v.realArea, v.realServer, v.hash01, v.hash02 })))
 	DB_REPLACE:Execute()
+	--
+	local DB_REPLACE2 = DB:Prepare("REPLACE INTO schema_stamina_data ( hash01, hash02, nCurrentStamina, nMaxStamina, SaveTime ) VALUES ( ?, ?, ?, ?, ? )")
+	DB_REPLACE2:ClearBindings()
+	DB_REPLACE2:BindAll(unpack(g2d({ v.hash01, sformat("%s_%s", v.realArea, v.realServer), v.nCurrentStamina, v.nMaxStamina, GetCurrentTime() })))
+	DB_REPLACE2:Execute()
 end
 
 function _C.LoadData(DB)
@@ -55,6 +69,14 @@ function _C.LoadData(DB)
 	local myself = _C.GetSelfData()
 	AllUsrList[myself.szKey] = clone(myself)
 	LR_AS_Data.AllPlayerList = clone(AllUsrList)
+	--
+	local DB_SELECT2 = DB:Prepare("SELECT * FROM schema_stamina_data WHERE hash01 IS NOT NULL AND hash02 IS NOT NULL")
+	local data2 = d2g(DB_SELECT2:GetAll())
+	All_Stamina = {}
+	for k, v in pairs(data2) do
+		All_Stamina[v.hash01] = All_Stamina[v.hash01] or {}
+		All_Stamina[v.hash01][v.hash02] = {nCurrentStamina = v.nCurrentStamina, nMaxStamina = v.nMaxStamina, SaveTime = v.SaveTime}
+	end
 end
 
 function _C.RepairDB(DB)

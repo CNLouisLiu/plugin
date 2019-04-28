@@ -2357,7 +2357,7 @@ function LR_AS_Trade.FIRST_LOADING_END()
 		return
 	end
 	local nMoney = me.GetMoney()
-	LR_AS_Trade.Login_Money = nMoney.nCopper+nMoney.nSilver*100+nMoney.nGold*10000
+	LR_AS_Trade.Login_Money = nMoney.nCopper + nMoney.nSilver * 100 + nMoney.nGold * 10000
 end
 
 -------------金钱变动提醒
@@ -2367,7 +2367,7 @@ function LR_AS_Trade.OutPutMoneyChange()
 		return
 	end
 	local nMoney = me.GetMoney()
-	local money = nMoney.nCopper+nMoney.nSilver*100+nMoney.nGold*10000
+	local money = nMoney.nCopper + nMoney.nSilver * 100 + nMoney.nGold * 10000
 	local delta_money = money - LR_AS_Trade.Login_Money
 	local text_money = LR_AS_Trade.FormatMoney(delta_money)
 

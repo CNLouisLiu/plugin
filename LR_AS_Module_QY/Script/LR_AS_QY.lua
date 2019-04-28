@@ -2129,6 +2129,11 @@ LR_AS_QY.LoadCommomUsrData = _QY.LoadCommomUsrData
 LR_AS_QY.GetQYList = _QY.GetQYList
 
 -------------------------------
+function _QY.FIRST_LOADING_END(DB)
+	_QY.LoadData(DB)
+end
+
+-------------------------------
 --×¢²áÄ£¿é
 LR_AS_Module.QY = {}
 LR_AS_Module.QY.PrepareData = _QY.PrepareData
@@ -2137,7 +2142,7 @@ LR_AS_Module.QY.LoadData = _QY.LoadAllUsrData
 LR_AS_Module.QY.ResetDataEveryDay = _QY.ResetDataEveryDay
 LR_AS_Module.QY.AddPage = _QY.AddPage
 LR_AS_Module.QY.RefreshPage = _QY.RefreshPage
-LR_AS_Module.QY.FIRST_LOADING_END = _QY.LoadData
+LR_AS_Module.QY.FIRST_LOADING_END = _QY.FIRST_LOADING_END
 LR_AS_Module.QY.ShowTip = _QY.ShowTip
 
 

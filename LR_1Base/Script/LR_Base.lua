@@ -274,21 +274,31 @@ function LR.CheckUnLock()
 	return state == "NO_PASSWORD" or state == "PASSWORD_UNLOCK"
 end
 
-function LR.GetItemNumInBag(dwTabType, dwIndex, nBookID)
+function LR.GetItemNumInBag(dwTabType, dwIndex, nBookID, nSegID, bNotCalMiBao)
 	local me = GetClientPlayer()
 	if not me then
 		return 0
 	end
 	local num = 0
 	for _, dBox in pairs(BAG_PACKAGE) do
+		if bNotCalMiBao and dBox == INVENTORY_INDEX.PACKAGE_MIBAO then
+			break
+		end
 		for dX = 0, me.GetBoxSize(dBox) - 1, 1 do
 			local item = me.GetItem(dBox, dX)
 			if item then
 				if item.dwTabType == dwTabType and item.dwIndex == dwIndex then
 					local nStackNum = 1
 					if item.nGenre == ITEM_GENRE.BOOK then
-						if item.nBookID ~= nBookID then
-							nStackNum = 0
+						if not nSegID then
+							if item.nBookID ~= nBookID then
+								nStackNum = 0
+							end
+						else
+							local dwBookID, dwSegmentID = GlobelRecipeID2BookID(item.nBookID)
+							if dwBookID ~= nBookID or dwSegmentID ~= nSegID then
+								nStackNum = 0
+							end
 						end
 					else
 						if item.bCanStack then
@@ -304,7 +314,7 @@ function LR.GetItemNumInBag(dwTabType, dwIndex, nBookID)
 	return num
 end
 
-function LR.GetItemNumInBank(dwTabType, dwIndex, nBookID)
+function LR.GetItemNumInBank(dwTabType, dwIndex, nBookID, nSegID)
 	local me = GetClientPlayer()
 	if not me then
 		return 0
@@ -317,8 +327,16 @@ function LR.GetItemNumInBank(dwTabType, dwIndex, nBookID)
 				if item.dwTabType == dwTabType and item.dwIndex == dwIndex then
 					local nStackNum = 1
 					if item.nGenre == ITEM_GENRE.BOOK then
-						if item.nBookID ~= nBookID then
-							nStackNum = 0
+						--当nSegID == nil时, nBookID = item.nBookID, 当nSegID ~= nil时, nBookID = dwBookID, nSegID = dwSegmentID
+						if not nSegID then
+							if item.nBookID ~= nBookID then
+								nStackNum = 0
+							end
+						else
+							local dwBookID, dwSegmentID = GlobelRecipeID2BookID(item.nBookID)
+							if dwBookID ~= nBookID or dwSegmentID ~= nSegID then
+								nStackNum = 0
+							end
 						end
 					else
 						if item.bCanStack then
@@ -387,12 +405,54 @@ function LR.GetItemNumInHorseBag(dwTabType, dwIndex, nBookID)
 	return num
 end
 
-function LR.GetItemNumInBagAndBank(dwTabType, dwIndex, nBookID)
-	local bagNum = LR.GetItemNumInBag(dwTabType, dwIndex, nBookID)
-	local bankNum = LR.GetItemNumInBank(dwTabType, dwIndex, nBookID)
+function LR.GetItemNumInBagAndBank(dwTabType, dwIndex, nBookID, nSegID, bNotCalMiBao)
+	local bagNum = LR.GetItemNumInBag(dwTabType, dwIndex, nBookID, nSegID, bNotCalMiBao)
+	local bankNum = LR.GetItemNumInBank(dwTabType, dwIndex, nBookID, nSegID)
 	return bagNum + bankNum
 end
 
+function LR.GetPlayerBagFreeBoxList()
+	local me = GetClientPlayer()
+	local tBoxTable = {}
+	for _, dwBox in pairs(BAG_PACKAGE) do
+		local dwSize = me.GetBoxSize(dwBox)
+		if dwSize > 0 then
+			for dwX = dwSize, 1, -1 do
+				local item = me.GetItem(dwBox, dwX - 1)
+				if not item then
+					local i, j = dwBox, dwX - 1
+					tinsert(tBoxTable, 1, {i, j})
+				end
+			end
+		end
+	end
+	return tBoxTable
+end
+
+function LR.IsPhoneLock()
+	return GetClientPlayer() and GetClientPlayer().IsTradingMibaoSwitchOpen()
+end
+
+function LR.GetBagEmptyBoxNum()
+	local num = 0
+	local me = GetClientPlayer()
+	for _, dBox in pairs(BAG_PACKAGE) do
+		if not LR.IsPhoneLock() and dBox == INVENTORY_INDEX.PACKAGE_MIBAO then
+			break
+		end
+		for dX = 0, me.GetBoxSize(dBox) - 1, 1 do
+			local item = me.GetItem(dBox, dX)
+			if not item then
+				num = num + 1
+			end
+		end
+	end
+
+	return num
+end
+------------------------------------------------------------------
+------
+------------------------------------------------------------------
 function LR.FormatTimeString(nTime)
 	local t = TimeToDate(nTime)
 	return string.format("%d-%02d-%02d %02d:%02d:%02d", t.year, t.month, t.day, t.hour, t.minute, t.second)
@@ -405,6 +465,7 @@ end
 function LR.GetFormatText(szText, font, r, g, b, nEvent, valign, halign, w, h)
 	return sformat("<text>text=\"%s\" font=%d h=%d lockshowhide=0 eventid=0 valign=1 halign=1 r=%d g=%d b=%d</text>", szText or "", font or 162, height or 60, r or 255, g or 255, b or 255)
 end
+
 ------------------------------------------------------------------
 ------UI
 ------------------------------------------------------------------
@@ -529,6 +590,23 @@ function LR.GetSelfMingJianBi()
 	end
 	return player.nArenaAward, player.GetArenaAwardRemainSpace(), player.GetMaxArenaAward()
 end
+
+function LR.GetAccountCode()
+	local account = GetUserAccount()
+	local code = LR.md5(LR.AES.encrypt("haohaohaolanrenchajianfeichanghao", LR.basexx.to_base64(account)))
+	return code
+end
+
+function LR.GetUserCode()
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local realArea, realServer = ServerInfo[5], ServerInfo[6]
+	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+	local AccountCode = LR.GetAccountCode()
+	local code = LR.AES.encrypt("hugeforest@qq.com", sformat("%s_%s", AccountCode, szKey))
+	return code
+end
+
 
 ---------------------------------------------------
 --获取心法名字
@@ -1865,26 +1943,7 @@ function LR.UnRegisterEvent (szEvent, fnAction)
 	end
 end
 
-----------------------------------------------
-function LR.GetPlayerBagFreeBoxList()
-	local me = GetClientPlayer()
-	local tBoxTable = {}
-	for _, dwBox in pairs(BAG_PACKAGE) do
-		local dwSize = me.GetBoxSize(dwBox)
-		if dwSize > 0 then
-			for dwX = dwSize, 1, -1 do
-				local item = me.GetItem(dwBox, dwX - 1)
-				if not item then
-					local i, j = dwBox, dwX - 1
-					tinsert(tBoxTable, 1, {i, j})
-				end
-			end
-		end
-	end
-	return tBoxTable
-end
-
-----------------------------------------------
+---------------------------------------------
 -----各种菜单获取
 ----------------------------------------------
 function LR.GetShiTuMenu(dwID)

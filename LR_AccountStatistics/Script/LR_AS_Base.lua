@@ -199,6 +199,7 @@ function LR_AS_Base.ResetData()
 
 	if RefreshTimeMonday > RC_ResetTime.ClearTimeMonday or RefreshTimeFriday > RC_ResetTime.ClearTimeFriday or RefreshTimeEveryDay > RC_ResetTime.ClearTimeEveryDay then
 		if RefreshTimeMonday > RC_ResetTime.ClearTimeMonday then
+			LR.Log("Weekly reset...")
 			LR_AS_Base.ResetDataMonday(DB)
 			LR_AS_Base.ResetDataFriday(DB)
 			LR_AS_Base.ResetDataEveryDay(DB)
@@ -215,6 +216,7 @@ function LR_AS_Base.ResetData()
 				end
 			end)
 		elseif RefreshTimeFriday > RC_ResetTime.ClearTimeFriday then
+			LR.Log("Friday reset...")
 			LR_AS_Base.ResetDataFriday(DB)
 			LR_AS_Base.ResetDataEveryDay(DB)
 
@@ -222,6 +224,7 @@ function LR_AS_Base.ResetData()
 			RC_ResetTime.ClearTimeFriday = CurrentTime
 			RC_ResetTime.ClearTimeEveryDay = CurrentTime
 		elseif RefreshTimeEveryDay > RC_ResetTime.ClearTimeEveryDay then
+			LR.Log("Everyday reset...")
 			LR_AS_Base.ResetDataEveryDay(DB)
 			--
 			RC_ResetTime.ClearTimeEveryDay = CurrentTime
@@ -240,6 +243,8 @@ function LR_AS_Base.ResetData()
 			DB_REPLACE2:BindAll(v, RC_ResetTime[v])
 			DB_REPLACE2:Execute()
 		end
+	else
+		LR.Log("Nothing reset....")
 	end
 
 	LR.CloseDB(DB)
@@ -249,17 +254,26 @@ end
 ---FirstLoadingEnd	--主要用于需要数据库的操作
 ---------------------------------
 function LR_AS_Base.FIRST_LOADING_END()
-	LR.Log("[LR] AS FIRST_LOADING_END load data begin ...")
 	local _begin_time = GetTickCount()
+	LR.Log("[LR] AS FIRST_LOADING_END RESET DATA begin ...")
+	LR_AS_Base.ResetData()
+	LR.Log(sformat("[LR] AS FIRST_LOADING_END RESET DATA end, cost %d ms", GetTickCount() - _begin_time))
+
+	LR.Log("[LR] AS FIRST_LOADING_END load data begin ...")
+	_begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "AS_BASE_FIRST_LOADING_END_AA481F7DB2E1EC1CBD53005AF1A11D3F")
+	local text = {}
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].FIRST_LOADING_END then
+			local t = GetTickCount()
 			LR_AS_Module[v].FIRST_LOADING_END(DB)
+			text[#text + 1] = sformat("[LR] %s loaded..., cost %d ms", v, GetTickCount() - t)
 		end
 	end
+	LR.Log(text)
 	LR.CloseDB(DB)
-	LR.Log(sformat("[LR] AS FIRST_LOADING_END load data cost %d ms", GetTickCount() - _begin_time))
+	LR.Log(sformat("[LR] AS FIRST_LOADING_END load data end, cost %d ms", GetTickCount() - _begin_time))
 	--FireEvent("LR_ACS_REFRESH_FP")
 
 	if not LR_AS_Base.UsrData.bRecord and LR_AS_Base.UsrData.nUpdateDel ~= VERSION then
@@ -271,8 +285,7 @@ function LR_AS_Base.FIRST_LOADING_END()
 		LR_AS_Base.UsrData.nUpdateDel = VERSION
 	end
 
-	LR_AS_Base.ResetData()
-	LR.DelayCall(6000, function()
+	LR.DelayCall(300, function()
 			local t = GetTickCount()
 			LR.Log("[LR] FIRST_LOADING_END AUTO SAVE BEGIN...")
 			LR_AS_Base.AutoSave()

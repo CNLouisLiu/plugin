@@ -178,7 +178,9 @@ end
 
 
 ------↓↓↓获取副本CD
+local CAUSED_BY_SELF = false
 function _FBList.ApplyCDProgress()
+	CAUSED_BY_SELF = true
 	--请求副本独立BOSS的CD
 	LR.Log("[LR] Apply dungeon role progress begin")
 	for dwMapID, v in pairs(INDEPENDENT_MAP) do
@@ -262,7 +264,10 @@ arg0 = {
 }
 ]]
 function _FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
-	LR.Log("[LR] COPY_RESPOND begin")
+	if not CAUSED_BY_SELF then
+		return
+	end
+	LR.Log("[LR] PLAYER_SAVED_COPY_RESPOND begin")
 	local FB_Record = arg0
 	--添加独立CD
 	for dwMapID, v in pairs(INDEPENDENT_MAP) do
@@ -293,13 +298,17 @@ function _FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
 	_FBList.SelfData = clone(FB_Record)
 	_FBList.AllUsrData[szKey] = clone(FB_Record)
 
-	LR.Log("[LR] COPY_RESPOND end")
+	LR.Log("[LR] PLAYER_SAVED_COPY_RESPOND end")
+	CAUSED_BY_SELF = false
 end
 
 
 function _FBList.FIRST_LOADING_END()
+	local t = GetTickCount()
+	LR.Log("[LR] FBList FIRST_LOADING_END get self cd progress begin...")
 	_FBList.LoadCommonSetting()
 	_FBList.ApplyCDProgress()
+	LR.Log(sformat("[LR] FBList FIRST_LOADING_END get self cd progress end..., cost %d ms", GetTickCount() - t))
 end
 
 function _FBList.ResetData()

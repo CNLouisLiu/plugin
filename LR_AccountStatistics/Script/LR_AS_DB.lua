@@ -9,7 +9,7 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20190203"
+local VERSION = "20190428a"
 -------------------------------------------------------------
 LR_AS_DB = LR_AS_DB or {}
 LR_AS_DEBUG = false
@@ -38,6 +38,19 @@ local schema_player_group = {
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
 }
 
+local schema_stamina_data = {
+	name = "schema_stamina_data",
+	version = VERSION,
+	data = {
+		{name = "hash01", 	sql = "hash01 VARCHAR(999)"},		--主键账号code
+		{name = "hash02", 	sql = "hash02 VARCHAR(999)"},		--主键区服hash
+		{name = "nCurrentStamina", sql = "nCurrentStamina INTEGER DEFAULT(0)"},			--精力值
+		{name = "nMaxStamina", sql = "nMaxStamina INTEGER DEFAULT(0)"},			--精力值
+		{name = "SaveTime", 	sql = "SaveTime INTEGER DEFAULT(0)"},	--保存时间
+	},
+	primary_key = {sql = "PRIMARY KEY ( hash01, hash02 )"},
+}
+
 local schema_player_list = {
 	name = "player_list",
 	version = VERSION,
@@ -51,6 +64,8 @@ local schema_player_list = {
 		{name = "loginServer", sql = "loginServer VARCHAR(20) DEFAULT('')"},
 		{name = "realArea", sql = "realArea VARCHAR(20) DEFAULT('')"},
 		{name = "realServer", sql = "realServer VARCHAR(20) DEFAULT('')"},
+		{name = "hash01", 	sql = "hash01 VARCHAR(999)"},		--账号code
+		{name = "hash02", 	sql = "hash02 VARCHAR(999)"},		--人物code
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
 }
@@ -470,6 +485,7 @@ local tTableConfig = {
 	schema_achievement_data,
 	schema_equipment_data,
 	schema_wltj_data,
+	schema_stamina_data,
 }
 
 function LR_AS_DB.IniMainDB()

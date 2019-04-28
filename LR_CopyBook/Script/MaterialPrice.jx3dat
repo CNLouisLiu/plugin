@@ -1,0 +1,86 @@
+return {
+	["5_3843"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 20000,
+		dwIndex = 3843,
+	},
+	["5_3841"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 350,
+		dwIndex = 3841,
+	},
+	["5_2201"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 350,
+		dwIndex = 2201,
+	},
+	["5_9773"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 20000,
+		dwIndex = 9773,
+	},
+	["5_3842"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 215,
+		dwIndex = 3842,
+	},
+	["5_3573"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 500,
+		dwIndex = 3573,
+	},
+	["5_2202"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 500,
+		dwIndex = 2202,
+	},
+	["5_2871"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 20000,
+		dwIndex = 2871,
+	},
+	["5_2870"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 20000,
+		dwIndex = 2870,
+	},
+	["5_1827"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 20000,
+		dwIndex = 1827,
+	},
+	["5_9772"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 20000,
+		dwIndex = 9772,
+	},
+	["5_2872"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 20000,
+		dwIndex = 2872,
+	},
+	["5_2200"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 215,
+		dwIndex = 2200,
+	},
+	["5_3574"] = {
+		dwTabType = 5,
+		nMaxStackNum = 20,
+		nPrice = 20000,
+		dwIndex = 3574,
+	},
+}

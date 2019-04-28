@@ -163,27 +163,6 @@ function _Bag.RepairDB(DB)
 			DB_DELETE:Execute()
 		end
 	end
---[[	local all_data = {}
-	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
-	local DB_SELECT = DB:Prepare("SELECT * FROM bag_item_data WHERE belong = ?")
-	for szKey, v in pairs(AllPlayerList) do
-		DB_SELECT:ClearBindings()
-		DB_SELECT:BindAll(g2d(szKey))
-		local result = DB_SELECT:GetAll()
-		all_data[szKey] = clone(result)
-	end
-	--删除
-	local DB_DELETE = DB:Prepare("DELETE FROM bag_item_data")
-	DB_DELETE:Execute()
-	--添加
-	local DB_REPLACE = DB:Prepare("REPLACE INTO bag_item_data (szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
-	for k2, v2 in pairs(all_data) do
-		for k, v in pairs(v2) do
-			DB_REPLACE:ClearBindings()
-			DB_REPLACE:BindAll(unpack({v.szKey, v.belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nSub, v.nDetail, v.nQuality, v.nStackNum}))
-			DB_REPLACE:Execute()
-		end
-	end]]
 end
 
 ------------------------------------------------------------------------------------------------------
@@ -239,25 +218,16 @@ function _Bank.SaveData(DB)
 end
 
 function _Bank.RepairDB(DB)
-	local all_data = {}
+	local DB_SELECT = DB:Prepare("SELECT belong FROM bank_item_data GROUP BY belong")
+	local result = DB_SELECT:GetAll()
+	--
 	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
-	local DB_SELECT = DB:Prepare("SELECT * FROM bank_item_data WHERE belong = ?")
-	for szKey, v in pairs(AllPlayerList) do
-		DB_SELECT:ClearBindings()
-		DB_SELECT:BindAll(g2d(szKey))
-		local result = DB_SELECT:GetAll()
-		all_data[szKey] = clone(result)
-	end
-	--删除
-	local DB_DELETE = DB:Prepare("DELETE FROM bank_item_data")
-	DB_DELETE:Execute()
-	--添加
-	local DB_REPLACE = DB:Prepare("REPLACE INTO bank_item_data (szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
-	for k2, v2 in pairs(all_data) do
-		for k, v in pairs(v2) do
-			DB_REPLACE:ClearBindings()
-			DB_REPLACE:BindAll(unpack({v.szKey, v.belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nSub, v.nDetail, v.nQuality, v.nStackNum}))
-			DB_REPLACE:Execute()
+	local DB_DELETE = DB:Prepare("DELETE FROM bank_item_data WHERE belong = ?")
+	for k, v in pairs(result) do
+		if not AllPlayerList[d2g(v.belong)] then
+			DB_DELETE:ClearBindings()
+			DB_DELETE:BindAll(v.belong)
+			DB_DELETE:Execute()
 		end
 	end
 end
@@ -550,29 +520,46 @@ end
 
 function _Mail.RepairDB(DB)
 	--mail_item_data
-	local all_data = {}
+	local DB_SELECT = DB:Prepare("SELECT belong FROM mail_item_data GROUP BY belong")
+	local result = DB_SELECT:GetAll()
+	--
 	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
-	local DB_SELECT = DB:Prepare("SELECT * FROM mail_item_data WHERE belong = ?")
-	for szKey, v in pairs(AllPlayerList) do
-		DB_SELECT:ClearBindings()
-		DB_SELECT:BindAll(g2d(szKey))
-		local result = DB_SELECT:GetAll()
-		all_data[szKey] = clone(result)
-	end
-	--删除
-	local DB_DELETE = DB:Prepare("DELETE FROM mail_item_data")
-	DB_DELETE:Execute()
-	--添加
-	local DB_REPLACE = DB:Prepare("REPLACE INTO mail_item_data (bDel, szKey, belong, szName, dwTabType, dwIndex, nUiId, nBookID, nGenre, nSub, nDetail, nQuality, nStackNum, nBelongMailID) VALUES ( 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
-	for k2, v2 in pairs(all_data) do
-		for k, v in pairs(v2) do
-			DB_REPLACE:ClearBindings()
-			DB_REPLACE:BindAll(unpack({v.szKey, v.belong, v.szName, v.dwTabType, v.dwIndex, v.nUiId, v.nBookID, v.nGenre, v.nSub, v.nDetail, v.nQuality, v.nStackNum, v.nBelongMailID}))
-			DB_REPLACE:Execute()
+	local DB_DELETE = DB:Prepare("DELETE FROM mail_item_data WHERE belong = ?")
+	for k, v in pairs(result) do
+		if not AllPlayerList[d2g(v.belong)] then
+			DB_DELETE:ClearBindings()
+			DB_DELETE:BindAll(v.belong)
+			DB_DELETE:Execute()
 		end
 	end
 
 	--mail_data
+	local DB_SELECT2 = DB:Prepare("SELECT belong FROM mail_data GROUP BY belong")
+	local result2 = DB_SELECT2:GetAll()
+	--
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_DELETE2 = DB:Prepare("DELETE FROM mail_data WHERE belong = ?")
+	for k, v in pairs(result2) do
+		if not AllPlayerList[d2g(v.belong)] then
+			DB_DELETE2:ClearBindings()
+			DB_DELETE2:BindAll(v.belong)
+			DB_DELETE2:Execute()
+		end
+	end
+
+	--mail_receive_time
+	local DB_SELECT3 = DB:Prepare("SELECT belong FROM mail_receive_time GROUP BY szKey")
+	local result3 = DB_SELECT3:GetAll()
+	--
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_DELETE3 = DB:Prepare("DELETE FROM mail_receive_time WHERE szKey = ?")
+	for k, v in pairs(result3) do
+		if not AllPlayerList[d2g(v.szKey)] then
+			DB_DELETE3:ClearBindings()
+			DB_DELETE3:BindAll(v.belong)
+			DB_DELETE3:Execute()
+		end
+	end
 end
 
 function _Mail.Open_Window()
@@ -618,6 +605,7 @@ function _Mail.CheckAllMail()
 	if not (LR_AS_Mail.UsrData.atMaturity or LR_AS_Mail.UsrData.remind) then
 		return
 	end
+	LR.Log("[LR] ESC check mail expire begin...")
 	local _check_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "MAIL_CHECK_MaturityDay_LOAD_DATA_3F2BE76E7773F09F899F220FFB17F490")
@@ -665,7 +653,7 @@ function _Mail.CheckAllMail()
 	end
 
 	LR.CloseDB(DB)
-	Log(sformat("[LR] Checking Mail expire cost %0.3f s", (GetTickCount() - _check_time) * 1.0 / 1000 ))
+	LR.Log(sformat("[LR] Checking Mail expire end, cost %d ms", GetTickCount() - _check_time))
 end
 -----------
 
@@ -2174,9 +2162,8 @@ function _Hook.ON_FRAME_CREATE()
 		LR.DelayCall(150, function() _Hook.HookGuildBank() end)
 	elseif szName == "OptionPanel" then
 		if GetTickCount() - _option_time > 10 * 1000 then
+			--检查邮件到期情况
 			_option_time = GetTickCount()
-			Log("ITEM_RECORD_ESC\n")
-			LR_AS_Base.LoadData()
 			_Mail.CheckAllMail()
 		end
 	end

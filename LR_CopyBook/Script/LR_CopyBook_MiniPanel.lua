@@ -5,11 +5,6 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil = math.floor, math.ceil
 local tconcat, tinsert, tremove, tsort = table.concat, table.insert, table.remove, table.sort
 -------------------------------------------------------------
-
-
-
-
--------------------------------------------------------------
 -- 创建插件
 LR_CopyBook_MiniPanel = _G2.CreateAddon("LR_CopyBook_MiniPanel")
 LR_CopyBook_MiniPanel.UserData = {
@@ -26,7 +21,9 @@ LR_CopyBook_MiniPanel:BindEvent("OnFrameKeyDown", "OnKeyDown")
 -- 窗体创建回调
 function LR_CopyBook_MiniPanel:OnCreate()
 	this:RegisterEvent("UI_SCALED")
-	this:RegisterEvent("CUSTOM_DATA_LOADED")
+	this:RegisterEvent("BAG_ITEM_UPDATE")
+	this:RegisterEvent("OT_ACTION_PROGRESS_BREAK")
+	this:RegisterEvent("DO_RECIPE_PREPARE_PROGRESS")
 
 	LR_CopyBook_MiniPanel.UpdateAnchor(this)
 end
@@ -34,12 +31,14 @@ end
 -- 事件回调
 --/script ReloadUIAddon()
 function LR_CopyBook_MiniPanel:OnEvents(event)
-	if event == "CUSTOM_DATA_LOADED" then
-		if arg0 == "Role" then
-			LR_CopyBook_MiniPanel.UpdateAnchor(this)
-		end
-	elseif event == "UI_SCALED" then
+	if event == "UI_SCALED" then
 		LR_CopyBook_MiniPanel.UpdateAnchor(this)
+	elseif event == "BAG_ITEM_UPDATE" then
+		LR_CopyBook_MiniPanel.BAG_ITEM_UPDATE()
+	elseif event == "OT_ACTION_PROGRESS_BREAK" then
+		LR_CopyBook_MiniPanel.OT_ACTION_PROGRESS_BREAK()
+	elseif event == "DO_RECIPE_PREPARE_PROGRESS" then
+		LR_CopyBook_MiniPanel.DO_RECIPE_PREPARE_PROGRESS()
 	end
 end
 
@@ -79,6 +78,9 @@ function LR_CopyBook_MiniPanel:Init()
 	Btn_Option.OnClick = function()
 		LR_TOOLS:OpenPanel(_L["LR Printing Machine"])
 	end
+	Btn_Option.OnRClick = function()
+		LR_CopyBook.Gets()
+	end
 
 	local Handle_BookID = self:Append("Handle", frame, "Handle_BookID", {w = 280, h = 40, x = 20, y = 40})
 	local imgTab = self:Append("Image", Handle_BookID,"TabImg",{w = 280, h = 40, x = 0, y = 0})
@@ -94,6 +96,34 @@ function LR_CopyBook_MiniPanel:Init()
 		imgTab:SetImage("ui\\Image\\UICommon\\guildmainpanel2.UITex",16)
 	end
 
+	local edit = self:Append("Edit", frame, "Edit_Num", {x = 20, y = 85, w = 30})
+	edit:SetText(LR_CopyBook.UsrData.nCopySuiteNum)
+	edit.OnChange = function(value)
+		local x = tonumber(value)
+		if type(x) == "number" then
+			if x > 100 then
+				x = 100
+				this:SetText(x)
+			end
+			LR_CopyBook.UsrData.nCopySuiteNum = x
+
+			if LR_TOOLS:Fetch("edit_CopyBookNum") and LR_TOOLS:Fetch("edit_CopyBookNum"):GetText() ~= tostring(x) then
+				LR_TOOLS:Fetch("edit_CopyBookNum"):SetText(x)
+			end
+			LR_CopyBook_MiniPanel:DrawNeed()
+		end
+	end
+
+	local Btn_Max = self:Append("Button", frame, "Btn_Max", {x = 60, y = 85, w = 50, text = _L["Max"]})
+	Btn_Max.OnClick = function()
+		local nMax = LR_CopyBook.GetCanCopySuiteNum()
+		edit:SetText(nMax)
+		local edit2 = LR_TOOLS:Fetch("edit_CopyBookNum")
+		if edit2 then
+			edit2:SetText(nMax)
+		end
+	end
+
 	---Need
 	WndWindow_Need = self:Append("Window", frame, "WndWindow_Need", {w = 290, h = 30, x = 20, y = 85, })
 	local Handle_Need = self:Append("Handle", WndWindow_Need, "Handle_Need", {w = 290, h = 30, x = 0, y = 0})
@@ -105,15 +135,7 @@ function LR_CopyBook_MiniPanel:Init()
 	local button1 = self:Append("Button", Wnd_CopyBTN, "button1",{text = _L["Begin Printing"] ,x = 0,y = 0,w = 95,h = 36})
 	--绑定按钮点击事件
 	button1.OnClick = function()
-		if  LR_CopyBook.on then
-			return
-		end
-		LR_CopyBook.on=true
-		Wnd.OpenWindow("interface\\LR_Plugin\\LR_CopyBook\\UI\\EmptyUI.ini","LR_CopyBook")
-		LR_CopyBook.RemainNum=LR_CopyBook.UsrData.CopyLimitNum
-		if LR_CopyBook.OTAFlag==0 then
-			LR_CopyBook.LastTime=GetLogicFrameCount()-4
-		end
+		LR_CopyBook.StartCopy()
 	end
 	local button2 = self:Append("Button", Wnd_CopyBTN,"button2",{text = _L["Stop Printing!"],x = 110,y = 0,w = 95,h = 36})
 	button2.OnClick = function()
@@ -122,7 +144,7 @@ function LR_CopyBook_MiniPanel:Init()
 
 	self:LoadSuitBooks()
 	local WndWindow_Books = self:Fetch("WndWindow_Books")
-	WndWindow_Books:Hide()
+	WndWindow_Books:Show()
 	Handle_BookID.OnClick = function()
 		local WndWindow_Books = self:Fetch("WndWindow_Books")
 		WndWindow_Books:ToggleVisible()
@@ -160,98 +182,75 @@ function LR_CopyBook_MiniPanel:LoadSuitBooks()
 		self:Destroy(WndWindow_Books)
 	end
 
-	WndWindow_Books = self:Append("Window", frame,"WndWindow_Books",{w = 290, h = 90, x = 20, y = 85, })
-	local Handle_Books = self:Append("Handle", WndWindow_Books,"Handle_Books",{w = 250, h = 30, x = 40, y = 0})
+	WndWindow_Books = self:Append("Window", frame,"WndWindow_Books",{w = 290, h = 90, x = 20, y = 115, })
+	local Handle_Books = self:Append("Handle", WndWindow_Books,"Handle_Books",{w = 280, h = 30, x = 0, y = 0})
 	Handle_Books:SetHandleStyle(3)
 
-	local bookList = LR_CopyBook.UsrData.bookList or {}
-	for k, v in pairs(bookList) do
+	local tCopyList = LR_CopyBook.UsrData.tCopyList or {}
+	local i = 1
+	for k, v in pairs(tCopyList) do
 		local dwIndex = LR.Table_GetBookItemIndex(v.dwBookID, v.dwSegmentID)
 		local iteminfo = GetItemInfo(5, dwIndex)
 
-		local Handle_Book = self:Append("Handle", Handle_Books, sformat("Handle_Book_%d_%d", v.dwBookID, v.dwSegmentID), {w = 240, h = 40, x = 0, y = 0})
-		local Image_Bg = self:Append("Image", Handle_Book, sformat("Image_Bg_%d_%d", v.dwBookID, v.dwSegmentID),{w = 230, h = 40, x = 0, y = 0})
-		Image_Bg:SetImage("ui\\Image\\UICommon\\battlefiled.UITex",1)
-		Image_Bg:SetAlpha(160)
+		local Handle_Book = self:Append("Handle", Handle_Books, sformat("Handle_Book_%d_%d", v.dwBookID, v.dwSegmentID), {w = 55, h = 55})
+		local Box = self:Append("Box", Handle_Book, sformat("Box_%d_%d", v.dwBookID, v.dwSegmentID), {w = 50, h = 50})
+		Box:SetObject(1)
+		Box:SetObjectIcon(Table_GetItemIconID(iteminfo.nUiId))
 
-		local Image_Hover = self:Append("Image", Handle_Book, sformat("Image_Hover_%d_%d", v.dwBookID, v.dwSegmentID),{w = 230, h = 40, x = 0, y = 0})
-		Image_Hover:SetImage("ui\\Image\\UICommon\\battlefiled.UITex", 2)
-		Image_Hover:Hide()
+		Box:SetOverText(1, LR.GetItemNumInBag(5, dwIndex, v.dwBookID, v.dwSegmentID))
+		Box:SetOverTextFontScheme(1, 15)
+		Box:SetOverTextPosition(1, ITEM_POSITION.RIGHT_BOTTOM)
 
-		local Image_Progress_Bar = self:Append("Image", Handle_Book, sformat("Progress_Bar_%d_%d", v.dwBookID, v.dwSegmentID),{w = 220, h = 32, x = 4, y = 4})
-		Image_Progress_Bar:SetImage("ui\\Image\\Common\\Money.UITex", 211)
-		Image_Progress_Bar:SetAlpha(180)
-		Image_Progress_Bar:SetImageType(1)
-		Image_Progress_Bar:Hide()
-
-
-		local Image_Icon = self:Append("Image", Handle_Book, sformat("Image_Icon_%d_%d", v.dwBookID, v.dwSegmentID),{w = 30, h = 30, x = 8, y = 5})
-		Image_Icon:FromIconID(Table_GetItemIconID(iteminfo.nUiId))
-		Image_Bg:SetAlpha(160)
-
-		local Text_Num = self:Append("Text", Handle_Book, sformat("Text_Num_%d_%d", v.dwBookID, v.dwSegmentID), {w = 30, h = 30, x = 8, y = 10})
-		Text_Num:SetText("999")
-		Text_Num:SetFontScheme(2)
-		Text_Num:SetFontScale(0.8)
-		Text_Num:SetHAlign(2)
-
-		local Text_BookName = self:Append("Text", Handle_Book, sformat("TextName_Book_%d_%d", v.dwBookID, v.dwSegmentID), {w = 190, h = 40, x = 46, y = 0})
-		Text_BookName:SetText(LR.Table_GetSegmentName(v.dwBookID, v.dwSegmentID))
-
-		local Image_Lock = self:Append("Image", Handle_Book, sformat("Image_Lock_%d_%d", v.dwBookID, v.dwSegmentID),{w = 20, h = 25, x = 200, y = 6})
-		Image_Lock:SetImage("ui\\Image\\Button\\frendnpartybutton.UITex", 89)
-		Image_Lock:Hide()
 		if iteminfo.nBindType == 3 then
-			Image_Lock:Show()
+			local ImageLock = LR.AppendUI("Image", Handle_Book, sformat("Image_Lock"), {x = 0, y = 0, w = 25, h = 25})
+			ImageLock:SetImage("ui\\Image\\Button\\frendnpartybutton.UITex", 90)
 		end
 
-		if me.IsBookMemorized(v.dwBookID, v.dwSegmentID) then
-			Handle_Book:SetAlpha(255)
-			if not v.bCopy then
-				Image_Bg:SetImage("ui\\Image\\UICommon\\battlefiled.UITex",3)
-				Handle_Book:SetAlpha(140)
-			end
+		Box:SetOverText(2, sformat("%d.", i))
+		Box:SetOverTextFontScheme(2, 15)
+		Box:SetOverTextPosition(2, ITEM_POSITION.LEFT_TOP)
+
+		local ImageBCopy = self:Append("Image", Handle_Book, sformat("ImageBCopy_%d_%d", v.dwBookID, v.dwSegmentID), {x = 25, y = 0, w = 25, h = 25})
+		if not me.IsBookMemorized(v.dwBookID, v.dwSegmentID) then
+			ImageBCopy:FromUITex("ui/Image/GMPanel/gm2.UITex", 8)
+			Box:EnableObject(false)
+		elseif v.bCopy then
+			ImageBCopy:FromUITex("ui/Image/GMPanel/gm2.UITex", 7)
+			Box:EnableObject(true)
 		else
-			Handle_Book:SetAlpha(70)
-			Image_Bg:SetImage("ui\\Image\\UICommon\\battlefiled.UITex", 4)
+			ImageBCopy:Hide()
+			Box:EnableObject(true)
 		end
 
-		Handle_Book.OnEnter = function()
+		Box.OnEnter = function()
 			if me.IsBookMemorized(v.dwBookID, v.dwSegmentID) then
-				Image_Hover:Show()
+				--Image_Hover:Show()
 			end
-			local info = GetBookTipByItemInfo(iteminfo, v.dwBookID, v.dwSegmentID, true)
 			local x, y = this:GetAbsPos()
 			local w, h = this:GetSize()
-			OutputTip(info, 400, { x, y, w, h })
+			OutputBookTipByID(v.dwBookID, v.dwSegmentID, {x, y, w, h})
 		end
-
-		Handle_Book.OnLeave = function()
-			Image_Hover:Hide()
+		Box.OnLeave = function()
 			HideTip()
 		end
+		Box.OnClick = function()
+			if not GetClientPlayer().IsBookMemorized(v.dwBookID, v.dwSegmentID) then
+				return
+			end
+			v.bCopy = not v.bCopy
+			LR_CopyBook_MiniPanel:ChangeCheck(v.dwBookID, v.dwSegmentID)
+		end
+
+		i = i + 1
 	end
 
 	local WndWindow_Books = self:Fetch("WndWindow_Books")
-	for k, v in pairs(bookList) do
-		local checkbox = self:Append("CheckBox", WndWindow_Books, sformat("CheckBox_%d_%d", v.dwBookID, v.dwSegmentID),{w = 30, h = 30, x = 12, y = (k - 1) * 40 +7})
-		checkbox:Enable(me.IsBookMemorized(v.dwBookID, v.dwSegmentID))
-		checkbox:Check(v.bCopy and me.IsBookMemorized(v.dwBookID, v.dwSegmentID))
-		checkbox.OnCheck = function(arg0)
-			LR_CopyBook.UsrData.bookList[k].bCopy = arg0
-			LR_CopyBook_MiniPanel:ChangeCheck(v.dwBookID, v.dwSegmentID, true)
-			LR_CopyBook.CountNeeds()
-			LR_CopyBook_MiniPanel:DrawNeed()
-		end
-	end
-
 	Handle_Books:FormatAllItemPos()
 	Handle_Books:SetSizeByAllItemSize()
 	local WndWindow_Books = self:Fetch("WndWindow_Books")
 	local w, h = Handle_Books:GetSize()
 	WndWindow_Books:SetSize(290, h)
 
-	LR_CopyBook.CountNeeds()
 	LR_CopyBook_MiniPanel:DrawNeed()
 	self:Resize()
 	LR_CopyBook_MiniPanel:SetBookID()
@@ -301,13 +300,13 @@ function LR_CopyBook_MiniPanel:SetBookID()
 	end
 	local Text_SuitBook = self:Fetch("Text_SuitBook")
 	local szName = _L["No book set, please set"]
-	if next(LR_CopyBook.UsrData.bookList) ~= nil then
-		szName = sformat(_L["SuitBook Name:%s"], LR_CopyBook.GetBookName(LR_CopyBook.UsrData.bookList[1].dwBookID, 1))
+	if next(LR_CopyBook.UsrData.tCopyList) ~= nil then
+		szName = sformat(_L["SuitBook Name:%s"], LR_CopyBook.GetSuiteBookNameByID(LR_CopyBook.UsrData.tCopyList[1].dwBookID))
 	end
 	Text_SuitBook:SetText(szName)
 end
 
-function LR_CopyBook_MiniPanel:ChangeCheck(dwBookID, dwSegmentID, flag)
+function LR_CopyBook_MiniPanel:ChangeCheck(dwBookID, dwSegmentID)
 	local frame = Station.Lookup("Normal/LR_CopyBook_MiniPanel")
 	if not frame then
 		return
@@ -317,25 +316,21 @@ function LR_CopyBook_MiniPanel:ChangeCheck(dwBookID, dwSegmentID, flag)
 		return
 	end
 
-	local bookList = LR_CopyBook.UsrData.bookList or {}
-	local bCopy = LR_CopyBook.UsrData.bookList[dwSegmentID] and LR_CopyBook.UsrData.bookList[dwSegmentID].bCopy
-	if not flag then
-		local check_box = self:Fetch(sformat("CheckBox_%d_%d", dwBookID, dwSegmentID))
-		check_box:Check(bCopy and me.IsBookMemorized(dwBookID, dwSegmentID))
+	local tCopyList = LR_CopyBook.UsrData.tCopyList or {}
+	local bCopy = LR_CopyBook.UsrData.tCopyList[dwSegmentID] and LR_CopyBook.UsrData.tCopyList[dwSegmentID].bCopy or false
+
+	local ImageBCopy = self:Fetch(sformat("ImageBCopy_%d_%d", dwBookID, dwSegmentID))
+	if not me.IsBookMemorized(dwBookID, dwSegmentID) then
+		ImageBCopy:FromUITex("ui/Image/GMPanel/gm2.UITex", 8)
+		ImageBCopy:Show()
+	elseif LR_CopyBook.UsrData.tCopyList[dwSegmentID].bCopy then
+		ImageBCopy:FromUITex("ui/Image/GMPanel/gm2.UITex", 7)
+		ImageBCopy:Show()
+	else
+		ImageBCopy:Hide()
 	end
 
-	local handle = self:Fetch(sformat("Handle_Book_%d_%d", dwBookID, dwSegmentID))
-	local bg = self:Fetch(sformat("Image_Bg_%d_%d", dwBookID, dwSegmentID))
-	if bCopy and me.IsBookMemorized(dwBookID, dwSegmentID) then
-		bg:SetImage("ui\\Image\\UICommon\\battlefiled.UITex",1)
-		handle:SetAlpha(255)
-	elseif not bCopy then
-		bg:SetImage("ui\\Image\\UICommon\\battlefiled.UITex",3)
-		handle:SetAlpha(140)
-	else
-		bg:SetImage("ui\\Image\\UICommon\\battlefiled.UITex",4)
-		handle:SetAlpha(70)
-	end
+	LR_CopyBook_MiniPanel:DrawNeed()
 end
 
 function LR_CopyBook_MiniPanel:RefreshBookNum()
@@ -347,14 +342,15 @@ function LR_CopyBook_MiniPanel:RefreshBookNum()
 	if not me then
 		return
 	end
-	local bookList = LR_CopyBook.UsrData.bookList or {}
-	for k, v in pairs(bookList) do
-		local Text_Num = self:Fetch(sformat("Text_Num_%d_%d", v.dwBookID, v.dwSegmentID))
-		local num = LR_CopyBook.GetBookNum(v.dwBookID, v.dwSegmentID)
+	local tCopyList = LR_CopyBook.UsrData.tCopyList or {}
+	for k, v in pairs(tCopyList) do
+		local Box = self:Fetch(sformat("Box_%d_%d", v.dwBookID, v.dwSegmentID))
+		local dwIndex = LR.Table_GetBookItemIndex(v.dwBookID, v.dwSegmentID)
+		local num = LR.GetItemNumInBag(5, dwIndex, v.dwBookID, v.dwSegmentID)
 		if num >= 0 then
-			Text_Num:SetText(num)
+			Box:SetOverText(1, num)
 		else
-			Text_Num:SetText("")
+			Box:SetOverText(1, "")
 		end
 	end
 end
@@ -368,36 +364,45 @@ function LR_CopyBook_MiniPanel:DrawNeed()
 	if not me then
 		return
 	end
-	local Needs = LR_CopyBook.Needs or {}
+
+	local Needs = LR_CopyBook.GetAllRecipeAgainstHasInBag()
 	local Handle = self:Fetch("Handle_Need")
 	self:ClearHandle(Handle)
 	Handle:SetSize(280, 30)
 
+	local hHandle1 = self:Append("Handle", Handle, "Handle_Text1", {w = 280, h = 30})
+	local tText = self:Append("Text", hHandle1, "Text_Recipe_All", {w = 280, h = 30, x = 0, y = 0, text = _L["Recipe have"]})
 	for k, v in pairs(Needs) do
-		local iteminfo = GetItemInfo(v.nType, v.dwIndex)
+		local _s, _e, dwTabType, dwIndex = sfind(k, "(.+)_(.+)")
+		local iteminfo = GetItemInfo(dwTabType, dwIndex)
 		if iteminfo then
 			local nUiId = iteminfo.nUiId
-			local need = v.need
-			local num = me.GetItemAmount(v.nType, v.dwIndex)
 			local nIconID = Table_GetItemIconID(nUiId)
-			local box = self:Append("Box", Handle, sformat("Box_%d", v.dwIndex), {h=30,w=30,})
+			local hHandle = self:Append("Handle", Handle, sformat("Handle_%d_%d", dwTabType, dwIndex), {w = 50, h = 50,})
+			local box = self:Append("Box", hHandle, sformat("Box_%d_%d", dwTabType, dwIndex), {h = 45, w = 45,})
 			box:SetObject(1)
 			box:SetObjectIcon(nIconID)
-
+			box:SetOverText(1, v.have)
+			box:SetOverTextFontScheme(1, 15)
+			box:SetOverTextPosition(1, ITEM_POSITION.RIGHT_BOTTOM)
 			box.OnEnter=function()
 				local x, y = this:GetAbsPos()
 				local w, h = this:GetSize()
-				OutputItemTip(UI_OBJECT_ITEM_INFO, 1, v.nType, v.dwIndex, {x, y, w, h,})
+				OutputItemTip(UI_OBJECT_ITEM_INFO, 1, dwTabType, dwIndex, {x, y, w, h,})
 			end
 
 			box.OnLeave=function()
 				HideTip()
 			end
-
-			local Text = self:Append("Text", Handle, sformat("Text_Need_%d", v.dwIndex), {w=30, h=30})
-			Text:SetText(sformat("x %d ( %d )    ", num, need))
 		end
 	end
+
+	local hHandle2 = self:Append("Handle", Handle, "Handle_Text2", {w = 280, h = 30})
+	local tText = self:Append("Text", hHandle2, "Text_Recipe_Need", {w = 280, h = 30, x = 0, y = 0, text = _L["Recipe need"]})
+
+	local hHandle3 = self:Append("Handle", Handle, "Handle_Recipe_Need", {w = 280, h = 30})
+	LR_CopyBook.DrawRecipeBoxes(hHandle3)
+
 	Handle:FormatAllItemPos()
 	Handle:SetSizeByAllItemSize()
 	local w, h = Handle:GetSize()
@@ -408,35 +413,29 @@ end
 
 
 ---------------------------------------------------
+local COPYING_CACHE = {}
 local ProgressBar
 function LR_CopyBook_MiniPanel.BreatheCall(dwBookID, dwSegmentID, nEndFrame, nTotalFrame)
 	local frame = Station.Lookup("Normal/LR_CopyBook_MiniPanel")
 	if not frame then
 		return
 	end
-	local me = GetClientPlayer()
-	if not me then
-		return
-	end
-	local Bar = LR_CopyBook_MiniPanel:Fetch(sformat("Progress_Bar_%d_%d", dwBookID, dwSegmentID))
-	if Bar then
-		Bar:SetImage("ui\\Image\\Common\\Money.UITex", 211)
-		Bar:SetAlpha(180)
-		ProgressBar = Bar
-		local nowFrame = GetLogicFrameCount()
-		if nowFrame <= nEndFrame then
-			local fP = 1- (nEndFrame - nowFrame) / nTotalFrame
-			Bar:SetPercentage(fP)
-			Bar:Show()
-		else
+
+	local BOX = LR_CopyBook_MiniPanel:Fetch(sformat("Box_%d_%d", dwBookID, dwSegmentID))
+	if BOX then
+		if GetLogicFrameCount() > nEndFrame then
+			BOX:SetObjectSelected(false)
+			BOX:SetCoolDownPercentage(0)
+			BOX:SetObjectCoolDown(false)
+			COPYING_CACHE = {}
 			LR.UnBreatheCall("CopyBook_OT")
-			Bar:SetImage("ui\\Image\\Common\\Money.UITex", 217)
-			Bar:SetAlpha(255)
-			LR.BreatheCall("CopyBook_OT_Fade", function() LR_CopyBook_MiniPanel.FadeOut(Bar) end)
-			ProgressBar = nil
+		else
+			local fp = (nEndFrame - GetLogicFrameCount()) / nTotalFrame * 1.0
+			BOX:SetObjectCoolDown(true)
+			BOX:SetCoolDownPercentage(fp)
 		end
 	else
-		ProgressBar = nil
+		COPYING_CACHE = {}
 		LR.UnBreatheCall("CopyBook_OT")
 	end
 end
@@ -458,7 +457,6 @@ function LR_CopyBook_MiniPanel.FadeOut(Bar)
 end
 -----------------------------------------------------
 function LR_CopyBook_MiniPanel.BAG_ITEM_UPDATE()
-	LR_CopyBook.CountNeeds()
 	LR_CopyBook_MiniPanel:DrawNeed()
 	LR_CopyBook_MiniPanel:RefreshBookNum()
 end
@@ -470,13 +468,21 @@ function LR_CopyBook_MiniPanel.DO_RECIPE_PREPARE_PROGRESS()
 	if CraftType == 12 then
 		local dwBookID, dwSegmentID = GlobelRecipeID2BookID(bookID)
 		local nowFrame = GetLogicFrameCount()
-		local nEndFrame = nowFrame +nTotalFrame
-		LR.UnBreatheCall("CopyBook_OT_Fade")
-		LR.BreatheCall("CopyBook_OT",function() LR_CopyBook_MiniPanel.BreatheCall(dwBookID, dwSegmentID, nEndFrame, nTotalFrame) end)
+		local nEndFrame = nowFrame + nTotalFrame
+		local BOX = LR_CopyBook_MiniPanel:Fetch(sformat("Box_%d_%d", dwBookID, dwSegmentID))
+		if BOX then
+			BOX:SetObjectSelected(true)
+		end
+		COPYING_CACHE = {dwBookID = dwBookID, dwSegmentID = dwSegmentID}
+		LR.BreatheCall("CopyBook_OT", function() LR_CopyBook_MiniPanel.BreatheCall(dwBookID, dwSegmentID, nEndFrame, nTotalFrame) end)
 	end
 end
 
 function LR_CopyBook_MiniPanel.OT_ACTION_PROGRESS_BREAK()
+	local frame = Station.Lookup("Normal/LR_CopyBook_MiniPanel")
+	if not frame then
+		return
+	end
 	local dwID = arg0
 	local me = GetClientPlayer()
 	if not me then
@@ -485,16 +491,24 @@ function LR_CopyBook_MiniPanel.OT_ACTION_PROGRESS_BREAK()
 	if dwID ~= me.dwID then
 		return
 	end
+	local dwBookID, dwSegmentID = COPYING_CACHE.dwBookID or 0, COPYING_CACHE.dwSegmentID or 0
+	local Bar = ProgressBar
+	local BOX = LR_CopyBook_MiniPanel:Fetch(sformat("Box_%d_%d", dwBookID, dwSegmentID))
+	if BOX then
+		BOX:SetObjectSelected(false)
+		BOX:SetCoolDownPercentage(0)
+		BOX:SetObjectCoolDown(false)
+		COPYING_CACHE = {}
+		LR.UnBreatheCall("CopyBook_OT")
+	end
+	COPYING_CACHE = {}
+end
+
+function LR_CopyBook_MiniPanel.SYS_MSG()
 	local Bar = ProgressBar
 	if Bar then
-		Bar:SetImage("ui\\Image\\Common\\Money.UITex", 215)
 		LR.UnBreatheCall("CopyBook_OT")
 		LR.BreatheCall("CopyBook_OT_Fade", function() LR_CopyBook_MiniPanel.FadeOut(Bar) end)
 	end
 	ProgressBar = nil
 end
-
-LR.RegisterEvent("OT_ACTION_PROGRESS_BREAK", function() LR_CopyBook_MiniPanel.OT_ACTION_PROGRESS_BREAK() end)
-LR.RegisterEvent("DO_RECIPE_PREPARE_PROGRESS", function() LR_CopyBook_MiniPanel.DO_RECIPE_PREPARE_PROGRESS() end)
-LR.RegisterEvent("BAG_ITEM_UPDATE",function() LR_CopyBook_MiniPanel.BAG_ITEM_UPDATE() end)
-

@@ -3128,6 +3128,12 @@ function CreateAddon:Append(__type, ...)
 	elseif __type == "TreeLeaf" then
 		__h = ItemTreeLeaf.new(...)
 	end
+	if __h == nil then
+		local dg = function(arg0, arg1, arg2)
+			Output(arg1, arg2)
+		end
+		dg(...)
+	end
 	local __name = __h:GetName()
 	self.__items[__name] = __h
 
