@@ -807,4 +807,8 @@ data={
 	["Reset"]="重置",
 	["Sure to reset?"]="    確定要重置嗎？",
 
+	["Account Stamina:"]="賬號精力：",
+	["DB Repair"]="數據庫修複",
+	["Are you sure to repair database ?"]="確定要修複數據庫？",
+
 }

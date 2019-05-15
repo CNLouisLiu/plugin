@@ -74,6 +74,11 @@ function LR.LoadLangPack(szLangFolder)
 		for k, v in pairs(t3) do
 			t0[k] = v
 		end
+		--
+		local t4 = LoadLUAData(sformat("%s\\lang\\%s", SaveDataPath, szLang)) or {}
+		for k, v in pairs(t4) do
+			t0[k] = v
+		end
 	end
 	setmetatable(t0, {
 		__index = function(t, k) return k end,

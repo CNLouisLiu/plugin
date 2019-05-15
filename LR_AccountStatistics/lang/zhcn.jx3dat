@@ -808,5 +808,7 @@ data={
 	["Sure to reset?"]="    确定要重置吗？",
 
 	["Account Stamina:"]="账号精力：",
+	["DB Repair"]="数据库修复",
+	["Are you sure to repair database ?"]="确定要修复数据库？",
 
 }

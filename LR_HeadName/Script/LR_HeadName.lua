@@ -86,6 +86,7 @@ local NPC_QUEST_LIST = {}	--存放npc的任务，key为模版id
 local NPC_CAN_ACCEPT_QUEST = {}
 local NPC_CAN_FINISH_QUEST = {}
 local SCENE_QUEST_CACHE = {}
+local SCENE_DATA_CACHE = {}
 
 LR_HeadName.default = {
 	DoodadKind = {
@@ -504,14 +505,43 @@ function _HandleRole:DrawName()
 		self:TeamMarkImageHide()
 	end
 
+	if SCENE_DATA_CACHE[dwID] then
+		local Frame_Now = GetLogicFrameCount()
+		local Frame_End = 0
+		local data = nil
+		for k, v in pairs(SCENE_DATA_CACHE[dwID]) do
+			if v.nEndFrame < Frame_Now then
+				tremove(SCENE_DATA_CACHE[dwID], k)
+			end
+		end
+		for k, v in pairs(SCENE_DATA_CACHE[dwID]) do
+			if v.nEndFrame > Frame_End and v.nEndFrame >= Frame_Now then
+				data = clone(v)
+				Frame_End = v.nEndFrame
+				break
+			end
+		end
+		if Frame_End > 0 then
+			--szText, {szText = temp, rgb = rgb , font = font2, fScale = 1, }
+			--tText = {}
+			local x1 = Table_GetBuffName(data.dwID, data.nLevel)
+			tinsert(tText, {szText = sformat("%s_%0.1f", x1, (Frame_End - Frame_Now) / 16.0), rgb = {255, 255, 255}, font = 2, fScale = 1})
+			--tinsert(tText, {szText = sformat("%s", ), rgb = {255, 255, 255}, font = 2, fScale = 1})
+		end
+		if next(SCENE_DATA_CACHE[dwID]) == nil then
+			SCENE_DATA_CACHE[dwID] = nil
+		end
+		--Output(tText)
+	end
+
 	for i = 1, #tText do
 		local r, g, b = unpack(tText[i].rgb)
 		--hText:AppendCharacterID(self.dwID, true, r, g, b, 255, -30-(i-1)*nHight , tText[i].font , tText[i].szText, 0, 1)	----tText[i].font
 
 		if tText[i].nType and tText[i].nType == "symbol" then
-			hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, ( - (nHight-2) *  tText[i].lenth), (-30- del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
+			hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, ( - (nHight-2) *  tText[i].lenth), (-30 - del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
 		else
-			del_height = del_height+mceil(nHight*(LR_HeadName.UsrData.nFontScale))
+			del_height = del_height + mceil(nHight * (LR_HeadName.UsrData.nFontScale))
 			if self.nTeamMark and LR_HeadName.UsrData.bShowTeamMark and LR_HeadName.UsrData.bHightLightTeamMark then
 				local font = 207
 				if LR_HeadName._Role[dwID]:GetShip() == "Enemy" then
@@ -521,9 +551,9 @@ function _HandleRole:DrawName()
 						font = 2
 					end
 				end
-				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30- del_height -nOffset)}, font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
+				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30 - del_height -nOffset)}, font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
 			else
-				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30- del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
+				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30 - del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
 			end
 		end
 	end
@@ -1037,6 +1067,7 @@ end
 ---------------------------------------------------
 function LR_HeadName.OnFrameCreate()
 	this:RegisterEvent("RENDER_FRAME_UPDATE")
+	this:RegisterEvent("LR_BUFF_TRAN")
 
 	local handle = this:Lookup("", "")
 	LR_HeadName.handle = handle:Lookup("Handle_HeadName")
@@ -1046,9 +1077,10 @@ end
 function LR_HeadName.OnEvent(szEvent)
 	if szEvent ==  "RENDER_FRAME_UPDATE" then
 		LR_HeadName.SetTeamMarkPos()
+	elseif szEvent == "LR_BUFF_TRAN" then
+		LR_HeadName.LR_BUFF_TRAN()
 	end
 end
-
 
 function LR_HeadName.OnFrameBreathe()
 	if not LR_HeadName.bOn then
@@ -1075,6 +1107,10 @@ function LR_HeadName.OnFrameBreathe()
 
 	if GetLogicFrameCount() % 4 ==  0 then
 		LR_HeadName.SortHandle()
+	end
+
+	for k, v in pairs(SCENE_DATA_CACHE) do
+		LR_HeadName.Check(k, TARGET.PLAYER, true)
 	end
 
 	if LR_HeadName.UsrData.bSeeLimit then
@@ -1140,7 +1176,7 @@ function LR_HeadName.OnFrameBreathe()
 		end
 	else
 		for k, v in pairs(LR_HeadName.AllList) do
-			if m>= freq_limit then
+			if m >= freq_limit then
 				local p = mfloor(m/50)
 				if (k%p) ==  (GetLogicFrameCount()%p) then
 					LR_HeadName.Check(k, v.nType)
@@ -1682,7 +1718,7 @@ function LR_HeadName.Check(dwID, nType, bForced)
 					if line2Text ~=  "" then
 						tinsert(szText, {szText = line2Text, rgb = rgb , font = font, })
 					end
-					if szName~= "" then
+					if szName ~= "" then
 						local temp = ""
 						if LR_HeadName.GetbShow(obj, nType, "Name", nShip) then
 							if not (nType ==  TARGET.PLAYER and LR_HeadName.UsrData.HideInDungeon.bOn and LR_HeadName.UsrData.HideInDungeon.Name and scene.nType ==  MAP_TYPE.DUNGEON ) then
@@ -3139,6 +3175,23 @@ function LR_HeadName.RefreshTarget()
 	local _type, _dwID = me.GetTarget()
 	if _type ==  TARGET.NPC then
 		LR_HeadName.Check(_dwID, _type, true)
+	end
+end
+
+function LR_HeadName.LR_BUFF_TRAN()
+	local nType = arg0
+	local dwID = arg1
+	local data = arg2
+	if nType == "Add" then
+		SCENE_DATA_CACHE[dwID] = SCENE_DATA_CACHE[dwID] or {}
+		tinsert(SCENE_DATA_CACHE[dwID], 1, data)
+	elseif nType == "Del" then
+		SCENE_DATA_CACHE[dwID] = SCENE_DATA_CACHE[dwID] or {}
+		for k, v in pairs(SCENE_DATA_CACHE[dwID]) do
+			if v.nIndex == data.nIndex then
+				tremove(SCENE_DATA_CACHE[dwID], k)
+			end
+		end
 	end
 end
 

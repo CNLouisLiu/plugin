@@ -33,4 +33,9 @@ data={
 	["No book set, please set"]="請點擊左上角圖標設置套書",
 	["SuitBook Name:%s"]="套書：%s",
 
+	--20190425add--
+	["Recipe have"]="需要的材料在背包中的數量",
+	["Recipe need"]="需購買的材料及數量",
+	["Need thew: %d, get examprint: %d"]="需要精力：%d，獲得監本：%d",
+
 }

@@ -66,9 +66,6 @@ function _C.LoadData(DB)
 	for k, v in pairs(data) do
 		AllUsrList[v.szKey] = v
 	end
-	local myself = _C.GetSelfData()
-	AllUsrList[myself.szKey] = clone(myself)
-	LR_AS_Data.AllPlayerList = clone(AllUsrList)
 	--
 	local DB_SELECT2 = DB:Prepare("SELECT * FROM schema_stamina_data WHERE hash01 IS NOT NULL AND hash02 IS NOT NULL")
 	local data2 = d2g(DB_SELECT2:GetAll())
@@ -77,6 +74,10 @@ function _C.LoadData(DB)
 		All_Stamina[v.hash01] = All_Stamina[v.hash01] or {}
 		All_Stamina[v.hash01][v.hash02] = {nCurrentStamina = v.nCurrentStamina, nMaxStamina = v.nMaxStamina, SaveTime = v.SaveTime}
 	end
+	--
+	local myself = _C.GetSelfData()
+	AllUsrList[myself.szKey] = clone(myself)
+	LR_AS_Data.AllPlayerList = clone(AllUsrList)
 end
 
 function _C.RepairDB(DB)

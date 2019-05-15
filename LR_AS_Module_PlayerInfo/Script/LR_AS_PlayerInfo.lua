@@ -519,7 +519,7 @@ function _C.ShowTip(v)
 	szTipInfo[#szTipInfo+1] = GetFormatText(_L["JingLi remain:"], 224) ..  GetFormatText(PlayerInfo.nVigorRemainSpace.."\n", 41)
 	local AccountStamina = 0
 	if v.hash01 then
-		AccountStamina = All_Stamina[v.hash01][sformat("%s_%s", v.realArea, v.realServer)].nCurrentStamina
+		AccountStamina = All_Stamina[v.hash01][sformat("%s_%s", v.realArea, v.realServer)].nCurrentStamina or 0
 	end
 	szTipInfo[#szTipInfo+1] = GetFormatText(_L["Account Stamina:"], 224) ..  GetFormatText(AccountStamina, 41)
 	if v.hash01 then

@@ -1282,15 +1282,24 @@ function LR_TeamBuffMonitor.BUFF_UPDATE_NORMALBUFF(tBuff)
 	local hBuff = _NormalBuffHandle[dwID]
 	if hBuff and hBuff:GetBuffnIndex() == nIndex and not bDelete then
 		FireEvent("LR_RAID_BUFF_ADD_FRESH", tBuff.dwPlayerID, tBuff)
+		if tBuff.bScene then
+			FireEvent("LR_BUFF_TRAN", "Add", tBuff.dwPlayerID, tBuff)
+		end
 		return
 	end
 
 	if tBuff.bOnlySelf then
 		if bDelete then
 			FireEvent("LR_RAID_BUFF_DELETE", tBuff.dwPlayerID, tBuff)
+			if tBuff.bScene then
+				FireEvent("LR_BUFF_TRAN", "Del", tBuff.dwPlayerID, tBuff)
+			end
 			return
 		else
 			FireEvent("LR_RAID_BUFF_ADD_FRESH", tBuff.dwPlayerID, tBuff)
+			if tBuff.bScene then
+				FireEvent("LR_BUFF_TRAN", "Add", tBuff.dwPlayerID, tBuff)
+			end
 			return
 		end
 	else
@@ -1303,9 +1312,15 @@ function LR_TeamBuffMonitor.BUFF_UPDATE_NORMALBUFF(tBuff)
 		end
 		if _nIndex == 0 then
 			FireEvent("LR_RAID_BUFF_DELETE", tBuff.dwPlayerID, tBuff)
+			if tBuff.bScene then
+				FireEvent("LR_BUFF_TRAN", "Del", tBuff.dwPlayerID, tBuff)
+			end
 			return
 		else
 			FireEvent("LR_RAID_BUFF_ADD_FRESH", tBuff.dwPlayerID, cache[_nIndex])
+			if tBuff.bScene then
+				FireEvent("LR_BUFF_TRAN", "Add", tBuff.dwPlayerID, tBuff)
+			end
 			return
 		end
 	end

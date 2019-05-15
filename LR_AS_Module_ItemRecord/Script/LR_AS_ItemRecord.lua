@@ -548,7 +548,7 @@ function _Mail.RepairDB(DB)
 	end
 
 	--mail_receive_time
-	local DB_SELECT3 = DB:Prepare("SELECT belong FROM mail_receive_time GROUP BY szKey")
+	local DB_SELECT3 = DB:Prepare("SELECT szKey FROM mail_receive_time")
 	local result3 = DB_SELECT3:GetAll()
 	--
 	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
@@ -2103,7 +2103,7 @@ function _Hook.HookMailPanel()
 		local BTN_Mail = frame:Lookup("LR_BTN_Mail")
 		if not BTN_Mail then
 			if LR_AS_ItemRecord.UsrData.bShowButtonInMailPanel then
-				local BTN_Mail = LR.AppendUI("Button", frame, "LR_BTN_Mail", {w = 90, h = 28, x = 200, y = 8})
+				local BTN_Mail = LR.AppendUI("UIButton", frame, "LR_BTN_Mail", {w = 90, h = 26, x = 200, y = 8, ani = {"ui\\Image\\UICommon\\HelpPanel.UITex", 22, 23, 54, 21}})
 				BTN_Mail:SetText(_L["LR Mail"])
 				BTN_Mail.OnClick = function()
 					LR_AS_ItemRecord_Panel:Open(nil, nil, nil, nil ,true)
