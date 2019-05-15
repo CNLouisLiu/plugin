@@ -807,4 +807,6 @@ data={
 	["Reset"]="重置",
 	["Sure to reset?"]="    确定要重置吗？",
 
+	["Account Stamina:"]="账号精力：",
+
 }

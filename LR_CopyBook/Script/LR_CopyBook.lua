@@ -476,8 +476,18 @@ function _C.DrawRecipeBoxes(parent)
 	local tCopyList = clone(LR_CopyBook.UsrData.tCopyList)
 	local dwBookID = tCopyList[1] and tCopyList[1].dwBookID or 0
 	local n = (MISSION_CACHE[sformat("BookID#%d", dwBookID)] or 0) * (LR_CopyBook.UsrData.nCopySuiteNum or 0)
+	local flag = false
+	if next(tCopyList) ~= nil then
+		for k, v in pairs(tCopyList) do
+			if v.bCopy and _C.CheckSegmentBookCanBCopy(v.dwBookID, v.dwSegmentID) then
+				flag = true
+			end
+		end
+	end
+	if not flag then
+		n = 0
+	end
 	local tText = LR.AppendUI("Text", Handle_Thew, "Text_Thew", {x = 0, y = 0, text = sformat(_L["Need thew: %d, get examprint: %d"], nThewNeed, n)})
-
 	parent:FormatAllItemPos()
 	local w, h = parent:GetAllItemSize()
 	parent:SetSize(w1, h)
