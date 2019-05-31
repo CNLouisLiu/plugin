@@ -13,8 +13,6 @@ local VERSION = "20180403"
 -------------------------------------------------------------
 local _C = {}
 local DATA2BSAVE = {}
-AllUsrList = {}		--存放人物列表
-All_Stamina = {}	--存放精力
 
 function _C.GetSelfData()
 	local me = GetClientPlayer()
@@ -37,8 +35,11 @@ function _C.GetSelfData()
 		nCurrentStamina = me.nCurrentStamina,
 		nMaxStamina = me.nMaxStamina,
 	}
-	All_Stamina[data.hash01] = All_Stamina[data.hash01] or {}
-	All_Stamina[data.hash01][sformat("%s_%s", realArea, realServer)] = {nCurrentStamina = data.nCurrentStamina, nMaxStamina = data.nMaxStamina, SaveTime = GetCurrentTime()}
+	--将自己的数据放入全局变量表
+	LR_AS_Data.AllPlayerList[szKey] = clone(data)
+	LR_AS_Data.All_Stamina[data.hash01] = LR_AS_Data.All_Stamina[data.hash01] or {}
+	LR_AS_Data.All_Stamina[data.hash01][sformat("%s_%s", realArea, realServer)] = {nCurrentStamina = data.nCurrentStamina, nMaxStamina = data.nMaxStamina, SaveTime = GetCurrentTime()}
+	--返回数据
 	return data
 end
 
@@ -60,24 +61,25 @@ function _C.SaveData(DB)
 end
 
 function _C.LoadData(DB)
+	--载入所有人物的列表
 	local DB_SELECT = DB:Prepare("SELECT * FROM player_list WHERE szKey IS NOT NULL ORDER BY nLevel DESC, dwForceID ASC, szName ASC")
 	local data = d2g(DB_SELECT:GetAll())
-	local AllUsrList = {}
+	local AllPlayerList = {}
 	for k, v in pairs(data) do
-		AllUsrList[v.szKey] = v
+		AllPlayerList[v.szKey] = v
 	end
-	--
+	LR_AS_Data.AllPlayerList = clone(AllPlayerList)
+	--载入所有账号的精力体力信息
 	local DB_SELECT2 = DB:Prepare("SELECT * FROM schema_stamina_data WHERE hash01 IS NOT NULL AND hash02 IS NOT NULL")
 	local data2 = d2g(DB_SELECT2:GetAll())
-	All_Stamina = {}
+	local All_Stamina = {}
 	for k, v in pairs(data2) do
 		All_Stamina[v.hash01] = All_Stamina[v.hash01] or {}
 		All_Stamina[v.hash01][v.hash02] = {nCurrentStamina = v.nCurrentStamina, nMaxStamina = v.nMaxStamina, SaveTime = v.SaveTime}
 	end
-	--
-	local myself = _C.GetSelfData()
-	AllUsrList[myself.szKey] = clone(myself)
-	LR_AS_Data.AllPlayerList = clone(AllUsrList)
+	LR_AS_Data.All_Stamina = clone(All_Stamina)
+	--将当前账号的信息以及账号信息放入共享数据
+	_C.GetSelfData()
 end
 
 function _C.RepairDB(DB)

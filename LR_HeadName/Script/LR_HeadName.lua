@@ -2302,12 +2302,12 @@ end
 
 function LR_HeadName.Random(rgb, rgb1)
 	local x1 = Random(16)
-	rgb = rgb+rgb1*x1
-	if rgb>255 then
-		rgb = 255*2-rgb
+	rgb = rgb + rgb1 * x1
+	if rgb > 255 then
+		rgb = 255 * 2 - rgb
 		rgb1 = -1
-	elseif rgb<80 then
-		rbg = 160-rgb
+	elseif rgb < 80 then
+		rgb = 160 - rgb
 		rgb1 = 1
 	end
 	return rgb, rgb1

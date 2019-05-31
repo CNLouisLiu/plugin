@@ -2028,7 +2028,7 @@ function LR_AS_ItemRecord_Panel:LoadItemBox(hWin)
 		hIconViewContent:Clear()
 		hBtnNext:Enable(true)
 		for i = 1, 84 do
-			k = (n - 1) * 84 + i
+			local k = (n - 1) * 84 + i
 			local item_data = t_table[k]
 			if item_data then
 				LR_AS_ItemRecord_Panel:LoadOneItem2(hIconViewContent, item_data)
@@ -2046,7 +2046,7 @@ function LR_AS_ItemRecord_Panel:LoadItemBox(hWin)
 		hIconViewContent:Clear()
 		hBtnPrev:Enable(true)
 		for i = 1, 84 do
-			k = (n - 1) * 84 + i
+			local k = (n - 1) * 84 + i
 			local item_data = t_table[k]
 			if item_data then
 				LR_AS_ItemRecord_Panel:LoadOneItem2(hIconViewContent, item_data)

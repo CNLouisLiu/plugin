@@ -40,8 +40,12 @@ LR_AS_Base.default = {
 LR_AS_Base.UsrData = clone(LR_AS_Base.default.UsrData)
 RegisterCustomData("LR_AS_Base.UsrData", VERSION)
 
+---------------------------------
+---账目本共享数据，不使用BASE库中的_GMV
+---------------------------------
 LR_AS_Data = {}
 LR_AS_Data.AllPlayerList = {}
+LR_AS_Data.All_Stamina = {}
 LR_AS_Data.AllUsrFilteredList = {}
 LR_AS_Data.AllUsrSortedList = {}
 LR_AS_Data.AllPlayerInfo = {}

@@ -304,7 +304,7 @@ function _C.GetCanCopySuiteNum()
 	--nLogiEmptyBagBoxNum:随着边抄边交，实际空出的格子(如果原来的格子中有书籍n本，抄m次，若n - m >= 0, 说明书够，不用抄，不增加空出来的格子数量;否则逻辑上空出来的格子-1)
 	--nLogiEmptyBagBoxNum:实际空出来的格子要能放得下材料
 	--nRecipeBoxNeed:材料需要的格子数量
-	local nEmptyBagBoxNum, nLogiEmptyBagBoxNum, nRecipeBoxNeed = LR.GetBagEmptyBoxNum(), 0, 0
+	local nEmptyBagBoxNum, nLogiEmptyBagBoxNum, nRecipeBoxNeed, nThewNeed = LR.GetBagEmptyBoxNum(), 0, 0, 0
 	local nCopySuiteNum = 0
 	local tBooksNumCache = {}
 	for k, v in pairs(tCopyList) do
@@ -596,7 +596,11 @@ function _C.SYS_MSG()
 				_C.UpdateSuitNum()
 				LR_CopyBook_MiniPanel.SYS_MSG()
 				RECIPE_PREPARE_PROGRESS_CACHE = {}
-				_C.CopyBook()
+				if LR_CopyBook.UsrData.nCopySuiteNum > 0 then
+					_C.CopyBook()
+				else
+					_C.StopCopy()
+				end
 			end
 		elseif arg1 == 1 or arg1 == 2 or arg1 == 6 or arg1 == 20 or arg1 == 211 then
 			_C.StopCopy()

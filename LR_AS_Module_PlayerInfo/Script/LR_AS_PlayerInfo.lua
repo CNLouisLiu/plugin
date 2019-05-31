@@ -11,7 +11,6 @@ local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
 local VERSION = "20180403a"
 -------------------------------------------------------------
-LR_AS_Base = LR_AS_Base or {}
 LR_AS_Base.PlayerInfoUI = {}
 LR_AS_Base.PlayerInfoUI.TitleOrder = {
 	"nMoney", "BangGong", "remainBangGong", "XiaYi", "remainXiaYi", "JianBen", "nVigor", "nVigorRemainSpace", "WeiWang", "remainWeiWang", "ZhanJieJiFen", "remainZhanJieJiFen", "ZhanJieDengJi", "MingJianBi"
@@ -467,6 +466,7 @@ function _C.ShowTip(v)
 	local szPath, nFrame = GetForceImage(v.dwForceID)
 	local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
 	local PlayerInfo = LR_AS_Data.AllPlayerInfo[szKey] or {}
+	local All_Stamina = LR_AS_Data.All_Stamina
 	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}

@@ -1392,7 +1392,7 @@ function _RC.ListRC()
 
 	_RC.Container = frame:Lookup("PageSet_Menu/Page_RC/WndScroll_RC/Wnd_RC")
 	_RC.Container:Clear()
-	num = _RC.ShowItem (TempTable_Cal, 255, 1, 0)
+	local num = _RC.ShowItem (TempTable_Cal, 255, 1, 0)
 	num = _RC.ShowItem (TempTable_NotCal, 60, 1, num)
 	_RC.Container:FormatAllContentPos()
 end

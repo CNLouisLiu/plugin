@@ -399,8 +399,8 @@ function _FBList.ListFB()
 	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 	_FBList.Container = frame:Lookup("PageSet_Menu/Page_FBList/WndScroll_FBList/Wnd_FBList")
 	_FBList.Container:Clear()
-	num = _FBList.ShowItem (TempTable_Cal, 255, 1, 0)
-	num = _FBList.ShowItem (TempTable_NotCal, 60, 1, num)
+	local num = _FBList.ShowItem(TempTable_Cal, 255, 1, 0)
+	num = _FBList.ShowItem(TempTable_NotCal, 60, 1, num)
 	_FBList.Container:FormatAllContentPos()
 end
 

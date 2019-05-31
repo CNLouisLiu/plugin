@@ -125,7 +125,7 @@ function LR_CopyBook_MiniPanel:Init()
 	end
 
 	---Need
-	WndWindow_Need = self:Append("Window", frame, "WndWindow_Need", {w = 290, h = 30, x = 20, y = 85, })
+	local WndWindow_Need = self:Append("Window", frame, "WndWindow_Need", {w = 290, h = 30, x = 20, y = 85, })
 	local Handle_Need = self:Append("Handle", WndWindow_Need, "Handle_Need", {w = 290, h = 30, x = 0, y = 0})
 	Handle_Need:SetHandleStyle(3)
 
@@ -223,6 +223,7 @@ function LR_CopyBook_MiniPanel:LoadSuitBooks()
 		end
 
 		Box.OnEnter = function()
+			local me = GetClientPlayer()
 			if me.IsBookMemorized(v.dwBookID, v.dwSegmentID) then
 				--Image_Hover:Show()
 			end

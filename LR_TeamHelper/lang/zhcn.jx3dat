@@ -17,4 +17,31 @@ data = {
 	["Global"]="※全局※",
 	["Open LR_CDRP"]="团队击杀进度查看器",
 
+	--20190529add--
+	["LR_Black_List_Panel"]="懒人黑名单",
+	["Add to LR_Black_List"]="加入懒人自定义黑名单",
+	["Custom_List"]="自定义数据",
+	["System_List"]="系统数据",
+	["szName"]="名字",
+	["area_server"]="区服",
+	["dwForceID"]="门派",
+	["role_type"]="体型",
+	["remarks"]="备注",
+	["details"]="详情",
+
+	["ChengNan"]="成男",
+	["ChengNv"]="成女",
+	["ZhengTai"]="正太",
+	["Loli"]="萝莉",
+
+	["Refresh"]="刷新",
+	["Delete"]="删除",
+	["Add"]="增加数据",
+
+	["LR_System_Black_List_Panel"]="系统黑名单明细",
+	["dwID"]="ID",
+	["area"]="区域",
+	["server"]="服务器",
+	["role_code"]="识别码",
+	["detail_link"]="详情",
 }

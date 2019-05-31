@@ -6,8 +6,6 @@ local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, tabl
 local AddonPath="Interface\\LR_Plugin\\LR_1Base"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_1Base"
 local _L = LR.LoadLangPack(AddonPath)
----------------------------------------------------------------
-LR = LR or {}
 --------------------------------------------------------------
 ----------物品格子
 --------------------------------------------------------------
@@ -488,28 +486,29 @@ function LR.hsv2rgb(h, s, v)
 end
 
 function LR.rgb2hsv(r, g, b)
-	local r=r/255
-	local g=g/255
-	local b=b/255
-	local MAX,MIN
-	if r>g then
-		MAX=mmax(r,b)
-		MIN=mmin(g,b)
+	local r = r / 255
+	local g = g / 255
+	local b = b / 255
+	local MAX, MIN
+	local h, s, v
+	if r > g then
+		MAX = mmax(r, b)
+		MIN = mmin(g, b)
 	else
-		MAX=mmax(g,b)
-		MIN=mmin(r,b)
+		MAX = mmax(g, b)
+		MIN = mmin(r, b)
 	end
-	local v=MAX
-	local delta=MAX-MIN
+	local v = MAX
+	local delta = MAX - MIN
 
 	if MAX == 0 then
-		s=0
+		s = 0
 	else
-		s=delta / MAX
+		s = delta / MAX
 	end
 
-	if MAX==MIN then
-		h=0
+	if MAX == MIN then
+		h = 0
 	else
 		if r == MAX and g >= b then
 			h = 60 * ( g - b ) / delta + 0
@@ -529,7 +528,7 @@ function LR.rgb2hsv(r, g, b)
 		h = h +360
 	end
 
-	return h, mfloor(s*100 + 0.5), mfloor(v*100 + 0.5)
+	return h, mfloor(s * 100 + 0.5), mfloor(v * 100 + 0.5)
 end
 
 ColorPanel = _G2.CreateAddon("ColorPanel")
@@ -1464,7 +1463,8 @@ function teamnotice.LR_TeamRequest()
 		return
 	end
 	if data[1] == "ASK" then
-		local t = {szName = me.szName, dwID = me.dwID, dwKungfuID = UI_GetPlayerMountKungfuID(), bGongZhan = LR.HasBuff(LR.GetBuffList(me), 3219)}
+		local user_code = LR.GetUserCode()
+		local t = {szName = me.szName, dwID = me.dwID, dwKungfuID = UI_GetPlayerMountKungfuID(), bGongZhan = LR.HasBuff(LR.GetBuffList(me), 3219), uc = user_code}
 		LR.BgTalk(szTalkerName, "LR_TeamRequest", "ANSWER", t)
 	end
 end

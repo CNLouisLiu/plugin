@@ -1695,7 +1695,7 @@ end
 -- Handle Object
 local ItemHandle = class(ItemBase)
 function ItemHandle:ctor(__parent, __name, __data)
-	assert(__parent ~= nil, "parent can not be null.")
+	assert(__parent ~= nil, "parent can not be null." .. __name)
 	__data = __data or {}
 	local __string = "<handle>w=10 h=10 handletype=0 postype=0 eventid=272 firstpostype=0 hover=Image_Hover </handle>"
 	if __data.w then

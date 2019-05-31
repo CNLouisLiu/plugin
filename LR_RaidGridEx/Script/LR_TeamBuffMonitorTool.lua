@@ -8,8 +8,15 @@ local VERSION = "20190128"		--修改此项可重置为默认数据
 local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
+----------------------------------------------------------------
+--引用的变量都在这里设置
+----------------------------------------------------------------
+--地图缓存数据
+local LR_Team_Map = _GMV.LR_Team_Map	--用于存地图BUFF信息
+local LR_Team_Map_Sorted =  _GMV.LR_Team_Map_Sorted	--按年代排序地图信息
+
 ---------------------------------------------------------------
-LR_TeamBuffTool = LR_TeamBuffTool or {}
+LR_TeamBuffTool = {}
 LR_TeamBuffTool.tBuffList = {
 --[[
 	VERSION = XXX,
@@ -160,7 +167,6 @@ function LR_TeamBuffTool.ClearBuffCache()
 	BUFF_CACHE = {}
 	LR_TeamBuffTool.SaveBuffCache(true)
 end
-
 
 --------------------------------------------------------------------
 ---公共BUFF配置文件

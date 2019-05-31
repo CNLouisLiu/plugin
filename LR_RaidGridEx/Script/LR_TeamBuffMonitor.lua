@@ -5,13 +5,20 @@ local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, tabl
 ---------------------------------------------------------------
 local VERSION = "20170921"
 ---------------------------------------------------------------
-local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
-local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
+local AddonPath = "Interface\\LR_Plugin\\LR_RaidGridEx"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
-local _DefaultBuffMonitorData={
+local _DefaultBuffMonitorData = {
 	VERSION = VERSION,
-	data={},
+	data = {},
 }
+----------------------------------------------------------------
+--引用的变量都在这里设置
+----------------------------------------------------------------
+--地图缓存数据
+_GMV.LR_Team_Map = {}	--用于存地图BUFF信息
+_GMV.LR_Team_Map_Sorted = {}	--按年代排序地图信息
+
 ----------------------------------------------------------------
 local _BuffBox = {
 	dwMemberID = nil,
@@ -564,6 +571,7 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 	local me = GetClientPlayer()
 	local scene = me.GetScene()
 	local dwMapID = scene.dwMapID
+	local LR_Team_Map = _GMV.LR_Team_Map
 	if scene.nType ==  MAP_TYPE.DUNGEON and not LR_TeamBuffTool_Panel.DisableDungeonData then
 		local data = LR_Team_Map[LR.MapType[dwMapID].szOtherName] or {enable = true, dwMapID = {}, data = {}, level = 1}
 		if data.enable then
@@ -621,9 +629,6 @@ local SOUND_TYPE = {
 ----------------------------------------------------------------
 ----地图缓存数据
 ----------------------------------------------------------------
-LR_Team_Map = {}	--用于存地图BUFF信息
-LR_Team_Map_Sorted =  {}	--按年代排序地图信息
-
 local map_initial = function()
 	local fenlei = {
 		[25] = {},
@@ -686,8 +691,8 @@ local map_initial = function()
 		end
 	end
 
-	LR_Team_Map = clone(data)
-	LR_Team_Map_Sorted = clone(list)
+	_GMV.LR_Team_Map = clone(data)
+	_GMV.LR_Team_Map_Sorted = clone(list)
 end
 map_initial()
 

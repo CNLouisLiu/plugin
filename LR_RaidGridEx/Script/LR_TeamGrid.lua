@@ -250,7 +250,7 @@ function _RoleGrid:AppendRoleGrid()
 	local RoleGridConfig = LoadLUAData(sformat("%s\\UI\\%s\\Role", AddonPath, LR_TeamGrid.UsrData.UI_Choose)) or {}
 	self.UI = {}
 	for i = 1, #RoleGridConfig do
-		v = RoleGridConfig[i]
+		local v = RoleGridConfig[i]
 		local Parent
 		if not v.Parent then
 			Parent = parentHandle
@@ -3091,7 +3091,7 @@ function LR_TeamGrid.ResizeTitle()
 	Wnd_Title:SetSize(w, 30)
 	WndContainer_Title:SetSize(w, 30)
 	--WndContainer_Title:SetRelPos(3, 2)
-	Handle_Title = Wnd_Title:Lookup("","")
+	local Handle_Title = Wnd_Title:Lookup("","")
 	Handle_Title:Lookup("Image_TitleBg"):SetSize(w, 30)
 	Handle_Title:Lookup("Image_Title"):SetSize(w, 30)
 	Handle_Title:Lookup("Animate_Title"):SetSize(w, 30)

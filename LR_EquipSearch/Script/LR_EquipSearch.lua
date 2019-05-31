@@ -276,7 +276,7 @@ function LR_EquipSearch.ExportDB()
 					tAttribute[#tAttribute + 1] = sformat("A%d,", LR_ATTRIBUTE_nID[v2.nID])
 				end
 			end
-			szAttribute = tconcat(tAttribute, "")
+			local szAttribute = tconcat(tAttribute, "")
 
 			local nRequireLevel = 0
 			if v.dwTabType ~= ITEM_TABLE_TYPE.OTHER then

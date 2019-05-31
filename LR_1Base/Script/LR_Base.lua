@@ -6,27 +6,6 @@ local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, tabl
 local AddonPath = "Interface\\LR_Plugin\\LR_1Base"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_1Base"
 ---------------------------------------------------------------
-BAG_PACKAGE = {
-	INVENTORY_INDEX.PACKAGE,	--1
-	INVENTORY_INDEX.PACKAGE1,	--2
-	INVENTORY_INDEX.PACKAGE2,	--3
-	INVENTORY_INDEX.PACKAGE3,	--4
-	INVENTORY_INDEX.PACKAGE4,	--5
-	INVENTORY_INDEX.PACKAGE_MIBAO,	--6
-}
-BANK_PACKAGE = {
-	INVENTORY_INDEX.BANK,
-	INVENTORY_INDEX.BANK_PACKAGE1,
-	INVENTORY_INDEX.BANK_PACKAGE2,
-	INVENTORY_INDEX.BANK_PACKAGE3,
-	INVENTORY_INDEX.BANK_PACKAGE4,
-	INVENTORY_INDEX.BANK_PACKAGE5,
-}
-
-ALL_KUNGFU_COLLECT = {
-	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 21, 22, 23, 24, 0,
-}
------------------------------------------------------------
 LR = LR or {
 	tDelayCall = {},
 	tEvent = {},
@@ -42,8 +21,6 @@ RegisterCustomData("LR.UsrData", CustomVersion)
 function LR.SaveLUAData(path, data, crc)
 	SaveLUAData(path, data, "\t", crc or false)
 end
-
----------------------------------------------------------------------------------
 -- 多语言处理
 -- (table) MY.LoadLangPack(void)
 local SZLANG = ""
@@ -596,8 +573,8 @@ function LR.GetSelfMingJianBi()
 	return player.nArenaAward, player.GetArenaAwardRemainSpace(), player.GetMaxArenaAward()
 end
 
-function LR.GetAccountCode()
-	local account = GetUserAccount()
+function LR.GetAccountCode(szText)
+	local account = szText or GetUserAccount()
 	local code = LR.md5(LR.AES.encrypt("haohaohaolanrenchajianfeichanghao", LR.basexx.to_base64(account)))
 	return code
 end
@@ -610,6 +587,10 @@ function LR.GetUserCode()
 	local AccountCode = LR.GetAccountCode()
 	local code = LR.AES.encrypt("hugeforest@qq.com", sformat("%s_%s", AccountCode, szKey))
 	return code
+end
+
+function LR.DecodeUserCode(text)
+	return LR.AES.decrypt("hugeforest@qq.com", text)
 end
 
 
@@ -1055,7 +1036,7 @@ end
 -- nY		-- 世界坐标系下的目标点 Y 值
 -- nZ		-- *可选* 世界坐标系下的目标点 Z 值
 function LR.GetDistance(nX, nY, nZ)
-	local NX, XY, NZ
+	local NX, NY, NZ
 	local me = GetClientPlayer()
 	if not nX then
 		return 0

@@ -350,6 +350,19 @@ function LR_TeamRequest.ON_BG_CHANNEL_MSG()
 				_ui[sformat("Btn_View_%s", v.szName)]:Enable(true)
 			end
 
+			--ºÚÃûµ¥¼ì²â
+			local ServerInfo = {GetUserServer()}
+			local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+			local szKey = sformat("%s_%s_%d", realArea, realServer, v.dwID)
+
+			Output(v.uc, szKey)
+			if LR_Black_List.IsTargetInAccountBlackList({role_code = v.uc, szKey = szKey}) then
+				Output("account black")
+			elseif LR_Black_List.IsTargetInSystemBlackList(szKey) then
+				Output("system black")
+			elseif LR_Black_List.IsTargetInCustomBlackList(szKey) then
+				Output("custom black")
+			end
 		end
 	end
 end

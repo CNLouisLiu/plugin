@@ -1097,7 +1097,7 @@ function _QY.ListQY()
 	_QY.Container:Clear()
 
 	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
-	num = _QY.ShowItem(TempTable_Cal, 255, 1, 0)
+	local num = _QY.ShowItem(TempTable_Cal, 255, 1, 0)
 	num = _QY.ShowItem(TempTable_NotCal, 60, 1, num)
 	_QY.Container:FormatAllContentPos()
 end
