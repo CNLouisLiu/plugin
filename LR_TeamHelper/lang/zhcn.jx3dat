@@ -44,4 +44,5 @@ data = {
 	["server"]="服务器",
 	["role_code"]="识别码",
 	["detail_link"]="详情",
+	["Open LR_Black"]="打开懒人黑名单列表",
 }

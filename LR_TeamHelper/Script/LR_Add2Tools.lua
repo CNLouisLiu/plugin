@@ -20,7 +20,7 @@ local LR_TeamHelper_UI ={
 	dwIcon = 6641,
 	szClass = "SmallHelpers",
 	tWidget = {
-		{	name="LR_TeamHelper_UI_check_box",type="CheckBox",text=_L["Enable LR TeamHelper"],x=0,y=0,w=200,
+		{	name="LR_TeamHelper_UI_check_box",type="CheckBox",text=_L["Enable LR TeamHelper"], x = 0, y = 0, w = 200,
 			default = function ()
 				return LR_TeamRequest.UsrData.bOn
 			end,
@@ -30,6 +30,10 @@ local LR_TeamHelper_UI ={
 		},{	name="LR_TeamHelper_UI_Button_01", type="Button", text = _L["Open LR_CDRP"], x = 0, y = 40, w = 200,
 			callback = function ()
 				LR_CDRP.OpenFrame()
+			end
+		},{	name="LR_TeamHelper_UI_Button_02", type="Button", text = _L["Open LR_Black"], x = 0, y = 80, w = 200,
+			callback = function ()
+				LR_Black_List.OpenPanel()
 			end
 		},
 	}

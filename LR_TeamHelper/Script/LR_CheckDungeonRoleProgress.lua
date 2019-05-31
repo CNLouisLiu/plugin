@@ -66,7 +66,7 @@ function LR_CDRP.OnFrameBreathe()
 end
 
 function LR_CDRP.OnFrameDestroy()
-	local UI = {}
+	UI = {}
 end
 
 function LR_CDRP.OnLButtonClick()

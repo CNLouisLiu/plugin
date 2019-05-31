@@ -2014,6 +2014,7 @@ LR.RegisterEvent("FIRST_LOADING_END", function() _RC.FIRST_LOADING_END() end)
 ------------------------------------------
 LR_AS_RC.LoadCustomQuestList = _RC.LoadCustomQuestList
 LR_AS_RC.SaveCommomMenuList = _RC.SaveCommomMenuList
+LR_AS_RC.LoadCommomMenuList = _RC.LoadCommomMenuList
 LR_AS_RC.SaveCustomQuestList = _RC.SaveCustomQuestList
 LR_AS_RC.RI_CHANG = RI_CHANG
 LR_AS_RC.RI_CHANG_NAME = RI_CHANG_NAME
@@ -2048,4 +2049,3 @@ LR_AS_Module.RC.RefreshPage = _RC.RefreshPage
 LR_AS_Module.RC.ShowTip = _RC.ShowTip
 LR_AS_Module.RC.FIRST_LOADING_END = _RC.LoadData2
 LR_AS_Module.RC.CheckExam = _Exam.CheckExam
-

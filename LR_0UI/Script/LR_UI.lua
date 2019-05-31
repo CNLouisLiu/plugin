@@ -273,9 +273,11 @@ function WndFrame:ctor(__name, __data)
 	self:_SetSelf(self.__this)
 	self:_SetType("WndFrame")
 	if __data.style and __data.style ~= "NONE" and __data.style ~= "NONE2" or __data.path then
-		frame:Lookup("Btn_Close").OnLButtonClick = function()
-			self:Destroy()
-			PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
+		if frame:Lookup("Btn_Close") then
+			frame:Lookup("Btn_Close").OnLButtonClick = function()
+				self:Destroy()
+				PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
+			end
 		end
 		if __data.title then
 			self:SetTitle(__data.title or "")
