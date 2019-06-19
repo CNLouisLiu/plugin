@@ -45,4 +45,14 @@ data = {
 	["role_code"]="识别码",
 	["detail_link"]="详情",
 	["Open LR_Black"]="打开懒人黑名单列表",
+
+	["In black list, plese hold ctrl to click."]="该角色在黑名单中，如需组队，请按住ctrl键。",
+	["Black list"]="黑名单",
+	["Instructions:"]="说明：",
+	["LR Plugin installed."]="对方已安装懒人插件",
+	["LR Plugin not installed."]="对方未安装懒人插件，请谨慎组队。",
+	["Be in black list."]="对方在黑名单中，请谨慎组队",
+
+	["Report"]="举报",
+	["LR_Black_Report"]="举报信息面板",
 }

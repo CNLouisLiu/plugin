@@ -118,6 +118,34 @@ function LR_TeamRequestPanel.OnLButtonClick()
 	end
 end
 
+function LR_TeamRequestPanel.OnMouseEnter()
+	local szName = this:GetName()
+	if szName == "Btn_Setting" then
+		local x, y = this:GetAbsPos()
+		local w, h = this:GetSize()
+		local tTip = {}
+		tTip[#tTip + 1] = GetFormatText(sformat("%s\n", _L["Instructions:"]))
+		--
+		tTip[#tTip + 1] = GetFormatImage("UI/Image/GMPanel/gm2.uitex", 7, 24, 24)
+		tTip[#tTip + 1] = GetFormatText(sformat("%s\n", _L["LR Plugin installed."]))
+		--
+		tTip[#tTip + 1] = GetFormatImage("UI/Image/GMPanel/gm2.uitex", 9, 24, 24)
+		tTip[#tTip + 1] = GetFormatText(sformat("%s\n", _L["LR Plugin not installed."]))
+		--
+		tTip[#tTip + 1] = GetFormatImage("UI/Image/GMPanel/gm2.uitex", 6, 24, 24)
+		tTip[#tTip + 1] = GetFormatText(sformat("%s\n", _L["Be in black list."]))
+
+		OutputTip(tconcat(tTip), 320, {x, y, w, h})
+	end
+end
+
+function LR_TeamRequestPanel.OnMouseLeave()
+	local szName = this:GetName()
+	if szName == "Btn_Setting" then
+		HideTip()
+	end
+end
+
 function LR_TeamRequestPanel.OnEvent(szEvent)
 	if szEvent == "UI_SCALED" then
 		LR_TeamRequestPanel.UpdateAnchor(this)
@@ -134,6 +162,14 @@ function LR_TeamRequestPanel.ini()
 
 	_ui = {}
 	_ui["WndContainer"] = LR.AppendUI("WndContainer", frame, "WndContainer", {x = 0, y = 30, w = 550, h = 100})
+	_ui["WinBlack"] = LR.AppendUI("Window", frame, "WinBlack", {x = 0, y = 30, w = 550, h = 100})
+	_ui["WndBlackContainer"] = LR.AppendUI("WndContainer", _ui["WinBlack"], "WndBlackContainer", {x = 0, y = 30, w = 550, h = 100})
+	--
+	local image = LR.AppendUI("Image", _ui["WinBlack"], "Image_Text", {x = 0, y = 0, w = 100, h = 30})
+	image:FromUITex("UI/image/Helper/help--bg.Uitex", 6)
+	local Text = LR.AppendUI("Text", _ui["WinBlack"], "Text_Black", {x = 10, y = 0, w = 100, h = 30, text = _L["Black list"]})
+	Text:SetFontScheme(159)
+
 	_ui["frame"] = frame
 
 	LR_TeamRequestPanel.LoadQuest()
@@ -162,13 +198,39 @@ function LR_TeamRequestPanel.ReSize()
 		return
 	end
 
-	if _ui["WndContainer"]:GetAllContentCount() == 0 then
+	if _ui["WndContainer"]:GetAllContentCount() == 0 and _ui["WndBlackContainer"]:GetAllContentCount() == 0 then
 		LR_TeamRequestPanel.ClosePanel()
 	else
-		_ui["WndContainer"]:SetSize(550, _ui["WndContainer"]:GetAllContentCount() * 40 + 2)
+		--
+		local num1 = _ui["WndContainer"]:GetAllContentCount()
+		local h1 = num1 * 50 + 2
+		_ui["WndContainer"]:SetSize(600, h1)
 		_ui["WndContainer"]:FormatAllContentPos()
-		_ui["frame"]:Lookup("",""):Lookup("Image_Bg"):SetSize(550, _ui["WndContainer"]:GetAllContentCount() * 40 + 32)
-		_ui["frame"]:SetSize(550, _ui["WndContainer"]:GetAllContentCount() * 40 + 32)
+		--
+		local num2, h3 = _ui["WndBlackContainer"]:GetAllContentCount(), 0
+		if num2 > 0 then
+			local h2 = num2 * 50 + 2
+			h3 = h2 + 30
+			_ui["WinBlack"]:SetRelPos(0, 30 + h1)
+			_ui["WinBlack"]:SetSize(600, h3)
+			_ui["WndBlackContainer"]:SetSize(600, h2)
+			_ui["WndBlackContainer"]:FormatAllContentPos()
+			--
+			local handle = frame:Lookup("WinBlack"):Lookup("","")
+			handle:Show()
+		else
+			_ui["WndBlackContainer"]:SetSize(600, 0)
+			_ui["WndBlackContainer"]:FormatAllContentPos()
+			--
+			_ui["WinBlack"]:SetRelPos(0, 30 + h1)
+			_ui["WinBlack"]:SetSize(600, h3)
+
+			local handle = frame:Lookup("WinBlack"):Lookup("","")
+			handle:Hide()
+		end
+
+		_ui["frame"]:Lookup("",""):Lookup("Image_Bg"):SetSize(600, h1 + h3 + 32)
+		_ui["frame"]:SetSize(600, h1 + h3 + 32)
 	end
 end
 
@@ -184,29 +246,32 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 		return
 	end
 	if not _ui[sformat("WndWindow_%s", data.szName)] then
-		local WndWindow = LR.AppendUI("Window", _ui["WndContainer"], sformat("WndWindow_%s", data.szName), {w = 550, h = 40})
-
-		local Image_Bg = LR.AppendUI("Image", WndWindow, "Image_Bg", { x = 0, y = 0, w = 550, h = 40})
+		local WndWindow = LR.AppendUI("Window", _ui["WndContainer"], sformat("WndWindow_%s", data.szName), {w = 600, h = 50})
+		--
+		local Image_Bg = LR.AppendUI("Image", WndWindow, "Image_Bg", { x = 0, y = 0, w = 600, h = 50})
 		Image_Bg:FromUITex("ui/Image/UICommon/CommonPanel.UITex", 48):SetImageType(10)
+		--image
+		local Image_Status = LR.AppendUI("Image", WndWindow, sformat("Image_Status_%s", data.szName), { x = 10, y = 10, w = 30, h = 30})
+		Image_Status:FromUITex("UI/Image/GMPanel/gm2.uitex", 9)
 
-		local Image_Kungfu = LR.AppendUI("Image", WndWindow, sformat("Image_Kungfu_%s", data.szName), { x = 10, y = 5, w = 30, h = 30})
+		local Image_Kungfu = LR.AppendUI("Image", WndWindow, sformat("Image_Kungfu_%s", data.szName), { x = 45, y = 10, w = 30, h = 30})
 		Image_Kungfu:FromUITex(GetForceImage(data.dwForceID))
 
-		local Text_Name = LR.AppendUI("Text", WndWindow, "Text_Name", {x = 45, y = 5, w = 100, h = 30})
+		local Text_Name = LR.AppendUI("Text", WndWindow, "Text_Name", {x = 80, y = 5, w = 95, h = 40})
 		Text_Name:SetVAlign(1):SetHAlign(0):SetFontScheme(2):SetText(sformat("%s (%d)", data.szName, data.nLevel)):SetFontColor(LR.GetMenPaiColor(data.dwForceID))
 
-		local Image_GongZhan = LR.AppendUI("Image", WndWindow, sformat("Image_GongZhan_%s", data.szName), { x = 225, y = 5, w = 30, h = 30})
+		local Image_GongZhan = LR.AppendUI("Image", WndWindow, sformat("Image_GongZhan_%s", data.szName), { x = 270, y = 10, w = 30, h = 30})
 		Image_GongZhan:FromIconID(Table_GetBuffIconID(3219, 1)):Hide()
 
-		local Image_Camp = LR.AppendUI("Image", WndWindow, "Image_Camp", { x = 265, y = 5, w = 30, h = 30})
+		local Image_Camp = LR.AppendUI("Image", WndWindow, "Image_Camp", { x = 310, y = 10, w = 30, h = 30})
 		Image_Camp:FromUITex(LR.GetCampImage(data.nCamp))
 
-		local Btn_View = LR.AppendUI("Button", WndWindow, sformat("Btn_View_%s", data.szName), {x = 308, y = 5, w = 70, h = 30, text = g_tStrings.STR_LOOKUP})
+		local Btn_View = LR.AppendUI("Button", WndWindow, sformat("Btn_View_%s", data.szName), {x = 350, y = 5, w = 80, h = 40, text = g_tStrings.STR_LOOKUP})
 		Btn_View:Enable(false)
-		local Btn_Apply = LR.AppendUI("Button", WndWindow, "Btn_Apply", {x = 385, y = 5, w = 70, h = 30, text = g_tStrings.STR_ACCEPT})
-		local Btn_Refuse = LR.AppendUI("Button", WndWindow, sformat("Btn_Refuse_%s", data.szName), {x = 465, y = 5, w = 70, h = 30, text = sformat("%s(%d)", g_tStrings.STR_REFUSE, 120)})
+		local Btn_Apply = LR.AppendUI("Button", WndWindow, "Btn_Apply", {x = 435, y = 5, w = 70, h = 40, text = g_tStrings.STR_ACCEPT})
+		local Btn_Refuse = LR.AppendUI("Button", WndWindow, sformat("Btn_Refuse_%s", data.szName), {x = 510, y = 5, w = 80, h = 40, text = sformat("%s(%d)", g_tStrings.STR_REFUSE, 120)})
 
-		local Image_Hover = LR.AppendUI("Image", WndWindow, sformat("Image_Hover_%s", data.szName), { x = 0, y = 0, w = 550, h = 40})
+		local Image_Hover = LR.AppendUI("Image", WndWindow, sformat("Image_Hover_%s", data.szName), { x = 0, y = 0, w = 600, h = 50})
 		Image_Hover:FromUITex("ui/Image/Common/Box.UITex", 10):SetImageType(10):Hide()
 
 		_ui[sformat("WndWindow_%s", data.szName)] = WndWindow
@@ -215,7 +280,18 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 		_ui[sformat("Image_Kungfu_%s", data.szName)] = Image_Kungfu
 		_ui[sformat("Image_GongZhan_%s", data.szName)] = Image_GongZhan
 		_ui[sformat("Btn_View_%s", data.szName)] = Btn_View
+		_ui[sformat("Image_Status_%s", data.szName)] = Image_Status
 
+		Btn_View.OnEnter = function()
+			if _ui[sformat("Image_Hover_%s", data.szName)] then
+				_ui[sformat("Image_Hover_%s", data.szName)]:Show()
+			end
+		end
+		Btn_View.OnLeave = function()
+			if _ui[sformat("Image_Hover_%s", data.szName)] then
+				_ui[sformat("Image_Hover_%s", data.szName)]:Hide()
+			end
+		end
 		Btn_View.OnClick = function()
 			if data.dwID then
 				LR.GetEquipmentMenu(data.dwID)[1].fnAction()
@@ -233,8 +309,45 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 			end
 		end
 		Btn_Apply.OnClick = function()
-			if REQUEST_LIST[data.szName] then
-				LR_TeamRequest.Request(data.szName, 1)
+			if data.dwID then
+				if IsCtrlKeyDown() then
+					if REQUEST_LIST[data.szName] then
+						LR_TeamRequest.Request(data.szName, 1)
+					end
+				else
+					local ServerInfo = {GetUserServer()}
+					local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+					local szKey = sformat("%s_%s_%d", realArea, realServer, data.dwID)
+					local bBlack = false
+					if LR_Black_List.IsTargetInAccountBlackList({role_code = data.role_code, szKey = szKey}) then
+						bBlack = true
+					elseif LR_Black_List.IsTargetInSystemBlackList(szKey) then
+						bBlack = true
+					elseif LR_Black_List.IsTargetInCustomBlackList(szKey) then
+						bBlack = true
+					end
+					if bBlack then
+						local msg = {
+							szMessage = _L["In black list, plese hold ctrl to click."],
+							szName = "black list",
+							fnAutoClose = function() return false end,
+							{szOption = g_tStrings.STR_HOTKEY_SURE,
+								fnAction = function()
+
+								end,
+							},
+						}
+						MessageBox(msg)
+					else
+						if REQUEST_LIST[data.szName] then
+							LR_TeamRequest.Request(data.szName, 1)
+						end
+					end
+				end
+			else
+				if REQUEST_LIST[data.szName] then
+					LR_TeamRequest.Request(data.szName, 1)
+				end
 			end
 		end
 
@@ -289,6 +402,22 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 	end
 end
 
+function LR_TeamRequest.ChangeToBlackWindow(data)
+	local frame = Station.Lookup("Normal1/LR_TeamRequestPanel")
+	if not frame then
+		return
+	end
+	if not _ui[sformat("WndWindow_%s", data.szName)] then
+		return
+	end
+	local WndWindow = _ui[sformat("WndWindow_%s", data.szName)]
+	local WndBlackContainer = _ui["WndBlackContainer"]
+	WndWindow:ChangeRelation(WndBlackContainer, true, true)
+	--
+	LR_TeamRequestPanel.ReSize()
+end
+
+
 -------------------------------------------
 ---事件处理
 -------------------------------------------
@@ -337,6 +466,7 @@ function LR_TeamRequest.ON_BG_CHANNEL_MSG()
 			REQUEST_LIST[v.szName].dwID = v.dwID
 			REQUEST_LIST[v.szName].dwKungfuID = v.dwKungfuID
 			REQUEST_LIST[v.szName].bGongZhan = v.bGongZhan
+			REQUEST_LIST[v.szName].role_code = v.uc
 
 			if _ui[sformat("Image_Kungfu_%s", v.szName)] then
 				_ui[sformat("Image_Kungfu_%s", v.szName)]:FromIconID(Table_GetSkillIconID(v.dwKungfuID, 1))
@@ -350,18 +480,27 @@ function LR_TeamRequest.ON_BG_CHANNEL_MSG()
 				_ui[sformat("Btn_View_%s", v.szName)]:Enable(true)
 			end
 
+			if _ui[sformat("Image_Status_%s", v.szName)] then
+				_ui[sformat("Image_Status_%s", v.szName)]:FromUITex("UI/Image/GMPanel/gm2.uitex", 7)
+			end
+
 			--黑名单检测
 			local ServerInfo = {GetUserServer()}
 			local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 			local szKey = sformat("%s_%s_%d", realArea, realServer, v.dwID)
 
-			Output(v.uc, szKey)
 			if LR_Black_List.IsTargetInAccountBlackList({role_code = v.uc, szKey = szKey}) then
-				Output("account black")
+				--Output("account black")
+				LR_TeamRequest.ChangeToBlackWindow(REQUEST_LIST[v.szName])
+				_ui[sformat("Image_Status_%s", v.szName)]:FromUITex("UI/Image/GMPanel/gm2.uitex", 6)
 			elseif LR_Black_List.IsTargetInSystemBlackList(szKey) then
-				Output("system black")
+				--Output("system black")
+				LR_TeamRequest.ChangeToBlackWindow(REQUEST_LIST[v.szName])
+				_ui[sformat("Image_Status_%s", v.szName)]:FromUITex("UI/Image/GMPanel/gm2.uitex", 6)
 			elseif LR_Black_List.IsTargetInCustomBlackList(szKey) then
-				Output("custom black")
+				--Output("custom black")
+				LR_TeamRequest.ChangeToBlackWindow(REQUEST_LIST[v.szName])
+				_ui[sformat("Image_Status_%s", v.szName)]:FromUITex("UI/Image/GMPanel/gm2.uitex", 6)
 			end
 		end
 	end

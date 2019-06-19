@@ -1656,7 +1656,7 @@ end
 function LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
 	local newTable = {}
 	_NORMAL_BUFF_SHOW[dwPlayerID] = _NORMAL_BUFF_SHOW[dwPlayerID] or {}
-	MemberBuff = _NORMAL_BUFF_SHOW[dwPlayerID]
+	local MemberBuff = _NORMAL_BUFF_SHOW[dwPlayerID]
 	for k, v in pairs (MemberBuff) do
 		if next(v) ~= nil then
 			newTable[v.dwID] = clone(v)

@@ -185,6 +185,9 @@ function LR.IsMapBlockAddon()
 	if not me then
 		return true
 	end
+	if IsAddonBanMap and IsAddonBanMap(me.GetMapID()) then
+		return true
+	end
 	if Table_IsTreasureBattleFieldMap(me.GetMapID()) then
 		return true
 	end
@@ -1607,6 +1610,16 @@ function LR.GetTongName(dwTongID)
 		return LR.Trim(Tong.ApplyGetTongName(dwTongID))
 	else
 		return ""
+	end
+end
+
+function LR.SetDataToClip(szText)
+	local lenth = slen(szText)
+	if lenth > 128 then
+		LR.Log(sformat("Text is too long.(%s -- %d)\n", szText, lenth))
+		SetDataToClip(ssub(szText, 1, 128))
+	else
+		SetDataToClip(szText)
 	end
 end
 -------------------------------------------------------------------------------

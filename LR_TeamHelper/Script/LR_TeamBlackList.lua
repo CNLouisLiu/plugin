@@ -7,7 +7,7 @@ local AddonPath = "Interface\\LR_Plugin\\LR_TeamHelper"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_TeamHelper"
 local _L = LR.LoadLangPack(AddonPath)
 ---------------------------------------------------------------
-local VERSION = "20190528b"
+local VERSION = "20190528c"
 ---------------------------------------------------------------
 local ROLETYPE_TEXT = {
 	[1] = _L["ChengNan"],
@@ -28,7 +28,7 @@ local SYSTEM_USER = {
 	["a1dfe695c899cfbe0c1d38fed2ff6598"] = true,
 }
 --
-local SYSTEM_DB_PATH = sformat("%s\\data", AddonPath)
+local SYSTEM_DB_PATH = sformat("%s\\data", SaveDataPath)
 local SYSTEM_DB_NAME = "system.db"
 --
 local CUSTOM_DB_PATH = sformat("%s\\data", SaveDataPath)
@@ -61,6 +61,7 @@ local schema_system_db = {
 		{name = "role_type", 	sql = "role_type INTEGER DEFAULT(0)"},
 		{name = "detail_link", 	sql = "detail_link VARCHAR(9999) DEFAULT('')"},
 		{name = "remarks", 	sql = "remarks VARCHAR(9999) DEFAULT('')"},
+		{name = "save_time", 	sql = "save_time INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
 }
@@ -152,6 +153,19 @@ function _C.AddOneCustomData(data)
 	LR.CloseDB(DB)
 	--
 	BLACK_CUSTOM_LIST[data.szKey] = clone(data)
+end
+
+function _C.Add2SystemDB(tData)
+	local path = sformat("%s\\%s", SYSTEM_DB_PATH, SYSTEM_DB_NAME)
+	local DB = LR.OpenDB(path, "LR_SYSTEM_BLACK_LIST_ADD_254SAD6F31WER9ASDF313")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO system_db ( szKey, szName, dwID, area, server, dwForceID, role_code, role_type, remarks, detail_link, save_time ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+	--
+	for k, data in pairs(tData) do
+		DB_REPLACE:ClearBindings()
+		DB_REPLACE:BindAll(data.szKey, data.szName, data.dwID, data.area, data.server, data.dwForceID, data.role_code, data.role_type, data.remarks, data.detail_link, GetCurrentTime())
+		DB_REPLACE:Execute()
+	end
+	LR.CloseDB(DB)
 end
 
 function _C.DelOneCustomData(szKey)
@@ -253,6 +267,9 @@ local UI = {}
 --
 local SP = {}	--short for System_Panel
 local SUI = {}
+--
+local RP = {}	--Report Panel
+local RUI = {}
 -----------------------------------------------
 LR_Black_List_Panel = {}
 LR_Black_List_Panel.UsrData = {
@@ -464,12 +481,42 @@ function LP.ShowSystemList()
 	local hScroll = UI["Scroll_System_List"]
 	hScroll:ClearHandle()
 
-	local szKey = {"szName", "area_server", "server", "dwForceID", "role_type"}
-
+	local szKey = {"szName", "area_server", "dwForceID", "role_type", "detail_link"}
+	local width = {160, 120, 80, 80}
 
 	for k, v in pairs(BLACK_SYSTEM_LIST) do
+		local Handle_Hover_Role = LR.AppendUI("HoverHandle", hScroll, sformat("Handle_%s", v.szKey), {w = 730, h = 30})
+		--
+		local x = 0
+		for k2, v2 in pairs(szKey) do
+			if v2 == "szName" then
+				local HandleName = LR.AppendUI("Handle", Handle_Hover_Role, sformat("Handle_%s", v2), {x = x, y = 0, w = width[k2], h = 30})
+				local Image = LR.AppendUI("Image", HandleName, sformat("ImageForce_%s", v2), {x = x, y = 0, w = 30, h = 30})
+				local Text = LR.AppendUI("Text", HandleName, sformat("TextName_%s", v2), {x = x + 30, y = 0, w = width[k2] - 30, h = 30})
+				Text:SetVAlign(1):SetHAlign(0)
+				Text:SetText(v.szName)
+			elseif v2 == "area_server" then
+				local Text = LR.AppendUI("Text", Handle_Hover_Role, sformat("Text_%s", v2), {x = x, y = 0, w = width[k2], h = 30})
+				Text:SetVAlign(1):SetHAlign(1)
+				Text:SetText(sformat("%s_%s", v.area, v.server))
+			elseif v2 == "dwForceID" then
+				local Text = LR.AppendUI("Text", Handle_Hover_Role, sformat("Text_%s", v2), {x = x, y = 0, w = width[k2], h = 30})
+				Text:SetVAlign(1):SetHAlign(1)
+				Text:SetText(g_tStrings.tForceTitle[v.dwForceID])
+			elseif v2 == "role_type" then
+				local Text = LR.AppendUI("Text", Handle_Hover_Role, sformat("Text_%s", v2), {x = x, y = 0, w = width[k2], h = 30})
+				Text:SetVAlign(1):SetHAlign(1)
+				Text:SetText(ROLETYPE_TEXT[tonumber(v.role_type)])
+			elseif v2 == "detail_link" then
+				local Image = LR.AppendUI("Image", Handle_Hover_Role, sformat("Image_%s", v2), {x = x, y = 0, w = 30, h = 30})
+				Image:RegisterEvent(256)
+				Image.OnEnter = function()
+					Output("dd")
+				end
+			end
 
-
+			x = x + width[k2]
+		end
 	end
 
 	hScroll:UpdateList()
@@ -585,10 +632,151 @@ function SP.OpenPanel(data)
 	end
 end
 
+--------
+--举报用
+--------
+LR_Black_Report = {}
+
+LR_Black_Report.UsrData = {
+	Anchor = {},
+}
+
+function LR_Black_Report.OnFrameCreate()
+	this:RegisterEvent("UI_SCALED")
+	--
+	RP.UpdateAnchor(this)
+	--
+	RegisterGlobalEsc("LR_Black_Report", function () return true end , function() Wnd.CloseWindow("LR_Black_Report") end)
+	PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
+end
+
+function LR_Black_Report.OnFrameDestroy()
+	UnRegisterGlobalEsc("LR_Black_Report")
+	PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
+end
+
+function LR_Black_Report.OnFrameDragEnd()
+	this:CorrectPos()
+	local x, y = this:GetRelPos()
+	LR_Black_Report.UsrData.Anchor = {x = x, y = y}
+end
+
+function LR_Black_Report.OnFrameBreathe()
+
+end
+
+function LR_Black_Report.OnEvent(szEvent)
+	if szEvent == "UI_SCALED" then
+
+	end
+end
+
+function RP.UpdateAnchor(frame)
+	frame:CorrectPos()
+	local Anchor = LR_Black_Report.UsrData.Anchor
+	if not Anchor.x then
+		frame:SetPoint("CENTER", 0, 0, "CENTER", 0, 0)
+	else
+		frame:SetAbsPos(Anchor.x, Anchor.y)
+	end
+end
+
+function RP.InitPanel(data)
+	local frame = LR.AppendUI("Frame", "LR_Black_Report", {title = _L["LR_Black_Report"], path = sformat("%s\\UI\\LR_Black_Report.ini", AddonPath)})
+
+	RUI["LR_Black_Report"] = frame
+	--
+	local vData = data or {}
+	--
+	local szKey = {"szName", "dwID", "area", "server", "role_code", "dwForceID", "role_type"}
+	local height = {30, 30, 30, 30, 30, 30, 30, 30, 120}
+
+	local y = 50
+	for k, v in pairs(szKey) do
+		local Label = LR.AppendUI("Text", frame, sformat("Label_%s", v), {x = 20, y = y, w = 60, h = height[k], text = _L[v]})
+		local Edit = LR.AppendUI("Edit", frame, sformat("Edit_%s", v), {x = 80, y = y, w = 220, h = height[k], text = vData[v] or ""})
+		Edit:Enable(false)
+		SUI[sformat("Edit_%s", v)] = Edit
+
+		local Btn = LR.AppendUI("UIButton", frame, sformat("Btn_%s", v), {w = 30, h = 30, x = 310, y = y, ani = {"ui\\Image\\UICommon\\CommonPanel2.UITex", 18, 19, 21}})
+		Btn.OnClick = function()
+			local text = sformat("%s:%s\n", _L[v], vData[v] or "")
+			LR.SetDataToClip(text)
+		end
+		Btn.OnEnter = function()
+			local tip = {}
+			local x, y = this:GetAbsPos()
+			local w, h = this:GetSize()
+			tip[#tip + 1] = GetFormatText(_L["Copy"])
+			OutputTip(tconcat(tip), 320, {x, y, w, h})
+		end
+		Btn.OnLeave = function()
+			HideTip()
+		end
+		y = y + height[k] + 5
+	end
+
+	local Btn = LR.AppendUI("Button", frame, sformat("Btn_%s", "Report"), {w = 120, h = 30, x = 140, y = y + 10, text = _L["Report"]})
+	Btn.OnClick = function()
+		OpenBrowser("https://m.weibo.cn/status/4381780369039021?")
+	end
+end
+
+function RP.OpenPanel(data)
+	local frame = Station.Lookup("Normal/LR_Black_Report")
+	if not frame then
+		RUI = {}
+		RP.InitPanel(data)
+	else
+		RUI = {}
+		Wnd.CloseWindow("LR_Black_Report")
+	end
+end
+
+function _C.ngb()
+	local path = sformat("%s\\data\\ngb", SaveDataPath)
+	local ngb_data = LoadLUAData(path) or {}
+	Output("1", path, ngb_data, IsFileExist(path .. ".jx3dat"))
+	--
+	local RT = {
+		["成男"] = 1,
+		["成女"] = 2,
+		["少侠"] = 5,
+		["萝莉"] = 6,
+	}
+	--
+	local T = {}
+	local mm = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 21, 22, 23, 24}
+	for k, v in pairs(mm) do
+		T[g_tStrings.tForceTitle[v]] = k
+	end
+	T["长歌"] = 22
+
+	local data = {}
+	for k, v in pairs(ngb_data) do
+		local tLine = {}
+		tLine.szName = v.Name
+		tLine.dwID = v.ID
+		_, _, tLine.area, tLine.server = sfind(v.Server, "(.+)_(.+)")
+		tLine.role_code = v.role_code or ""
+		tLine.dwForceID = T[v.Sects]
+		tLine.role_type = RT[v.Shape]
+		tLine.detail_link = v.Details
+		tLine.remarks = v.Describe
+		tLine.szKey = sformat("%s_%s_%d", tLine.area, tLine.server, tLine.dwID)
+		data[#data + 1] = clone(tLine)
+	end
+	Output(data)
+	--
+	_C.Add2SystemDB(data)
+end
+
 -----------------------------------------------
 LR_Black_List.IsTargetInCustomBlackList = _C.IsTargetInCustomBlackList
 LR_Black_List.IsTargetInSystemBlackList = _C.IsTargetInSystemBlackList
 LR_Black_List.IsTargetInAccountBlackList = _C.IsTargetInAccountBlackList
 LR_Black_List.OpenPanel = LP.OpenPanel
+LR_Black_List.ReportP = RP.OpenPanel
+LR_Black_List.ngb = _C.ngb
 
 

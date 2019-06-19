@@ -219,8 +219,11 @@ function WndBase:GetAlpha()
 	return self.__this:GetAlpha()
 end
 
-function WndBase:ChangeRelation(...)
-	self.__this:ChangeRelation(...)
+function WndBase:ChangeRelation(__parent, ...)
+	if __parent.__addon then
+		__parent = __parent:GetSelf()
+	end
+	self.__this:ChangeRelation(__parent, ...)
 	return self
 end
 
@@ -392,6 +395,10 @@ function WndWindow:ctor(__parent, __name, __data)
 	self:SetRelPos(__data.x or 0, __data.y or 0)
 	self.data = {parent = __parent, name = __name, data = __data}
 end
+
+--[[function WndWindow:Lookup(...)
+	return self.__this:Lookup(...)
+end]]
 
 function WndWindow:SetSize(...)
 	self.__this:SetSize(...)

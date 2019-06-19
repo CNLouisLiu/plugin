@@ -249,6 +249,7 @@ function LR_TeamTools.DeathRecord.OnSkillEffectLog(dwCaster, dwTarget, bReact, n
 		nCasterType = TARGET.PLAYER
 	end
 	--¼¼ÄÜÃû×Ö
+	local szSkillName = ""
 	if nEffectType ==  SKILL_EFFECT_TYPE.SKILL then
 		szSkillName = Table_GetSkillName(dwID, dwLevel)
 	elseif nEffectType ==  SKILL_EFFECT_TYPE.BUFF then
