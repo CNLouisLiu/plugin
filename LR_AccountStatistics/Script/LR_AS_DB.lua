@@ -9,7 +9,7 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20190428a"
+local VERSION = "20190626"
 -------------------------------------------------------------
 LR_AS_DB = LR_AS_DB or {}
 LR_AS_DEBUG = false
@@ -99,6 +99,8 @@ local schema_player_info = {
 		{name = "nMaxVigor", 	sql = "nMaxVigor INTEGER DEFAULT(10000)"},			--100级新版最大精力
 		{name = "nVigorRemainSpace", 	sql = "nVigorRemainSpace INTEGER DEFAULT(3000)"},			--100级新版精力，可获
 		{name = "SaveTime", sql = "SaveTime INTEGER DEFAULT(0)"},
+		{name = "LastLoginTime", sql = "LastLoginTime INTEGER DEFAULT(0)"},
+		{name = "LastLogoutTime", sql = "LastLogoutTime INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
 }

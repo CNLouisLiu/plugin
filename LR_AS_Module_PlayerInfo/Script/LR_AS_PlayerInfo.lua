@@ -11,9 +11,11 @@ local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
 local VERSION = "20180403a"
 -------------------------------------------------------------
+local LOGIN_TIME = 0
+
 LR_AS_Base.PlayerInfoUI = {}
 LR_AS_Base.PlayerInfoUI.TitleOrder = {
-	"nMoney", "BangGong", "remainBangGong", "XiaYi", "remainXiaYi", "JianBen", "nVigor", "nVigorRemainSpace", "WeiWang", "remainWeiWang", "ZhanJieJiFen", "remainZhanJieJiFen", "ZhanJieDengJi", "MingJianBi"
+	"nMoney", "BangGong", "remainBangGong", "XiaYi", "remainXiaYi", "JianBen", "nVigor", "nVigorRemainSpace", "WeiWang", "remainWeiWang", "ZhanJieJiFen", "remainZhanJieJiFen", "ZhanJieDengJi", "MingJianBi", "LastLoginTime"
 }
 local DefaultShowData = {
 	["szName"] = true,
@@ -31,6 +33,7 @@ local DefaultShowData = {
 	["remainZhanJieJiFen"] = false,
 	["ZhanJieDengJi"] = false,
 	["MingJianBi"] = false,
+	["LastLoginTime"] = false,
 }
 LR_AS_Base.PlayerInfoUI.ShowData = clone(DefaultShowData)
 
@@ -50,6 +53,7 @@ LR_AS_Base.PlayerInfoUI.Width = {
 	["remainZhanJieJiFen"] = 80,
 	["ZhanJieDengJi"] = 80,
 	["MingJianBi"] = 80,
+	["LastLoginTime"] = 80,
 }
 
 local _C = {}
@@ -81,6 +85,7 @@ end
 
 function _C.LOGIN_GAME()
 	_C.CfgLoad()
+	LOGIN_TIME = GetCurrentTime()
 end
 
 LR.RegisterEvent("LOGIN_GAME", function() _C.LOGIN_GAME() end)
@@ -131,6 +136,8 @@ function _C.GetSelfData()
 	UserInfo.nCamp = me.nCamp or 0		--阵营
 	UserInfo.szTongName = LR.GetTongName(me.dwTongID) or ""	--帮会名称
 	UserInfo.SaveTime = GetCurrentTime()
+	UserInfo.LastLoginTime = LOGIN_TIME
+	UserInfo.LastLogoutTime = GetCurrentTime()
 
 	--100级新版精力
 	UserInfo.nVigor = me.nVigor
@@ -147,9 +154,9 @@ end
 function _C.SaveData(DB)
 	-------保存自身的属性数据
 	local v = clone(DATA2BSAVE) or {}
-	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, remainJianBen, BangGong, remainBangGong, XiaYi, remainXiaYi, WeiWang, remainWeiWang, ZhanJieJiFen, remainZhanJieJiFen, ZhanJieDengJi, MingJianBi, remainMingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, remainJianBen, BangGong, remainBangGong, XiaYi, remainXiaYi, WeiWang, remainWeiWang, ZhanJieJiFen, remainZhanJieJiFen, ZhanJieDengJi, MingJianBi, remainMingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime, LastLoginTime, LastLogoutTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
-	DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.remainJianBen, v.BangGong, v.remainBangGong, v.XiaYi, v.remainXiaYi, v.WeiWang, v.remainWeiWang, v.ZhanJieJiFen, v.remainZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.remainMingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.nVigor, v.nMaxVigor, v.nVigorRemainSpace, v.SaveTime})))
+	DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.remainJianBen, v.BangGong, v.remainBangGong, v.XiaYi, v.remainXiaYi, v.WeiWang, v.remainWeiWang, v.ZhanJieJiFen, v.remainZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.remainMingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.nVigor, v.nMaxVigor, v.nVigorRemainSpace, v.SaveTime, LOGIN_TIME, GetCurrentTime()})))
 	DB_REPLACE:Execute()
 end
 
@@ -194,6 +201,8 @@ function _C.RepairDB(DB)
 		data.nCamp = value1(v.nCamp, 0)	--阵营
 		data.szTongName = value1(v.szTongName, "")	--帮会名称
 		data.SaveTime = GetCurrentTime()
+		data.LastLoginTime = value1(v.LastLoginTime, 0)
+		data.LastLogoutTime = value1(v.LastLogoutTime, 0)
 
 		--100级新版精力
 		data.nVigor = value1(v.nVigor, 0)
@@ -205,10 +214,10 @@ function _C.RepairDB(DB)
 	local DB_DELETE = DB:Prepare("DELETE FROM player_info")
 	DB_DELETE:Execute()
 	--保存数据
-	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, remainJianBen, BangGong, remainBangGong, XiaYi, remainXiaYi, WeiWang, remainWeiWang, ZhanJieJiFen, remainZhanJieJiFen, ZhanJieDengJi, MingJianBi, remainMingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, remainJianBen, BangGong, remainBangGong, XiaYi, remainXiaYi, WeiWang, remainWeiWang, ZhanJieJiFen, remainZhanJieJiFen, ZhanJieDengJi, MingJianBi, remainMingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime, LastLoginTime, LastLogoutTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
 	for k, v in pairs(all_data) do
 		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.remainJianBen, v.BangGong, v.remainBangGong, v.XiaYi, v.remainXiaYi, v.WeiWang, v.remainWeiWang, v.ZhanJieJiFen, v.remainZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.remainMingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.nVigor, v.nMaxVigor, v.nVigorRemainSpace, v.SaveTime})))
+		DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.remainJianBen, v.BangGong, v.remainBangGong, v.XiaYi, v.remainXiaYi, v.WeiWang, v.remainWeiWang, v.ZhanJieJiFen, v.remainZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.remainMingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.nVigor, v.nMaxVigor, v.nVigorRemainSpace, v.SaveTime, v.LastLoginTime, v.LastLogoutTime})))
 		DB_REPLACE:Execute()
 	end
 end
@@ -217,10 +226,10 @@ end
 function _C.ClearAllReaminJianBenAndJingLi(DB)
 	local DB_SELECT = DB:Prepare("SELECT * FROM player_info WHERE szKey IS NOT NULL")
 	local Data = d2g(DB_SELECT:GetAll())
-	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, remainJianBen, BangGong, remainBangGong, XiaYi, remainXiaYi, WeiWang, remainWeiWang, ZhanJieJiFen, remainZhanJieJiFen, ZhanJieDengJi, MingJianBi, remainMingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime) VALUES ( ?, ?, ?, ?, ?, 1500, ?, 200000, ?, 9000, ?, 200000, ?, ?, ?, ?, 2400, ?, ?, ?, ?, ?, ?, 3000, ?)")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, remainJianBen, BangGong, remainBangGong, XiaYi, remainXiaYi, WeiWang, remainWeiWang, ZhanJieJiFen, remainZhanJieJiFen, ZhanJieDengJi, MingJianBi, remainMingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime, LastLoginTime, LastLogoutTime) VALUES ( ?, ?, ?, ?, ?, 1500, ?, 200000, ?, 9000, ?, 200000, ?, ?, ?, ?, 2400, ?, ?, ?, ?, ?, ?, 3000, ?, ?, ? )")
 	for k, v in pairs (Data) do
 		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.BangGong, v.XiaYi, v.WeiWang, v.ZhanJieJiFen, v.remainZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.nVigor, v.nMaxVigor, GetCurrentTime()})))
+		DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.BangGong, v.XiaYi, v.WeiWang, v.ZhanJieJiFen, v.remainZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.nVigor, v.nMaxVigor, GetCurrentTime(), v.LastLoginTime, v.LastLogoutTime})))
 		DB_REPLACE:Execute()
 	end
 end
@@ -413,6 +422,17 @@ function _C.ShowItem(t_Table, Alpha, bCal, _num, _money)
 						elseif remainJianBen < 300 then
 							Text:SetFontScheme(207)
 							Text:SetFontColor(215, 215, 0)
+						end
+					elseif v2 == "LastLoginTime" then
+						local delta = GetCurrentTime() - PlayerInfo.LastLoginTime
+						if delta < 60 * 60 then
+							Text:SetText(sformat(_L["%d minute ago"], mfloor(delta / 60)))
+						elseif delta < 60 * 60 * 48 then
+							Text:SetText(sformat(_L["%d hour ago"], mfloor(delta / 60 / 60)))
+						elseif delta < 60 * 60 * 24 * 365 * 3 then
+							Text:SetText(sformat(_L["%d days ago"], mfloor(delta / 60 / 60 / 24)))
+						else
+							Text:SetText(_L["3 Years ago"])
 						end
 					end
 				end

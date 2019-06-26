@@ -1220,6 +1220,166 @@ function _C3.ON_FRAME_CREATE()
 end
 LR.RegisterEvent("ON_FRAME_CREATE", function() _C3.ON_FRAME_CREATE() end)]]
 ----------------------------------------------------------
+----人物特征码
+----------------------------------------------------------
+local Role_Code = {}
+---
+Role_Code.DATA_CACHE = {}	--存放已有数据(关键字是area_server_dwID)
+Role_Code.DATA_CACHE2 = {}	--存放已有数据(关键字是area_server_szName)
+Role_Code.DATA_2B_SAVE = {}		--存放新出现的需要保存的数据
+---
+Role_Code.DB_PATH = sformat("%s\\data", SaveDataPath)
+Role_Code.DB_NAME = "role_code.db"
+Role_Code.VERSION = "20190624"
+---数据库
+local schema_role_code_db = {
+	name = "role_code_db",
+	version = Role_Code.VERSION,
+	data = {
+		{name = "szKey", 	sql = "szKey VARCHAR(100) DEFAULT('')"},  --主键
+		{name = "role_code", 	sql = "role_code VARCHAR(999) DEFAULT('')"},
+		{name = "szName", 	sql = "szName VARCHAR(30) DEFAULT('')"},
+	},
+	primary_key = {sql = "PRIMARY KEY ( szKey )"},
+}
+--
+function Role_Code.IniDB()
+	local tTableConfig = {
+		schema_role_code_db,
+	}
+	LR.IniDB(Role_Code.DB_PATH, Role_Code.DB_NAME, tTableConfig)
+end
+Role_Code.IniDB()
+--
+function Role_Code.SaveData()
+	local data = clone(Role_Code.DATA_2B_SAVE)
+	Role_Code.DATA_2B_SAVE = {}
+	if next(data) == nil then
+		return
+	end
+	--
+	local path = sformat("%s\\%s", Role_Code.DB_PATH, Role_Code.DB_NAME)
+	local DB = LR.OpenDB(path, "LR_Role_Code_Save_#234!dfadf23431ofjoijl314")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO role_code_db ( szKey, role_code, szName ) VALUES ( ?, ?, ? )")
+	for k, v in pairs(data) do
+		DB_REPLACE:ClearBindings()
+		DB_REPLACE:BindAll(v.szKey, v.role_code, v.szName)
+		DB_REPLACE:Execute()
+	end
+	LR.CloseDB(DB)
+end
+--
+function Role_Code.LoadDB(data)
+	local bHave, role = Role_Code.CheckExist(data)
+	if not bHave then
+		if data.szName or data.dwID then
+			local ServerInfo = {GetUserServer()}
+			local realArea, realServer = ServerInfo[5], ServerInfo[6]
+			local path = sformat("%s\\%s", Role_Code.DB_PATH, Role_Code.DB_NAME)
+			local DB = LR.OpenDB(path, "LR_Role_Code_Load_C3BC6B1CA99C4C062BD1DDBD297DDD28")
+			local DB_SELECT_SQL = ""
+			if data.dwID then
+				DB_SELECT_SQL = sformat("SELECT * FROM role_code_db WHERE szKey = '%s_%s_%d'", realArea, realServer, data.dwID)
+			elseif data.szName then
+				DB_SELECT_SQL = sformat("SELECT * FROM role_code_db WHERE szName = '%s'", data.szName)
+			end
+			local DB_SELECT = DB:Prepare(DB_SELECT_SQL)
+			local tData = DB_SELECT:GetAll()
+			LR.CloseDB(DB)
+			if next(tData) ~= nil then
+				local v = tData[1]
+				Role_Code.DATA_CACHE[v.szKey] = clone(v)
+				Role_Code.DATA_CACHE2[sformat("%s_%s_%s", realArea, realServer, v.szName)] = clone(v)
+			end
+		end
+	end
+end
+--
+function Role_Code.CheckExist(data)
+	local ServerInfo = {GetUserServer()}
+	local realArea, realServer = ServerInfo[5], ServerInfo[6]
+	if data.dwID then
+		local role = Role_Code.DATA_CACHE[sformat("%s_%s_%d", realArea, realServer, data.dwID)]
+		if role then
+			return true, role
+		end
+	elseif data.szName then
+		local role = Role_Code.DATA_CACHE2[sformat("%s_%s_%s", realArea, realServer, data.szName)]
+		if role then
+			return true, role
+		end
+	end
+	return false, nil
+end
+
+
+function Role_Code.PARTY_UPDATE_BASE_INFO()
+	local me = GetClientPlayer()
+	if not me or IsRemotePlayer(me.dwID) then
+		return
+	end
+	local team = GetClientTeam()
+	if not team then
+		return
+	end
+	local data = {dwID = me.dwID, code = LR.GetUserCode(), szName = me.szName}
+	LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_TeamHelper", "SEND_SELF_CODE", data)
+end
+
+function Role_Code.ON_BG_CHANNEL_MSG()
+	local szKey = arg0
+	local nChannel = arg1
+	local dwTalkerID = arg2
+	local szTalkerName = arg3
+	local data = arg4
+	if LR.IsMapBlockAddon() then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me or IsRemotePlayer(me.dwID) or dwTalkerID == me.dwID then
+		return
+	end
+	if szKey == "LR_TeamHelper" then
+		if data[1] == "SEND_SELF_CODE" then
+			local v = data[2]
+			local ServerInfo = {GetUserServer()}
+			local realArea, realServer = ServerInfo[5], ServerInfo[6]
+			local szKey = sformat("%s_%s_%d", realArea, realServer, v.dwID)
+			if not Role_Code.DATA_CACHE[szKey] then
+				Role_Code.DATA_CACHE[szKey] = {szKey = szKey, role_code = v.code, szName = v.szName}
+				Role_Code.DATA_CACHE[sformat("%s_%s_%s", realArea, realServer, v.szName)] = {szKey = szKey, role_code = v.code, szName = v.szName}
+				Role_Code.DATA_2B_SAVE[szKey] = {szKey = szKey, role_code = v.code, szName = v.szName}
+			end
+		end
+	elseif szKey == "LR_TeamRequest" then
+		if data[1] == "ANSWER" then
+			local v = data[2]
+			local ServerInfo = {GetUserServer()}
+			local realArea, realServer = ServerInfo[5], ServerInfo[6]
+			local szKey = sformat("%s_%s_%d", realArea, realServer, v.dwID)
+			if not Role_Code.DATA_CACHE[szKey] then
+				Role_Code.DATA_CACHE[szKey] = {szKey = szKey, role_code = v.uc, szName = v.szName}
+				Role_Code.DATA_CACHE[sformat("%s_%s_%s", realArea, realServer, v.szName)] = {szKey = szKey, role_code = v.uc, szName = v.szName}
+				Role_Code.DATA_2B_SAVE[szKey] = {szKey = szKey, role_code = v.uc, szName = v.szName}
+			end
+		end
+	end
+end
+
+function Role_Code.ON_FRAME_CREATE()
+	local szName = arg0:GetName()
+	if szName  ==  "ExitPanel" then
+		Role_Code.SaveData()
+	elseif szName == "OptionPanel" then
+		Role_Code.SaveData()
+	end
+end
+
+LR.RegisterEvent("PARTY_UPDATE_BASE_INFO", function() Role_Code.PARTY_UPDATE_BASE_INFO() end)
+LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() Role_Code.ON_BG_CHANNEL_MSG() end)
+LR.RegisterEvent("ON_FRAME_CREATE", function() Role_Code.ON_FRAME_CREATE() end)
+LR.Role_Code = Role_Code
+----------------------------------------------------------
 ----团队告示
 ----------------------------------------------------------
 local notice_ui = {}
@@ -1401,7 +1561,7 @@ function teamnotice.PARTY_ADD_MEMBER()
 	--Output("PARTY_DELETE_MEMBER")
 	local dwTeamID = arg0
 	local dwMemberID = arg1
-	local nGroupIndex =arg2
+	local nGroupIndex = arg2
 	if LR.IsMapBlockAddon() then
 		return
 	end
@@ -1464,7 +1624,8 @@ function teamnotice.LR_TeamRequest()
 	end
 	if data[1] == "ASK" then
 		local user_code = LR.GetUserCode()
-		local t = {szName = me.szName, dwID = me.dwID, dwKungfuID = UI_GetPlayerMountKungfuID(), bGongZhan = LR.HasBuff(LR.GetBuffList(me), 3219), uc = user_code}
+		local role_type = me.nRoleType
+		local t = {szName = me.szName, rt = role_type, dwID = me.dwID, dwKungfuID = UI_GetPlayerMountKungfuID(), bGongZhan = LR.HasBuff(LR.GetBuffList(me), 3219), uc = user_code}
 		LR.BgTalk(szTalkerName, "LR_TeamRequest", "ANSWER", t)
 	end
 end

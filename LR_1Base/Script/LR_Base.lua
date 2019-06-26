@@ -1622,10 +1622,10 @@ function LR.SetDataToClip(szText)
 		SetDataToClip(szText)
 	end
 end
+
 -------------------------------------------------------------------------------
 ----------------任务相关
 -------------------------------------------------------------------------------
-
 LR.tAllSceneQuest = {}  ---------------存放所有任务
 LR.tAllUnknownAccept = {}
 LR.tAllUnknownFinish = {}
@@ -2194,6 +2194,141 @@ function LR.CJ_TigerRun()
 	end
 end
 
+-------------------------------------------------------------------------------
+--------好友列表
+-------------------------------------------------------------------------------
+local tFriend_List_ByID = {}
+local tFriend_List_ByName = {}
+local _Friend = {}
+function _Friend.GetFriendList()
+	--
+	tFriend_List = {}
+	tFriend_List_ByID = {}
+	tFriend_List_ByName = {}
+	--
+	local me = GetClientPlayer()
+	local tGroupInfo = me.GetFellowshipGroupInfo() or {}
+	tinsert(tGroupInfo, {id = 0, name = g_tStrings.STR_MAKE_FRIEND})
+	for k, v in pairs(tGroupInfo) do
+		local tFriend = me.GetFellowshipInfo(v.id) or {}
+		for k2, v2 in pairs(tFriend) do
+			local data = {}
+			data.dwID = v2.id
+			data.szName = v2.name
+			local fellowClient = GetFellowshipCardClient()
+			if fellowClient then
+				local card = fellowClient.GetFellowshipCardInfo(v2.id)
+				if card then
+					data.dwForceID = card.dwForceID
+					data.nCamp = card.nCamp
+					data.nRoleType = card.nRoleType
+					data.nLevel = card.nLevel
+					data.szSignature = card.szSignature
+				end
+			end
+			tFriend_List_ByID[v2.id] = clone(data)
+			tFriend_List_ByName[v2.name] = clone(data)
+			tinsert(tFriend_List, clone(data))
+		end
+	end
+end
+
+function _Friend.IsFriend(arg0)
+	if not arg0 then
+		return false
+	end
+	if type(arg0) == "string" then
+		if tFriend_List_ByName[arg0] then
+			return true
+		end
+	elseif type(arg0) == "number" then
+		if tFriend_List_ByID[arg0] then
+			return true
+		end
+	end
+	return false
+end
+
+function _Friend.GetFriend(arg0)
+	if not arg0 then
+		return {}
+	end
+	if type(arg0) == "string" then
+		return tFriend_List_ByName[arg0] or {}
+	elseif type(arg0) == "number" then
+		return tFriend_List_ByID[arg0] or {}
+	end
+	return {}
+end
+
+LR.Friend = _Friend
+LR.RegisterEvent("FIRST_LOADING_END", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("PLAYER_FELLOWSHIP_UPDATE", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("PLAYER_FELLOWSHIP_CHANGE", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("PLAYER_FELLOWSHIP_LOGIN", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("PLAYER_FOE_UPDATE", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("PLAYER_BLACK_LIST_UPDATE", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("DELETE_FELLOWSHIP", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("FELLOWSHIP_TWOWAY_FLAG_CHANGE", function() _Friend.GetFriendList() end)
+
+------------------------------------------------------------------------------------
+----帮会
+------------------------------------------------------------------------------------
+local _tTong_Member_List_ByID = {}
+local _tTong_Member_List_ByName = {}
+local _Tong = {}
+function _Tong.GetMemberList()
+	------
+	_tTong_Member_List_ByID = {}
+	_tTong_Member_List_ByName = {}
+	------
+	local Tong = GetTongClient()
+	local MemberList = Tong.GetMemberList(true, "name", true, -1, -1)
+	for k, dwID in pairs(MemberList) do
+		local info = Tong.GetMemberInfo(dwID)
+		local data = {}
+		data.dwID = dwID
+		data.dwForceID = info.nForceID
+		data.szName = info.szName
+		data.nLevel = info.nLevel
+		--
+		_tTong_Member_List_ByID[dwID] = clone(data)
+		_tTong_Member_List_ByName[info.szName] = clone(data)
+	end
+end
+
+function _Tong.IsTongMember(arg0)
+	if not arg0 then
+		return false
+	end
+	if type(arg0) == "string" then
+		if _tTong_Member_List_ByName[arg0] then
+			return true
+		end
+	elseif type(arg0) == "number" then
+		if _tTong_Member_List_ByID[arg0] then
+			return true
+		end
+	end
+	return false
+end
+
+function _Tong.GetTongMember(arg0)
+	if not arg0 then
+		return {}
+	end
+	if type(arg0) == "string" then
+		return _tTong_Member_List_ByName[arg0] or {}
+	elseif type(arg0) == "number" then
+		return _tTong_Member_List_ByID[arg0] or {}
+	end
+	return {}
+end
+
+LR.Tong = _Tong
+LR.RegisterEvent("FIRST_LOADING_END", function() _Tong.GetMemberList() end)
+------------------------------------------------------------------------------------
+----黑本
 ------------------------------------------------------------------------------------
 LR.BlackFBList = {}
 LR.BlackACK = 0
