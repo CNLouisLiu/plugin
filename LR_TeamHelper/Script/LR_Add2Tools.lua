@@ -48,6 +48,13 @@ local LR_TeamHelper_UI ={
 			callback = function ()
 				LR_TeamRequest.GetSystemDB()
 			end
+		},{	name = "LR_TeamHelper_UI_check_box03", type = "CheckBox", text = _L["Check new member"], x = 0, y = 120, w = 200,
+			default = function ()
+				return LR_Black_List.UsrData.bCheckNewMember
+			end,
+			callback = function (enabled)
+				LR_Black_List.UsrData.bCheckNewMember = enabled
+			end,
 		},
 	}
 }
@@ -83,6 +90,11 @@ LR_TeamHelper_UI.menu = {
 	fnAutoClose=true,
 }
 LR_TeamRequest.OptionMenu(LR_TeamHelper_UI.menu)
+LR_TeamHelper_UI.menu[#LR_TeamHelper_UI.menu + 1] = {bDevide = true}
+LR_TeamHelper_UI.menu[#LR_TeamHelper_UI.menu + 1] = {szOption = _L["Check new member"], bCheck = true, bMCheck = false, bChecked = function() return LR_Black_List.UsrData.bCheckNewMember end,
+	fnAction = function()
+		LR_Black_List.UsrData.bCheckNewMember = not LR_Black_List.UsrData.bCheckNewMember
+	end}
 
 LR_TeamHelper_UI.menu2 = {
 	szOption =_L["Open LR_CDRP"],

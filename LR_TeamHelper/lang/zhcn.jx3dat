@@ -85,5 +85,6 @@ data = {
 	["Auto allow tong member to get in party"]="自动通过同帮会成员的组队请求",
 	["Auto Action"]="自动选项",
 	["Get black list data"]="获取黑名单数据",
+	["Check new member"]="检测新入队成员是否在黑名单",
 
 }

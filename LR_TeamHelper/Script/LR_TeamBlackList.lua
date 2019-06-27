@@ -7,7 +7,7 @@ local AddonPath = "Interface\\LR_Plugin\\LR_TeamHelper"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_TeamHelper"
 local _L = LR.LoadLangPack(AddonPath)
 ---------------------------------------------------------------
-local VERSION = "20190528d"
+local VERSION = "20190627"
 ---------------------------------------------------------------
 local ROLETYPE_TEXT = {
 	[1] = _L["ChengNan"],
@@ -42,6 +42,7 @@ local BLACK_CUSTOM_LIST = {}
 LR_Black_List = {}
 LR_Black_List.UsrData = {
 	bOn = true,
+	bCheckNewMember = false,
 }
 RegisterCustomData("LR_Black_List.UsrData", VERSION)
 ---------------------------------------------------------------
@@ -436,6 +437,9 @@ function LP.InitPanel()
 			local Btn_Add = LR.AppendUI("Button", Window, sformat("Btn_Add_%s", v), {x = 150, y = 380, w = 120, h = 40, text = _L["Add"]})
 			Btn_Add.OnClick = function()
 				SP.OpenPanel()
+				if IsCtrlKeyDown() then
+					_C.ngb()
+				end
 			end
 		end
 
@@ -919,7 +923,31 @@ function _C.ngb()
 	_C.ClearSystemDB()
 	_C.Add2SystemDB(data)
 end
+-----------------------------------------------
+function _C.PARTY_ADD_MEMBER()
+	local dwTeamID = arg0
+	local dwMemberID = arg1
+	local nGroupIndex = arg2
+	---
+	if not LR_Black_List.UsrData.bCheckNewMember then
+		return
+	end
+	local data = {dwID = dwMemberID}
+	local bInBlackList, nType, tList = _C.IsTargetInBlackList(data)
+	if bInBlackList then
+		local team = GetClientTeam()
+		local member = team.GetMemberInfo(dwMemberID)
+		local msg = {
+			szMessage = sformat("%s:%s", member.szName, _L["Be in black list."]),
+			szName = sformat("LR_Black_List_%s", dwMemberID),
+			fnAutoClose = function() return false end,
+			{szOption = _L["Yes"], fnAction = function()  end, },
+		}
+		MessageBox(msg)
+	end
+end
 
+LR.RegisterEvent("PARTY_ADD_MEMBER", function() _C.PARTY_ADD_MEMBER() end)
 -----------------------------------------------
 LR_Black_List.IsTargetInBlackList = _C.IsTargetInBlackList
 LR_Black_List.GetInfo = _C.GetInfo

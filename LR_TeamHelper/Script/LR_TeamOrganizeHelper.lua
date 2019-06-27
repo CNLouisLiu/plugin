@@ -564,6 +564,12 @@ function LR_TeamRequest.ChangeToBlackWindow(data)
 	local WndBlackContainer = _ui["WndBlackContainer"]
 	WndWindow:ChangeRelation(WndBlackContainer, true, true)
 	_ui[sformat("WndWindow_%s", data.szName)] = WndWindow
+
+	--
+	local bInBlackList, nType, tList = LR_Black_List.IsTargetInBlackList(REQUEST_LIST[data.szName])
+	if bInBlackList then
+		_ui[sformat("Image_Status_%s", data.szName)]:FromUITex("UI/Image/GMPanel/gm2.uitex", 6)
+	end
 	--
 	LR_TeamRequestPanel.ReSize()
 end
@@ -640,7 +646,7 @@ function LR_TeamRequest.ON_BG_CHANNEL_MSG()
 			local bInBlackList, nType, tList = LR_Black_List.IsTargetInBlackList(REQUEST_LIST[v.szName])
 			if bInBlackList then
 				LR_TeamRequest.ChangeToBlackWindow(REQUEST_LIST[v.szName])
-				_ui[sformat("Image_Status_%s", v.szName)]:FromUITex("UI/Image/GMPanel/gm2.uitex", 6)
+				--_ui[sformat("Image_Status_%s", v.szName)]:FromUITex("UI/Image/GMPanel/gm2.uitex", 6)
 			end
 		end
 	end

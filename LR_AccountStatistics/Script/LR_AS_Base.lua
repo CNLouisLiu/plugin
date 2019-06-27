@@ -514,51 +514,6 @@ function LR_AS_Base.SeparateUsrList()
 		end
 	end)
 
-
---[[	tsort(TempTable, function(a, b)
-		if a[nKey] and b[nKey] then
-			if nSort  ==  "asc" then
-				if a[nKey]  ==  b[nKey] then
-					if  a["nLevel"]  ==  b["nLevel"] then
-						if a["dwForceID"]  ==  b["dwForceID"] then
-							if a["szName"]  ==  b["szName"] then
-								return a["dwID"] < b["dwID"]
-							else
-								return a["szName"] < b["szName"]
-							end
-						else
-							return a["dwForceID"] < b["dwForceID"]
-						end
-					else
-						return a["nLevel"] > b["nLevel"]
-					end
-				else
-					return a[nKey] < b[nKey]
-				end
-			else
-				if a[nKey]  ==  b[nKey] then
-					if  a["nLevel"]  ==  b["nLevel"] then
-						if a["dwForceID"]  ==  b["dwForceID"] then
-							if a["szName"]  ==  b["szName"] then
-								return a["dwID"] > b["dwID"]
-							else
-								return a["szName"] > b["szName"]
-							end
-						else
-							return a["dwForceID"] < b["dwForceID"]
-						end
-					else
-						return a["nLevel"] < b["nLevel"]
-					end
-				else
-					return a[nKey] > b[nKey]
-				end
-			end
-		else
-			return true
-		end
-	end)]]
-
 	local TempTable_NotCal = {}
 	local TempTable_Cal = {}
 
@@ -575,17 +530,26 @@ function LR_AS_Base.SeparateUsrList()
 			bCal = false
 		end
 
-		local GroupChose = LR_AS_Group.GroupChose
 		local isExist = true
-		if next(GroupChose) ~= nil then
+		if LR_AS_Group.ShowGroupType ==  1 then
 			isExist = false
-			for k, v in pairs(GroupChose) do
-				if LR_AS_Group.ifGroupHasUser(key, v) then
-					isExist = true
+			local AccountGroupChoose = LR_AS_Group.AccountGroupChoose
+			local tData = LR_AS_Group.GetAccountGroup(AccountGroupChoose.account_code, AccountGroupChoose.server)
+			if tData[key] then
+				isExist = true
+			end
+		elseif LR_AS_Group.ShowGroupType ==  2 then
+			local GroupChose = LR_AS_Group.GroupChose
+			if next(GroupChose) ~= nil then
+				isExist = false
+				for k, v in pairs(GroupChose) do
+					if LR_AS_Group.ifGroupHasUser(key, v) then
+						isExist = true
+					end
 				end
 			end
 		end
-
+		--
 		if LR_AS_Group.ShowDataNotInGroup then
 			if bCal and isExist then
 				tinsert(TempTable_Cal, TempTable[i])

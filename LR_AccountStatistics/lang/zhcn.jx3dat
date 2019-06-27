@@ -818,4 +818,11 @@ data={
 	["3 Years ago"]="超过3年",
 	["LastLoginTime"]="最后登录",
 
+	["Group By Account"]="按账户分组",
+	["Custom Group"]="自定义分组",
+	["Account:%s...%s"]="账户：%s...%s",
+	["Set other name"]="设置别名",
+	["Account:%s"]="账户：%s",
+	["Show All Account"]="显示所有账号",
+
 }
