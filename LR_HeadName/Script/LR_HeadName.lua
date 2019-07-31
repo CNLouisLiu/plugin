@@ -7,7 +7,7 @@ local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_HeadName"
 local _L = LR.LoadLangPack(AddonPath)
 local szIniFile = sformat("%s\\UI\\LR_HeadNameItem.ini", AddonPath)
 local DEBUG = false
-local CustomVersion = "20180718"	--修改此处可重置默认数据
+local CustomVersion = "20190727c"	--修改此处可重置默认数据
 ---------------------------------------------------------
 local HEAD_CLIENTPLAYER = 0
 local HEAD_OTHERPLAYER = 1
@@ -88,6 +88,8 @@ local NPC_CAN_FINISH_QUEST = {}
 local SCENE_QUEST_CACHE = {}
 local SCENE_DATA_CACHE = {}
 
+LR_HeadName.UIScale = 1
+
 LR_HeadName.default = {
 	DoodadKind = {
 		[DOODAD_KIND.INVALID] = false,
@@ -107,8 +109,8 @@ LR_HeadName.default = {
 		[DOODAD_KIND.NPCDROP] = false,
 	},
 	UsrData = {
-		font = 17,
-		nFontScale = 1.2,
+		font = 192,
+		nFontScale = 0.9,
 		Height = 16, 		--行间距
 		SeeMax = 250,
 		distanceMax = 65,
@@ -242,16 +244,16 @@ LR_HeadName.default = {
 		},
 		LifeBar = {
 			ShowBorder = true,
-			Height = 6,
-			Lenth = 56,
-			Alpha = 155,
+			Height = 7,
+			Lenth = 64,
+			Alpha = 255,
 			ColorMode = 2,
-			nOffsetY = -2,
+			nOffsetY = 0,
 			BorderColor = {0, 0, 0},
 			bShowLifePercentText = true,
-			nLifePercentTextOffsetX = 32,
+			nLifePercentTextOffsetX = 14,
 			nLifePercentTextOffsetY = 0,
-			nLifePercentTextScale = 0.8,
+			nLifePercentTextScale = 0.6,
 		},
 		ChangGeShadow = {
 			bShow = true, 	-----总开关
@@ -474,16 +476,19 @@ function _HandleRole:DrawName()
 	hText:SetAlpha(255)
 	hText:SetD3DPT(D3DPT.TRIANGLEFAN)
 	local nHight = LR_HeadName.UsrData.Height
-	local nOffset = LR_HeadName.UsrData.nOffset or 0
-	nOffset = nOffset - 12
+	local nOffsetY = (LR_HeadName.UsrData.nOffset or 0) - 26
+
 	local dwID = self.dwID
 	local _Role = LR_HeadName._Role[dwID]
 	local bTop = true
 	if _Role:GetTemplateID() ==  46297 or _Role:GetTemplateID() ==  46140 then
-		nOffset = nOffset+50
+		nOffset = nOffset + 50
 		bTop = false
 	end
-	local del_height = -nHight
+	local del_height = - nHight
+
+	local UIScale = LR_HeadName.UIScale
+	local fx = UIScale * (LR_HeadName.UsrData.nFontScale or 1)
 
 	if self.nTeamMark and LR_HeadName.UsrData.bShowTeamMark then
 		if tMarkerTextList[self.nTeamMark] then
@@ -491,9 +496,9 @@ function _HandleRole:DrawName()
 				local me = GetClientPlayer()
 				local _nType, _dwTargetID = me.GetTarget()
 				if dwID ==  _dwTargetID then
-					tText[#tText+1] = {szText = sformat("↓ %s ↓", tMarkerTextList[self.nTeamMark]), rgb = {255, 201, 14}, font = LR_HeadName.UsrData.font, fScale = 1, }
+					tText[#tText+1] = {szText = sformat("↓ %s ↓", tMarkerTextList[self.nTeamMark]), rgb = {255, 201, 14}, font = LR_HeadName.UsrData.font, fScale = fx, }
 				else
-					tText[#tText+1] = {szText = sformat("↓ %s ↓", tMarkerTextList[self.nTeamMark]), rgb = {206, 164, 10}, font = LR_HeadName.UsrData.font, fScale = 1, }
+					tText[#tText+1] = {szText = sformat("↓ %s ↓", tMarkerTextList[self.nTeamMark]), rgb = {206, 164, 10}, font = LR_HeadName.UsrData.font, fScale = fx, }
 				end
 				self:TeamMarkImageHide()
 			elseif LR_HeadName.UsrData.nShowTeamMarkType ==  2 then
@@ -525,7 +530,7 @@ function _HandleRole:DrawName()
 			--szText, {szText = temp, rgb = rgb , font = font2, fScale = 1, }
 			--tText = {}
 			local x1 = Table_GetBuffName(data.dwID, data.nLevel)
-			tinsert(tText, {szText = sformat("%s_%0.1f", x1, (Frame_End - Frame_Now) / 16.0), rgb = {255, 255, 255}, font = 2, fScale = 1})
+			tinsert(tText, {szText = sformat("%s_%0.1f", x1, (Frame_End - Frame_Now) / 16.0), rgb = {255, 255, 255}, font = 2, fScale = fx})
 			--tinsert(tText, {szText = sformat("%s", ), rgb = {255, 255, 255}, font = 2, fScale = 1})
 		end
 		if next(SCENE_DATA_CACHE[dwID]) == nil then
@@ -539,9 +544,8 @@ function _HandleRole:DrawName()
 		--hText:AppendCharacterID(self.dwID, true, r, g, b, 255, -30-(i-1)*nHight , tText[i].font , tText[i].szText, 0, 1)	----tText[i].font
 
 		if tText[i].nType and tText[i].nType == "symbol" then
-			hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, ( - (nHight-2) *  tText[i].lenth), (-30 - del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
+			hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, ( - (nHight-2) *  tText[i].lenth), nOffsetY}, tText[i].font , tText[i].szText, 0, fx)----tText[i].font
 		else
-			del_height = del_height + mceil(nHight * (LR_HeadName.UsrData.nFontScale))
 			if self.nTeamMark and LR_HeadName.UsrData.bShowTeamMark and LR_HeadName.UsrData.bHightLightTeamMark then
 				local font = 207
 				if LR_HeadName._Role[dwID]:GetShip() == "Enemy" then
@@ -551,13 +555,14 @@ function _HandleRole:DrawName()
 						font = 2
 					end
 				end
-				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30 - del_height -nOffset)}, font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
+				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, nOffsetY}, font , tText[i].szText, 0, fx)----tText[i].font
 			else
-				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, (-30 - del_height -nOffset)}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)----tText[i].font
+				hText:AppendCharacterID(dwID, bTop , r, g, b, 255, {0, 0, 0, 0, nOffsetY}, tText[i].font , tText[i].szText, 0, fx)----tText[i].font
 			end
+			nOffsetY = nOffsetY - nHight
 		end
 	end
-	self.nTopOffset =  25 + nOffset +(nHight + 5) * (#tText) * LR_HeadName.UsrData.nFontScale
+	self.nTopOffset =  -nOffsetY
 end
 
 function _HandleRole:DrawDoodad(tText)
@@ -570,9 +575,11 @@ function _HandleRole:DrawDoodad(tText)
 	local nHight = LR_HeadName.UsrData.Height
 	local nOffset = LR_HeadName.UsrData.nOffset or 0
 	nOffset = nOffset - 12
+	local UIScale = LR_HeadName.UIScale
+	local fx = UIScale * (LR_HeadName.UsrData.nFontScale or 1)
 	for i = 1, #tText do
 		local r, g, b = unpack(tText[i].rgb)
-		hText:AppendDoodadID(self.dwID, r, g, b, 255, {0, 0, 0, 0, -50-(i-1)*nHight-nOffset}, tText[i].font , tText[i].szText, 0, LR_HeadName.UsrData.nFontScale)
+		hText:AppendDoodadID(self.dwID, r, g, b, 255, {0, 0, 0, 0, -50-(i-1)*nHight-nOffset}, tText[i].font , tText[i].szText, 0, fx)
 	end
 end
 
@@ -594,7 +601,7 @@ function _HandleRole:DrawLifeBoard()
 	local nWidth = LR_HeadName.UsrData.LifeBar.Lenth
 	local nHeight = LR_HeadName.UsrData.LifeBar.Height
 	local nOffsetY = LR_HeadName.UsrData.LifeBar.nOffsetY or 0
-	nOffsetY = nOffsetY - 4
+	nOffsetY = nOffsetY + 3 + (LR_HeadName.UsrData.nOffset or 0)
 	local Alpha = LR_HeadName.UsrData.LifeBar.Alpha
 	local nOffset = LR_HeadName.UsrData.nOffset or 0
 
@@ -613,7 +620,7 @@ function _HandleRole:DrawLifeBoard()
 	local _Role = LR_HeadName._Role[dwID]
 	local bTop = true
 	if _Role:GetTemplateID() ==  46297 or _Role:GetTemplateID() ==  46140 then
-		nOffsetY = nOffsetY+50
+		nOffsetY = nOffsetY + 50
 		bTop = false
 	end
 
@@ -638,9 +645,9 @@ function _HandleRole:DrawLifeBoard()
 
 	r, g, b = 80, 80, 80
 	BorderIn:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX, bcY})
-	BorderIn:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX+(nWidth - 2), bcY})
-	BorderIn:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX+(nWidth - 2), bcY+(nHeight - 2)})
-	BorderIn:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX, bcY+(nHeight - 2)})
+	BorderIn:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX + (nWidth - 2), bcY})
+	BorderIn:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX + (nWidth - 2), bcY + (nHeight - 2)})
+	BorderIn:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX, bcY + (nHeight - 2)})
 	BorderIn:Hide()
 end
 
@@ -650,7 +657,7 @@ function _HandleRole:DrawLife(t)
 	local nWidth = LR_HeadName.UsrData.LifeBar.Lenth
 	local nHeight = LR_HeadName.UsrData.LifeBar.Height
 	local nOffsetY = LR_HeadName.UsrData.LifeBar.nOffsetY or 0
-	nOffsetY = nOffsetY - 4
+	nOffsetY = nOffsetY + 3 + (LR_HeadName.UsrData.nOffset or 0)
 	--local Alpha = LR_HeadName.UsrData.LifeBar.Alpha
 	local Alpha = 255
 	local nOffset = LR_HeadName.UsrData.nOffset or 0
@@ -699,20 +706,22 @@ function _HandleRole:DrawLife(t)
 	LifeBar:ClearTriangleFanPoint()
 
 	LifeBar:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX, bcY})
-	LifeBar:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX+nWidth, bcY})
-	LifeBar:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX+nWidth, bcY+(nHeight - 4)})
-	LifeBar:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX, bcY+(nHeight - 4)})
+	LifeBar:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX + nWidth, bcY})
+	LifeBar:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX + nWidth, bcY + (nHeight - 4)})
+	LifeBar:AppendCharacterID(dwID, bTop, r, g, b, Alpha, {0, 0, 0, bcX, bcY + (nHeight - 4)})
 
 	--LifeBar:SetTriangleFan(GEOMETRY_TYPE.TEXT)
 	local hLifePer = Handle_Dummy:Lookup("Shadow_LifePer")
 	local nLifePercentTextOffsetX = LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0
-	local nLifePercentTextOffsetY = LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY or 0
+	local nLifePercentTextOffsetY = bcY + (LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY or 0)
 	local nLifePercentTextScale = LR_HeadName.UsrData.LifeBar.nLifePercentTextScale or 0.8
 
 	hLifePer:SetTriangleFan(GEOMETRY_TYPE.TEXT)
 	hLifePer:ClearTriangleFanPoint()
-	local tt = "%" .. tostring(nLifePercentTextOffsetX) .. "s%d%%"
-	hLifePer:AppendCharacterID(dwID, true, r, g, b, 255, nLifePercentTextOffsetY , LR_HeadName.UsrData.font, sformat(tt, " ",LifePer * 100), 0, nLifePercentTextScale)
+
+	local UIScale = LR_HeadName.UIScale
+	local fx = UIScale * nLifePercentTextScale
+	hLifePer:AppendCharacterID(dwID, true, r, g, b, 255, {0, 0, 0, LR_HeadName.UsrData.LifeBar.Lenth / 2 + nLifePercentTextOffsetX, nLifePercentTextOffsetY} , LR_HeadName.UsrData.font, sformat("%d%%", LifePer * 100), 0, fx)
 
 	hLifePer:Hide()
 	LifeBar:Hide()
@@ -1068,10 +1077,12 @@ end
 function LR_HeadName.OnFrameCreate()
 	this:RegisterEvent("RENDER_FRAME_UPDATE")
 	this:RegisterEvent("LR_BUFF_TRAN")
+	this:RegisterEvent("UI_SCALED")
 
-	local handle = this:Lookup("", "")
+	local handle = this:Lookup("","")
 	LR_HeadName.handle = handle:Lookup("Handle_HeadName")
 	this:SetAlpha(255)
+	LR_HeadName.GetUIScale()
 end
 
 function LR_HeadName.OnEvent(szEvent)
@@ -1079,6 +1090,9 @@ function LR_HeadName.OnEvent(szEvent)
 		LR_HeadName.SetTeamMarkPos()
 	elseif szEvent == "LR_BUFF_TRAN" then
 		LR_HeadName.LR_BUFF_TRAN()
+	elseif szEvent == "UI_SCALED" then
+		LR_HeadName.GetUIScale()
+		LR_HeadName.ReDrawAll()
 	end
 end
 
@@ -1100,6 +1114,10 @@ function LR_HeadName.OnFrameBreathe()
 		LR_HeadName.RandomRGB = {r, g, b, r1, g1, b1}
 	end
 
+	if not LR_HeadName.handle then
+		LR_HeadName.handle = this:Lookup("",""):Lookup("Handle_HeadName")
+	end
+	--local m = this:Lookup("",""):Lookup("Handle_HeadName"):GetItemCount()
 	local m = LR_HeadName.handle:GetItemCount()
 --[[	for k, v in pairs(LR_HeadName.AllList) do
 		m = m+1
@@ -3549,3 +3567,10 @@ function LR_HeadName.OneKeyShieldPlayer()
 	LR_HeadName.ReDrawAll()
 end
 
+function LR_HeadName.GetUIScale()
+	local Handle_Scale = this:Lookup("",""):Lookup("Handle_Scale")
+	local Handle_Fixed = this:Lookup("",""):Lookup("Handle_Fixed")
+	local w1, h1 = Handle_Scale:GetSize()
+	local w2, h2 = Handle_Fixed:GetSize()
+	LR_HeadName.UIScale = w2 / w1
+end

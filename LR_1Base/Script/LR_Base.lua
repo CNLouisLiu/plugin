@@ -577,19 +577,26 @@ function LR.GetSelfMingJianBi()
 end
 
 function LR.GetAccountCode(szText)
-	local account = szText or GetUserAccount()
+	local account = szText or "unknown"
+	if account == "unknown" and GetUserAccount then
+		account = GetUserAccount()
+	end
 	local code = LR.md5(LR.AES.encrypt("haohaohaolanrenchajianfeichanghao", LR.basexx.to_base64(account)))
 	return code
 end
 
-function LR.GetUserCode()
-	local me = GetClientPlayer()
-	local ServerInfo = {GetUserServer()}
-	local realArea, realServer = ServerInfo[5], ServerInfo[6]
-	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	local AccountCode = LR.GetAccountCode()
-	local code = LR.AES.encrypt("hugeforest@qq.com", sformat("%s_%s", AccountCode, szKey))
-	return code
+function LR.GetUserCode(data)
+	if not data then
+		local me = GetClientPlayer()
+		local ServerInfo = {GetUserServer()}
+		local realArea, realServer = ServerInfo[5], ServerInfo[6]
+		local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+		local AccountCode = LR.GetAccountCode()
+		local code = LR.AES.encrypt("hugeforest@qq.com", sformat("%s_%s", AccountCode, szKey))
+		return code
+	else
+		return LR.AES.encrypt("hugeforest@qq.com", sformat("%s_%s", data.AccountCode, data.szKey))
+	end
 end
 
 function LR.DecodeUserCode(text)
@@ -1747,7 +1754,11 @@ function LR.GetQuestPoint(szText)
 				end
 				local szName = ""
 				if szType == "N" then
-					szName = Table_GetNpcTemplateName(tNum[2])
+					if tNum[2] then
+						szName = Table_GetNpcTemplateName(tNum[2])
+					else
+						--Output("test", szText)
+					end
 				else
 					szName = LR.TABLE_GetDoodadTemplateName(tNum[2])
 				end
@@ -2202,7 +2213,6 @@ local tFriend_List_ByName = {}
 local _Friend = {}
 function _Friend.GetFriendList()
 	--
-	tFriend_List = {}
 	tFriend_List_ByID = {}
 	tFriend_List_ByName = {}
 	--
@@ -2228,7 +2238,6 @@ function _Friend.GetFriendList()
 			end
 			tFriend_List_ByID[v2.id] = clone(data)
 			tFriend_List_ByName[v2.name] = clone(data)
-			tinsert(tFriend_List, clone(data))
 		end
 	end
 end

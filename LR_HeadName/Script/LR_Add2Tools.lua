@@ -44,7 +44,7 @@ LR_HeadName_UI = {
 				tTips[#tTips+1] = {szText = _L["Instructions05\n"], font = 5, r = 255, g = 255, b = 255, }
 				return tTips
 			end,
-		}, {	name = "LR_Head_FontSize", type = "ComboBox", x = 150, y = 0, w = 120, text = _L["FontSize"],
+		}, { name = "LR_Head_FontSize", type = "ComboBox", x = 150, y = 0, w = 120, text = _L["Font Settings"],
 			enable =  function ()
 				return LR_HeadName.bOn
 			end,
@@ -53,22 +53,19 @@ LR_HeadName_UI = {
 				if not player then
 					return
 				end
-				local menu  = {
-					{szOption = _L["Small"], bCheck = true, bMCheck = true, bChecked = function() return LR_HeadName.UsrData.font == 17 end,
-						fnAction = function()
-							LR_HeadName.UsrData.font = 17
+				local menu = {}
+				menu[#menu + 1] = {szOption = _L["Font Style"]}
+				local m2 = menu[#menu]
+				local FontStyle = {1, 40, 259, 192, 232}
+				for k, v in pairs(FontStyle) do
+					m2[#m2 + 1] = {szOption = sformat(_L["Font Style %d"], k), bCheck = true, bMCheck = true, bChecked = function() return LR_HeadName.UsrData.font == v end,
+						fnAction =function()
+							LR_HeadName.UsrData.font = v
 							LR_HeadName.SaveCommonSettings()
 							LR_HeadName.ReDrawAll()
 						end,
-					},
---[[					{szOption = _L["Big"], bCheck = true, bMCheck = true, bChecked = function() return LR_HeadName.UsrData.font == 23 end,
-						fnAction = function()
-							LR_HeadName.UsrData.font = 23
-							LR_HeadName.SaveCommonSettings()
-							LR_HeadName.ReDrawAll()
-						end,
-					},]]
-				}
+					}
+				end
 				menu[#menu+1] = {bDevide = true}
 				menu[#menu+1] = {szOption = _L["Scale"],
 					fnMouseEnter = function()

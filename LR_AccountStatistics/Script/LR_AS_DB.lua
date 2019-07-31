@@ -9,7 +9,7 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20190626"
+local VERSION = "20190627"
 -------------------------------------------------------------
 LR_AS_DB = LR_AS_DB or {}
 LR_AS_DEBUG = false
@@ -64,8 +64,8 @@ local schema_player_list = {
 		{name = "loginServer", sql = "loginServer VARCHAR(20) DEFAULT('')"},
 		{name = "realArea", sql = "realArea VARCHAR(20) DEFAULT('')"},
 		{name = "realServer", sql = "realServer VARCHAR(20) DEFAULT('')"},
-		{name = "hash01", 	sql = "hash01 VARCHAR(999)"},		--账号code
-		{name = "hash02", 	sql = "hash02 VARCHAR(999)"},		--人物code
+		{name = "hash01", 	sql = "hash01 VARCHAR(999) DEFAULT('')"},		--账号code
+		{name = "hash02", 	sql = "hash02 VARCHAR(999) DEFAULT('')"},		--人物code
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
 }

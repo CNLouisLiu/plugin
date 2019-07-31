@@ -802,7 +802,7 @@ function LR_BookRd_Panel:GetSource(hWin)
 	if LR_BookRd_Panel.BookSuitID ==  0 or LR_BookRd_Panel.BookNameID ==  0 then
 		return
 	end
-	m = 1
+	local m = 1
 	local szBookName = LR_BookRd_Panel.GetSegmentName(LR_BookRd_Panel.BookSuitID, LR_BookRd_Panel.BookNameID)
 	szBookName = LR.Trim(szBookName)
 
@@ -865,7 +865,7 @@ function LR_BookRd_Panel:GetSource(hWin)
 			Text_break2:SetHAlign(0)
 			Text_break2:SetVAlign(1)
 
-			m = m+1
+			m = m + 1
 		end
 	end
 
@@ -906,7 +906,7 @@ function LR_BookRd_Panel:GetSource(hWin)
 			local Text_break2 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_2", m), {w = 396, h = 30, x  = 15, y = 2, text = sformat("%s%s", _L["Drop"], text), font = 35})
 			Text_break2:SetHAlign(0)
 			Text_break2:SetVAlign(1)
-			m = m+1
+			m = m + 1
 		end
 	end
 

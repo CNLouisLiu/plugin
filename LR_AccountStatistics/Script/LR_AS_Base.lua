@@ -633,6 +633,27 @@ function LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction, all_option)
 end
 
 ---------------------------------
+---压力测试
+---------------------------------
+local StressTest = {}
+
+function StressTest.IniDB()
+	LR.Log("[LR] AS StressTest IniDB begin....")
+	local _begin_time = GetTickCount()
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
+	local DB = LR.OpenDB(path, "AS_StressTestIniDB_0sdfdsdfsdfsdfsddfC9")
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].StressTest and LR_AS_Module[v].StressTest.IniDB then
+			--Log(sformat("%s\n", v))
+			LR_AS_Module[v].StressTest.IniDB(DB)
+		end
+	end
+	LR.CloseDB(DB)
+	LR.Log(sformat("[LR] AS StressTest IniDB end, cost %d ms", GetTickCount() - _begin_time))
+end
+
+LR_AS_Base.StressTest = StressTest
+---------------------------------
 ---打开设置界面
 ---------------------------------
 function LR_AS_Base.SetOption()

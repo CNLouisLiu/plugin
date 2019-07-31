@@ -825,4 +825,16 @@ data={
 	["Account:%s"]="账户：%s",
 	["Show All Account"]="显示所有账号",
 
+	["MI_SHU_SHENG"]="迷书生",
+	["DIALOG_MI_SHU_SHENG_01"]="看样子还想再吃一根",
+	["DIALOG_MI_SHU_SHENG_02"]="已经吃得圆滚滚，吃不下啦",
+
+	["DI_SHUI_EN"]="滴水恩",
+	["DIALOG_DI_SHUI_EN_01"]="绿头鸭的羽毛似乎还有些脏",
+	["DIALOG_DI_SHUI_EN_02"]="表示自己不想再洗了",
+
+	["CANG_HAI_DI"]="沧海笛",
+	["DIALOG_CANG_HAI_DI_01"]="想要的话明天再来吧",
+	
+
 }

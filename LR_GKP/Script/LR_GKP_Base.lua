@@ -319,7 +319,7 @@ function _GKP.InsertSetBossMenu(menu)
 	}
 	local m = menu[#menu]
 	m[#m + 1] = {szOption = sformat(_L["Uint price:%d"], LR_GKP_Base.SmallIronPrice)}
-	mm = m[#m]
+	local mm = m[#m]
 	mm[#mm + 1] = {szOption = _L["Set"],
 		fnAction = function()
 			GetUserInputNumber(LR_GKP_Base.SmallIronPrice or 0, 99999, nil, function(arg0)

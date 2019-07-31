@@ -1030,6 +1030,15 @@ function LR_AS_ItemRecord_Panel:Init()
 	local hEditBox = self:Append("Edit", frame, "searchText", {w = 100 , h = 26, x = 220, y = 51, text = ""})
 	hEditBox:Enable(true)
 	hEditBox.OnChange = function (value)
+		if ssub(value, 1, 1) == "@" then
+			local x = ssub(value, 2)
+			local y = LR.Friend.GetFriend(x)
+			if next(y) ~= nil then
+				Output(y)
+			end
+			return
+		end
+
 		LR_AS_ItemRecord_Panel.searchText = value
 
 		--LR_AS_ItemRecord_Panel.LoadUserAllData()
@@ -2103,7 +2112,7 @@ function _Hook.HookMailPanel()
 		local BTN_Mail = frame:Lookup("LR_BTN_Mail")
 		if not BTN_Mail then
 			if LR_AS_ItemRecord.UsrData.bShowButtonInMailPanel then
-				local BTN_Mail = LR.AppendUI("UIButton", frame, "LR_BTN_Mail", {w = 90, h = 26, x = 200, y = 8, ani = {"ui\\Image\\UICommon\\HelpPanel.UITex", 22, 23, 54, 21}})
+				local BTN_Mail = LR.AppendUI("UIButton", frame, "LR_BTN_Mail", {w = 90, h = 26, x = 160, y = 5, ani = {"ui\\Image\\UICommon\\HelpPanel.UITex", 22, 23, 54, 21}})
 				BTN_Mail:SetText(_L["LR Mail"])
 				BTN_Mail.OnClick = function()
 					LR_AS_ItemRecord_Panel:Open(nil, nil, nil, nil ,true)
@@ -2174,6 +2183,17 @@ LR.RegisterEvent("ON_FRAME_CREATE", function() _Hook.ON_FRAME_CREATE() end)
 
 LR_AS_ItemRecord.HookBag = _Hook.HookBag
 LR_AS_ItemRecord.HookMailPanel = _Hook.HookMailPanel
+
+---------------------------------
+---Ñ¹Á¦²âÊÔ
+---------------------------------
+local StressTest = {}
+StressTest.Num = 50
+function StressTest.IniDB(DB)
+
+
+end
+
 ------------------------------------------------------------------------------------------------------
 ----×¢²áÄ£¿é
 ------------------------------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
+	local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
 local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
@@ -10,6 +10,7 @@ local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
 local VERSION = "20180403"
+local DEBUG = false
 -------------------------------------------------------------
 local MONITOR_TYPE = {
 	WINDOW_DIALOG = 1,
@@ -62,6 +63,9 @@ local QIYU = {
 	TAI_XING_DAO = 33,	--太行道
 	MI_BAO_TU = 34,		--
 	KE_JIANG_GAN = 35, ---
+	MI_SHU_SHENG = 36, ---迷书生
+	DI_SHUI_EN = 37,  ---滴水恩
+	CANG_HAI_DI = 38, ---沧海笛
 }
 
 local QIYU_NAME = {}	--名字
@@ -561,6 +565,50 @@ QIYU_ITEM[QIYU.KE_JIANG_GAN] = {
 }
 QIYU_ACHIEVEMENT[QIYU.KE_JIANG_GAN] = 6697
 QIYU_PET[QIYU.KE_JIANG_GAN] = {dwTabType = 8, dwIndex = 22539}
+
+--迷书生  36
+QIYU_NAME[QIYU.MI_SHU_SHENG] = _L["MI_SHU_SHENG"]
+QIYU_MNTP[QIYU.MI_SHU_SHENG] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.MI_SHU_SHENG] = 6
+QIYU_NPC[QIYU.MI_SHU_SHENG] = 65896
+QIYU_WINDOW_DIALOG[QIYU.MI_SHU_SHENG] = {
+	{szText = _L["DIALOG_MI_SHU_SHENG_01"], bFinish = false, }, 		--不满次数
+	{szText = _L["DIALOG_MI_SHU_SHENG_02"], bFinish = true, }, 		--满次数
+}
+--[[QIYU_ITEM[QIYU.MI_SHU_SHENG] = {
+	{dwTabType = 5, dwIndex = 32584, },
+}]]
+QIYU_ACHIEVEMENT[QIYU.MI_SHU_SHENG] = 7102
+QIYU_PET[QIYU.MI_SHU_SHENG] = {dwTabType = 8, dwIndex = 22563}
+
+--滴水恩  37
+QIYU_NAME[QIYU.DI_SHUI_EN] = _L["DI_SHUI_EN"]
+QIYU_MNTP[QIYU.DI_SHUI_EN] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.DI_SHUI_EN] = 411
+QIYU_NPC[QIYU.DI_SHUI_EN] = 65578
+QIYU_WARNING_MSG[QIYU.DI_SHUI_EN] = {
+	{szText = _L["DIALOG_DI_SHUI_EN_01"], bFinish = false, }, 		--不满次数
+	{szText = _L["DIALOG_DI_SHUI_EN_02"], bFinish = true, }, 		--满次数
+}
+--[[QIYU_ITEM[QIYU.DI_SHUI_EN] = {
+	{dwTabType = 5, dwIndex = 32577, },
+}]]
+QIYU_ACHIEVEMENT[QIYU.DI_SHUI_EN] = 7103
+QIYU_PET[QIYU.DI_SHUI_EN] = {dwTabType = 8, dwIndex = 22562}
+
+--沧海笛  38
+QIYU_NAME[QIYU.CANG_HAI_DI] = _L["CANG_HAI_DI"]
+QIYU_MNTP[QIYU.CANG_HAI_DI] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.CANG_HAI_DI] = 216
+QIYU_NPC[QIYU.CANG_HAI_DI] = 65917
+QIYU_WINDOW_DIALOG[QIYU.CANG_HAI_DI] = {
+	{szText = _L["DIALOG_CANG_HAI_DI_01"], bFinish = true, }, 		--满次数
+}
+QIYU_ITEM[QIYU.CANG_HAI_DI] = {
+	{dwTabType = 5, dwIndex = 32655, },
+}
+QIYU_ACHIEVEMENT[QIYU.CANG_HAI_DI] = 7104
+QIYU_PET[QIYU.CANG_HAI_DI] = {dwTabType = 8, dwIndex = 22561}
 --------------------------------------------------------------------
 LR_AS_QY = {}
 local Default = {
@@ -799,14 +847,17 @@ function _QY.CheckItemNum(dwTabType, dwIndex)
 							flag = false
 						end
 					end
-					local key = sformat("%d_%d", dwTabType, dwIndex)
-					if num < QIYU_ITEM_NUM[key] and flag then
-						_QY.SelfData[v] = _QY.SelfData[v] or 0
-						_QY.SelfData[v] = _QY.SelfData[v] + 1
+
+					local key = sformat("#%d_%d", dwTabType, dwIndex)
+					if num < (QIYU_ITEM_NUM[key] or 0) and flag then
+						_QY.SelfData[v] = ( _QY.SelfData[v] or 0 ) + 1
 						_QY.SaveData2()
 						_QY.ListQY()
 					end
 					QIYU_ITEM_NUM[key] = num
+					if DEBUG then
+						Output(QIYU_ITEM_NUM[key])
+					end
 				end
 			end
 		end
@@ -867,12 +918,16 @@ function _QY.OPEN_WINDOW()
 	local szText = LR.Trim(arg1)
 	local dwTargetType = arg2
 	local dwTargetID = arg3
-	if dwTargetType ~=  TARGET.NPC then
+	if dwTargetType ~= TARGET.NPC then
 		return
 	end
 	local npc = GetNpc(dwTargetID)
 	if not npc then
 		return
+	end
+
+	if DEBUG then
+		Output("OPEN_WINDOW", szText)
 	end
 
 	local dwTemplateID = npc.dwTemplateID
@@ -961,6 +1016,10 @@ function _QY.ON_WARNING_MESSAGE()
 	local scene = me.GetScene()
 	if scene.nType ==  MAP_TYPE.DUNGEON or scene.nType == MAP_TYPE.BATTLE_FIELD then
 		return
+	end
+
+	if DEBUG then
+		Output("ON_WARNING_MESSAGE", nMsgType, szMsg)
 	end
 
 	local dwMapID = scene.dwMapID
@@ -1746,7 +1805,7 @@ function _Pet.LoadData()
 		sql_where = sformat("%s AND szQYName = '%s'", sql_where, g2d(szPetName))
 	end
 
-	DB_SELECT = DB:Prepare(sformat("SELECT * FROM pet_history WHERE %s ORDER BY nTime DESC LIMIT 50 OFFSET 0", sql_where))
+	local DB_SELECT = DB:Prepare(sformat("SELECT * FROM pet_history WHERE %s ORDER BY nTime DESC LIMIT 50 OFFSET 0", sql_where))
 	local data = d2g(DB_SELECT:GetAll())
 
 	LR.CloseDB(DB)

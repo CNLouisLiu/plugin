@@ -904,7 +904,7 @@ function UI.draw(xScreen, yScreen,zScreen)
 end
 
 function UI.DrawShape(tar, sha, nAngle, nRadius, col, dwType, __Alpha)
-	local pi=mpi
+	local pi = mpi
 	local nRadius = nRadius * 64
 	local nFace = mceil(128 * nAngle / 360)
 	local dwRad1 = pi * (tar.nFaceDirection - nFace) / 128
@@ -918,7 +918,7 @@ function UI.DrawShape(tar, sha, nAngle, nRadius, col, dwType, __Alpha)
 		dwRad2 = dwRad2 + pi / 20
 	end
 
-	nAlpha=__Alpha
+	local nAlpha = __Alpha
 	local r, g, b = unpack(col)
 	-- orgina point
 	sha:SetTriangleFan(GEOMETRY_TYPE.TRIANGLE)

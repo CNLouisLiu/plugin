@@ -195,8 +195,6 @@ function LR_TeamRequestPanel.OnLButtonClick()
 		menu[#menu + 1] = {szOption = _L["Option"], fnAction = function() LR_TOOLS:OpenPanel(_L["LR TeamHelper"]) end}
 		menu[#menu + 1] = {bDevide = true}
 		LR_TeamRequest.OptionMenu(menu)
-		menu[#menu + 1] = {bDevide = true}
-		menu[#menu + 1] = {szOption = _L["Get black list data"], fnAction = function() LR_TeamRequest.GetSystemDB() end}
 
 		PopupMenu(menu, {x, y, w, h})
 	end
@@ -205,21 +203,7 @@ end
 function LR_TeamRequestPanel.OnMouseEnter()
 	local szName = this:GetName()
 	if szName == "Btn_Setting" then
-		local x, y = this:GetAbsPos()
-		local w, h = this:GetSize()
-		local tTip = {}
-		tTip[#tTip + 1] = GetFormatText(sformat("%s\n", _L["Instructions:"]))
-		--
-		tTip[#tTip + 1] = GetFormatImage("UI/Image/GMPanel/gm2.uitex", 7, 24, 24)
-		tTip[#tTip + 1] = GetFormatText(sformat("%s\n", _L["LR Plugin installed."]))
-		--
-		tTip[#tTip + 1] = GetFormatImage("UI/Image/GMPanel/gm2.uitex", 9, 24, 24)
-		tTip[#tTip + 1] = GetFormatText(sformat("%s\n", _L["LR Plugin not installed."]))
-		--
-		tTip[#tTip + 1] = GetFormatImage("UI/Image/GMPanel/gm2.uitex", 6, 24, 24)
-		tTip[#tTip + 1] = GetFormatText(sformat("%s\n", _L["Be in black list."]))
 
-		OutputTip(tconcat(tTip), 320, {x, y, w, h})
 	end
 end
 
@@ -334,14 +318,11 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 		--
 		local Image_Bg = LR.AppendUI("Image", WndWindow, "Image_Bg", { x = 0, y = 0, w = 600, h = 50})
 		Image_Bg:FromUITex("ui/Image/UICommon/CommonPanel.UITex", 48):SetImageType(10)
-		--image
-		local Image_Status = LR.AppendUI("Image", WndWindow, sformat("Image_Status_%s", data.szName), { x = 10, y = 10, w = 30, h = 30})
-		Image_Status:FromUITex("UI/Image/GMPanel/gm2.uitex", 9)
 
-		local Image_Kungfu = LR.AppendUI("Image", WndWindow, sformat("Image_Kungfu_%s", data.szName), { x = 45, y = 10, w = 30, h = 30})
+		local Image_Kungfu = LR.AppendUI("Image", WndWindow, sformat("Image_Kungfu_%s", data.szName), { x = 10, y = 10, w = 30, h = 30})
 		Image_Kungfu:FromUITex(GetForceImage(data.dwForceID))
 
-		local Text_Name = LR.AppendUI("Text", WndWindow, "Text_Name", {x = 80, y = 5, w = 95, h = 40})
+		local Text_Name = LR.AppendUI("Text", WndWindow, "Text_Name", {x = 45, y = 5, w = 95, h = 40})
 		Text_Name:SetVAlign(1):SetHAlign(0):SetFontScheme(2):SetText(sformat("%s (%d)", data.szName, data.nLevel)):SetFontColor(LR.GetMenPaiColor(data.dwForceID))
 
 		local Image_GongZhan = LR.AppendUI("Image", WndWindow, sformat("Image_GongZhan_%s", data.szName), { x = 270, y = 10, w = 30, h = 30})
@@ -364,7 +345,6 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 		_ui[sformat("Image_Kungfu_%s", data.szName)] = Image_Kungfu
 		_ui[sformat("Image_GongZhan_%s", data.szName)] = Image_GongZhan
 		_ui[sformat("Btn_View_%s", data.szName)] = Btn_View
-		_ui[sformat("Image_Status_%s", data.szName)] = Image_Status
 
 		Btn_View.OnEnter = function()
 			if _ui[sformat("Image_Hover_%s", data.szName)] then
@@ -398,24 +378,8 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 					LR_TeamRequest.Request(data.szName, 1)
 				end
 			else
-				local v = REQUEST_LIST[data.szName] or {}
-				local bInBlackList, nType, tList = LR_Black_List.IsTargetInBlackList(v)
-				if bInBlackList then
-					local msg = {
-						szMessage = _L["In black list, plese hold ctrl to click."],
-						szName = "black list",
-						fnAutoClose = function() return false end,
-						{szOption = g_tStrings.STR_HOTKEY_SURE,
-							fnAction = function()
-
-							end,
-						},
-					}
-					MessageBox(msg)
-				else
-					if REQUEST_LIST[data.szName] then
-						LR_TeamRequest.Request(data.szName, 1)
-					end
+				if REQUEST_LIST[data.szName] then
+					LR_TeamRequest.Request(data.szName, 1)
 				end
 			end
 		end
@@ -443,53 +407,9 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 			local v = REQUEST_LIST[data.szName] or {}
 			local tTips = {}
 			if not v.dwID then
-				tTips[#tTips + 1] = GetFormatText(_L["This player has not installed LR_Plugin, be careful.\n"], 24)
+				--tTips[#tTips + 1] = GetFormatText(_L["This player has not installed LR_Plugin, be careful.\n"], 24)
 			end
-			local bInBlackList, nType, tList = LR_Black_List.IsTargetInBlackList(v)
-			if bInBlackList then
-				local function _list(tip, tList)
-					for k2, v2 in pairs(tList) do
-						local info = LR_Black_List.GetInfo(v2)
-						tip[#tip + 1] = GetFormatText("---------")
-						local szPath, nFrame = GetForceImage(info.dwForceID)
-						tip[#tip + 1] = GetFormatImage(szPath, nFrame, 24, 24)
-						tip[#tip + 1] = GetFormatText(sformat(_L["%s\n"], info.szName), 28)
-						tip[#tip + 1] = GetFormatText(sformat(_L["Server: %s_%s\n"], info.area, info.server), 28)
-						tip[#tip + 1] = GetFormatText(sformat(_L["ID: %d\n"], info.dwID), 28)
-						tip[#tip + 1] = GetFormatText(sformat(_L["Role type: %s\n"], ROLETYPE_TEXT[info.role_type]), 28)
-						tip[#tip + 1] = GetFormatText(sformat(_L["Cheat_style: %s\n"], info.cheat_style), 28)
-						tip[#tip + 1] = GetFormatText(sformat(_L["Details: %s\n"], info.remarks), 28)
-						tip[#tip + 1] = GetFormatText(sformat(_L["Link: %s\n"], info.detail_link), 28)
-						local _t1 = _L["Have not yet."]
-						if info.role_code ~= "" then
-							_t1 = info.role_code
-						end
-						tip[#tip + 1] = GetFormatText(sformat(_L["User code: %s\n"], _t1), 28)
-						if info.role_code == "" and nType == 1 then
-							tTips[#tTips + 1] = GetFormatText(_L["This player is lack of user_code, if you have the user_code of this player, please give it to me.\n"], 24)
-							local bHave, role = LR.Role_Code.CheckExist(info)
-							if bHave then
-								tTips[#tTips + 1] = GetFormatText(_L["You have the code of this player, please give it to me. Right click to choose 'hand it up'"], 235)
-							end
-						end
-					end
-				end
-				if nType == 1 then
-					tTips[#tTips + 1] = GetFormatText(_L["This player is in system black list.\n"], 235)
-					--
-					_list(tTips, tList)
-				elseif nType == 2 then
-					local tName = {}
-					for k2, v2 in pairs(tList) do
-						tinsert(tName, v2.szName)
-					end
-					tTips[#tTips + 1] = GetFormatText(sformat(_L["This player has the same account with player %s .\n"], tconcat(tName, ",")), 235)
-					--
-					_list(tTips, tList)
-				elseif nType == 3 then
-					tTips[#tTips + 1] = GetFormatText(_L["This player is in custom black list.\n"], 235)
-				end
-			end
+
 			if #tTips > 0 then
 				local x, y = this:GetAbsPos()
 				local w, h = this:GetSize()
@@ -519,35 +439,10 @@ function LR_TeamRequestPanel.LoadOneQuest(data)
 				menu[#menu + 1] = {szOption = g_tStrings.STR_SAY_SECRET, fnAction = function() LR.SwitchChat(data.szName) end}
 				menu[#menu + 1] = {szOption = g_tStrings.STR_MAKE_FRIEND, fnAction = function() GetClientPlayer().AddFellowship(data.szName) end}
 			end
-			local v = REQUEST_LIST[data.szName] or {}
-			local bInBlackList, nType, tList = LR_Black_List.IsTargetInBlackList(v)
-			if bInBlackList then
-				local info = LR_Black_List.GetInfo(v)
-				if info.role_code == "" and nType == 1 then
-					local bHave, role = LR.Role_Code.CheckExist(info)
-					if bHave then
-						menu[#menu + 1] = {bDevide = true,}
-						menu[#menu + 1] = {szOption=_L["Black List"], fnDisable = function() return true end,}
-						menu[#menu + 1] = {szOption=_L["Hand it up"],
-							fnAction = function()
-								local v3 = clone(v)
-								local ServerInfo = {GetUserServer()}
-								local realArea, realServer = ServerInfo[5], ServerInfo[6]
-								v3.role_code = role.role_code
-								v3.area = realArea
-								v3.server = realServer
-								LR_Black_List.ReportP(v3)
-							end,}
-					end
-				end
-			end
 			local fx, fy = Cursor.GetPos()
 			PopupMenu(menu, {fx, fy, 0, 0})
 		end
 
-		if LR_Black_List.IsTargetInBlackList(data) then
-			LR_TeamRequest.ChangeToBlackWindow(data)
-		end
 		LR_TeamRequestPanel.ReSize()
 	end
 end
@@ -565,11 +460,6 @@ function LR_TeamRequest.ChangeToBlackWindow(data)
 	WndWindow:ChangeRelation(WndBlackContainer, true, true)
 	_ui[sformat("WndWindow_%s", data.szName)] = WndWindow
 
-	--
-	local bInBlackList, nType, tList = LR_Black_List.IsTargetInBlackList(REQUEST_LIST[data.szName])
-	if bInBlackList then
-		_ui[sformat("Image_Status_%s", data.szName)]:FromUITex("UI/Image/GMPanel/gm2.uitex", 6)
-	end
 	--
 	LR_TeamRequestPanel.ReSize()
 end
@@ -631,22 +521,6 @@ function LR_TeamRequest.ON_BG_CHANNEL_MSG()
 			end
 			if _ui[sformat("Btn_View_%s", v.szName)] then
 				_ui[sformat("Btn_View_%s", v.szName)]:Enable(true)
-			end
-
-			if _ui[sformat("Image_Status_%s", v.szName)] then
-				_ui[sformat("Image_Status_%s", v.szName)]:FromUITex("UI/Image/GMPanel/gm2.uitex", 7)
-			end
-
-			--ºÚÃûµ¥¼ì²â
-			local ServerInfo = {GetUserServer()}
-			local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-			local szKey = sformat("%s_%s_%d", realArea, realServer, v.dwID)
-			REQUEST_LIST[v.szName].szKey = szKey
-			--
-			local bInBlackList, nType, tList = LR_Black_List.IsTargetInBlackList(REQUEST_LIST[v.szName])
-			if bInBlackList then
-				LR_TeamRequest.ChangeToBlackWindow(REQUEST_LIST[v.szName])
-				--_ui[sformat("Image_Status_%s", v.szName)]:FromUITex("UI/Image/GMPanel/gm2.uitex", 6)
 			end
 		end
 	end

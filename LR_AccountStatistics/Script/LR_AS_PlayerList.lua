@@ -47,8 +47,8 @@ function _C.PrepareData()
 	DATA2BSAVE = _C.GetSelfData()
 end
 
-function _C.SaveData(DB)
-	local v = clone(DATA2BSAVE) or {}
+function _C.SaveData(DB, TestData)
+	local v = TestData or clone(DATA2BSAVE) or {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO player_list ( szKey, dwID, szName, nLevel, dwForceID, loginArea, loginServer, realArea, realServer, hash01, hash02 ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({ v.szKey, v.dwID, v.szName, v.nLevel, v.dwForceID, v.loginArea, v.loginServer, v.realArea, v.realServer, v.hash01, v.hash02 })))
@@ -146,13 +146,49 @@ function _C.RepairDB(DB)
 	LR_AS_Data.AllPlayerList = clone(all_data)
 end
 
---×¢²áÄ£¿é
+---------------------------------
+---Ñ¹Á¦²âÊÔ
+---------------------------------
+local StressTest = {}
+StressTest.Num = 50
+function StressTest.IniDB(DB)
+	for i = 1, StressTest.Num, 1 do
+		local realArea = sformat(_L["Area%d"], i % 3)
+		local realServer = sformat(_L["Server%d"], i % 4)
+		local dwID = 1000000 + i
+		local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
+
+		local data = {
+			szKey = szKey,
+			dwID = dwID,
+			szName = sformat(_L["TestUser_%d"], i),
+			nLevel = 100,
+			dwForceID = i % 10,
+			loginArea = realArea,
+			loginServer = realServer,
+			realArea = realArea,
+			realServer = realServer,
+			hash01 = LR.GetAccountCode(sformat(_L["TestAccount_%d"], i % 5)),
+			hash02 = LR.GetUserCode({AccountCode = LR.GetAccountCode(_L["TestAccount_%d"], i % 5), szKey = szKey}),
+			--
+			nCurrentStamina = 3000,
+			nMaxStamina = 3000,
+		}
+		_C.SaveData(DB, data)
+	end
+end
+
+---------------------------------
+---×¢²áÄ£¿é
+---------------------------------
 LR_AS_Module.PlayerList = {}
 LR_AS_Module.PlayerList.PrepareData = _C.PrepareData
 LR_AS_Module.PlayerList.SaveData = _C.SaveData
 LR_AS_Module.PlayerList.LoadData = _C.LoadData
 LR_AS_Module.PlayerList.FIRST_LOADING_END = _C.LoadData
 LR_AS_Module.PlayerList.RepairDB = _C.RepairDB
+----
+LR_AS_Module.PlayerList.StressTest = StressTest
 
 
 

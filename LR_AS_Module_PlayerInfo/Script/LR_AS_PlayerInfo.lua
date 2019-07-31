@@ -151,9 +151,9 @@ function _C.PrepareData()
 	DATA2BSAVE = _C.GetSelfData()
 end
 
-function _C.SaveData(DB)
+function _C.SaveData(DB, TestData)
 	-------保存自身的属性数据
-	local v = clone(DATA2BSAVE) or {}
+	local v = TestData or clone(DATA2BSAVE) or {}
 	local DB_REPLACE = DB:Prepare("REPLACE INTO player_info (szKey, nGold, nSilver, nCopper, JianBen, remainJianBen, BangGong, remainBangGong, XiaYi, remainXiaYi, WeiWang, remainWeiWang, ZhanJieJiFen, remainZhanJieJiFen, ZhanJieDengJi, MingJianBi, remainMingJianBi, szTitle, nCurrentTrainValue, nCamp, szTongName, nVigor, nMaxVigor, nVigorRemainSpace, SaveTime, LastLoginTime, LastLogoutTime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({v.szKey, v.nGold, v.nSilver, v.nCopper, v.JianBen, v.remainJianBen, v.BangGong, v.remainBangGong, v.XiaYi, v.remainXiaYi, v.WeiWang, v.remainWeiWang, v.ZhanJieJiFen, v.remainZhanJieJiFen, v.ZhanJieDengJi, v.MingJianBi, v.remainMingJianBi, v.szTitle, v.nCurrentTrainValue, v.nCamp, v.szTongName, v.nVigor, v.nMaxVigor, v.nVigorRemainSpace, v.SaveTime, LOGIN_TIME, GetCurrentTime()})))
@@ -614,7 +614,55 @@ function _C.FIRST_LOADING_END(DB)
 	_C.LoadData(DB)
 end
 
---注册模块
+---------------------------------
+---压力测试
+---------------------------------
+local StressTest = {}
+StressTest.Num = 50
+function StressTest.IniDB(DB)
+	local value1 = function(value, default)
+		return value and value ~= "" and value or default
+	end
+
+	for i = 1, StressTest.Num, 1 do
+		local realArea = sformat(_L["Area%d"], i % 3)
+		local realServer = sformat(_L["Server%d"], i % 4)
+		local dwID = 1000000 + i
+		local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
+
+		local data, v = {}, {}
+		data.szKey = szKey
+		data.nGold = value1(v.nGold, i)
+		data.nSilver = value1(v.nSilver, i)
+		data.nCopper = value1(v.nCopper, i)
+		data.nMoney = data.nCopper + data.nSilver * 100 + data.nGold * 10000
+		data.JianBen, data.remainJianBen = value1(v.JianBen, i), value1(v.remainJianBen, 1500)	--监本
+		data.BangGong, data.remainBangGong = value1(v.BangGong, i), value1(v.remainBangGong, 170000)		--帮贡
+		data.XiaYi, data.remainXiaYi = value1(v.XiaYi, i), value1(v.remainXiaYi, 9000)	--狭义
+		data.WeiWang, data.remainWeiWang = value1(v.WeiWang, i), value1(v.remainWeiWang, 180000)	--威望
+		data.ZhanJieJiFen, data.remainZhanJieJiFen = value1(v.ZhanJieJiFen, i), value1(v.remainZhanJieJiFen, 0)	--战阶积分
+		data.ZhanJieDengJi = value1(v.ZhanJieDengJi, 0)	--战阶等级
+		data.MingJianBi, data.remainMingJianBi = value1(v.MingJianBi, i), value1(v.remainMingJianBi, 0)	--名剑币
+		data.szTitle = value1(v.szTitle, "")	--称号
+		data.nCurrentTrainValue = value1(v.nCurrentTrainValue, i)	--修为
+		data.nCamp = value1(v.nCamp, 0)	--阵营
+		data.szTongName = value1(v.szTongName, "")	--帮会名称
+		data.SaveTime = GetCurrentTime()
+		data.LastLoginTime = value1(v.LastLoginTime, 0)
+		data.LastLogoutTime = value1(v.LastLogoutTime, 0)
+
+		--100级新版精力
+		data.nVigor = value1(v.nVigor, i)
+		data.nMaxVigor = value1(v.nMaxVigor, 1500)
+		data.nVigorRemainSpace = value1(v.nVigorRemainSpace, 0)
+
+		_C.SaveData(DB, data)
+	end
+end
+
+---------------------------------
+---注册模块
+---------------------------------
 LR_AS_Module.PlayerInfo = {}
 LR_AS_Module.PlayerInfo.PrepareData = _C.PrepareData
 LR_AS_Module.PlayerInfo.SaveData = _C.SaveData
@@ -628,3 +676,5 @@ LR_AS_Module.PlayerInfo.CheckTitleDisable = _C.CheckTitleDisable
 LR_AS_Module.PlayerInfo.CfgSave = _C.CfgSave
 LR_AS_Module.PlayerInfo.CfgReset = _C.CfgReset
 LR_AS_Module.PlayerInfo.RepairDB = _C.RepairDB
+-----
+LR_AS_Module.PlayerInfo.StressTest = StressTest

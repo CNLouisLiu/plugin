@@ -92,6 +92,9 @@ function _Group.GetAccountGroupFromDB()
 	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
 	local AccountGroup = {}
 	for szKey, v in pairs(AllPlayerList) do
+		if not v.hash01 or v.hash01 == "" then
+			v.hash01 = "unknown"
+		end
 		AccountGroup[v.hash01] = AccountGroup[v.hash01] or {}
 		local server = sformat("%s_%s", v.realArea, v.realServer)
 		AccountGroup[v.hash01][server] = AccountGroup[v.hash01][server] or {}

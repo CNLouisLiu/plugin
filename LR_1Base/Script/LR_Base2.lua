@@ -857,6 +857,7 @@ local _FontSheild = {
 	[182] = true,
 	[183] = true,
 	[211] = true,
+	[288] = true,
 }
 
 function _FontPanel:Init(fnAction,rgb)
@@ -872,15 +873,16 @@ function _FontPanel:Init(fnAction,rgb)
 	local hScroll = LR.AppendUI("Scroll", hPageSet, "Scroll", {x = 0, y = 0, w = 340, h = 420})
 
 	_FontPanel.hSelected = {}
-	for i = 1, 241, 1 do
+
+	local add = function(i)
 		if not _FontSheild[i] then
-			local handle = LR.AppendUI("Handle", hScroll, sformat("Handle_%d", i), {w = 85, h = 40})
-			local hover = LR.AppendUI("Image", handle, sformat("Hover_%d", i), {w = 85, h = 40})
+			local handle = LR.AppendUI("Handle", hScroll, sformat("Handle_%d", i), {w = 85, h = 30})
+			local hover = LR.AppendUI("Image", handle, sformat("Hover_%d", i), {w = 85, h = 30})
 			hover:FromUITex("ui/image/common/box.uitex", 1)
 			hover:Hide()
 			hover:SetImageType(10)
 
-			local selected = LR.AppendUI("Image", handle, sformat("Selected_%d", i), {w = 85, h = 40})
+			local selected = LR.AppendUI("Image", handle, sformat("Selected_%d", i), {w = 85, h = 30})
 			selected:FromUITex("ui/image/common/box.uitex", 10)
 			selected:Hide()
 			if i == _FontPanel.selected then
@@ -888,12 +890,11 @@ function _FontPanel:Init(fnAction,rgb)
 			end
 			_FontPanel.hSelected[i] = selected
 
-
-			local text = LR.AppendUI("Text", handle, sformat("Text_%d", i), {w = 85, h = 40, text = sformat(_L["Font%d"], i)})
+			local text = LR.AppendUI("Text", handle, sformat("Text_%d", i), {w = 85, h = 30, text = sformat(_L["Font%d"], i)})
 			text:SetHAlign(1)
 			text:SetVAlign(1)
 			text:SetFontScheme(i)
-			--text:SetFontColor(255, 255, 255)
+			text:SetFontColor(255, 255, 255)
 
 			handle.OnClick = function()
 				if _FontPanel.hSelected[_FontPanel.selected] then
@@ -916,6 +917,11 @@ function _FontPanel:Init(fnAction,rgb)
 				hover:Hide()
 			end
 		end
+	end
+
+	local fonts = {1, 2, 4, 7, 10, 15, 19, 20, 21, 23, 40, 44, 50, 99, 167, 168, 192, 199, 201, 207, 208, 209, 226, 230, 231, 232, 233, 234, 237, 238, 247, 248, 251, 252, 257, 259, 260, 262, 263, 264, 265, 273, 274}
+	for k, v in pairs(fonts) do
+		add(v)
 	end
 
 	hScroll:UpdateList()

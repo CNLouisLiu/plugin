@@ -204,12 +204,12 @@ function _FBList.PrepareData()
 	DATA2BSAVE = FB_Record
 end
 
-function _FBList.SaveData(DB)
+function _FBList.SaveData(DB, TestData, TestszKey)
 	local me = GetClientPlayer()
 	local serverInfo = {GetUserServer()}
 	local realArea, realServer = serverInfo[5], serverInfo[6]
-	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	local FB_Record = clone(DATA2BSAVE)
+	local szKey = TestszKey or sformat("%s_%s_%d", realArea, realServer, me.dwID)
+	local FB_Record = TestData or clone(DATA2BSAVE)
 	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(FB_Record)})))
@@ -957,7 +957,7 @@ function LR_FB_Tips.LOADING_END()
 	if not scene then
 		return
 	end
-	if scene.nType ~=  MAP_TYPE.DUNGEON then
+	if scene.nType ~= MAP_TYPE.DUNGEON then
 		return
 	end
 	LR_FB_Tips.FirstCheck = false
@@ -984,6 +984,7 @@ function LR_FB_Tips.CheckCD()
 	local szName = Table_GetMapName(dwMapID)
 	local MSG = {}
 	local FB_ID = _FBList.GetFBIDByMapID(_FBList.SelfData, dwMapID)
+	LR_FB_Tips.OutBlackCD()
 	if not LR_FB_Tips.FirstCheck then
 		MSG[#MSG+1] = sformat(_L["LR:You enter FB[%s], ID is %d, "], szName, nCopyIndex)
 		if FB_ID ~= nil then
@@ -1020,7 +1021,7 @@ end
 function LR_FB_Tips.ON_MAP_COPY_PROGRESS_UPDATE()
 	LR.DelayCall(150, function()
 		_FBList.ApplyCDProgress()
-		LR_FB_Tips.LR_FB_Tips.OutBlackCD()
+		LR_FB_Tips.OutBlackCD()
 	end)
 end
 
@@ -1030,7 +1031,7 @@ function LR_FB_Tips.OutBlackCD()
 		return
 	end
 	local scene = me.GetScene()
-	if scene.nType ~=  MAP_TYPE.DUNGEON then
+	if scene.nType ~= MAP_TYPE.DUNGEON then
 		return
 	end
 	local dwMapID = scene.dwMapID
@@ -1063,8 +1064,33 @@ LR_AS_FBList.FB5R = _FBList.FB5R
 LR_AS_FBList.SaveCommonSetting = _FBList.SaveCommonSetting
 LR_AS_FBList.LoadCommonSetting = _FBList.LoadCommonSetting
 
-------------------------------------------
---×¢²áÄ£¿é
+---------------------------------
+---Ñ¹Á¦²âÊÔ
+---------------------------------
+local StressTest = {}
+StressTest.Num = 50
+function StressTest.IniDB(DB)
+	for i = 1, StressTest.Num, 1 do
+		local realArea = sformat(_L["Area%d"], i % 3)
+		local realServer = sformat(_L["Server%d"], i % 4)
+		local dwID = 1000000 + i
+		local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
+
+		local fenlei = {"FB25R", "FB10R", "FB5R"}
+		local FB_Record = {}
+		for k, v in pairs(fenlei) do
+			for k2, v2 in pairs(_FBList[v]) do
+				FB_Record[tostring(v2.dwMapID)] = {i * 1000 + v2.dwMapID}
+			end
+		end
+
+		_FBList.SaveData(DB, FB_Record, szKey)
+	end
+end
+
+---------------------------------
+---×¢²áÄ£¿é
+---------------------------------
 LR_AS_Module.FBList = {}
 LR_AS_Module.FBList.PrepareData = _FBList.PrepareData
 LR_AS_Module.FBList.SaveData = _FBList.SaveData
@@ -1075,5 +1101,6 @@ LR_AS_Module.FBList.ResetDataFriday = _FBList.ResetDataFriday
 LR_AS_Module.FBList.AddPage = _FBList.AddPage
 LR_AS_Module.FBList.RefreshPage = _FBList.RefreshPage
 LR_AS_Module.FBList.ShowTip = _FBList.ShowTip
-
+-----
+LR_AS_Module.FBList.StressTest = StressTest
 

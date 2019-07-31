@@ -311,4 +311,10 @@ data={
 	--20181227add--
 	["bShowMine"]="显示矿藏",
 	["bShowAgriculture"]="显示神农",
+
+	--20190728add--
+	["Font Settings"]="文字设置",
+	["Font Style"]="字体样式",
+	["Font Style %d"]="样式%d",
+
 }
