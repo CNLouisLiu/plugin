@@ -3548,8 +3548,6 @@ LR.RegisterEvent("CUSTOM_DATA_LOADED", function() LR_HeadName.CUSTOM_DATA_LOADED
 LR.RegisterEvent("DO_SKILL_CAST", function() LR_HeadName.DO_SKILL_CAST() end)
 LR.RegisterEvent("ON_BG_CHANNEL_MSG",function() LR_HeadName.ON_BG_CHANNEL_MSG() end)
 
-Wnd.OpenWindow(sformat("%s\\UI\\LR_HeadNameNone.ini", AddonPath), "LR_HeadName"):Hide()
-
 function LR_HeadName.ON_READ_BOOK()
 	for k, v in pairs(_BeiMing) do
 		LR_HeadName.Check(k, TARGET.DOODAD, true)
@@ -3574,3 +3572,5 @@ function LR_HeadName.GetUIScale()
 	local w2, h2 = Handle_Fixed:GetSize()
 	LR_HeadName.UIScale = w2 / w1
 end
+
+Wnd.OpenWindow(sformat("%s\\UI\\LR_HeadNameNone.ini", AddonPath), "LR_HeadName"):Hide()
