@@ -138,6 +138,7 @@ LR_HeadName.default = {
 		bShowTargetDis = true,
 		bShowTargetFace = false,	--显示目标面向
 		bShowFightingEnemyDis = false,
+		bChangeSizeByUIScale = false,	--随UI缩放一起变换大小
 		NPC = {
 			bShow = true,
 			bAlwaysHideSysNpcTop = true,
@@ -254,6 +255,7 @@ LR_HeadName.default = {
 			nLifePercentTextOffsetX = 14,
 			nLifePercentTextOffsetY = 0,
 			nLifePercentTextScale = 0.6,
+			bNotCalLifeLenth = false,
 		},
 		ChangGeShadow = {
 			bShow = true, 	-----总开关
@@ -476,7 +478,7 @@ function _HandleRole:DrawName()
 	hText:SetAlpha(255)
 	hText:SetD3DPT(D3DPT.TRIANGLEFAN)
 	local nHight = LR_HeadName.UsrData.Height
-	local nOffsetY = (LR_HeadName.UsrData.nOffset or 0) - 26
+	local nOffsetY = -(LR_HeadName.UsrData.nOffset or 0) - 26
 
 	local dwID = self.dwID
 	local _Role = LR_HeadName._Role[dwID]
@@ -489,6 +491,9 @@ function _HandleRole:DrawName()
 
 	local UIScale = LR_HeadName.UIScale
 	local fx = UIScale * (LR_HeadName.UsrData.nFontScale or 1)
+	if LR_HeadName.UsrData.bChangeSizeByUIScale then
+		fx = LR_HeadName.UsrData.nFontScale or 1
+	end
 
 	if self.nTeamMark and LR_HeadName.UsrData.bShowTeamMark then
 		if tMarkerTextList[self.nTeamMark] then
@@ -577,6 +582,9 @@ function _HandleRole:DrawDoodad(tText)
 	nOffset = nOffset - 12
 	local UIScale = LR_HeadName.UIScale
 	local fx = UIScale * (LR_HeadName.UsrData.nFontScale or 1)
+	if LR_HeadName.UsrData.bChangeSizeByUIScale then
+		fx = LR_HeadName.UsrData.nFontScale or 1
+	end
 	for i = 1, #tText do
 		local r, g, b = unpack(tText[i].rgb)
 		hText:AppendDoodadID(self.dwID, r, g, b, 255, {0, 0, 0, 0, -50 - (i-1) * nHight - nOffset}, tText[i].font , tText[i].szText, 0, fx)
@@ -601,7 +609,7 @@ function _HandleRole:DrawLifeBoard()
 	local nWidth = LR_HeadName.UsrData.LifeBar.Lenth
 	local nHeight = LR_HeadName.UsrData.LifeBar.Height
 	local nOffsetY = LR_HeadName.UsrData.LifeBar.nOffsetY or 0
-	nOffsetY = nOffsetY + 3 + (LR_HeadName.UsrData.nOffset or 0)
+	nOffsetY = nOffsetY + 0 + (LR_HeadName.UsrData.nOffset or 0)
 	local Alpha = LR_HeadName.UsrData.LifeBar.Alpha
 	local nOffset = LR_HeadName.UsrData.nOffset or 0
 
@@ -657,7 +665,7 @@ function _HandleRole:DrawLife(t)
 	local nWidth = LR_HeadName.UsrData.LifeBar.Lenth
 	local nHeight = LR_HeadName.UsrData.LifeBar.Height
 	local nOffsetY = LR_HeadName.UsrData.LifeBar.nOffsetY or 0
-	nOffsetY = nOffsetY + 3 + (LR_HeadName.UsrData.nOffset or 0)
+	nOffsetY = nOffsetY + 0 + (LR_HeadName.UsrData.nOffset or 0)
 	--local Alpha = LR_HeadName.UsrData.LifeBar.Alpha
 	local Alpha = 255
 	local nOffset = LR_HeadName.UsrData.nOffset or 0
@@ -666,7 +674,7 @@ function _HandleRole:DrawLife(t)
 	local _Role = LR_HeadName._Role[dwID]
 	local bTop = true
 	if _Role:GetTemplateID() ==  46297 or _Role:GetTemplateID() ==  46140 then
-		nOffsetY = nOffsetY+50
+		nOffsetY = nOffsetY + 50
 		bTop = false
 	end
 
@@ -721,7 +729,15 @@ function _HandleRole:DrawLife(t)
 
 	local UIScale = LR_HeadName.UIScale
 	local fx = UIScale * nLifePercentTextScale
-	hLifePer:AppendCharacterID(dwID, true, r, g, b, 255, {0, 0, 0, LR_HeadName.UsrData.LifeBar.Lenth / 2 + nLifePercentTextOffsetX, nLifePercentTextOffsetY} , LR_HeadName.UsrData.font, sformat("%d%%", LifePer * 100), 0, fx)
+	if LR_HeadName.UsrData.bChangeSizeByUIScale then
+		fx = nLifePercentTextScale
+	end
+	local nX, nY = nLifePercentTextOffsetX, nLifePercentTextOffsetY - 3
+	if not LR_HeadName.UsrData.LifeBar.bNotCalLifeLenth then
+		nX = nX + LR_HeadName.UsrData.LifeBar.Lenth / 2 + 15
+	end
+
+	hLifePer:AppendCharacterID(dwID, true, r, g, b, 255, {0, 0, 0, nX, nY} , LR_HeadName.UsrData.font, sformat("%d%%", LifePer * 100), 0, fx)
 
 	hLifePer:Hide()
 	LifeBar:Hide()

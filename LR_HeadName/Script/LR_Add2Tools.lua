@@ -87,9 +87,17 @@ LR_HeadName_UI = {
 						end,
 					}
 				end
+				menu[#menu+1] = {szOption = _L["Change size by ui scale"], bCheck = true, bChecked = function() return LR_HeadName.UsrData.bChangeSizeByUIScale end,
+					fnAction = function()
+						LR_HeadName.UsrData.bChangeSizeByUIScale = not LR_HeadName.UsrData.bChangeSizeByUIScale
+						LR_HeadName.SaveCommonSettings()
+						LR_HeadName.ReDrawAll()
+					end,
+				}
 				for i = 1, #menu do
 					tinsert(m, menu[i])
 				end
+
 				PopupMenu(m)
 			end,
 		}, {name = "LR_Head_Line_Spacing", type = "ComboBox", x = 300, y = 0, w = 100, text = _L["Line spacing"],
@@ -878,23 +886,40 @@ LR_HeadName_UI = {
 						LR_HeadName.SaveCommonSettings()
 					end,
 				})
-				tinsert(m, {szOption = _L["Set lifeper text offsetX"] .. sformat(": %d", LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0) ,
+				tinsert(m, {szOption = _L["Set lifeper text offsetX"] .. sformat(": %d", LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0), bCheck = true,
 					fnAction = function()
-						GetUserInputNumber(LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0, 1000, nil, function(arg0)
-							LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX = arg0,
-							LR_HeadName.ReDrawAll()
-							LR_HeadName.SaveCommonSettings()
-						end)
+						local x, y = this:GetAbsPos()
+						local h, w = this:GetSize()
+						GetUserInput(_L["Input number"], function(arg0)
+							local number = tonumber(LR.Trim(arg0))
+							if type(number) == "number" then
+								LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX = arg0,
+								LR_HeadName.ReDrawAll()
+								LR_HeadName.SaveCommonSettings()
+							end
+						end, nil, nil, {x, y, w, h}, LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0, 10, false, false, nil)
 					end,
 					fnDisable = function() return not LR_HeadName.UsrData.LifeBar.bShowLifePercentText end,
+					{szOption = _L["Not cal life lenth"], bCheck = true, bChecked = function() return LR_HeadName.UsrData.LifeBar.bNotCalLifeLenth end,
+						fnAction = function()
+							LR_HeadName.UsrData.LifeBar.bNotCalLifeLenth = not LR_HeadName.UsrData.LifeBar.bNotCalLifeLenth
+							LR_HeadName.ReDrawAll()
+							LR_HeadName.SaveCommonSettings()
+						end,
+					},
 				})
 				tinsert(m, {szOption = _L["Set lifeper text offsetY"] .. sformat(": %d", LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY or 0) ,
 					fnAction = function()
-						GetUserInputNumber(LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY or 0, 1000, nil, function(arg0)
-							LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY = arg0,
-							LR_HeadName.ReDrawAll()
-							LR_HeadName.SaveCommonSettings()
-						end)
+						local x, y = this:GetAbsPos()
+						local h, w = this:GetSize()
+						GetUserInput(_L["Input number"], function(arg0)
+							local number = tonumber(LR.Trim(arg0))
+							if type(number) == "number" then
+								LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY = arg0,
+								LR_HeadName.ReDrawAll()
+								LR_HeadName.SaveCommonSettings()
+							end
+						end, nil, nil, {x, y, w, h}, LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY or 0, 10, false, false, nil)
 					end,
 					fnDisable = function() return not LR_HeadName.UsrData.LifeBar.bShowLifePercentText end,
 				})

@@ -317,4 +317,9 @@ data={
 	["Font Style"]="字体样式",
 	["Font Style %d"]="样式%d",
 
+	--20190821add--
+	["Input number"]="请输入数字",
+	["Not cal life lenth"]="不关联血条长度",
+	["Change size by ui scale"]="随UI缩放进行缩放",
+
 }
