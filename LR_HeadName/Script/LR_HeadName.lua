@@ -579,7 +579,7 @@ function _HandleRole:DrawDoodad(tText)
 	local fx = UIScale * (LR_HeadName.UsrData.nFontScale or 1)
 	for i = 1, #tText do
 		local r, g, b = unpack(tText[i].rgb)
-		hText:AppendDoodadID(self.dwID, r, g, b, 255, {0, 0, 0, 0, -50-(i-1)*nHight-nOffset}, tText[i].font , tText[i].szText, 0, fx)
+		hText:AppendDoodadID(self.dwID, r, g, b, 255, {0, 0, 0, 0, -50 - (i-1) * nHight - nOffset}, tText[i].font , tText[i].szText, 0, fx)
 	end
 end
 
@@ -2547,9 +2547,13 @@ function LR_HeadName.SpliteString(szText, bOutput)
 				end
 				local szName = ""
 				if szType == "N" then
-					szName = Table_GetNpcTemplateName(tNum[2])
+					if tNum[2] then
+						szName = Table_GetNpcTemplateName(tNum[2])
+					end
 				else
-					szName = LR.TABLE_GetDoodadTemplateName(tNum[2])
+					if tNum[2] then
+						szName = LR.TABLE_GetDoodadTemplateName(tNum[2])
+					end
 				end
 				tList[#tList + 1] = {nType = szType, dwMapID = tNum[1], dwTemplateID = tNum[2], szName = szName}
 			end

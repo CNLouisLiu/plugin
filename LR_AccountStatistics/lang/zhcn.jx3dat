@@ -835,6 +835,8 @@ data={
 
 	["CANG_HAI_DI"]="沧海笛",
 	["DIALOG_CANG_HAI_DI_01"]="想要的话明天再来吧",
+
+	["Auto refresh"]="每5秒刷新一次",
 	
 
 }

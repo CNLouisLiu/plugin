@@ -97,6 +97,7 @@ QIYU_PET[QIYU.SHENG_FU_JU] = {dwTabType = 8, dwIndex = 13925}
 QIYU_NAME[QIYU.ZHUO_YAO_JI] = _L["ZHUO_YAO_JI"]
 QIYU_MNTP[QIYU.ZHUO_YAO_JI] = MONITOR_TYPE.ITEM
 QIYU_MAP[QIYU.ZHUO_YAO_JI] = 16
+QIYU_NPC[QIYU.ZHUO_YAO_JI] = 36945
 QIYU_ITEM[QIYU.ZHUO_YAO_JI] = {
 	{dwTabType = 5, dwIndex = 26009, },
 }
@@ -1335,7 +1336,7 @@ function _QY.ShowTip2(qiyu_id, rect)
 		szXml[#szXml + 1] = GetFormatText(_L["Related map:"], 17, 233, 150, 122)
 		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", Table_GetMapName(QIYU_MAP[qiyu_id])), 17, 255, 255, 255)
 		szXml[#szXml + 1] = GetFormatText(_L["Related Npc/Doodad:"], 17, 233, 150, 122)
-		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", QIYU_NPC and Table_GetNpcTemplateName(QIYU_NPC[qiyu_id]) or QIYU_DOODAD and Table_GetDoodadTemplateName(QIYU_DOODAD[qiyu_id]) or ""), 17, 255, 255, 255)
+		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", QIYU_NPC[qiyu_id] and Table_GetNpcTemplateName(QIYU_NPC[qiyu_id]) or QIYU_DOODAD[qiyu_id] and Table_GetDoodadTemplateName(QIYU_DOODAD[qiyu_id])), 17, 255, 255, 255)
 		szXml[#szXml + 1] = GetFormatText(_L["Related achievement:"], 17, 233, 150, 122)
 		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", QIYU_NAME[qiyu_id]), 17, 255, 255, 255)
 		OutputTip(tconcat(szXml), 330, rect)
@@ -1614,7 +1615,7 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 			local frame = self:Fetch("LR_ACS_QiYu_Panel")
 			local nX, nY = frame:GetRelPos()
 			local nW, nH = frame:GetSize()
-			OutputAchievementTip(QIYU_ACHIEVEMENT[v], {nX, nY, nW, 0})
+			OutputAchievementTip(QIYU_ACHIEVEMENT[v.k], {nX, nY, nW, 0})
 		end
 
 		m = m+1

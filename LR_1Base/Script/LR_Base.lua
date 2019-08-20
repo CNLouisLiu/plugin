@@ -6,7 +6,7 @@ local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, tabl
 local AddonPath = "Interface\\LR_Plugin\\LR_1Base"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_1Base"
 ---------------------------------------------------------------
-LR = LR or {
+LR = {
 	tDelayCall = {},
 	tEvent = {},
 	tBreatheCall = {},
@@ -21,6 +21,8 @@ RegisterCustomData("LR.UsrData", CustomVersion)
 function LR.SaveLUAData(path, data, crc)
 	SaveLUAData(path, data, "\t", crc or false)
 end
+
+---------------------------------------------------------------------------------
 -- 多语言处理
 -- (table) MY.LoadLangPack(void)
 local SZLANG = ""
@@ -66,6 +68,234 @@ end
 local _L = LR.LoadLangPack(AddonPath)
 
 ---------------------------------------------------------------------------------
+local _DEBUGDD = {
+	bOn = false,
+	tAddon = {},
+}
+---
+_DEBUGDD.EventM = {}	--存放需要监控Debug的Event列表
+_DEBUGDD.EventD = {}	--存放Event的信息
+---
+function _DEBUGDD.RegisterEvent(szEvent, szAddon)		--注册需要监控的Event
+	local szAddon = szAddon or "BASE"
+	if not szEvent then
+		return
+	end
+	_DEBUGDD.EventM[szEvent] = _DEBUGDD.EventM[szEvent] or {}
+	_DEBUGDD.EventM[szEvent][szAddon] = true
+end
+
+function _DEBUGDD.UnRegisterEvent(szEvent, szAddon)
+	local szAddon = szAddon or "BASE"
+	if not szEvent then
+		for event, addons in pairs(_DEBUGDD.EventM) do
+			addons[szAddon] = nil
+			if next(addons) == nil then
+				_DEBUGDD.EventM[szEvent] = nil
+			end
+		end
+		return
+	end
+	if _DEBUGDD.EventM[szEvent] then
+		_DEBUGDD.EventM[szEvent][szAddon] = nil
+		if next(_DEBUGDD.EventM[szEvent]) == nil then
+			_DEBUGDD.EventM[szEvent] = nil
+		end
+	end
+end
+
+function _DEBUGDD.OutputEvent(szEvent)
+	if not _DEBUGDD.bOn then
+		return
+	end
+	if _DEBUGDD.EventM[szEvent] and next(_DEBUGDD.EventM[szEvent]) ~= nil then
+		if _DEBUGDD.EventD[szEvent] then
+			local out, check = {sformat("EVENT = '%s'", szEvent), VALUE = {}}, {}
+			for k, v in pairs(_DEBUGDD.EventD[szEvent]) do
+				out.VALUE[sformat("%s (arg%d)", v, k - 1)] = _G[sformat("arg%d", k - 1)] == nil and "NULL" or _G[sformat("arg%d", k - 1)]
+				check[sformat("%s", v)] = _G[sformat("arg%d", k - 1)] == nil and "NULL" or _G[sformat("arg%d", k - 1)]
+			end
+			if szEvent == "" then
+
+			else
+				Output(out)
+			end
+		else
+			--LR.SysMsg(sformat("[LR] no such event data.(%s)\n", szEvent))
+		end
+	end
+end
+
+function _DEBUGDD.LoadCFG()
+	_DEBUGDD.EventD = LoadLUAData(sformat("%s\\data\\event.dat", AddonPath)) or {}
+end
+
+function _DEBUGDD.Output(szText , szHeader , nLevel )
+	if not (LR.UsrData and LR.UsrData.Debug_enable) then
+		return
+	end
+	local szText = szText or ""
+	local nLevel = nLevel or 1
+	local szHeader = szHeader or "-LR-> "
+	if not (nLevel >= LR.UsrData.Debug_Level) then
+		return
+	end
+	if type(szText) == "string" then
+		LR.SysMsg(sformat("%s%s\n", szHeader, szText))
+	elseif type(szText) == "number" then
+		LR.SysMsg(sformat("%s%s\n", szHeader, tostring(szText)))
+	elseif type(szText) == "table" then
+		LR.SysMsg(sformat("%s{\n", szHeader))
+		if next(szText)~= nil then
+			for k, v in pairs(szText) do
+				LR.SysMsg(sformat("%s\[%d\] = ", szHeader, k))
+				if type(v) == "string" or type(v) == "number" then
+					_DEBUGDD.Output(v , "" , nLevel)
+				elseif type(v) == "table" then
+					_DEBUGDD.Output(v , szHeader.."    " , nLevel)
+				end
+			end
+		end
+		LR.SysMsg(sformat("%s}\n", szHeader))
+	end
+end
+
+function _DEBUGDD.bCanDebug()
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if realArea == "电信一区" and realServer == "蝶恋花" and IsShiftKeyDown() and IsAltKeyDown() then
+		return true
+	else
+		return false
+	end
+end
+
+function _DEBUGDD.bCanDebug2()
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if realArea == "电信一区" and realServer == "蝶恋花" and LR.GetTongName(me.dwTongID) == "么么哒萌萌哒" then
+		return true
+	else
+		return false
+	end
+end
+
+function _DEBUGDD.SysMenuAdd()
+	if _DEBUGDD.bCanDebug2() then
+		local menu = {szOption = "DEBUG", bCheck = true, bChecked = function() return _DEBUGDD.bOn end, fnAction = function() _DEBUGDD.bOn = not _DEBUGDD.bOn end}
+		for k, v in pairs(_DEBUGDD.tAddon) do
+			menu[#menu + 1] = {szOption = v:GetName(), bCheck = true, bMCheck = false, bChecked = function() return v:IsOn() end, fnAction = function() v:Switch() end}
+			local m = menu[#menu]
+			for k2, v2 in pairs(v.tEvent) do
+				m[#m + 1] = {szOption = k2, bCheck = true, bMCheck = false, bChecked = function() return v:IsEventOn(k2) end, fnAction = function() v:SwitchEvent(k2) end}
+			end
+		end
+		---头像菜单
+		Player_AppendAddonMenu ({menu})
+		---扳手菜单
+		TraceButton_AppendAddonMenu ({menu})
+	end
+end
+
+------------------------------
+local _DEBUG_ADDON = {}
+_DEBUG_ADDON.__index = _DEBUG_ADDON
+
+function _DEBUG_ADDON:New(szAddon)
+	local o = {}
+	setmetatable(o, self)
+	o.bOn = false
+	o.szName = szAddon
+	o.desName = szAddon
+	o.tEvent = {}
+	_DEBUGDD.tAddon[szAddon] = o
+	return o
+end
+
+function _DEBUG_ADDON:On(arg)
+	self.bOn = arg == nil and true or arg
+	return self
+end
+
+function _DEBUG_ADDON:Off()
+	Self.bOn = false
+	return self
+end
+
+function _DEBUG_ADDON:IsOn()
+	return self.bOn
+end
+
+function _DEBUG_ADDON:Switch()
+	self.bOn = not self.bOn
+	return self
+end
+
+function _DEBUG_ADDON:RegisterEvent(szEvent)
+	self.tEvent[szEvent] = false
+	return self
+end
+
+function _DEBUG_ADDON:EventOn(szEvent)
+	if self.tEvent[szEvent] ~= nil then
+		self.tEvent[szEvent] = true
+		_DEBUGDD.RegisterEvent(szEvent, self.szName)
+	end
+	return self
+end
+
+function _DEBUG_ADDON:EventOff(szEvent)
+	if self.tEvent[szEvent] ~= nil then
+		self.tEvent[szEvent] = false
+		_DEBUGDD.UnRegisterEvent(szEvent, self.szName)
+	end
+	return self
+end
+
+function _DEBUG_ADDON:IsEventOn(szEvent)
+	if self.tEvent[szEvent] ~= nil then
+		return self.tEvent[szEvent]
+	else
+		return false
+	end
+end
+
+function _DEBUG_ADDON:SwitchEvent(szEvent)
+	if self.tEvent[szEvent] ~= nil then
+		if self:IsEventOn(szEvent) then
+			self:EventOff(szEvent)
+		else
+			self:EventOn(szEvent)
+		end
+	end
+	return self
+end
+
+function _DEBUG_ADDON:GetName()
+	return self.szName
+end
+
+function _DEBUG_ADDON:Output(...)
+	if self.bOn then
+		Output(...)
+	end
+end
+
+--
+
+--
+LR.DEBUG = {}
+LR.DEBUG.Output = _DEBUGDD.Output
+LR.DEBUG.Addon = _DEBUG_ADDON
+--
+local _DEBUG = _DEBUG_ADDON:New("BASE")
+--
+function LR.DebugD()
+	Output("EventM", _DEBUGDD.EventM, "EventD", _DEBUGDD.EventD)
+end
+
 ------------------------------------
 function LR.Trim(szText)
 	if not szText or szText == "" then
@@ -1100,58 +1330,6 @@ function LR.SysMsg (szText, nType, bRich, nFont, tColor)
 	OutputMessage(nType, szText, bRich, nFont, tColor)
 end
 
-function LR.Debug(szText , szHeader , nLevel )
-	if not (LR.UsrData and LR.UsrData.Debug_enable) then
-		return
-	end
-	local szText = szText or ""
-	local nLevel = nLevel or 1
-	local szHeader = szHeader or "-LR-> "
-	if not (nLevel >= LR.UsrData.Debug_Level) then
-		return
-	end
-	if type(szText) == "string" then
-		LR.SysMsg(sformat("%s%s\n", szHeader, szText))
-	elseif type(szText) == "number" then
-		LR.SysMsg(sformat("%s%s\n", szHeader, tostring(szText)))
-	elseif type(szText) == "table" then
-		LR.SysMsg(sformat("%s{\n", szHeader))
-		if next(szText)~= nil then
-			for k, v in pairs(szText) do
-				LR.SysMsg(sformat("%s\[%d\] = ", szHeader, k))
-				if type(v) == "string" or type(v) == "number" then
-					LR.Debug(v , "" , nLevel)
-				elseif type(v) == "table" then
-					LR.Debug(v , szHeader.."    " , nLevel)
-				end
-			end
-		end
-		LR.SysMsg(sformat("%s}\n", szHeader))
-	end
-end
-
-function LR.bCanDebug()
-	local me = GetClientPlayer()
-	local ServerInfo = {GetUserServer()}
-	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if realArea == "电信一区" and realServer == "红尘寻梦" and IsShiftKeyDown() and IsAltKeyDown() then
-		return true
-	else
-		return false
-	end
-end
-
-function LR.bCanDebug2()
-	local me = GetClientPlayer()
-	local ServerInfo = {GetUserServer()}
-	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if realArea == "电信一区" and realServer == "红尘寻梦" and LR.GetTongName(me.dwTongID) == "么么哒萌萌哒" then
-		return true
-	else
-		return false
-	end
-end
-
 ---------------------------------------------
 ---发布系统警告
 ---------------------------------------------
@@ -1885,6 +2063,7 @@ end
 function LR.EventHandler (szEvent)
 	local tEvent = LR.tEvent[szEvent]
 	if next(tEvent) ~= nil then
+		_DEBUGDD.OutputEvent(szEvent)
 		for k, v in pairs (tEvent) do
 			local res, err = pcall(v)
 			if not res then
@@ -1899,7 +2078,7 @@ end
 -- fnAction		-- 事件处理函数，arg0 ~ arg9，传入 nil 相当于取消该事件
 --特别注意：当 fnAction 为 nil 并且 szKey 也为 nil 时会取消所有通过本函数注册的事件处理器
 --注册时结构：LR.RegisterEvent("event", function() 需要执行的函数 end)，一定要这么写
-function LR.RegisterEvent (szEvent, fnAction)
+function LR.RegisterEvent (szEvent, fnAction, addon)
 	local szKey = nil
 	local nPos = StringFindW(szEvent, ".")
 	if nPos then
@@ -1909,13 +2088,23 @@ function LR.RegisterEvent (szEvent, fnAction)
 	if not LR.tEvent[szEvent] then
 		LR.tEvent[szEvent] = {}
 		RegisterEvent(szEvent, function() LR.EventHandler(szEvent) end)
+		--
+		if not addon then
+			_DEBUG:RegisterEvent(szEvent)
+		end
 	end
+
 	local tEvent = LR.tEvent[szEvent]
 	if fnAction then
 		if not szKey then
 			tinsert(tEvent, fnAction)
 		else
 			tEvent[szKey] = fnAction
+		end
+		if addon then
+			if _DEBUGDD.tAddon[addon] then
+				_DEBUGDD.tAddon[addon]:RegisterEvent(szEvent)
+			end
 		end
 	else
 		if not szKey then
@@ -2510,6 +2699,7 @@ end
 
 function LR.LOGIN_GAME()
 	LR.RegisterHotKey()
+	_DEBUGDD.LoadCFG()
 end
 
 function LR.SYS_MSG()
@@ -2543,8 +2733,10 @@ end)
 LR.RegisterEvent("FIRST_LOADING_END", function()
 	LR.Black_FIRST_LOADING_END()
 	LR.LoadMenPaiColor()
+	_DEBUGDD.SysMenuAdd()
 end)
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() LR.Black_ON_BG_CHANNEL_MSG() end)
 LR.RegisterEvent("PARTY_ADD_MEMBER", function() LR.Black_PARTY_ADD_MEMBER() end)
 LR.RegisterEvent("LOGIN_GAME", function() LR.LOGIN_GAME() end)
 LR.RegisterEvent("SYS_MSG", function() LR.SYS_MSG() end)
+

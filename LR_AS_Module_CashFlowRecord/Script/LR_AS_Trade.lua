@@ -82,7 +82,7 @@ end
 
 function Dbug.Debug(szText , szHeader , nLevel )
 	if Dbug.Debug_enable then
-		LR.Debug(szText , szHeader , nLevel)
+		LR.Debug.Output(szText , szHeader , nLevel)
 	end
 end
 
