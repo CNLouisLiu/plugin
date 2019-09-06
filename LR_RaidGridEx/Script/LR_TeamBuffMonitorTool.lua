@@ -207,6 +207,109 @@ function LR_TeamBuffTool.FormatBuff(v2)
 	return buff
 end
 
+--[[
+boolean类型变量，默认true的，当值为true时则不导出；如果默认值是false的，则当值为false时不导出
+数值类型的变量，默认值为x的，当值为x时，不导出
+字符串类型的变量，默认值为x的，当值为x时，不导出
+表类型的，当表为空时不导出
+]]
+local function SimplifiedData(v, default)
+	if type(v) == "boolean" or type(default) == "boolean" then
+		if default then
+			return v == false and v or v == true and nil
+		else
+			return v == true or nil
+		end
+	elseif type(v) == "table" or type(default) == "table" then
+		return next(v or {}) ~= nil and v or nil
+	elseif type(v) == "number" or type(default) == "number" then
+		return v ~= default and v or nil
+	elseif type(v) == "string" then
+		return v ~= default and v or nil
+	end
+end
+
+local function FormatSimplifiedData(v, default)
+	if type(default) == "table" then
+		local t = {}
+		for k2, v2 in pairs(default) do
+			if type(v2) == "table" then
+				if next(v2) ~= nil then
+					t[k2] = FormatSimplifiedData(v[k2], v2)
+				else
+					t[k2] = SimplifiedData(v[k2], v2)
+				end
+			else
+				t[k2] = SimplifiedData(v[k2], v2)
+			end
+		end
+		return SimplifiedData(t, {})
+	else
+		return SimplifiedData(v, default)
+	end
+end
+
+function FullData(v, default)
+	if type(v) == "boolean" or type(default) == "boolean" then
+		if default then
+			return v == nil or v
+		else
+			return v or v == nil and false
+		end
+	elseif type(v) == "table" or type(default) == "table" then
+		return next(v or {}) == nil and (default) or (v)
+	elseif type(v) == "number" or type(default) == "number" then
+		return v or default
+	elseif type(v) == "string" then
+		return v or default
+	end
+end
+
+function FormatFullData(v, default)
+	if type(default) == "table" then
+		local t = {}
+		for k2, v2 in pairs(default) do
+			Output("11", k2, v[k2], v2)
+			t[k2] = FormatFullData(v[k2], v2)
+			Output("33", t[k2])
+		end
+		return t
+	else
+		Output("22")
+		return FullData(v, default)
+	end
+end
+
+local a = {
+	x = "xxx",
+	z = {
+		y = "yyy",
+	},
+	v = false,
+}
+local b = {
+	x = "1",
+	y = "2",
+	z = {
+		x = "1",
+		y = "2",
+		z = false,
+	},
+	w = false,
+	v = true,
+	u = true,
+}
+
+function LR_TeamBuffTool.Test()
+	local y = FormatFullData(a, b)
+	if EncryptAES then
+		Output("yess")
+	end
+end
+
+
+
+
 function LR_TeamBuffTool.FormatData(data)
 	local tBuffList = {}
 	local temp = {}

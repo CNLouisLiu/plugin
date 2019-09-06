@@ -2270,12 +2270,11 @@ end
 ---------------------------------------------
 ----DelayCall
 ---------------------------------------------
-LR_Breathe = {}
-function LR_Breathe.OnFrameCreate()
-
+function LR.OnFrameCreate()
+	LR.hWeb = this:Lookup("Web_Page")
 end
 
-function LR_Breathe.OnFrameBreathe()
+function LR.OnFrameBreathe()
 	--Output("LR_Breathe.OnFrameBreathe")
 	local nFrame = GetTickCount()
 	for k, v in pairs(LR.tBreatheCall) do
@@ -2292,7 +2291,7 @@ function LR_Breathe.OnFrameBreathe()
 	end
 end
 
-function LR_Breathe.OnFrameRender()
+function LR.OnFrameRender()
 	local nTime = GetTime()
 	for k, v in pairs (LR.tDelayCall) do
 		if v then
@@ -2344,7 +2343,7 @@ end
 function LR.UnBreatheCall(szKey)
 	LR.BreatheCall(szKey)
 end
-Wnd.OpenWindow("Interface\\LR_Plugin\\LR_1Base\\UI\\LR_1Base_None.ini", "LR_Breathe")
+Wnd.OpenWindow("Interface\\LR_Plugin\\LR_1Base\\UI\\LR_1Base_None.ini", "LR")
 ------------------------------------------------------------------------------------
 -------
 ------------------------------------------------------------------------------------

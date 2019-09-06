@@ -7,6 +7,119 @@ local AddonPath="Interface\\LR_Plugin\\LR_1Base"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_1Base"
 local _L = LR.LoadLangPack(AddonPath)
 --------------------------------------------------------------
+----------Web
+--------------------------------------------------------------
+local WEB_LOADING_STATE = {
+	NONE = 0,
+	LOADING = 1,
+	DONE = 2,
+}
+local _Web = {}
+_Web.Queue = {}
+
+function _Web.AddQueue(szName, data)
+	tinsert(_Web.Queue, {szName = szName, data = data, state = 0})
+end
+
+function _Web.Go(url)
+	local hWeb = LR.hWeb
+	hWeb:Navigate(url)
+	hWeb.OnDocumentComplete = function()
+		--local data = _Web.GetData()
+		Output("yes")
+		local page = _Web.Queue[1]
+		page.state = WEB_LOADING_STATE.DONE
+	end
+end
+
+function _Web.GetData()
+	local hWeb = LR.hWeb
+	local szUrl, szTitle, szContent = hWeb:GetLocationURL(), hWeb:GetLocationName(), hWeb:GetDocument()
+	return szUrl, szTitle, szContent
+end
+
+function _Web.BreatheCall()
+	if #_Web.Queue > 0 then
+		local page = _Web.Queue[1]
+		if page.state == WEB_LOADING_STATE.NONE then
+			page.state = WEB_LOADING_STATE.LOADING
+			_Web.Go(page.url)
+		elseif page.state == WEB_LOADING_STATE.DONE then
+			tremove(_Web.Queue, 1)
+		end
+	end
+end
+
+
+LR.Web = {}
+LR.Web.Go = _Web.Go
+
+Page = {}
+function Page.OnFrameCreate()
+	local page = this:Lookup("Web_Page")
+	page.OnDocumentComplete = function()
+		local szUrl, szTitle, szContent = page:GetLocationURL(), page:GetLocationName(), page:GetDocument()
+		local ddd = DecryptAES(szContent, "key123abc")
+
+		Output(szContent, ddd)
+
+
+
+
+--[[		local _s, _e, raw_data = sfind(szContent, '"(.+)"')
+		if _s then
+			--Output(raw_data)
+			local data = LR.JsonDecode(LR.AES.decrypt("ggg", raw_data))
+			SaveLUAData(sformat("%s//raw", SaveDataPath), data)
+			Output("done")
+			--Output(data or "NULL")
+		else
+			if szUrl ~= "about:blank" then
+				Output(szContent, "error data")
+			end
+		end
+		if szUrl ~= "about:blank" then
+			page:Navigate("about:blank")
+		end]]
+	end
+
+	--page:Navigate("http://www.baidu.com")
+end
+
+function Page.Open()
+	local frame = Station.Lookup("Normal/Page")
+	if frame then
+		Wnd.CloseWindow(frame)
+	else
+		Wnd.OpenWindow(sformat("%s\\ui\\page.ini", AddonPath), "Page")
+	end
+end
+
+function Page.Go(url)
+	local frame = Station.Lookup("Normal/Page")
+	local page = frame:Lookup("Web_Page")
+	page:Navigate(url)
+end
+
+function Page.Test()
+	local data = {"111"}
+	local a1 = EncryptAES(data, "key123abc")
+	Output(a1)
+	local a2 = DecryptAES(a1, "key123abc")
+	Output(a2)
+
+
+	---local data = LoadLUAData(sformat("%s//zhcn", SaveDataPath))
+	SaveLUAData(sformat("%s//t.dat", SaveDataPath), data, {passphrase = 'key123abc'})
+	--SaveLUAData(sformat("%s//t.dat", SaveDataPath), data, {passphrase = 'key123abc'}, true)
+	--local t = LoadLUAData(sformat("%s//t.dat", SaveDataPath))
+	local t = LoadLUAData("http://www.xiongada.com/t.jx3dat")
+	--Output(t, LR.AES.decrypt("123456", t), LR.JsonDecode(LR.AES.decrypt("123456", t)))
+
+	--Page.Go("http://www.xiongada.com/t.dat.jx3dat")
+end
+
+--------------------------------------------------------------
 ----------物品格子
 --------------------------------------------------------------
 local ItemBox = {
