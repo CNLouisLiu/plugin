@@ -307,6 +307,33 @@ function LR_TeamBuffTool.Test()
 	end
 end
 
+----------------------------------------------------------
+---
+----------------------------------------------------------
+function LR_TeamBuffTool.d1()
+	local data = {{author = "xx", title = "sss", file = ".\\x.dat"}, {data = ""}}
+	data[2].data = LR.basexx.to_base64(EncryptAES(LR.JsonEncode(LR_TeamBuffTool.tBuffList), "123"))
+	SaveLUAData(sformat("%s\\tt.dat", SaveDataPath), data, nil, false)
+
+end
+
+function LR_TeamBuffTool.d2(url, title, content)
+	local _s, _e, data = sfind(content, "data=\"(.+)\"")
+	Output("ddd", data)
+	if _s then
+		local t = LoadLUAData(sformat("%s\\tt.dat", SaveDataPath))
+		local x = t[2].data
+		Output("ttt2", x)
+		local d = LR.JsonDecode(DecryptAES(LR.basexx.from_base64(data), "123"))
+		Output(d)
+		Output(slen(x), slen(data))
+	end
+end
+
+function LR_TeamBuffTool.d3()
+	LR.Web.Go("ss", {url = "http://www.xiongada.com/tt.dat", fnAction = LR_TeamBuffTool.d2})
+end
+
 
 
 

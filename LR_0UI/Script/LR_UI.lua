@@ -264,6 +264,8 @@ function WndFrame:ctor(__name, __data)
 			frame = Wnd.OpenWindow(string.format(__ini, "WndFrameNone"), __name)
 		elseif __data.style == "NONE2" then
 			frame = Wnd.OpenWindow(string.format(__ini, "WndFrameNone2"), __name)
+		elseif __data.style == "DialogPanel" then
+			frame = Wnd.OpenWindow(string.format(__ini, "WndFrameDialogPanel"), __name)
 		end
 	else
 		frame = Wnd.OpenWindow(__data.path , __name)
@@ -1321,11 +1323,11 @@ function WndContainerScroll:ctor(__parent, __name, __data)
 	__data = __data or {}
 	local hwnd = _AppendWnd(__parent, "WndContainerScroll", __name)
 	local hWndScroll = hwnd:Lookup("WndScroll")
-	local _WndContainer=hWndScroll:Lookup("_WndContainer")
+	local _WndContainer = hWndScroll:Lookup("_WndContainer")
 	local Scroll_List=hwnd:Lookup("New_ScrollBar")
 	self.__this = hwnd
 	self.__WndContainer = _WndContainer
-	self._hwnd=hwnd
+	self._hwnd = hwnd
 	self._hWndScroll=hWndScroll
 	self.__up = hWndScroll:Lookup("Btn_Up")
 	self.__down = hWndScroll:Lookup("Btn_Down")
@@ -1432,6 +1434,10 @@ function WndScroll:ctor(__parent, __name, __data)
 		end
 		self.__handle:SetItemStartRelPos(0, -__value * 10)
 	end
+end
+
+function WndScroll:Lookup(...)
+	return self.__handle:Lookup(...)
 end
 
 function WndScroll:GetHandle()
@@ -1652,6 +1658,10 @@ end
 
 function ItemBase:GetParent()
 	return self.__parent
+end
+
+function ItemBase:IsValid()
+	return self.__this:IsValid()
 end
 
 function ItemBase:HasParent(__name)
@@ -1875,7 +1885,7 @@ function ItemHoverHandle:ctor(__parent, __name, __data)
 	self:SetRelPos(__data.x or 0, __data.y or 0)
 	self:SetSize(__data.w, __data.h)
 
-	hwnd:SetName("dd")
+	hwnd:SetName(__name)
 
 	if __parent.__addon then
 		__parent = __parent:GetHandle()
@@ -3192,8 +3202,4 @@ do
 	for k, v in pairs(_API) do
 		_G2[k] = v
 	end
-end
-
-_G2.test = function()
-	Output("dd")
 end

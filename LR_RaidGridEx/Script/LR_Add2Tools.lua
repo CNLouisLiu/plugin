@@ -407,7 +407,11 @@ local LR_TeamGrid_UI ={
 				return LR_TeamGrid.bOn
 			end,
 			callback = function()
-				LR_TeamBuffTool_Panel:Open()
+				if IsCtrlKeyDown() then
+					LR_BuffManager_Panel.OpenPanel()
+				else
+					LR_TeamBuffTool_Panel:Open()
+				end
 			end
 		},{	name = "LR_TeamGrid_UI_co13", type="ComboBox", text = _L["Control Panel Set"], x = 270, y = 340, w = 160,
 			default = function ()

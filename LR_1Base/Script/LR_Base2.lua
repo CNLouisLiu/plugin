@@ -14,21 +14,31 @@ local WEB_LOADING_STATE = {
 	LOADING = 1,
 	DONE = 2,
 }
+local EXPIRE_TIME = 1000 * 60
 local _Web = {}
 _Web.Queue = {}
+_Web.nExpireTime = nil
 
 function _Web.AddQueue(szName, data)
-	tinsert(_Web.Queue, {szName = szName, data = data, state = 0})
+	tinsert(_Web.Queue, {szName = szName, url = data. url, fnAction = data.fnAction, state = WEB_LOADING_STATE.NONE})
 end
 
-function _Web.Go(url)
+function _Web.Go(data)
 	local hWeb = LR.hWeb
-	hWeb:Navigate(url)
+	hWeb:Navigate(data.url)
 	hWeb.OnDocumentComplete = function()
-		--local data = _Web.GetData()
-		Output("yes")
-		local page = _Web.Queue[1]
-		page.state = WEB_LOADING_STATE.DONE
+		local szUrl, szTitle, szContent = hWeb:GetLocationURL(), hWeb:GetLocationName(), hWeb:GetDocument()
+		if szUrl ~= "about:blank" then
+			pcall(data.fnAction, szUrl, szTitle, szContent)
+			if #_Web.Queue > 0 then
+				_Web.Queue[1].state = WEB_LOADING_STATE.DONE
+				Output("11")
+			end
+			hWeb:Navigate("about:blank")
+		end
+	end
+	hWeb.OnWebLoadEnd = function()
+		----
 	end
 end
 
@@ -39,84 +49,54 @@ function _Web.GetData()
 end
 
 function _Web.BreatheCall()
-	if #_Web.Queue > 0 then
-		local page = _Web.Queue[1]
-		if page.state == WEB_LOADING_STATE.NONE then
-			page.state = WEB_LOADING_STATE.LOADING
-			_Web.Go(page.url)
-		elseif page.state == WEB_LOADING_STATE.DONE then
-			tremove(_Web.Queue, 1)
-		end
-	end
-end
-
-
-LR.Web = {}
-LR.Web.Go = _Web.Go
-
-Page = {}
-function Page.OnFrameCreate()
-	local page = this:Lookup("Web_Page")
-	page.OnDocumentComplete = function()
-		local szUrl, szTitle, szContent = page:GetLocationURL(), page:GetLocationName(), page:GetDocument()
-		local ddd = DecryptAES(szContent, "key123abc")
-
-		Output(szContent, ddd)
-
-
-
-
---[[		local _s, _e, raw_data = sfind(szContent, '"(.+)"')
-		if _s then
-			--Output(raw_data)
-			local data = LR.JsonDecode(LR.AES.decrypt("ggg", raw_data))
-			SaveLUAData(sformat("%s//raw", SaveDataPath), data)
-			Output("done")
-			--Output(data or "NULL")
-		else
-			if szUrl ~= "about:blank" then
-				Output(szContent, "error data")
+	local nTime = GetTime()
+	if _Web.nExpireTime then
+		if #_Web.Queue > 0 then
+			if _Web.Queue[1].state == WEB_LOADING_STATE.DONE then
+				tremove(_Web.Queue, 1)
+				_Web.nExpireTime = nil
+			elseif _Web.nExpireTime < nTime then
+				local data = tremove(_Web.Queue, 1)
+				if data then
+					pcall(data.fnAction)
+				end
+				_Web.nExpireTime = nil
 			end
 		end
-		if szUrl ~= "about:blank" then
-			page:Navigate("about:blank")
-		end]]
 	end
 
-	--page:Navigate("http://www.baidu.com")
-end
-
-function Page.Open()
-	local frame = Station.Lookup("Normal/Page")
-	if frame then
-		Wnd.CloseWindow(frame)
-	else
-		Wnd.OpenWindow(sformat("%s\\ui\\page.ini", AddonPath), "Page")
+	if _Web.nExpireTime == nil then
+		if #_Web.Queue > 0 then
+			local page = _Web.Queue[1]
+			_Web.Go(page)
+			_Web.nExpireTime = GetTime() + EXPIRE_TIME
+		end
 	end
 end
+LR.BreatheCall("WEB", function() _Web.BreatheCall() end)
 
-function Page.Go(url)
-	local frame = Station.Lookup("Normal/Page")
-	local page = frame:Lookup("Web_Page")
-	page:Navigate(url)
+LR.Web = {}
+LR.Web.Go = _Web.AddQueue
+
+function LR.Web.t(nType)
+
 end
 
-function Page.Test()
-	local data = {"111"}
-	local a1 = EncryptAES(data, "key123abc")
-	Output(a1)
-	local a2 = DecryptAES(a1, "key123abc")
-	Output(a2)
-
-
-	---local data = LoadLUAData(sformat("%s//zhcn", SaveDataPath))
-	SaveLUAData(sformat("%s//t.dat", SaveDataPath), data, {passphrase = 'key123abc'})
-	--SaveLUAData(sformat("%s//t.dat", SaveDataPath), data, {passphrase = 'key123abc'}, true)
-	--local t = LoadLUAData(sformat("%s//t.dat", SaveDataPath))
-	local t = LoadLUAData("http://www.xiongada.com/t.jx3dat")
-	--Output(t, LR.AES.decrypt("123456", t), LR.JsonDecode(LR.AES.decrypt("123456", t)))
-
-	--Page.Go("http://www.xiongada.com/t.dat.jx3dat")
+function LR.TTT()
+	local t = {}
+	local nCount = g_tTable.PathList:GetRowCount()
+	Output(nCount)
+	for i = 1, nCount do
+		local tPath = g_tTable.PathList:GetRow(i)
+		if tPath then
+			tinsert(t, tPath)
+		end
+	end
+	SaveLUAData(sformat("%s\\Path", SaveDataPath), t, "\t")
+end
+function LR.TTT2()
+	Output(GetRootPath())
+	local szFile = GetOpenFileName(sformat("%s", _L["Choose file"]), "Save data File(*.jx3dat)\0*.jx3dat\0All Files(*.*)\0*.*\0", "k:\\downloads33\\")
 end
 
 --------------------------------------------------------------

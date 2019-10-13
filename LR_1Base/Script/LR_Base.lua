@@ -410,23 +410,64 @@ function LR.LoadDragonMapData()
 end
 LR.LoadDragonMapData()
 
-function LR.IsMapBlockAddon()
+function LR.IsMapBlockAddon(dwMapID)
 	local me = GetClientPlayer()
 	if not me then
 		return true
 	end
-	if IsAddonBanMap and IsAddonBanMap(me.GetMapID()) then
+	local dwMapID = dwMapID or me.GetMapID()
+	if IsAddonBanMap and IsAddonBanMap(dwMapID) then
 		return true
 	end
-	if Table_IsTreasureBattleFieldMap(me.GetMapID()) then
+	if Table_IsTreasureBattleFieldMap(dwMapID) then
 		return true
 	end
-	if Table_IsZombieBattleFieldMap and Table_IsZombieBattleFieldMap(me.GetMapID()) then
+	if Table_IsZombieBattleFieldMap and Table_IsZombieBattleFieldMap(dwMapID) then
 		return true
 	end
 	return false
 end
 
+function LR.GetMapData(dwMapID)
+	local me = GetClientPlayer()
+	if not me then
+		return nil
+	end
+	local result = {nType = MAP_TYPE.NORMAL_MAP, dwMapID = 0, nCopyIndex = 0, data = {}}
+	if dwMapID then
+		local MapParams = GetMapParams(dwMapID)
+		result.nType = MapParams.nType
+		result.dwMapID = dwMapID
+	else
+		local scene = me.GetScene()
+		result.nType = scene.nType
+		result.dwMapID = scene.dwMapID
+		result.nCopyIndex = scene.nCopyIndex
+	end
+	if result.nType == MAP_TYPE.DUNGEON then
+		result.data = clone(LR.MapType[result.dwMapID])
+	end
+	return result
+end
+
+function LR.IsDungeonMap(dwMapID)
+	local data = LR.GetCurrentMapData(dwMapID)
+	if data.nType == MAP_TYPE.DUNGEON then
+		return true
+	else
+		return false
+	end
+end
+
+--------------------------------------
+function LR.CheckUnLock()
+	local state = Lock_State()
+	return state == "NO_PASSWORD" or state == "PASSWORD_UNLOCK"
+end
+
+function LR.IsPhoneLock()
+	return GetClientPlayer() and GetClientPlayer().IsTradingMibaoSwitchOpen()
+end
 --------------------------------------
 function LR.Table_GetBookItemIndex(dwBookID, dwSegmentID)
 	local dwBookItemIndex = 0
@@ -482,11 +523,6 @@ function LR.GetItemNameByItemInfo(itemInfo, nBookInfo)
 	else
 		return Table_GetItemName(itemInfo.nUiId)
 	end
-end
-
-function LR.CheckUnLock()
-	local state = Lock_State()
-	return state == "NO_PASSWORD" or state == "PASSWORD_UNLOCK"
 end
 
 function LR.GetItemNumInBag(dwTabType, dwIndex, nBookID, nSegID, bNotCalMiBao)
@@ -1228,7 +1264,6 @@ function LR.UpdateMiniFlag(dwType, tar, nF1, nF2)
 		m:UpdataArrowPoint(dwType, tar.dwID, nF1, nF2 or 48, nX, nZ, 16)
 	end
 end
-
 
 ----------------------------------------
 --¶ÔÏó²Ù×÷
