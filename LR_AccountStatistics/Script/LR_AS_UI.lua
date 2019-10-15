@@ -13,6 +13,10 @@ local VERSION = "20180403"
 -------------------------------------------------------------
 LR_AS_Panel = {}
 LR_AS_Panel.Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0}
+LR_AS_Panel.UsrData = {
+	bAutoRefresh = false,
+}
+RegisterCustomData("LR_AS_Panel.UsrData", VERSION)
 
 function LR_AS_Panel.UpdateAnchor(frame)
 	frame:CorrectPos()
@@ -54,6 +58,25 @@ function LR_AS_Panel.OnFrameCreate()
 		this:Lookup("PageSet_Menu"):ActivePage(0)
 	end
 
+	local BTN_WLTJ = LR.AppendUI("Button", this, "BTN_WLTJ", {x = 510, y = 52, text = _L["WLTJ"]})
+	BTN_WLTJ.OnClick = function()
+		if LR_WLTJ then
+			LR_WLTJ.OpenFrame()
+		end
+	end
+	if LR_WLTJ then
+		BTN_WLTJ:Enable(true)
+	else
+		BTN_WLTJ:Enable(false)
+	end
+
+	local AutoRefresh = LR.AppendUI("CheckBox", this, "CheckBox_AR", {x = 50, y = 20, text = _L["Auto refresh"]})
+	AutoRefresh:Check(LR_AS_Panel.UsrData.bAutoRefresh)
+	AutoRefresh:Enable(true)
+	AutoRefresh.OnCheck = function(arg0)
+		LR_AS_Panel.UsrData.bAutoRefresh = arg0
+	end
+
 	LR.AppendAbout(Addon, this)
 	FireEvent("LR_ACS_REFRESH_FP")
 end
@@ -79,7 +102,10 @@ function LR_AS_Panel.OpenPanel(flag)
 end
 
 function LR_AS_Panel.OnFrameBreathe()
-	if GetLogicFrameCount() % (16*5) ~=  0 then
+	if not LR_AS_Panel.UsrData.bAutoRefresh then
+		return
+	end
+	if GetLogicFrameCount() % ( 16 * 5 ) ~=  0 then
 		return
 	end
 	local me = GetClientPlayer()

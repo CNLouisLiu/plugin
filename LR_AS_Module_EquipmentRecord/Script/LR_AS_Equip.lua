@@ -59,6 +59,7 @@ function _Equip.GetSuitIndex(nLogicIndex)
 	return nSuitIndex, dwBox
 end
 
+--获取所有部位的装备
 function _Equip.GetAllEquipBox() -- update boxes
 	local player = GetClientPlayer()
 	if not player then
@@ -70,7 +71,7 @@ function _Equip.GetAllEquipBox() -- update boxes
 	_Equip.SelfData = _Equip.SelfData or {}
 	local SelfData = _Equip.SelfData
 	local EQUIPMENT_SUIT_COUNT = 4
-	for i = 0, EQUIPMENT_SUIT_COUNT - 1 do
+	for i = 0, EQUIPMENT_SUIT_COUNT - 1 do		---这里的0~3不是我们看到的装备套装位置的0~3
 		local nSuitIndex , dwBox = _Equip.GetSuitIndex(i)
 		SelfData[tostring(nSuitIndex)] = SelfData[tostring(nSuitIndex)] or {}
 		local Suits = {}
@@ -100,8 +101,11 @@ function _Equip.GetAllEquipBox() -- update boxes
 	end
 end
 
+local EQUIPMENT_NOW_CACHE = {}
+local EQUIPMENT_SUIT_NOW_CACHE = 0
 function _Equip.GetEquiping()
 	local me = GetClientPlayer()
+	EQUIPMENT_NOW_CACHE = {}
 	local Suits = {}
 	for k = 1, #_Equip.tEquipPos, 1 do
 		local nType = _Equip.tEquipPos[k].position
@@ -123,6 +127,9 @@ function _Equip.GetEquiping()
 			t_item.nVersion = item.nVersion
 			t_item.nUiId = item.nUiId
 			Suits[szName] = clone(t_item)
+			EQUIPMENT_NOW_CACHE[nType] = item.dwID
+		else
+			EQUIPMENT_NOW_CACHE[nType] = 0
 		end
 	end
 	return Suits
@@ -173,15 +180,23 @@ function _Equip.GetEquipScore()
 	_Equip.SelfData[tostring(nIndex)].char_infomore = clone(char_infomore)
 end
 
+local DATA2BSAVE = {}
+function _Equip.PrepareData()
+	DATA2BSAVE = {}
+	_Equip.GetAllEquipBox()
+	_Equip.GetEquipScore()
+	DATA2BSAVE = clone(_Equip.SelfData)
+end
+
 function _Equip.SaveData(DB)
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	local SelfData = _Equip.SelfData or {}
+	local data = DATA2BSAVE
 	local DB_REPLACE = DB:Prepare("REPLACE INTO equipment_data ( szKey, nSuitIndex, equipment_data, score, char_infomoreV2, bDel ) VALUES ( ?, ?, ?, ?, ?, 0 )")
 	local DB_REPLACE2 = DB:Prepare("REPLACE INTO equipment_data ( szKey, nSuitIndex, bDel ) VALUES ( ?, ?, 1 )")
-	for nSuitIndex, v in pairs (SelfData) do
+	for nSuitIndex, v in pairs (data) do
 		DB_REPLACE:ClearBindings()
 		DB_REPLACE:BindAll(unpack(g2d({szKey, nSuitIndex, LR.JsonEncode(v.equipment_data), LR.JsonEncode(v.score), LR.JsonEncode(v.char_infomore)})))
 		DB_REPLACE:Execute()
@@ -216,7 +231,7 @@ end
 -------------------------------------------------------------------------
 ----------装备界面
 --------------------------------------------------------------------------
-LR_AS_Equip_Panel = CreateAddon("LR_AS_Equip_Panel")
+LR_AS_Equip_Panel = _G2.CreateAddon("LR_AS_Equip_Panel")
 LR_AS_Equip_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_AS_Equip_Panel.UserData = {
@@ -745,6 +760,21 @@ function _Equip.Hook()
 				HideTip()
 			end
 		end
+
+		--用于切换装备时屏蔽EQUIP_ITEM_UPDATE事件的响应
+		local Page_Battle = frame:Lookup("PageSet_Main"):Lookup("Page_Battle")
+		if Page_Battle then
+			for i = 1, 4, 1 do
+				local CheckBox_PageNum = Page_Battle:Lookup(sformat("CheckBox_PageNum%d", i))
+				if CheckBox_PageNum then
+					CheckBox_PageNum.OnLButtonClick = function()
+						if EQUIPMENT_SUIT_NOW_CACHE ~= i - 1 then
+							_Equip.bLock = true
+						end
+					end
+				end
+			end
+		end
 	end
 end
 
@@ -754,20 +784,24 @@ function _Equip.EQUIP_CHANGE()
 	if me.bFightState then
 		return
 	end
-	_Equip.bLock = true	--防止处理切换装备时大量产生的EQUIP_ITEM_UPDATE事件
 	--获取装备、装分、属性
-	LR.DelayCall(100, function()
-		_Equip.GetAllEquipBox()
+	--LR.DelayCall(100, function()
+		LR.Log("[LR] EQUIP_CHANGE, get score...")
 		_Equip.GetEquipScore()
 		--保存
 		if LR_AS_Equip.UsrData.bAutoSaveWhenChangeEquipment then
+			local t = GetTickCount()
+			LR.Log("[LR] EQUIP_CHANGE, auto save data begin...")
+			_Equip.PrepareData()
 			local path = sformat("%s\\%s", SaveDataPath, db_name)
 			local DB = LR.OpenDB(path, "EQUIP_CHANGE_SAVE_DATA_BB77392CC5A9D92DF1011413EE07D945")
 			_Equip.SaveData(DB)
 			LR.CloseDB(DB)
+			LR.Log(sformat("[LR] EQUIP_CHANGE, auto save data end..., cost %d ms", GetTickCount() - t))
 		end
-	end)
-	LR.DelayCall(500, function() _Equip.bLock = false end)
+	--end)
+	EQUIPMENT_SUIT_NOW_CACHE = GetClientPlayer().GetEquipIDArray(0)
+	_Equip.bLock = false
 end
 
 ---更换装备
@@ -779,34 +813,39 @@ local nBoxIndex = arg0
 local nItemIndex = arg1
 ]]
 function _Equip.EQUIP_ITEM_UPDATE()
+	if _Equip.bLock then
+		return
+	end
 	local me = GetClientPlayer()
 	if me.bFightState then
 		return
 	end
---[[	LR.DelayCall(100, function()
-		if not _Equip.bLock then
-			_Equip.GetAllEquipBox()
+	LR.Log("[LR] EQUIP_ITEM_UPDATE begin")
+	local t = GetTickCount()
+	local dwBox, dwX = arg0, arg1
+	local item = GetPlayerItem(me, dwBox, dwX)
+	if item then
+		if EQUIPMENT_NOW_CACHE[dwX] ~= item.dwID then
+			LR.Log(sformat("[LR] Equiped item, %d_%d, [%s], get score", item.dwTabType, item.dwIndex, item.szName))
 			_Equip.GetEquipScore()
-			--保存
-			if LR_AS_Equip.UsrData.bAutoSaveWhenChangeEquipment then
-				local path = sformat("%s\\%s", SaveDataPath, db_name)
-				local DB = LR.OpenDB(path, "EQUIP_ITEM_UPDATE_SAVE_8F52275BBD77FC6386511E0E064D6967")
-				_Equip.SaveData(DB)
-				LR.CloseDB(DB)
-			end
 		end
-	end)]]
+	end
+	LR.Log(sformat("[LR] EQUIP_ITEM_UPDATE end, cost %d ms", GetTickCount() - t))
 end
 
 function _Equip.FIRST_LOADING_END(DB)
+	_Equip.LoadSelfData(DB)
+	_Equip.GetAllEquipBox()
+	_Equip.GetEquipScore()
+end
+
+function _Equip.FIRST_LOADING_END2()
+	--和_Equip.FIRST_LOADING_END区分，_Equip.FIRST_LOADING_END用于通用数据处理
 	if LR_AS_Equip.UsrData.bShowButtonInCharacterPanel then
 		_Equip.Hook()
 	end
-	_Equip.LoadSelfData(DB)
-	LR.DelayCall(2000, function()
-		_Equip.GetAllEquipBox()
-		_Equip.GetEquipScore()
-	end)
+
+	EQUIPMENT_SUIT_NOW_CACHE = GetClientPlayer().GetEquipIDArray(0)
 end
 
 function _Equip.ON_FRAME_CREATE()
@@ -817,12 +856,13 @@ function _Equip.ON_FRAME_CREATE()
 	end
 end
 
-LR.RegisterEvent("FIRST_LOADING_END", function() _Equip.FIRST_LOADING_END() end)
+LR.RegisterEvent("FIRST_LOADING_END", function() _Equip.FIRST_LOADING_END2() end)
 LR.RegisterEvent("EQUIP_CHANGE", function() _Equip.EQUIP_CHANGE() end)
---LR.RegisterEvent("EQUIP_ITEM_UPDATE", function() _Equip.EQUIP_ITEM_UPDATE() end)		--去除，装备耐久，受缴械等都会触发，不可控，会卡的
+LR.RegisterEvent("EQUIP_ITEM_UPDATE", function() _Equip.EQUIP_ITEM_UPDATE() end)		--去除，装备耐久，受缴械等都会触发，不可控，会卡的
 LR.RegisterEvent("ON_FRAME_CREATE", function() _Equip.ON_FRAME_CREATE() end)
 --注册模块
 LR_AS_Module.EquipmentRecord = {}
+LR_AS_Module.EquipmentRecord.PrepareData = _Equip.PrepareData
 LR_AS_Module.EquipmentRecord.SaveData = _Equip.SaveData
 LR_AS_Module.EquipmentRecord.FIRST_LOADING_END = _Equip.FIRST_LOADING_END
 
@@ -832,8 +872,10 @@ LR_AS_Equip.Hook = _Equip.Hook
 --[[
 装备统计模块
 因为只能获得当前装备的装分和属性，所以
-登录时先从数据库载入装备信息
-切套装或者换装备时更新装备信息
-在自动保存时保存所有信息
+登录时先从数据库载入装备信息，并获取一波当前的1-4套装备信息以及装分信息。此后装分信息只在切套装或者换装备时更新，不再读取数据库
+切套装或者换装备时更新装备的装分信息(物品信息可以不更新)
+在自动保存时，先刷所有的1-4套的装备信息，以及当前套装的装分信息，然后保存
+
+根据测试，EQUIP_ITEM_UPDATE事件在EQUIP_CHANGE事件之前发生
 ]]
 

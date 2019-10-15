@@ -5,13 +5,20 @@ local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, tabl
 ---------------------------------------------------------------
 local VERSION = "20170921"
 ---------------------------------------------------------------
-local AddonPath="Interface\\LR_Plugin\\LR_RaidGridEx"
-local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_TeamGrid"
+local AddonPath = "Interface\\LR_Plugin\\LR_RaidGridEx"
+local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_TeamGrid"
 local _L = LR.LoadLangPack(AddonPath)
-local _DefaultBuffMonitorData={
+local _DefaultBuffMonitorData = {
 	VERSION = VERSION,
-	data={},
+	data = {},
 }
+----------------------------------------------------------------
+--引用的变量都在这里设置
+----------------------------------------------------------------
+--地图缓存数据
+_GMV.LR_Team_Map = {}	--用于存地图BUFF信息
+_GMV.LR_Team_Map_Sorted = {}	--按年代排序地图信息
+
 ----------------------------------------------------------------
 local _BuffBox = {
 	dwMemberID = nil,
@@ -387,7 +394,7 @@ BossFocusBuff =
 		}
 	}
 
-local x3=KG_Table.Load(BossFocusBuff.Path, BossFocusBuff.Title)
+local x3 = KG_Table.Load(BossFocusBuff.Path, BossFocusBuff.Title)
 local RowCount = x3:GetRowCount()
 for i = 1, RowCount, 1 do
 	local x = x3:GetRow(i)
@@ -396,7 +403,6 @@ end
 --_BossFocus[208] = {dwID = 208, nLevel = 11, nStackNum = 1}	--扶摇
 --_BossFocus[680] = {dwID = 680, nLevel = 29, nStackNum = 1}	--翔舞
 --_BossFocus[103] = {dwID = 103, nLevel = 1, nStackNum = 1}	--打坐
-
 
 ----------------------------------------------------------------
 ----边角指示器buff
@@ -528,6 +534,7 @@ function LR_TeamEdgeIndicator.FIRST_LOADING_END()
 	LR_TeamEdgeIndicator.add2bufflist()
 end
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_TeamEdgeIndicator.FIRST_LOADING_END() end)
+--LR.RegisterEvent("LOADING_END", function() LR_TeamBuffSettingPanel.FormatDebuffNameList() end)
 ----------------------------------------------------------------
 ----Debuff设置
 ----------------------------------------------------------------
@@ -560,6 +567,28 @@ function LR_TeamBuffSettingPanel.FormatDebuffNameList()
 			end
 		end
 	end
+
+	local me = GetClientPlayer()
+	local scene = me.GetScene()
+	local dwMapID = scene.dwMapID
+	local LR_Team_Map = _GMV.LR_Team_Map
+	if scene.nType ==  MAP_TYPE.DUNGEON and not LR_TeamBuffTool_Panel.DisableDungeonData then
+		local data = LR_Team_Map[LR.MapType[dwMapID].szOtherName] or {enable = true, dwMapID = {}, data = {}, level = 1}
+		if data.enable then
+			for k, buff in pairs(data.data) do
+				if buff.enable then
+					if buff.nMonitorLevel > 0 then
+						local szKey = sformat("%d_L%d", buff.dwID, buff.nMonitorLevel)
+						tBuff[szKey] = LR_TeamBuffSettingPanel.FormatMonitorBuff(buff)
+					else
+						local szKey = sformat("%d", buff.dwID)
+						tBuff[szKey] = LR_TeamBuffSettingPanel.FormatMonitorBuff(buff)
+					end
+				end
+			end
+		end
+	end
+
 	LR_TeamBuffSettingPanel.BuffList = clone(tBuff)
 	LR_TeamEdgeIndicator.add2bufflist()
 
@@ -596,6 +625,77 @@ local SOUND_TYPE = {
 	g_sound.PickupRing,
 	g_sound.PickupWater,
 }
+
+----------------------------------------------------------------
+----地图缓存数据
+----------------------------------------------------------------
+local map_initial = function()
+	local fenlei = {
+		[25] = {},
+		[10] = {},
+		[5] = {},
+	}
+	for dwMapID, v in pairs (LR.MapType) do
+		if fenlei[v.nMaxPlayerCount] then
+			fenlei[v.nMaxPlayerCount][#fenlei[v.nMaxPlayerCount]+1] = {dwMapID = dwMapID, Level = v.Level, szName = v.szName, szVersionName = v.szVersionName, szOtherName = v.szOtherName}
+		end
+	end
+	tsort(fenlei[25], function(a, b) return a.dwMapID > b.dwMapID end)
+	tsort(fenlei[10], function(a, b) return a.dwMapID > b.dwMapID end)
+	tsort(fenlei[5], function(a, b) return a.dwMapID > b.dwMapID end)
+
+	--以["三才阵"]这种类型分类
+	local data = {}
+	for k, v in pairs(fenlei[25]) do
+		data[v.szOtherName] = data[v.szOtherName] or {enable = true, dwMapID = {}, data = {}, level = 1}
+		tinsert(data[v.szOtherName].dwMapID, v.dwMapID)
+	end
+	for k, v in pairs(fenlei[10]) do
+		data[v.szOtherName] = data[v.szOtherName] or {enable = true, dwMapID = {}, data = {}, level = 1}
+		tinsert(data[v.szOtherName].dwMapID, v.dwMapID)
+	end
+	for k, v in pairs(fenlei[5]) do
+		data[v.szOtherName] = data[v.szOtherName] or {enable = true, dwMapID = {}, data = {}, level = 2}
+		tinsert(data[v.szOtherName].dwMapID, v.dwMapID)
+	end
+
+	--按时代进行分类
+	--获取分类中最大的dwMap数字
+	for k, v in pairs(data) do
+		v.nMaxdwMapID = mmax(unpack(v.dwMapID))
+	end
+
+	local list, szVersionName = {}, {}
+	for k, v in pairs(data) do
+		if not szVersionName[LR.MapType[v.nMaxdwMapID].szVersionName] then
+			tinsert(list, {szVersionName = LR.MapType[v.nMaxdwMapID].szVersionName, nMaxdwMapID = 0, data = {}})
+			szVersionName[LR.MapType[v.nMaxdwMapID].szVersionName] = #list
+		end
+
+		tinsert(list[szVersionName[LR.MapType[v.nMaxdwMapID].szVersionName]].data, {nMaxdwMapID = v.nMaxdwMapID, szOtherName = LR.MapType[v.nMaxdwMapID].szOtherName, level = v.level, dwMapID = clone(v.dwMapID), enable = v.enable, data = clone(v.data)})
+		list[szVersionName[LR.MapType[v.nMaxdwMapID].szVersionName]].nMaxdwMapID = mmax(list[szVersionName[LR.MapType[v.nMaxdwMapID].szVersionName]].nMaxdwMapID, v.nMaxdwMapID)
+	end
+	tsort(list, function(a, b) return a.nMaxdwMapID > b.nMaxdwMapID end)
+	for k, v in pairs(list) do
+		tsort(v.data, function(a, b)
+			if a.level == b.level then
+				return a.nMaxdwMapID > b.nMaxdwMapID
+			else
+				return a.level < b.level
+			end
+		end)
+	end
+	for k, v in pairs(list) do
+		for k2, v2 in pairs(v.data) do
+			tsort(v2.dwMapID, function(a, b) return a > b end)
+		end
+	end
+
+	_GMV.LR_Team_Map = clone(data)
+	_GMV.LR_Team_Map_Sorted = clone(list)
+end
+map_initial()
+
 ----------------------------------------------------------------
 ----Debuff监控
 ----------------------------------------------------------------
@@ -908,11 +1008,12 @@ function LR_TeamBuffMonitor.BUFF_UPDATE2()
 		if _BossFocus[dwID].nLevel == nLevel then
 			if bDelete then
 				FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
-			end
-			if  nStackNum >= _BossFocus[dwID].nStackNum then
-				FireEvent("ON_BOSS_FOCUS", dwPlayerID, true)
 			else
-				FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
+				if nStackNum >= _BossFocus[dwID].nStackNum then
+					FireEvent("ON_BOSS_FOCUS", dwPlayerID, true)
+				else
+					FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
+				end
 			end
 		else
 			FireEvent("ON_BOSS_FOCUS", dwPlayerID, false)
@@ -1186,15 +1287,24 @@ function LR_TeamBuffMonitor.BUFF_UPDATE_NORMALBUFF(tBuff)
 	local hBuff = _NormalBuffHandle[dwID]
 	if hBuff and hBuff:GetBuffnIndex() == nIndex and not bDelete then
 		FireEvent("LR_RAID_BUFF_ADD_FRESH", tBuff.dwPlayerID, tBuff)
+		if tBuff.bScene then
+			FireEvent("LR_BUFF_TRAN", "Add", tBuff.dwPlayerID, tBuff)
+		end
 		return
 	end
 
 	if tBuff.bOnlySelf then
 		if bDelete then
 			FireEvent("LR_RAID_BUFF_DELETE", tBuff.dwPlayerID, tBuff)
+			if tBuff.bScene then
+				FireEvent("LR_BUFF_TRAN", "Del", tBuff.dwPlayerID, tBuff)
+			end
 			return
 		else
 			FireEvent("LR_RAID_BUFF_ADD_FRESH", tBuff.dwPlayerID, tBuff)
+			if tBuff.bScene then
+				FireEvent("LR_BUFF_TRAN", "Add", tBuff.dwPlayerID, tBuff)
+			end
 			return
 		end
 	else
@@ -1207,9 +1317,15 @@ function LR_TeamBuffMonitor.BUFF_UPDATE_NORMALBUFF(tBuff)
 		end
 		if _nIndex == 0 then
 			FireEvent("LR_RAID_BUFF_DELETE", tBuff.dwPlayerID, tBuff)
+			if tBuff.bScene then
+				FireEvent("LR_BUFF_TRAN", "Del", tBuff.dwPlayerID, tBuff)
+			end
 			return
 		else
 			FireEvent("LR_RAID_BUFF_ADD_FRESH", tBuff.dwPlayerID, cache[_nIndex])
+			if tBuff.bScene then
+				FireEvent("LR_BUFF_TRAN", "Add", tBuff.dwPlayerID, tBuff)
+			end
 			return
 		end
 	end
@@ -1540,7 +1656,7 @@ end
 function LR_TeamBuffMonitor.RedrawBuffBox(dwPlayerID)
 	local newTable = {}
 	_NORMAL_BUFF_SHOW[dwPlayerID] = _NORMAL_BUFF_SHOW[dwPlayerID] or {}
-	MemberBuff = _NORMAL_BUFF_SHOW[dwPlayerID]
+	local MemberBuff = _NORMAL_BUFF_SHOW[dwPlayerID]
 	for k, v in pairs (MemberBuff) do
 		if next(v) ~= nil then
 			newTable[v.dwID] = clone(v)
@@ -1654,5 +1770,9 @@ function LR_TeamBuffMonitor.SortBuff(dwPlayerID)
 		end
 		BuffHandle:FormatAllItemPos()
 	end
+end
+
+function LR_TeamBuffMonitor.OutputBossFocusBuff()
+	Output(_BossFocus)
 end
 

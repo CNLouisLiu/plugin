@@ -13,6 +13,12 @@ local INDEPENDENT_MAP = {
 	[300] = true,
 	[299] = true,
 	[301] = true,
+	[360] = true,
+	[354] = true,
+	[349] = true,
+	[348] = true,
+	[347] = true,
+	[341] = true,
 }
 
 local UI = {}
@@ -60,7 +66,7 @@ function LR_CDRP.OnFrameBreathe()
 end
 
 function LR_CDRP.OnFrameDestroy()
-	local UI = {}
+	UI = {}
 end
 
 function LR_CDRP.OnLButtonClick()
@@ -182,8 +188,12 @@ function LR_CDRP.Load()
 			dwForceID = me.dwForceID,
 		}
 		local kungfu = me.GetKungfuMount()
-		local dwSkillID = kungfu.dwSkillID
-		data.dwMountKungfuID = dwSkillID
+		if kungfu then
+			local dwSkillID = kungfu.dwSkillID
+			data.dwMountKungfuID = dwSkillID
+		else
+			data.dwMountKungfuID = 0
+		end
 		local HandleTeam = LR.AppendUI("Handle", HandleBody, "HandleTeam", {w = 120, h = 600})
 		HandleTeam:SetHandleStyle(3)
 		local dwMapID = LR_CDRP.dwMapID

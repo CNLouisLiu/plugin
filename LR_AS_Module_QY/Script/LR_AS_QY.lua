@@ -1,4 +1,4 @@
-local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
+	local sformat, slen, sgsub, ssub, sfind, sgfind, smatch, sgmatch, slower = string.format, string.len, string.gsub, string.sub, string.find, string.gfind, string.match, string.gmatch, string.lower
 local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstring.replace, wstring.split, wstring.lower
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin, mtan = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min, math.tan
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
@@ -10,6 +10,7 @@ local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
 local VERSION = "20180403"
+local DEBUG = false
 -------------------------------------------------------------
 local MONITOR_TYPE = {
 	WINDOW_DIALOG = 1,
@@ -59,6 +60,12 @@ local QIYU = {
 	GUI_AN_ZHI_AN = 30,		--天天8 22534
 	GUI_AN_ZHI_ZHI = 31,	--吉瑞8 22533
 	GUI_AN_ZHI_GUI = 32,
+	TAI_XING_DAO = 33,	--太行道
+	MI_BAO_TU = 34,		--
+	KE_JIANG_GAN = 35, ---
+	MI_SHU_SHENG = 36, ---迷书生
+	DI_SHUI_EN = 37,  ---滴水恩
+	CANG_HAI_DI = 38, ---沧海笛
 }
 
 local QIYU_NAME = {}	--名字
@@ -90,6 +97,7 @@ QIYU_PET[QIYU.SHENG_FU_JU] = {dwTabType = 8, dwIndex = 13925}
 QIYU_NAME[QIYU.ZHUO_YAO_JI] = _L["ZHUO_YAO_JI"]
 QIYU_MNTP[QIYU.ZHUO_YAO_JI] = MONITOR_TYPE.ITEM
 QIYU_MAP[QIYU.ZHUO_YAO_JI] = 16
+QIYU_NPC[QIYU.ZHUO_YAO_JI] = 36945
 QIYU_ITEM[QIYU.ZHUO_YAO_JI] = {
 	{dwTabType = 5, dwIndex = 26009, },
 }
@@ -517,7 +525,91 @@ QIYU_WARNING_MSG[QIYU.GUI_AN_ZHI_GUI] = {
 QIYU_ACHIEVEMENT[QIYU.GUI_AN_ZHI_GUI] = 6187
 QIYU_PET[QIYU.GUI_AN_ZHI_GUI] = {dwTabType = 8, dwIndex = 21060}
 
+--太行道
+QIYU_NAME[QIYU.TAI_XING_DAO] = _L["TAI_XING_DAO"]
+QIYU_MNTP[QIYU.TAI_XING_DAO] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.TAI_XING_DAO] = 243
+QIYU_NPC[QIYU.TAI_XING_DAO] = 62005
+QIYU_WINDOW_DIALOG[QIYU.TAI_XING_DAO] = {
+	{szText = _L["DIALOG_TAI_XING_DAO_01"], bFinish = true, }, 		--满次数
+}
+QIYU_ITEM[QIYU.TAI_XING_DAO] = {
+	{dwTabType = 5, dwIndex = 30745, },
+}
+QIYU_ACHIEVEMENT[QIYU.TAI_XING_DAO] = 6695
+QIYU_PET[QIYU.TAI_XING_DAO] = {dwTabType = 8, dwIndex = 22538}
 
+--秘宝图
+QIYU_NAME[QIYU.MI_BAO_TU] = _L["MI_BAO_TU"]
+QIYU_MNTP[QIYU.MI_BAO_TU] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.MI_BAO_TU] = 332
+QIYU_NPC[QIYU.MI_BAO_TU] = 62788
+QIYU_WINDOW_DIALOG[QIYU.MI_BAO_TU] = {
+	{szText = _L["DIALOG_MI_BAO_TU_01"], bFinish = true, }, 		--满次数
+}
+QIYU_ITEM[QIYU.MI_BAO_TU] = {
+	{dwTabType = 5, dwIndex = 7843, },
+}
+QIYU_ACHIEVEMENT[QIYU.MI_BAO_TU] = 6696
+QIYU_PET[QIYU.MI_BAO_TU] = {dwTabType = 8, dwIndex = 22537}
+
+--客江干
+QIYU_NAME[QIYU.KE_JIANG_GAN] = _L["KE_JIANG_GAN"]
+QIYU_MNTP[QIYU.KE_JIANG_GAN] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.KE_JIANG_GAN] = 330
+QIYU_NPC[QIYU.KE_JIANG_GAN] = 62806
+QIYU_WINDOW_DIALOG[QIYU.KE_JIANG_GAN] = {
+	{szText = _L["DIALOG_KE_JIANG_GAN_01"], bFinish = true, }, 		--满次数
+}
+QIYU_ITEM[QIYU.KE_JIANG_GAN] = {
+	{dwTabType = 5, dwIndex = 30965, },
+}
+QIYU_ACHIEVEMENT[QIYU.KE_JIANG_GAN] = 6697
+QIYU_PET[QIYU.KE_JIANG_GAN] = {dwTabType = 8, dwIndex = 22539}
+
+--迷书生  36
+QIYU_NAME[QIYU.MI_SHU_SHENG] = _L["MI_SHU_SHENG"]
+QIYU_MNTP[QIYU.MI_SHU_SHENG] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.MI_SHU_SHENG] = 6
+QIYU_NPC[QIYU.MI_SHU_SHENG] = 65896
+QIYU_WINDOW_DIALOG[QIYU.MI_SHU_SHENG] = {
+	{szText = _L["DIALOG_MI_SHU_SHENG_01"], bFinish = false, }, 		--不满次数
+	{szText = _L["DIALOG_MI_SHU_SHENG_02"], bFinish = true, }, 		--满次数
+}
+--[[QIYU_ITEM[QIYU.MI_SHU_SHENG] = {
+	{dwTabType = 5, dwIndex = 32584, },
+}]]
+QIYU_ACHIEVEMENT[QIYU.MI_SHU_SHENG] = 7102
+QIYU_PET[QIYU.MI_SHU_SHENG] = {dwTabType = 8, dwIndex = 22563}
+
+--滴水恩  37
+QIYU_NAME[QIYU.DI_SHUI_EN] = _L["DI_SHUI_EN"]
+QIYU_MNTP[QIYU.DI_SHUI_EN] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.DI_SHUI_EN] = 411
+QIYU_NPC[QIYU.DI_SHUI_EN] = 65578
+QIYU_WARNING_MSG[QIYU.DI_SHUI_EN] = {
+	{szText = _L["DIALOG_DI_SHUI_EN_01"], bFinish = false, }, 		--不满次数
+	{szText = _L["DIALOG_DI_SHUI_EN_02"], bFinish = true, }, 		--满次数
+}
+--[[QIYU_ITEM[QIYU.DI_SHUI_EN] = {
+	{dwTabType = 5, dwIndex = 32577, },
+}]]
+QIYU_ACHIEVEMENT[QIYU.DI_SHUI_EN] = 7103
+QIYU_PET[QIYU.DI_SHUI_EN] = {dwTabType = 8, dwIndex = 22562}
+
+--沧海笛  38
+QIYU_NAME[QIYU.CANG_HAI_DI] = _L["CANG_HAI_DI"]
+QIYU_MNTP[QIYU.CANG_HAI_DI] = MONITOR_TYPE.WINDOW_DIALOG
+QIYU_MAP[QIYU.CANG_HAI_DI] = 216
+QIYU_NPC[QIYU.CANG_HAI_DI] = 65917
+QIYU_WINDOW_DIALOG[QIYU.CANG_HAI_DI] = {
+	{szText = _L["DIALOG_CANG_HAI_DI_01"], bFinish = true, }, 		--满次数
+}
+QIYU_ITEM[QIYU.CANG_HAI_DI] = {
+	{dwTabType = 5, dwIndex = 32655, },
+}
+QIYU_ACHIEVEMENT[QIYU.CANG_HAI_DI] = 7104
+QIYU_PET[QIYU.CANG_HAI_DI] = {dwTabType = 8, dwIndex = 22561}
 --------------------------------------------------------------------
 LR_AS_QY = {}
 local Default = {
@@ -599,7 +691,30 @@ function _QY.GetSelfQiYuAchievementData()
 	_QY.SelfAchievementData = clone(data)
 end
 
+----
+local DATA2BSAVE_QY = {}
+function _QY.PrepareData()
+	_QY.GetSelfQiYuAchievementData()
+	local SelfData = {}
+	for k, v in pairs(_QY.SelfData or {}) do
+		SelfData[tostring(k)] = v
+	end
+	DATA2BSAVE_QY = SelfData
+end
+
 function _QY.SaveData(DB)
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local realArea, realServer = ServerInfo[5], ServerInfo[6]
+	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_data ( szKey, qiyu_data, qiyu_achievement, bDel ) VALUES ( ?, ?, ?, ? )")
+	local SelfData = clone(DATA2BSAVE_QY)
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(SelfData), LR.JsonEncode(_QY.SelfAchievementData or {}), 0})))
+	DB_REPLACE:Execute()
+end
+
+function _QY.SaveData2()
 	if not LR_AS_Base.UsrData.bRecord then
 		return
 	end
@@ -607,29 +722,12 @@ function _QY.SaveData(DB)
 	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
-	_QY.GetSelfQiYuAchievementData()
-	local flag = false
-	local DB = DB
-	if not DB then
-		local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
-		DB = LR.OpenDB(path, "QY_SAVE_DATA_29583960578E953B49032A172A76C5CA")
-		flag = true
-	end
-	local ServerInfo = {GetUserServer()}
-	local realArea, realServer = ServerInfo[5], ServerInfo[6]
-	local dwID = me.dwID
-	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-	local DB_REPLACE = DB:Prepare("REPLACE INTO qiyu_data ( szKey, qiyu_data, qiyu_achievement, bDel ) VALUES ( ?, ?, ?, ? )")
-	local SelfData = {}
-	for k, v in pairs(_QY.SelfData or {}) do
-		SelfData[tostring(k)] = v
-	end
-	DB_REPLACE:ClearBindings()
-	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(SelfData), LR.JsonEncode(_QY.SelfAchievementData or {}), 0})))
-	DB_REPLACE:Execute()
-	if flag then
-		LR.CloseDB(DB)
-	end
+	_QY.PrepareData()
+	--
+	local path = sformat("%s\\UsrData\\%s", SaveDataPath, db_name)
+	local DB = LR.OpenDB(path, "QY_SAVE_DATA_29583960578E953B49032A172A76C5CA")
+	_QY.SaveData(DB)
+	LR.CloseDB(DB)
 end
 
 function _QY.LoadData(DB)
@@ -637,6 +735,7 @@ function _QY.LoadData(DB)
 	if not me then
 		return
 	end
+	_QY.LoadAllUsrData(DB)
 	local ServerInfo = {GetUserServer()}
 	local realArea, realServer = ServerInfo[5], ServerInfo[6]
 	local dwID = me.dwID
@@ -749,14 +848,17 @@ function _QY.CheckItemNum(dwTabType, dwIndex)
 							flag = false
 						end
 					end
-					local key = sformat("%d_%d", dwTabType, dwIndex)
-					if num < QIYU_ITEM_NUM[key] and flag then
-						_QY.SelfData[v] = _QY.SelfData[v] or 0
-						_QY.SelfData[v] = _QY.SelfData[v] + 1
-						_QY.SaveData()
+
+					local key = sformat("#%d_%d", dwTabType, dwIndex)
+					if num < (QIYU_ITEM_NUM[key] or 0) and flag then
+						_QY.SelfData[v] = ( _QY.SelfData[v] or 0 ) + 1
+						_QY.SaveData2()
 						_QY.ListQY()
 					end
 					QIYU_ITEM_NUM[key] = num
+					if DEBUG then
+						Output(QIYU_ITEM_NUM[key])
+					end
 				end
 			end
 		end
@@ -817,12 +919,16 @@ function _QY.OPEN_WINDOW()
 	local szText = LR.Trim(arg1)
 	local dwTargetType = arg2
 	local dwTargetID = arg3
-	if dwTargetType ~=  TARGET.NPC then
+	if dwTargetType ~= TARGET.NPC then
 		return
 	end
 	local npc = GetNpc(dwTargetID)
 	if not npc then
 		return
+	end
+
+	if DEBUG then
+		Output("OPEN_WINDOW", szText)
 	end
 
 	local dwTemplateID = npc.dwTemplateID
@@ -853,7 +959,7 @@ function _QY.OPEN_WINDOW()
 					if bFinish then
 						_QY.SelfData[v] = 4
 					end
-					_QY.SaveData()
+					_QY.SaveData2()
 					_QY.ListQY()
 				end
 			end
@@ -892,7 +998,7 @@ function _QY.MSG_NPC_NEARBY(szMsg)
 					if bFinish then
 						_QY.SelfData[v] = 4
 					end
-					_QY.SaveData()
+					_QY.SaveData2()
 					_QY.ListQY()
 				end
 			end
@@ -911,6 +1017,10 @@ function _QY.ON_WARNING_MESSAGE()
 	local scene = me.GetScene()
 	if scene.nType ==  MAP_TYPE.DUNGEON or scene.nType == MAP_TYPE.BATTLE_FIELD then
 		return
+	end
+
+	if DEBUG then
+		Output("ON_WARNING_MESSAGE", nMsgType, szMsg)
 	end
 
 	local dwMapID = scene.dwMapID
@@ -935,7 +1045,7 @@ function _QY.ON_WARNING_MESSAGE()
 					if bFinish then
 						_QY.SelfData[v] = 4
 					end
-					_QY.SaveData()
+					_QY.SaveData2()
 					_QY.ListQY()
 				end
 			end
@@ -1006,7 +1116,7 @@ function _QY.ReFreshTitle()
 				text.OnItemMouseEnter = function ()
 					local x, y = this:GetAbsPos()
 					local rect = {x, y, 0, 0}
-					_QY.ShowTip(v.k, rect)
+					_QY.ShowTip2(v.k, rect)
 					text:SetFontColor(255, 128, 0)
 				end
 				text.OnItemMouseLeave = function ()
@@ -1047,7 +1157,7 @@ function _QY.ListQY()
 	_QY.Container:Clear()
 
 	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
-	num = _QY.ShowItem(TempTable_Cal, 255, 1, 0)
+	local num = _QY.ShowItem(TempTable_Cal, 255, 1, 0)
 	num = _QY.ShowItem(TempTable_NotCal, 60, 1, num)
 	_QY.Container:FormatAllContentPos()
 end
@@ -1136,49 +1246,7 @@ function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 		handle:RegisterEvent(304)
 		handle.OnItemMouseEnter = function ()
 			item_Select:Show()
-			local nMouseX, nMouseY =  Cursor.GetPos()
-			local szTipInfo = {}
-			local szPath, nFrame = GetForceImage(v.dwForceID)
-			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
-			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
-			local tList = _QY.GetQYList()
-			for k, v in pairs(tList) do
-				local times = QY_Record[v.k] or 0
-				local text = ""
-				local font = 17
-				if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v.k])] then
-					text = _L["Achievement done"]
-					font = 47
-				else
-					if times>= 3 then
-						text = _L["Done"]
-						font = 47
-					elseif times>0 then
-						text = times
-						font = 31
-					else
-						text = times
-						font = 17
-					end
-				end
-				local dwTabType = QIYU_PET[v.k].dwTabType
-				local dwIndex = QIYU_PET[v.k].dwIndex
-				local itemInfo = GetItemInfo(dwTabType, dwIndex)
-				if itemInfo then
-					local dwIconID = Table_GetItemIconID(itemInfo.nUiId)
-					local r, g, b = GetItemFontColorByQuality(itemInfo.nQuality)
-					szTipInfo[#szTipInfo+1] = LR.GetFormatImageByID(dwIconID, 24, 24)
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s", itemInfo.szName), nil, r, g, b)
-				end
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" (%s) ", Table_GetMapName(QIYU_MAP[v.k])))
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" %s:", QIYU_NAME[v.k]), 224)
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\t%s\n", text), font)
-
-			end
-			local szOutputTip = tconcat(szTipInfo)
-			OutputTip(szOutputTip, 330, {nMouseX, nMouseY, 0, 0})
+			_QY.ShowTip(v)
 		end
 		handle.OnItemMouseLeave = function()
 			item_Select:Hide()
@@ -1195,7 +1263,66 @@ function _QY.ShowItem(t_Table, Alpha, bCal, _num)
 	return num
 end
 
-function _QY.ShowTip(qiyu_id, rect)
+function _QY.ShowTip(v)
+	local nMouseX, nMouseY =  Cursor.GetPos()
+	local szTipInfo = {}
+	local szPath, nFrame = GetForceImage(v.dwForceID)
+	local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
+	local QY_Record = _QY.AllUsrData[szKey].qiyu_data or {}
+	local QY_Achievement  = _QY.AllUsrData[szKey].qiyu_achievement or {}
+	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if v.dwID == me.dwID and v.realArea == realArea and v.realServer == realServer then
+		QY_Record = clone(_QY.SelfData)
+	end
+
+	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
+	szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
+	local tList = _QY.GetQYList()
+	for k, v in pairs(tList) do
+		local times = QY_Record[v.k] or 0
+		local text = ""
+		local font = 17
+		if QY_Achievement[tostring(QIYU_ACHIEVEMENT[v.k])] then
+			text = _L["Achievement done"]
+			font = 47
+		else
+			if times>= 3 then
+				text = _L["Done"]
+				font = 47
+			elseif times>0 then
+				text = times
+				font = 31
+			else
+				text = times
+				font = 17
+			end
+		end
+		local dwTabType = QIYU_PET[v.k].dwTabType
+		local dwIndex = QIYU_PET[v.k].dwIndex
+		local itemInfo = GetItemInfo(dwTabType, dwIndex)
+		if itemInfo then
+			local dwIconID = Table_GetItemIconID(itemInfo.nUiId)
+			local r, g, b = GetItemFontColorByQuality(itemInfo.nQuality)
+			szTipInfo[#szTipInfo+1] = LR.GetFormatImageByID(dwIconID, 24, 24)
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s", itemInfo.szName), nil, r, g, b)
+		end
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" (%s) ", Table_GetMapName(QIYU_MAP[v.k])))
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat(" %s:", QIYU_NAME[v.k]), 224)
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\t%s\n", text), font)
+
+	end
+	local szOutputTip = tconcat(szTipInfo)
+	OutputTip(szOutputTip, 330, {nMouseX, nMouseY, 0, 0})
+end
+
+
+function _QY.ShowTip2(qiyu_id, rect)
 	local szXml = {}
 	local dwTabType = QIYU_PET[qiyu_id].dwTabType
 	local dwIndex = QIYU_PET[qiyu_id].dwIndex
@@ -1209,7 +1336,7 @@ function _QY.ShowTip(qiyu_id, rect)
 		szXml[#szXml + 1] = GetFormatText(_L["Related map:"], 17, 233, 150, 122)
 		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", Table_GetMapName(QIYU_MAP[qiyu_id])), 17, 255, 255, 255)
 		szXml[#szXml + 1] = GetFormatText(_L["Related Npc/Doodad:"], 17, 233, 150, 122)
-		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", QIYU_NPC and Table_GetNpcTemplateName(QIYU_NPC[qiyu_id]) or QIYU_DOODAD and Table_GetDoodadTemplateName(QIYU_DOODAD[qiyu_id]) or ""), 17, 255, 255, 255)
+		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", QIYU_NPC[qiyu_id] and Table_GetNpcTemplateName(QIYU_NPC[qiyu_id]) or QIYU_DOODAD[qiyu_id] and Table_GetDoodadTemplateName(QIYU_DOODAD[qiyu_id])), 17, 255, 255, 255)
 		szXml[#szXml + 1] = GetFormatText(_L["Related achievement:"], 17, 233, 150, 122)
 		szXml[#szXml + 1] = GetFormatText(sformat("%s\n", QIYU_NAME[qiyu_id]), 17, 255, 255, 255)
 		OutputTip(tconcat(szXml), 330, rect)
@@ -1263,7 +1390,7 @@ end
 ----------------------------------------------------
 ----小窗口
 ----------------------------------------------------
-LR_ACS_QiYu_Panel = CreateAddon("LR_ACS_QiYu_Panel")
+LR_ACS_QiYu_Panel = _G2.CreateAddon("LR_ACS_QiYu_Panel")
 LR_ACS_QiYu_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_ACS_QiYu_Panel.UsrData = {
@@ -1475,7 +1602,7 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 		hIconViewContent.OnEnter = function()
 			local x, y = Text_break2:GetAbsPos()
 			local rect = {x, y, 140, 0}
-			_QY.ShowTip(v.k, rect)
+			_QY.ShowTip2(v.k, rect)
 			Image_Hover:Show()
 		end
 
@@ -1488,7 +1615,7 @@ function LR_ACS_QiYu_Panel:LoadItemBox(hWin)
 			local frame = self:Fetch("LR_ACS_QiYu_Panel")
 			local nX, nY = frame:GetRelPos()
 			local nW, nH = frame:GetSize()
-			OutputAchievementTip(QIYU_ACHIEVEMENT[v], {nX, nY, nW, 0})
+			OutputAchievementTip(QIYU_ACHIEVEMENT[v.k], {nX, nY, nW, 0})
 		end
 
 		m = m+1
@@ -1679,7 +1806,7 @@ function _Pet.LoadData()
 		sql_where = sformat("%s AND szQYName = '%s'", sql_where, g2d(szPetName))
 	end
 
-	DB_SELECT = DB:Prepare(sformat("SELECT * FROM pet_history WHERE %s ORDER BY nTime DESC LIMIT 50 OFFSET 0", sql_where))
+	local DB_SELECT = DB:Prepare(sformat("SELECT * FROM pet_history WHERE %s ORDER BY nTime DESC LIMIT 50 OFFSET 0", sql_where))
 	local data = d2g(DB_SELECT:GetAll())
 
 	LR.CloseDB(DB)
@@ -1716,7 +1843,7 @@ LR.RegisterEvent("LOOT_ITEM", function() _Pet.LOOT_ITEM() end)
 ------------------------------------------
 ---世界奇遇事件面板
 ------------------------------------------
-QY_History_Panel = CreateAddon("QY_History_Panel")
+QY_History_Panel = _G2.CreateAddon("QY_History_Panel")
 QY_History_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 QY_History_Panel.UsrData = {
 	Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0},
@@ -2062,14 +2189,21 @@ LR_AS_QY.LoadCommomUsrData = _QY.LoadCommomUsrData
 LR_AS_QY.GetQYList = _QY.GetQYList
 
 -------------------------------
+function _QY.FIRST_LOADING_END(DB)
+	_QY.LoadData(DB)
+end
+
+-------------------------------
 --注册模块
 LR_AS_Module.QY = {}
+LR_AS_Module.QY.PrepareData = _QY.PrepareData
 LR_AS_Module.QY.SaveData = _QY.SaveData
 LR_AS_Module.QY.LoadData = _QY.LoadAllUsrData
 LR_AS_Module.QY.ResetDataEveryDay = _QY.ResetDataEveryDay
 LR_AS_Module.QY.AddPage = _QY.AddPage
 LR_AS_Module.QY.RefreshPage = _QY.RefreshPage
-LR_AS_Module.QY.FIRST_LOADING_END = _QY.LoadData
+LR_AS_Module.QY.FIRST_LOADING_END = _QY.FIRST_LOADING_END
+LR_AS_Module.QY.ShowTip = _QY.ShowTip
 
 
 

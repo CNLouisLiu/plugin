@@ -82,7 +82,7 @@ end
 
 function Dbug.Debug(szText , szHeader , nLevel )
 	if Dbug.Debug_enable then
-		LR.Debug(szText , szHeader , nLevel)
+		LR.Debug.Output(szText , szHeader , nLevel)
 	end
 end
 
@@ -2357,7 +2357,7 @@ function LR_AS_Trade.FIRST_LOADING_END()
 		return
 	end
 	local nMoney = me.GetMoney()
-	LR_AS_Trade.Login_Money = nMoney.nCopper+nMoney.nSilver*100+nMoney.nGold*10000
+	LR_AS_Trade.Login_Money = nMoney.nCopper + nMoney.nSilver * 100 + nMoney.nGold * 10000
 end
 
 -------------金钱变动提醒
@@ -2367,7 +2367,7 @@ function LR_AS_Trade.OutPutMoneyChange()
 		return
 	end
 	local nMoney = me.GetMoney()
-	local money = nMoney.nCopper+nMoney.nSilver*100+nMoney.nGold*10000
+	local money = nMoney.nCopper + nMoney.nSilver * 100 + nMoney.nGold * 10000
 	local delta_money = money - LR_AS_Trade.Login_Money
 	local text_money = LR_AS_Trade.FormatMoney(delta_money)
 
@@ -2522,7 +2522,7 @@ LR.RegisterEvent("QUEST_FINISHED", function() LR_AS_Trade.QUEST_FINISHED() end)
 ----------------------------------------------------------------
 ------界面
 ----------------------------------------------------------------
-LR_Acc_Trade_Panel = CreateAddon("LR_Acc_Trade_Panel")
+LR_Acc_Trade_Panel = _G2.CreateAddon("LR_Acc_Trade_Panel")
 LR_Acc_Trade_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_Acc_Trade_Panel.UsrData = {
@@ -3530,7 +3530,7 @@ function LR_Acc_Trade_Panel:RefreshBTN_PAGE()
 end
 -------------------------------------------------------------
 -- 创建插件
-LR_Acc_Trade_ChooseDate_Panel = CreateAddon("LR_Acc_Trade_ChooseDate_Panel")
+LR_Acc_Trade_ChooseDate_Panel = _G2.CreateAddon("LR_Acc_Trade_ChooseDate_Panel")
 LR_Acc_Trade_ChooseDate_Panel.UserData = {
 	Anchor = {s = "CENTER", r = "CENTER", x = 0, y = 0},
 }

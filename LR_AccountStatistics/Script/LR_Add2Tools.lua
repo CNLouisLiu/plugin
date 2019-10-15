@@ -166,6 +166,17 @@ local UI2 = {
 				}
 				MessageBox(msg)
 			end,
+		},{	name = "LR_AS_DB_Button_05", type = "Button", x = 210, y = 30, text = _L["DB Repair"], w = 200, h = 40, font = 5,
+			callback = function()
+				local msg = {
+					szMessage = _L["Are you sure to repair database ?"],
+					szName = "backup database",
+					fnAutoClose = function() return false end,
+					{szOption = g_tStrings.STR_HOTKEY_SURE, fnAction = function() LR_AS_DB.RepairDB() end, },
+					{szOption = g_tStrings.STR_HOTKEY_CANCEL, },
+				}
+				MessageBox(msg)
+			end,
 		},{	name = "LR_AS_DB_CheckBox_01", type = "CheckBox", text = _L["Auto backup data"], x = 0, y = 60, w = 200,
 			default = function ()
  				return LR_AS_Base.UsrData.bAutoBackup

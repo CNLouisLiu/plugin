@@ -111,6 +111,8 @@ data={
 	["Restore"]="恢復",
 	["LR Color Tip"]="H:色相\nS:飽和度\nV:亮度\n按住Ctrl時，鼠標滑過調色板時不會取色\n更多有關HSV的信息請自行百度",
 	["LR_MenPai_Color"]="門派顏色",
+	["Tips4"]="",
+	["m"]="麽麽噠萌萌噠",
 
 	["About"]="關於",
 	["JX3 LR Plugin"]="劍網3懶人插件集",
@@ -118,9 +120,9 @@ data={
 	["Enable Bottom-Right Button"]="開啟右下角入口按鈕",
 	["Welcome %s to use LR Plugins"]="歡迎 %s 使用懶人插件集！",
 	["Author:HuaQi@DianLiu"]="作者：華契@電一國色",
-	["If you have any suggestions or comments, please open the Weibo of the author!"]="如果你有任何的意見和建議，請點擊打開作者微博！",
+	["If you have any suggestions or comments, please open the Weibo of the author!"]="點擊打開'懶人插件'官方微博(有紅包)\n也請反饋bug、提出寶貴建議和意見",
 	["Click to open the Setting_Interface of LR Plugins"]="點擊打開懶人插件設置界面",
-	["I want to make suggestions and comments, feedback bugs"]="我要提建議和意見，反饋bug",
+	["I want to make suggestions and comments, feedback bugs"]="點擊打開'懶人插件'官方微博",
 	["Plugins"]="插件",
 	["Team Grid"]="團隊面板",
 	["Setting Panel"]="設置面板",
@@ -185,4 +187,19 @@ data={
 	["This map can not use team notice\n"]="此地圖不能使用團隊告示\n",
 
 	["Remote player can not use.\n"]="【懶人】跨服不可使用\n",
+
+	["Shutdown Tong Message"]="關閉聊天欄插件幫會招人信息",
+
+	--20190104add--
+	[".(.+)"]="·(.+)",
+	["LANJINGKUANG"]="藍晶礦",
+	["D1"]="電信一區",
+	["DLH"]="蝶戀花",
+	["TipsJia"]="電一【紅塵蝶戀服】(原電六國色)\n懶人插件作者的中惡休閑養老幫會【麽麽噠萌萌噠】收人\n15神行、幫修(8折)、騎馬跑商、雙倍秘境已開\n歡迎各類人士加入",
+	["NoTips"]="沒幫會時不再顯示幫會推薦",
+	["TipsTong"]="懶人插件幫會招人（非劍網3官方發佈）：您現在還沒有幫會！誠摯邀請您加入懶人插件的電一【紅塵蝶戀服】中惡休閑小幫會【麽麽噠萌萌噠】，15神行、跑商、幫修、幫會四任務 已開，歡迎加入！請打開左下角的幫會界面，搜索 麽麽噠萌萌噠 加入，空位很多！如您不想再看到此條消息，請打開懶人設置面板，進行關閉。\n",
+
+	["Enter name"]="輸入名字",
+	["__blank"]="",
+
 }

@@ -359,9 +359,9 @@ function LR_TeamSkillMonitor.ShowSkillPanel()
 	if not me then
 		return
 	end
-	local kungfu = me.GetKungfuMount()
-	local dwSkillID = kungfu.dwSkillID
-	if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448  then
+	if LR.IsNurse() then
+		local kungfu = me.GetKungfuMount()
+		local dwSkillID = kungfu.dwSkillID
 		local data = LR_TeamSkillMonitor.SkillMonitorData.data[dwSkillID] or {}
 		local n = 1
 		for i = 1, #data, 1 do
@@ -436,9 +436,7 @@ function LR_TeamSkillMonitor.DO_SKILL_CAST()
 	if not me then
 		return
 	end
-	local kungfu = me.GetKungfuMount()
-	local dwKungSkillID = kungfu.dwSkillID
-	if not (dwKungSkillID == 10028 or dwKungSkillID == 10080 or dwKungSkillID == 10176 or dwKungSkillID == 10448)  then
+	if not LR.IsNurse()  then
 		return
 	end
 --[[	local szName = LR.Trim(Table_GetSkillName(dwSkillID, dwLevel))
@@ -474,15 +472,11 @@ function LR_TeamSkillMonitor.DO_SKILL_CAST()
 end
 
 function LR_TeamSkillMonitor.QiXueFreshCD(dwKungSkillID, dwQiXueSkillID, dwCastSkillID, dwTriggerSkillID, dwActionSkillID)
+	if not LR.IsNurse() then
+		return
+	end
 	local me = GetClientPlayer()
-	if not me then
-		return
-	end
 	local kungfu = me.GetKungfuMount()
-	local dwKungSkillID = kungfu.dwSkillID
-	if not (dwKungSkillID == 10028 or dwKungSkillID == 10080 or dwKungSkillID == 10176 or dwKungSkillID == 10448)  then
-		return
-	end
 	if dwKungSkillID == dwKungSkillID then	--ÄÌ¶¾
 		if me.GetSkillLevel(dwQiXueSkillID) > 0 and LR.Trim(Table_GetSkillName(dwCastSkillID, 1)) == LR.Trim(Table_GetSkillName(dwTriggerSkillID, 1)) then
 			if _hSkillBox[LR.Trim(Table_GetSkillName(dwActionSkillID, 1))] then

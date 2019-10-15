@@ -1,0 +1,4 @@
+data={
+	["BUFF_UPDATE"]={"dwForceID","bDelete","nIndex","bCanCancel","dwID","nStackNum","nEndFrame","bInit","nLevel","dwSkillSrcID","isValid","nLeftFrame"},
+	["OPEN_WINDOW"]={"dwIndex","szText","TargetType","TargetID"},
+}

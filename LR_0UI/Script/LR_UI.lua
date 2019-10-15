@@ -219,8 +219,11 @@ function WndBase:GetAlpha()
 	return self.__this:GetAlpha()
 end
 
-function WndBase:ChangeRelation(...)
-	self.__this:ChangeRelation(...)
+function WndBase:ChangeRelation(__parent, ...)
+	if __parent.__addon then
+		__parent = __parent:GetSelf()
+	end
+	self.__this:ChangeRelation(__parent, ...)
 	return self
 end
 
@@ -255,14 +258,19 @@ function WndFrame:ctor(__name, __data)
 			frame = Wnd.OpenWindow(string.format(__ini, "WndFrame"), __name)
 		elseif __data.style == "LARGER" then
 			frame = Wnd.OpenWindow(string.format(__ini, "WndFrameLarger"), __name)
+		elseif __data.style == "LARGER2" then
+			frame = Wnd.OpenWindow(string.format(__ini, "WndFrameLarger2"), __name)
 		elseif __data.style == "NONE" then
 			frame = Wnd.OpenWindow(string.format(__ini, "WndFrameNone"), __name)
 		elseif __data.style == "NONE2" then
 			frame = Wnd.OpenWindow(string.format(__ini, "WndFrameNone2"), __name)
+		elseif __data.style == "DialogPanel" then
+			frame = Wnd.OpenWindow(string.format(__ini, "WndFrameDialogPanel"), __name)
 		end
 	else
 		frame = Wnd.OpenWindow(__data.path , __name)
 	end
+	PlaySound(SOUND.UI_SOUND, g_sound.OpenFrame)
 	--frame:SetAlpha(0)
 	frame:SetName(__name)
 	--self:Register(__name)
@@ -270,9 +278,12 @@ function WndFrame:ctor(__name, __data)
 	self:_SetSelf(self.__this)
 	self:_SetType("WndFrame")
 	if __data.style and __data.style ~= "NONE" and __data.style ~= "NONE2" or __data.path then
---[[		frame:Lookup("Btn_Close").OnLButtonClick = function()
-			self:Destroy()
-		end]]
+		if frame:Lookup("Btn_Close") then
+			frame:Lookup("Btn_Close").OnLButtonClick = function()
+				self:Destroy()
+				PlaySound(SOUND.UI_SOUND, g_sound.CloseFrame)
+			end
+		end
 		if __data.title then
 			self:SetTitle(__data.title or "")
 		end
@@ -386,6 +397,10 @@ function WndWindow:ctor(__parent, __name, __data)
 	self:SetRelPos(__data.x or 0, __data.y or 0)
 	self.data = {parent = __parent, name = __name, data = __data}
 end
+
+--[[function WndWindow:Lookup(...)
+	return self.__this:Lookup(...)
+end]]
 
 function WndWindow:SetSize(...)
 	self.__this:SetSize(...)
@@ -1308,11 +1323,11 @@ function WndContainerScroll:ctor(__parent, __name, __data)
 	__data = __data or {}
 	local hwnd = _AppendWnd(__parent, "WndContainerScroll", __name)
 	local hWndScroll = hwnd:Lookup("WndScroll")
-	local _WndContainer=hWndScroll:Lookup("_WndContainer")
+	local _WndContainer = hWndScroll:Lookup("_WndContainer")
 	local Scroll_List=hwnd:Lookup("New_ScrollBar")
 	self.__this = hwnd
 	self.__WndContainer = _WndContainer
-	self._hwnd=hwnd
+	self._hwnd = hwnd
 	self._hWndScroll=hWndScroll
 	self.__up = hWndScroll:Lookup("Btn_Up")
 	self.__down = hWndScroll:Lookup("Btn_Down")
@@ -1421,8 +1436,17 @@ function WndScroll:ctor(__parent, __name, __data)
 	end
 end
 
+function WndScroll:Lookup(...)
+	return self.__handle:Lookup(...)
+end
+
 function WndScroll:GetHandle()
 	return self.__handle
+end
+
+function WndScroll:AppendItemFromIni(...)
+	local __item = self.__handle:AppendItemFromIni(...)
+	return __item
 end
 
 function WndScroll:AddItem(__name)
@@ -1436,6 +1460,11 @@ function WndScroll:AddItem(__name)
 		__cover:Hide()
 	end
 	return __item
+end
+
+function WndScroll:RemoveItem(...)
+	self.__handle:RemoveItem(...)
+	return self
 end
 
 function WndScroll:SetHandleStyle(...)
@@ -1517,7 +1546,6 @@ local _AppendItem = function(__parent, __string, __name)
 
 		end
 	end
-
 
 	local __count = __parent:GetItemCount()
 	__parent:AppendItemFromString(__string)
@@ -1632,6 +1660,10 @@ function ItemBase:GetParent()
 	return self.__parent
 end
 
+function ItemBase:IsValid()
+	return self.__this:IsValid()
+end
+
 function ItemBase:HasParent(__name)
 	if self:GetType() == "WndFrame" then
 		return false
@@ -1646,7 +1678,11 @@ function ItemBase:HasParent(__name)
 end
 
 function ItemBase:Destroy()
-	self.__parent:RemoveItem(self.__this)
+	if self.__parent:GetType() == "WndScroll" then
+		self.__parent:GetHandle():RemoveItem(self.__this)
+	else
+		self.__parent:RemoveItem(self.__this)
+	end
 	return self
 end
 
@@ -1678,9 +1714,9 @@ end
 -- Handle Object
 local ItemHandle = class(ItemBase)
 function ItemHandle:ctor(__parent, __name, __data)
-	assert(__parent ~= nil, "parent can not be null.")
+	assert(__parent ~= nil, "parent can not be null." .. __name)
 	__data = __data or {}
-	local __string = "<handle>w=10 h=10 handletype=0 postype=0 eventid=272 firstpostype=0</handle>"
+	local __string = "<handle>w=10 h=10 handletype=0 postype=0 eventid=272 firstpostype=0 disablescale=0</handle>"
 	if __data.w then
 		__string = string.gsub(__string, "w=%d+", string.format("w=%d", __data.w))
 	end
@@ -1698,6 +1734,9 @@ function ItemHandle:ctor(__parent, __name, __data)
 	end
 	if __data.eventid then
 		__string = string.gsub(__string, "eventid=%d+", string.format("eventid=%d", __data.eventid))
+	end
+	if __data.hover then
+		__string = string.gsub(__string, "hover=%d+", string.format("hover='%s'", __data.hover))
 	end
 	--Output(__string)
 	local hwnd = _AppendItem(__parent, __string, __name)
@@ -1734,7 +1773,6 @@ function ItemHandle:ChangeRelation(...)
 	self.__this:ChangeRelation(...)
 	return self
 end
-
 
 function ItemHandle:GetHandle()
 	return self.__this
@@ -1831,6 +1869,155 @@ end
 
 function ItemHandle:Clear()
 	self.__this:Clear()
+	return self
+end
+
+-- hoverhandle
+local ItemHoverHandle = class(ItemBase)
+function ItemHoverHandle:ctor(__parent, __name, __data)
+	assert(__parent ~= nil, "parent can not be null.")
+	__data = __data or {}
+
+	local hwnd = __parent:AppendItemFromIni(string.format(__ini, "ItemHoverHandle"), "HoverHandle", __name)
+	self.__this = hwnd
+	self:_SetSelf(self.__this)
+	self:_SetParent(__parent)
+	self:SetRelPos(__data.x or 0, __data.y or 0)
+	self:SetSize(__data.w, __data.h)
+
+	hwnd:SetName(__name)
+
+	if __parent.__addon then
+		__parent = __parent:GetHandle()
+	end
+
+	__parent:FormatAllItemPos()
+
+	--Bind Handle Events
+	self.__this.OnItemLButtonClick = function()
+		self:_FireEvent("OnClick")
+	end
+	self.__this.OnItemMouseEnter = function()
+		self:_FireEvent("OnEnter")
+	end
+	self.__this.OnItemMouseLeave = function()
+		self:_FireEvent("OnLeave")
+	end
+	self.__this.OnItemRButtonClick = function()
+		self:_FireEvent("OnRClick")
+	end
+end
+
+function ItemHoverHandle:Lookup(...)
+	return self.__this:Lookup(...)
+end
+
+function ItemHoverHandle:ChangeRelation(...)
+	self.__this:ChangeRelation(...)
+	return self
+end
+
+function ItemHoverHandle:GetHandle()
+	return self.__this
+end
+
+function ItemHoverHandle:RegisterEvent(...)
+	self.__this:RegisterEvent(...)
+	return self
+end
+
+function ItemHoverHandle:AppendItemFromString(...)
+	return self.__this:AppendItemFromString(...)
+end
+
+function ItemHoverHandle:AppendItemFromIni(...)
+	return self.__this:AppendItemFromIni(...)
+end
+
+function ItemHoverHandle:AppendItemFromData(...)
+	self.__this:AppendItemFromData(...)
+	return self
+end
+
+function ItemHoverHandle:FormatAllItemPos()
+	self.__this:FormatAllItemPos()
+	return self
+end
+
+function ItemHoverHandle:SetHandleStyle(...)
+	self.__this:SetHandleStyle(...)
+	return self
+end
+
+function ItemHoverHandle:GetItemStartRelPos()
+	return self.__this:GetItemStartRelPos()
+end
+
+function ItemHoverHandle:SetItemStartRelPos(...)
+	self.__this:SetItemStartRelPos(...)
+	return self
+end
+
+function ItemHoverHandle:SetSizeByAllItemSize()
+	self.__this:SetSizeByAllItemSize()
+	return self
+end
+
+function ItemHoverHandle:GetAllItemSize()
+	return self.__this:GetAllItemSize()
+end
+
+function ItemHoverHandle:GetVisibleItemCount()
+	return self.__this:GetVisibleItemCount()
+end
+
+function ItemHoverHandle:EnableFormatWhenAppend(...)
+	self.__this:EnableFormatWhenAppend(...)
+	return self
+end
+
+function ItemHoverHandle:ExchangeItemIndex(...)
+	self.__this:ExchangeItemIndex(...)
+	return self
+end
+
+function ItemHoverHandle:SetMinRowHeight(...)
+	self.__this:SetMinRowHeight(...)
+	return self
+end
+
+function ItemHoverHandle:SetMaxRowHeight(...)
+	self.__this:SetMaxRowHeight(...)
+	return self
+end
+
+function ItemHoverHandle:SetRowHeight(...)
+	self.__this:SetRowHeight(...)
+	return self
+end
+
+function ItemHoverHandle:Sort()
+	self.__this:Sort()
+	return self
+end
+
+function ItemHoverHandle:GetItemCount()
+	return self.__this:GetItemCount()
+end
+
+function ItemHoverHandle:ClearHandle()
+	self.__this:Clear()
+	return self
+end
+
+function ItemHoverHandle:Clear()
+	self.__this:Clear()
+	return self
+end
+
+function ItemHoverHandle:SetSize(...)
+	self.__this:SetSize(...)
+	self.__this:Lookup("Image_Hover"):SetSize(...)
 	return self
 end
 
@@ -2945,6 +3132,8 @@ function CreateAddon:Append(__type, ...)
 		__h = WndUICheckBox.new(...)
 	elseif __type == "Handle" then
 		__h = ItemHandle.new(...)
+	elseif __type == "HoverHandle" then
+		__h = ItemHoverHandle.new(...)
 	elseif __type == "Text" then
 		__h = ItemText.new(...)
 	elseif __type == "Image" then
@@ -2957,6 +3146,12 @@ function CreateAddon:Append(__type, ...)
 		__h = ItemBox.new(...)
 	elseif __type == "TreeLeaf" then
 		__h = ItemTreeLeaf.new(...)
+	end
+	if __h == nil then
+		local dg = function(arg0, arg1, arg2)
+			Output(arg1, arg2)
+		end
+		dg(...)
 	end
 	local __name = __h:GetName()
 	self.__items[__name] = __h
@@ -2992,6 +3187,7 @@ local _API = {
 	CreateUIButton = WndUIButton.new,
 	CreateUICheckBox = WndUICheckBox.new,
 	CreateHandle = ItemHandle.new,
+	CreateHoverHandle = ItemHoverHandle.new,
 	CreateText = ItemText.new,
 	CreateImage = ItemImage.new,
 	CreateAnimate = ItemAnimate.new,
@@ -3001,9 +3197,9 @@ local _API = {
 	CreateAddon = CreateAddon_new,
 }
 
+_G2 = {}
 do
 	for k, v in pairs(_API) do
-		_G[k] = v
+		_G2[k] = v
 	end
 end
-

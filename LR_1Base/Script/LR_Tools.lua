@@ -5,7 +5,7 @@ local wslen, wssub, wsreplace, wssplit, wslower = wstring.len, wstring.sub, wstr
 local mfloor, mceil, mabs, mpi, mcos, msin, mmax, mmin = math.floor, math.ceil, math.abs, math.pi, math.cos, math.sin, math.max, math.min
 local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, table.remove, table.sort, table.getn
 -----
-LR_TOOLS = CreateAddon("LR_TOOLS")
+LR_TOOLS = _G2.CreateAddon("LR_TOOLS")
 LR_TOOLS:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_TOOLS.tAddonClass = LR_TOOLS.tAddonClass or {
@@ -14,7 +14,7 @@ LR_TOOLS.tAddonClass = LR_TOOLS.tAddonClass or {
 
 function LR_TOOLS.Check_tAddonClass (szTitle)
 	for i = 1, #LR_TOOLS.tAddonClass, 1 do
-		if LR_TOOLS.tAddonClass[i][1] ==  szTitle then
+		if LR_TOOLS.tAddonClass[i][1] == szTitle then
 			return true
 		end
 	end
@@ -50,7 +50,7 @@ function LR_TOOLS:UpdateAnchor(frame)
 end
 
 function LR_TOOLS:OnEvents(event)
-	if event ==  "UI_SCALED" then
+	if event == "UI_SCALED" then
 		self:UpdateAnchor(this)
 	end
 end
@@ -96,6 +96,18 @@ function LR_TOOLS:Init()
 		LR_TOOLS.DisableEffect = not arg0
 	end
 
+	local ServerInfo = {GetUserServer()}
+	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if (realArea == _L["D1"] and realServer == _L["DLH"] ) then
+		local TongBox = self:Append("CheckBox", frame, "TongBox", {w = 200, x = 380, y = 477 , text = _L["Shutdown Tong Message"] })
+		TongBox:Check(LR_TOOLS.NeverShowTongS)
+		TongBox:Enable(true)
+		TongBox:SetFontScheme(161)
+		TongBox.OnCheck = function(arg0)
+			LR_TOOLS.NeverShowTongS = arg0
+		end
+	end
+
 	local Window_Welcome = self:Append("Window", hPageSet, "Window_Welcome" , {w = 530, h = 380, x = 210, y = 50})
 	local img_Welcome = self:Append("Image", Window_Welcome, "img_Welcome" , {x = 0, y = 0, w = 520, h = 240, image = "interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.UITex", frame = 0})
 	--self:Append("Image", Window_Welcome, "img_Welcome" , {x = 0, y = 0, w = 150, h = 150, image = "interface\\LR_Plugin\\LR_0UI\\ini\\Welcome.UITex", frame = 1})
@@ -103,8 +115,8 @@ function LR_TOOLS:Init()
 	Window_Welcome:Show()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if realArea ==  "电信一区" and realServer == "红尘寻梦" then
-		local text_tone = self:Append("Text", Window_Welcome, "text_Welcome2" , {w = 515, x = 0, y = 225, h = 20, text  = "电六 大一统\n中恶休闲养老帮会【么么哒萌萌哒】收人\n15神行、帮修、骑马跑商已开\n欢迎各类人士加入", font  = 230})
+	if realArea == _L["D1"] and realServer == _L["DLH"] then
+		local text_tone = self:Append("Text", Window_Welcome, "text_Welcome2" , {w = 515, x = 0, y = 225, h = 20, text  = _L["TipsJia"], font  = 230})
 		text_tone:SetVAlign(2)
 		text_tone:SetHAlign(2)
 		text_tone:SetMultiLine(true)
@@ -116,7 +128,7 @@ function LR_TOOLS:Init()
 	for i = 1, #self.tAddonClass do
 		-- Nav
 		local hBtn = self:Append("UICheckBox", hPageSet, sformat("t_TabClass_%s", self.tAddonClass[i][1]), {x = 20 + 80 * ( i- 1), y = 0, w = 80, h = 30, text = self.tAddonClass[i][2], group = "AddonClass"})
-		if i ==  1 then
+		if i == 1 then
 			hBtn:Check(true)
 		end
 
@@ -150,7 +162,7 @@ function LR_TOOLS:Init()
 			self:AppendAddonInfo(hBox.winSel, tAddonList[j].tWidget)
 			hBox.winSel:Hide()
 
-			if LR_TOOLS.SelectBoxName ==   tAddonList[j].szTitle then
+			if LR_TOOLS.SelectBoxName == tAddonList[j].szTitle then
 				self:Selected(hBox, i, j)
 				hPageSet:ActivePage(i-1)
 				Window_Welcome:Hide()
@@ -243,11 +255,11 @@ end
 
 function LR_TOOLS:GetAddonList(szClass)
 	local temp = {}
---[[	if szClass ==  self.tAddonClass[1][1] then
+--[[	if szClass == self.tAddonClass[1][1] then
 		return self.tAddonModules
 	else]]
 		for k, v in pairs(self.tAddonModules) do
-			if v.szClass ==  szClass then
+			if v.szClass == szClass then
 				tinsert(temp, v)
 			end
 		end
@@ -267,7 +279,10 @@ function LR_TOOLS:AppendAddonInfo(hWin, tWidget)
 		local ServerInfo = {GetUserServer()}
 		local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 		if not v.bDebug or v.bDebug and LR.bCanDebug() then
-			if v.type ==  "Text" then
+			if v.type == "Handle" then
+				local hHandle = self:Append("Handle", hWin, v.name, {w = v.w, h = v.h, x = v.x, y = v.y})
+				if v.default then v.default(hHandle) end
+			elseif v.type == "Text" then
 				local t_text = self:Append("Text", hWin, v.name, {w = v.w, h = v.h, x = v.x, y = v.y, text = v.text, font = v.font})
 				if v.IsRichText then
 					t_text:SetRichText(true)
@@ -282,23 +297,23 @@ function LR_TOOLS:AppendAddonInfo(hWin, tWidget)
 				t_text:SetSize(v.w, v.h)
 				t_text:SetVAlign(v.VAlign or 0)
 				t_text:SetHAlign(v.HAlign or 0)
-			elseif v.type ==  "TextButton" then
+			elseif v.type == "TextButton" then
 				local handle = self:Append("Handle", hWin, v.name, {w = v.w, h = v.h, x = v.x, y = v.y})
 				local text = self:Append("Text", handle, sformat("t_%s", v.name), {w = v.w, h = v.h, text = v.text, font = v.font})
 				handle.OnEnter = function() text:SetFontScheme(168) end
 				handle.OnLeave = function() text:SetFontScheme(v.font) end
 				handle.OnClick = v.callback
-			elseif v.type ==  "Button" then
+			elseif v.type == "Button" then
 				local hButton = self:Append("Button", hWin, v.name, {w = v.w, x = v.x, y = v.y, text = v.text})
-				hButton:Enable((v.enable ==  nil) and true or v.enable())
+				hButton:Enable((v.enable == nil) and true or v.enable())
 				if v.font then
 					hButton:SetFontScheme(v.font)
 				end
 				hButton.OnClick = v.callback
-			elseif v.type ==  "CheckBox" then
+			elseif v.type == "CheckBox" then
 				local hCheckBox = self:Append("CheckBox", hWin, v.name, {w = v.w, x = v.x, y = v.y, text = v.text})
 				hCheckBox:Check(v.default())
-				hCheckBox:Enable((v.enable ==  nil) and true or v.enable())
+				hCheckBox:Enable((v.enable == nil) and true or v.enable())
 				hCheckBox.OnCheck = function(arg0)
 					v.callback(arg0)
 					for _, v2 in pairs(tWidget) do
@@ -318,20 +333,20 @@ function LR_TOOLS:AppendAddonInfo(hWin, tWidget)
 					local w, h = hCheckBox:GetSize()
 					if v.Tip then
 						local szXml = {}
-						if type(v.Tip) ==  "table" then
+						if type(v.Tip) == "table" then
 							if next(v.Tip) ~=  nil then
 								for kk, vv in pairs (v.Tip) do
 									szXml[#szXml+1] = GetFormatText(vv.szText, (vv.font or 136), (vv.r or 255), (vv.g or 128), (vv.b or 0))
 								end
 							end
-						elseif type(v.Tip) ==  "function" then
+						elseif type(v.Tip) == "function" then
 							local tips = v.Tip()
 							if next(tips) ~=  nil then
 								for kk, vv in pairs (tips) do
 									szXml[#szXml+1] = GetFormatText(vv.szText, (vv.font or 136), (vv.r or 255), (vv.g or 128), (vv.b or 0))
 								end
 							end
-						elseif type(v.Tip) ==  "string" then
+						elseif type(v.Tip) == "string" then
 							szXml[#szXml+1] = GetFormatText(v.Tip, 136, 255, 128, 0)
 						end
 						if next(szXml) ~=  nil then
@@ -345,30 +360,30 @@ function LR_TOOLS:AppendAddonInfo(hWin, tWidget)
 						HideTip()
 					end
 				end
-			elseif v.type ==  "RadioBox" then
+			elseif v.type == "RadioBox" then
 				local hRadioBox = self:Append("RadioBox", hWin, v.name, {w = v.w, x = v.x, y = v.y, text = v.text, group = v.group})
 				hRadioBox:Check(v.default())
-				hRadioBox:Enable((v.enable ==  nil) and true or v.enable())
+				hRadioBox:Enable((v.enable == nil) and true or v.enable())
 				hRadioBox.OnCheck = v.callback
 				hRadioBox.OnEnter = function()
 					local x, y = hRadioBox:GetAbsPos()
 					local w, h = hRadioBox:GetSize()
 					if v.Tip then
 						local szXml = {}
-						if type(v.Tip) ==  "table" then
+						if type(v.Tip) == "table" then
 							if next(v.Tip) ~=  nil then
 								for kk, vv in pairs (v.Tip) do
 									szXml[#szXml+1] = GetFormatText(vv.szText, (vv.font or 136), (vv.r or 255), (vv.g or 128), (vv.b or 0))
 								end
 							end
-						elseif type(v.Tip) ==  "function" then
+						elseif type(v.Tip) == "function" then
 							local tips = v.Tip()
 							if next(tips) ~=  nil then
 								for kk, vv in pairs (tips) do
 									szXml[#szXml+1] = GetFormatText(vv.szText, (vv.font or 136), (vv.r or 255), (vv.g or 128), (vv.b or 0))
 								end
 							end
-						elseif type(v.Tip) ==  "string" then
+						elseif type(v.Tip) == "string" then
 							szXml[#szXml+1] = GetFormatText(v.Tip, 136, 255, 128, 0)
 						end
 						if next(szXml) ~=  nil then
@@ -381,29 +396,29 @@ function LR_TOOLS:AppendAddonInfo(hWin, tWidget)
 						HideTip()
 					end
 				end
-			elseif v.type ==  "ComboBox" then
+			elseif v.type == "ComboBox" then
 				local hComboBox = self:Append("ComboBox", hWin, v.name, {w = v.w, x = v.x, y = v.y, text = v.text})
-				hComboBox:Enable((v.enable ==  nil) and true or v.enable())
+				hComboBox:Enable((v.enable == nil) and true or v.enable())
 				hComboBox.OnClick = v.callback
 				hComboBox.OnEnter = function()
 					local x, y = hComboBox:GetAbsPos()
 					local w, h = hComboBox:GetSize()
 					if v.Tip then
 						local szXml = {}
-						if type(v.Tip) ==  "table" then
+						if type(v.Tip) == "table" then
 							if next(v.Tip) ~=  nil then
 								for kk, vv in pairs (v.Tip) do
 									szXml[#szXml+1] = GetFormatText(vv.szText, (vv.font or 136), (vv.r or 255), (vv.g or 128), (vv.b or 0))
 								end
 							end
-						elseif type(v.Tip) ==  "function" then
+						elseif type(v.Tip) == "function" then
 							local tips = v.Tip()
 							if next(tips) ~=  nil then
 								for kk, vv in pairs (tips) do
 									szXml[#szXml+1] = GetFormatText(vv.szText, (vv.font or 136), (vv.r or 255), (vv.g or 128), (vv.b or 0))
 								end
 							end
-						elseif type(v.Tip) ==  "string" then
+						elseif type(v.Tip) == "string" then
 							szXml[#szXml+1] = GetFormatText(v.Tip, 136, 255, 128, 0)
 						end
 						if next(szXml) ~=  nil then
@@ -416,13 +431,13 @@ function LR_TOOLS:AppendAddonInfo(hWin, tWidget)
 						HideTip()
 					end
 				end
-			elseif v.type ==  "ColorBox" then
+			elseif v.type == "ColorBox" then
 				local hColorBox = self:Append("ColorBox", hWin, v.name, {w = v.w, x = v.x, y = v.y, text = v.text})
 				hColorBox:SetColor(unpack(v.default()))
 				hColorBox.OnChange = v.callback
-			elseif v.type ==  "Edit" then
+			elseif v.type == "Edit" then
 				local hEditBox = self:Append("Edit", hWin, v.name, {w = v.w, h = v.h, x = v.x, y = v.y, text = v.default() , limit = v.limit, multi = v.multi })
-				hEditBox:Enable((v.enable ==  nil) and true or v.enable())
+				hEditBox:Enable((v.enable == nil) and true or v.enable())
 				hEditBox.OnChange = v.callback
 				hEditBox.OnKillFocus = function()
 					if IsPopupMenuOpened() then
@@ -435,18 +450,18 @@ function LR_TOOLS:AppendAddonInfo(hWin, tWidget)
 						end
 					end
 				end
-			elseif v.type ==  "CSlider" then
+			elseif v.type == "CSlider" then
 				local hCSlider = self:Append("CSlider", hWin, v.name, {w = v.w, x = v.x, y = v.y, text = v.text, min = v.min, max = v.max, step = v.step, value = v.default(), unit = v.unit})
-				hCSlider:Enable((v.enable ==  nil) and true or v.enable())
+				hCSlider:Enable((v.enable == nil) and true or v.enable())
 				hCSlider.OnChange = v.callback
-			elseif v.type ==  "TipBox" then
+			elseif v.type == "TipBox" then
 				local hTipBox = self:Append("Button", hWin, v.name, {w = v.w, x = v.x, y = v.y, text = v.text})
-				hTipBox:Enable((v.enable ==  nil) and true or v.enable())
+				hTipBox:Enable((v.enable == nil) and true or v.enable())
 				hTipBox.OnEnter = v.callback
 				hTipBox.OnLeave = function ()
 					HideTip()
 				end
-			elseif v.type ==  "TipText" then
+			elseif v.type == "TipText" then
 				local hTipText = self:Append("Text", hWin, v.name, {w = v.w, h = v.h, x = v.x, y = v.y, text = v.text, font = v.font})
 				hTipText.OnMouseEnter  = function()
 					local x, y = this:GetAbsPos()
@@ -454,7 +469,7 @@ function LR_TOOLS:AppendAddonInfo(hWin, tWidget)
 					local szXml = v.tip
 					OutputTip(szXml, 350, {x, y, w, h})
 				end
-			elseif v.type ==  "Image" then
+			elseif v.type == "Image" then
 				local hImage = self:Append("Image", hWin, v.name , {x = v.x , y = v.y , w = v.w , h = v.h})
 				hImage:FromUITex(v.path, v.nFrame)
 			elseif v.type == "FAQ" then
@@ -464,20 +479,20 @@ function LR_TOOLS:AppendAddonInfo(hWin, tWidget)
 					local w, h = hFAQ:GetSize()
 					if v.Tip then
 						local szXml = {}
-						if type(v.Tip) ==  "table" then
+						if type(v.Tip) == "table" then
 							if next(v.Tip) ~=  nil then
 								for kk, vv in pairs (v.Tip) do
 									szXml[#szXml+1] = GetFormatText(vv.szText, (vv.font or 136), (vv.r or 255), (vv.g or 128), (vv.b or 0))
 								end
 							end
-						elseif type(v.Tip) ==  "function" then
+						elseif type(v.Tip) == "function" then
 							local tips = v.Tip()
 							if next(tips) ~=  nil then
 								for kk, vv in pairs (tips) do
 									szXml[#szXml+1] = GetFormatText(vv.szText, (vv.font or 136), (vv.r or 255), (vv.g or 128), (vv.b or 0))
 								end
 							end
-						elseif type(v.Tip) ==  "string" then
+						elseif type(v.Tip) == "string" then
 							szXml[#szXml+1] = GetFormatText(v.Tip, 136, 255, 128, 0)
 						end
 						if next(szXml) ~=  nil then
@@ -610,7 +625,7 @@ RegisterEvent("FIRST_LOADING_END", function()
 			hWnd:SetSize(hWnd_w, hWnd_h+40)
 			Frame:SetRelPos(posx, posy-40)
 			while btns do
-				if btns:GetType() ==  "WndButton" then
+				if btns:GetType() == "WndButton" then
 					local posx, posy = btns:GetRelPos()
 					btns:SetRelPos(posx, posy+40)
 				end
@@ -618,7 +633,7 @@ RegisterEvent("FIRST_LOADING_END", function()
 			end
 		end
 
-		Btn_LR_TOOLS = CreateUIButton(hWnd, "Btn_LR_TOOLS", {w = 34, h = 40, x = Frame_w - 35, y = 5, ani = {"ui\\Image\\UICommon\\activepopularize.UITex", 35, 34, 41}})
+		Btn_LR_TOOLS = _G2.CreateUIButton(hWnd, "Btn_LR_TOOLS", {w = 34, h = 40, x = Frame_w - 35, y = 5, ani = {"ui\\Image\\UICommon\\activepopularize.UITex", 35, 34, 41}})
 		Btn_LR_TOOLS.OnClick = function()
 			LR_TOOLS:OpenPanel()
 		end
@@ -641,48 +656,43 @@ RegisterEvent("FIRST_LOADING_END", function()
 		LR_TOOLS.Box = Btn_LR_TOOLS
 end)
 
-function LR_TOOLS.CHANGE_TONG_NOTIFY(flag)
+function LR_TOOLS.CheckS()
+	local me = GetClientPlayer()
+	if not me or sfind(me.szName, "GM") then
+		return false
+	end
+	local ServerInfo = {GetUserServer()}
+	local realArea, realServer = ServerInfo[5], ServerInfo[6]
+	if not (realArea == _L["D1"] and realServer == _L["DLH"] ) then
+		return false
+	end
+	return true
+end
+
+function LR_TOOLS.CheckX()
 	local me = GetClientPlayer()
 	if not me then
-		return
+		return false
 	end
-	local scene = me.GetScene()
-	if scene.nType == MAP_TYPE.BATTLE_FIELD then
-		return
+	if me.nLevel < 95 or me.nCamp == 1 then
+		return false
 	end
+	if me.dwTongID ~= 0 then
+		return false
+	end
+	return true
+end
+
+
+function LR_TOOLS.CHANGE_TONG_NOTIFY(flag)
 	if LR_TOOLS.NeverShowTongS then
 		return
 	end
-	if flag and not (arg1 ==  1 or arg1 ==  3 or arg1 ==  4) then
+	if flag and not (arg1 == 1 or arg1 == 3 or arg1 == 4) then
 		return
 	end
-	if sfind(me.szName, "GM") then
-		return
-	end
-	local ServerInfo = {GetUserServer()}
-	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if not (realArea == "电信一区" and realServer == "红尘寻梦" ) then
-		return
-	end
-	if me.nLevel <20 or me.nCamp == 1 then
-		return
-	end
-	if me.dwTongID ~=  0 then
-		return
-	end
-	local msg = {}
-	msg[#msg+1] = GetFormatText("懒人插件：您现在还没有帮会！诚挚邀请您", 48)
-	msg[#msg+1] = GetFormatText("加入", 200 , 255 , 151 , 167)
-	msg[#msg+1] = GetFormatText("懒人插件的电六中恶休闲小帮会", 48)
-	msg[#msg+1] = GetFormatText("【么么哒萌萌哒】", 23 , 255 , 128 , 128 )
-	msg[#msg+1] = GetFormatText("，15神行、跑商、帮修、帮会四任务 已开，欢迎加入！请打开左下角的帮会界面，搜索 ", 48)
-	msg[#msg+1] = GetFormatText("么么哒萌萌哒", 200 , 255 , 128 , 128 )
-	msg[#msg+1] = GetFormatText(" 加入，", 48)
-	msg[#msg+1] = GetFormatText("空位很多！", 200 , 255 , 151 , 167)
-	msg[#msg+1] = GetFormatText("如您不想再看到此条消息，请打开懒人设置面板关于页面，进行关闭。\n\n", 48)
-	local szText = tconcat(msg)
-	OutputMessage("MSG_SYS", szText, true)
-	--LR.SysMsg("\n\n懒人插件：您现在还没有帮会！诚挚邀请您加入懒人插件的中恶休闲小帮会【么么哒萌萌哒】，15神行、跑商、帮修已开，欢迎加入！请打开左下角的帮会界面，搜索 么么哒萌萌哒 加入。\n\n")
+
+
 end
 
 LR.RegisterEvent("CHANGE_TONG_NOTIFY", function() LR_TOOLS.CHANGE_TONG_NOTIFY(true) end)
@@ -714,6 +724,18 @@ LR_TOOLS.menu = {
 	fnClickIcon = function ()
 		LR_TOOLS:OpenPanel()
 	end,
+--[[
+	fnMouseEnter = function()
+		if LR_TOOLS.CheckS() and LR_TOOLS.CheckX() then
+			local x, y = this:GetAbsPos()
+			local w, h = this:GetSize()
+			OutputTip(GetFormatText(_L["TipsJia"], 2), 320)
+		end
+	end,
+	fnMouseLeave = function()
+		HideTip()
+	end,
+]]
 	}
 
 ---头像菜单
@@ -744,11 +766,11 @@ RegisterEvent("FIRST_LOADING_END", function()
 				OpenBrowser("http://www.weibo.com/u/1119308690")
 			end,
 			},
-			{name = "LR_TOOLS_Tong_S", type = "CheckBox", text = "没帮会时不再显示帮会推荐", x = 0, y = 350, w = 200,
+			{name = "LR_TOOLS_Tong_S", type = "CheckBox", text = _L["NoTips"], x = 0, y = 350, w = 200,
 			default = function ()
 				local ServerInfo = {GetUserServer()}
 				local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-				if not (realArea == "电信一区" and realServer == "红尘寻梦") then
+				if not (realArea == _L["D1"] and realServer == _L["DLH"]) then
 					local box = LR_TOOLS:Fetch("LR_TOOLS_Tong_S")
 					if box then
 						box:Hide()
@@ -764,10 +786,10 @@ RegisterEvent("FIRST_LOADING_END", function()
 	}
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if realArea ==  "电信一区" and realServer == "红尘寻梦" then
+	if realArea == _L["D1"] and realServer == _L["DLH"] then
 		tinsert(LR_TOOLS_About.tWidget, {
 			name = "LR_TOOLS_About_shouren", type = "Text", x = 5, y = 225, w = 515, h = 20, font  = 230, VAlign = 2, HAlign = 2, IsMultiLine = true, IsRichText = true,
-			text  = "电六 大一统\n中恶休闲养老帮会【么么哒萌萌哒】收人\n15神行、帮修、骑马跑商已开\n欢迎各类人士加入",
+			text  = _L["TipsJia"],
 		})
 	end
 	LR.DelayCall(2000, function() LR_TOOLS.CHANGE_TONG_NOTIFY() end)
@@ -787,25 +809,8 @@ local Tools_MenPaiColor = {
 	szClass = "About",
 	tWidget = {},
 }
-local tForceID = {
-	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 21, 22, 23,
-}
-local tForceTitle = {
-	[0] = _L["Force0"],
-	[1] = _L["Force1"],
-	[2] = _L["Force2"],
-	[3] = _L["Force3"],
-	[4] = _L["Force4"],
-	[5] = _L["Force5"],
-	[6] = _L["Force6"],
-	[7] = _L["Force7"],
-	[8] = _L["Force8"],
-	[9] = _L["Force9"],
-	[10] = _L["Force10"],
-	[21] = _L["Force21"],
-	[22] = _L["Force22"],
-	[23] = _L["Force23"],
-}
+
+local tForceID = ALL_KUNGFU_COLLECT
 for i = 1, #tForceID, 1 do
 	local tWidget = Tools_MenPaiColor.tWidget
 	local szIcon, nFrame = GetForceImage(tForceID[i])
@@ -813,7 +818,7 @@ for i = 1, #tForceID, 1 do
 		name = sformat("Image_Force_%d", i), type = "Image", x = (i+2)%3 * 150 , y = (mceil(i/3) - 1) *35 , w = 28, h = 28, path = szIcon, nFrame = nFrame,
 	}
 	tWidget[#tWidget+1] = {
-		name = sformat("ColorBox_Force_%d", i), type = "ColorBox", x = (i+2)%3 * 150 + 32 , y = (mceil(i/3)-1) *35 + 3, text = tForceTitle[tForceID[i]], w = 120,
+		name = sformat("ColorBox_Force_%d", i), type = "ColorBox", x = (i+2)%3 * 150 + 32 , y = (mceil(i/3)-1) *35 + 3, text = g_tStrings.tForceTitle[tForceID[i]], w = 120,
 		default = function()
 			return {LR.GetMenPaiColor(tForceID[i])}
 		end,

@@ -9,6 +9,7 @@ data = {
 		Height = 32,
 		EventID = 524596,
 		LockShowAndHide = 1,
+		DisableScale=1,
 	},
 	{	name = "Image_LifeBG",
 		nType = "Image",

@@ -742,4 +742,101 @@ data={
 	["Instant saving when quest update"]="日常任务变化时即时保存",
 	["QYJSMD"]="奇遇基数埋点",
 
+	--20181225add--
+	["JingLi"]="精力",
+	["ShengYuJingLi"]="可获精力",
+
+	--20190101add--
+	["WLTJ"]="武林通鉴",
+
+	["PlayerInfo"]="角色",
+	["FBList"]="副本",
+	["RC"]="日常",
+	["QY"]="奇遇",
+
+	["TAI_XING_DAO"]="太行道",
+	["DIALOG_TAI_XING_DAO_01"]="今天我收到的寒泉岩已经足够了",
+	["MI_BAO_TU"]="秘宝图",
+	["DIALOG_MI_BAO_TU_01"]="今天我收到的鱼饵已经足够了",
+	["KE_JIANG_GAN"]="客江干",
+	["DIALOG_KE_JIANG_GAN_01"]="贫僧今日已有足够的野菜了",
+
+	["Money:"]="金钱：",
+	["BangGong:"]="江湖贡献值",
+	["XiaYi:"]="侠义值",
+	["WeiWang:"]="威望值",
+	["ZhanJieJiFen:"]="战阶积分：",
+	["ZhanJieDengJi:"]="战阶等级：",
+	["MingJianBi:"]="名剑币：",
+	["JianBen:"]="监本：",
+	["Finished HuiShi exam(6-7)\n"]="完成了会试(周六至周日)\n",
+	["Finished ShengShi exam(1-7)\n"]="完成了省试(周一至周日)\n",
+	["Haven't had any exam yet\n"]="还没有考试\n",
+	["JingLi:"]="精力：",
+	["JingLi remain:"]="还可获得精力：",
+	["Gold"]="金",
+	["Silver"]="银",
+	["Copper"]="铜",
+	["ZHENYINGRICHANG"]="阵营日常",
+
+
+	["===%s People Dungeon===\n"]="=== %s人副本 ===\n",
+	["discard"]="（废弃）",
+
+	--20190203add--
+	["remainBangGong:"]="可获得江湖贡献值：",
+	["remainXiaYi:"]="可获得狭义值：",
+	["remainWeiWang:"]="可获得威望值：",
+	["remainZhanJieJiFen:"]="战阶百分比：",
+	["JianTouShang"]="↑",
+	["JianTouXia"]="↓",
+	["nMoney"]="金钱",
+	["BangGong"]="江贡值",
+	["remainBangGong"]="可获江贡",
+	["remainXiaYi"]="可获狭义",
+	["remainZhanJieJiFen"]="战阶百分比",
+	["ZhanJieDengJi"]="战阶等级",
+	["JianBen"]="监本印文",
+	["MingJianBi"]="名剑币",
+	["nVigor"]="精力",
+	["nVigorRemainSpace"]="可获精力",
+	["remainWeiWang"]="可获威望",
+	["H%sH"]="▲%s▲",
+	["S%sS"]="△%s△",
+	["Choose details"]="选择明细列",
+	["Reset"]="重置",
+	["Sure to reset?"]="    确定要重置吗？",
+
+	["Account Stamina:"]="账号精力：",
+	["DB Repair"]="数据库修复",
+	["Are you sure to repair database ?"]="确定要修复数据库？",
+
+	--20190626add--
+	["%d minute ago"]="%d分钟前",
+	["%d hour ago"]="%d小时前",
+	["%d days ago"]="%d天前",
+	["3 Years ago"]="超过3年",
+	["LastLoginTime"]="最后登录",
+
+	["Group By Account"]="按账户分组",
+	["Custom Group"]="自定义分组",
+	["Account:%s...%s"]="账户：%s...%s",
+	["Set other name"]="设置别名",
+	["Account:%s"]="账户：%s",
+	["Show All Account"]="显示所有账号",
+
+	["MI_SHU_SHENG"]="迷书生",
+	["DIALOG_MI_SHU_SHENG_01"]="看样子还想再吃一根",
+	["DIALOG_MI_SHU_SHENG_02"]="已经吃得圆滚滚，吃不下啦",
+
+	["DI_SHUI_EN"]="滴水恩",
+	["DIALOG_DI_SHUI_EN_01"]="绿头鸭的羽毛似乎还有些脏",
+	["DIALOG_DI_SHUI_EN_02"]="表示自己不想再洗了",
+
+	["CANG_HAI_DI"]="沧海笛",
+	["DIALOG_CANG_HAI_DI_01"]="想要的话明天再来吧",
+
+	["Auto refresh"]="每5秒刷新一次",
+	
+
 }

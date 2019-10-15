@@ -6,46 +6,46 @@ local AddonPath="Interface\\LR_Plugin\\LR_HeadName"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_HeadName"
 local _L = LR.LoadLangPack(AddonPath)
 -----------------------------------------------
-local sziniFile="Interface\\LR_Plugin\\LR_HeadName\\UI\\LR_Balloon.ini"
-local SeeTime=10000
+local sziniFile = "Interface\\LR_Plugin\\LR_HeadName\\UI\\LR_Balloon.ini"
+local SeeTime = 10000
 
 LR_Balloon = LR_Balloon or {
-	DialogList={},
-	Handle_Total=nil,
-	LR_HeadName_Frame=nil,
+	DialogList = {},
+	Handle_Total = nil,
+	LR_HeadName_Frame = nil,
 }
 
-LR_Balloon.UsrData={
-	bShowPlayerMsg=true,
-	bShowNpcMsg=true,
-	bBlock=true,
-	NumLimit=50,
+LR_Balloon.UsrData = {
+	bShowPlayerMsg = true,
+	bShowNpcMsg = true,
+	bBlock = true,
+	NumLimit = 50,
 }
 local CustomVersion = "20170110"
 RegisterCustomData("LR_Balloon.UsrData", CustomVersion)
 -----------------------------------------
-local _Balloon={
-	handle=nil,
-	dwID=nil,
-	xScreen=-4999,
-	yScreen=-4999,
-	szContent="",
-	nStartTime=0,
-	nEndTime=0,
-	szName="",
-	xOffset=0,
-	yOffset=0,
-	alpha=0,
+local _Balloon = {
+	handle = nil,
+	dwID = nil,
+	xScreen = -4999,
+	yScreen = -4999,
+	szContent = "",
+	nStartTime = 0,
+	nEndTime = 0,
+	szName = "",
+	xOffset = 0,
+	yOffset = 0,
+	alpha = 0,
 }
 _Balloon.__index = _Balloon
 
 function _Balloon:new(obj)
-	local o={}
-	setmetatable(o,self)
-	o.dwID=obj.dwID
-	o.self=obj
-	o.nType=obj.nType
-	o.szContent=obj.szContent
+	local o = {}
+	setmetatable(o, self)
+	o.dwID = obj.dwID
+	o.self = obj
+	o.nType = obj.nType
+	o.szContent = obj.szContent
 	o.nStartTime = GetTime()
 	o.nEndTime = GetTime()+SeeTime
 	return o
@@ -88,33 +88,33 @@ function _Balloon:Create()
 		if IsPlayer(dwID) and dwID ~= GetClientPlayer().dwID then
 			self:Remove()
 			LR_Balloon.DialogList[dwID] = nil
-			local player=GetPlayer(dwID)
+			local player = GetPlayer(dwID)
 			if player then
 				LR_Balloon.LoadBlock()
 				LR_Balloon.BlockList.RoleList[dwID] = {dwID=dwID,szName=LR.Trim(player.szName)}
 				LR_Balloon.SaveBlock()
 			end
-			local msg=_L["LR_Balloon:Shield balloons from [%s].\n"]
-			msg=sformat(msg,LR.Trim(player.szName))
+			local msg = _L["LR_Balloon:Shield balloons from [%s].\n"]
+			msg = sformat(msg,LR.Trim(player.szName))
 			LR.SysMsg(msg)
 			if IsShiftKeyDown () then
 				LR_Balloon_Panel:Open()
 			end
 		end
 	end
-	self.handle=Handle_Balloon
+	self.handle = Handle_Balloon
 	--Output("2",self.dwID)
 	return self
 end
 
 function _Balloon:Remove()
-	local Handle_Total=LR_Balloon.Handle_Total
+	local Handle_Total = LR_Balloon.Handle_Total
 	local dwID = self.dwID
-	local Handle_Balloon=Handle_Total:Lookup(sformat("Handle_Balloon_%d", dwID))
+	local Handle_Balloon = Handle_Total:Lookup(sformat("Handle_Balloon_%d", dwID))
 	if Handle_Balloon then
 		Handle_Total:RemoveItem(Handle_Balloon)
 	end
-	self.handle=nil
+	self.handle = nil
 	return self
 end
 
@@ -144,15 +144,15 @@ function _Balloon:GetPos()
 end
 
 function _Balloon:SetPos()
-	local xScreen=self.xScreen
-	local yScreen=self.yScreen
-	local handle=self.handle
+	local xScreen = self.xScreen
+	local yScreen = self.yScreen
+	local handle = self.handle
 	local nTopOffset = LR_HeadName.UsrData.nBallonTopOffset or 0
 
 	xScreen = xScreen - self.xOffset
 	yScreen = yScreen - self.yOffset + nTopOffset
 
-	handle:SetAbsPos(xScreen,yScreen)
+	handle:SetAbsPos(xScreen, yScreen)
 	return self
 end
 
@@ -476,7 +476,7 @@ LR.RegisterEvent("FIRST_LOADING_END",function() LR_Balloon.LoadBlock() end)
 ------------------------------------------
 --ΩÁ√Ê
 ------------------------------------------
-LR_Balloon_Panel = CreateAddon("LR_Balloon_Panel")
+LR_Balloon_Panel = _G2.CreateAddon("LR_Balloon_Panel")
 LR_Balloon_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_Balloon_Panel.nChose=1

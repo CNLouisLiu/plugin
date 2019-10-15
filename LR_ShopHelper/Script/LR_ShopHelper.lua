@@ -136,11 +136,11 @@ function LR_AutoSell.SHOP_OPENSHOP()
 									bSell = true
 								end
 							elseif v.dwTabType then
-								if v.dwTabType ==  item.dwTabType and v.dwIndex ==  item.dwIndex then
+								if tonumber(v.dwTabType) == item.dwTabType and tonumber(v.dwIndex) ==  item.dwIndex then
 									bSell = true
 								end
 							elseif v.nUiId then
-								if v.nUiId == item.nUiId then
+								if tonumber(v.nUiId) == item.nUiId then
 									bSell = true
 								end
 							end
@@ -156,11 +156,11 @@ function LR_AutoSell.SHOP_OPENSHOP()
 									bSell = false
 								end
 							elseif v.dwTabType then
-								if v.dwTabType ==  item.dwTabType and v.dwIndex ==  item.dwIndex then
+								if tonumber(v.dwTabType) ==  item.dwTabType and tonumber(v.dwIndex) ==  item.dwIndex then
 									bSell = false
 								end
 							elseif v.nUiId then
-								if v.nUiId == item.nUiId then
+								if tonumber(v.nUiId) == item.nUiId then
 									bSell = false
 								end
 							end

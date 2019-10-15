@@ -16,6 +16,10 @@ LR_AS_Group.GroupChose = {}	--存放选择显示的Group
 LR_AS_Group.GroupList = {}	--存放Group列表
 LR_AS_Group.AllUsrGroup = {}	--存放人员的Group信息
 LR_AS_Group.ShowDataNotInGroup = false --显示不在分组中的人物
+LR_AS_Group.ShowGroupType = 0	-- 0：不分组显示；1：按账号分组显示；2：按自定义分组显示
+LR_AS_Group.AccountGroup = {}
+LR_AS_Group.AccountGroupChoose = {}
+LR_AS_Group.AccountOtherName = {}
 
 local _Group = {}
 --------------------------------------------
@@ -62,14 +66,10 @@ function _Group.UpdateMyGroupInfo(DB)
 	local result = d2g(DB_SELECT:GetAll())
 	if result and next(result) ~= nil then
 		local v = result[1]
-		v.nMaxStamina = me.nMaxStamina or 0
-		v.nCurrentStamina = me.nCurrentStamina or 0
-		v.nMaxThew = me.nMaxThew or 0
-		v.nCurrentThew = me.nCurrentThew or 0
 		v.SaveTime = GetCurrentTime()
-		local DB_REPLACE = DB:Prepare("REPLACE INTO group_list ( groupID, szName, nCurrentStamina, nMaxStamina, nCurrentThew, nMaxThew, SaveTime ) VALUES ( ?, ?, ?, ?, ?, ?, ? )")
+		local DB_REPLACE = DB:Prepare("REPLACE INTO group_list ( groupID, szName, SaveTime ) VALUES ( ?, ?, ? )")
 		DB_REPLACE:ClearBindings()
-		DB_REPLACE:BindAll(unpack(g2d({v.groupID, v.szName, v.nCurrentStamina, v.nMaxStamina, v.nCurrentThew, v.nMaxThew, v.SaveTime})))
+		DB_REPLACE:BindAll(unpack(g2d({v.groupID, v.szName, v.SaveTime})))
 		DB_REPLACE:Execute()
 	end
 end
@@ -81,8 +81,64 @@ end
 function _Group.LoadData(DB)
 	_Group.LoadGroupListData(DB)
 	_Group.LoadAllUserGroup(DB)
+	--
+	_Group.GetAccountGroupFromDB()
 end
 
+------------------------------------------------
+--账号分组
+------------------------------------------------
+function _Group.GetAccountGroupFromDB()
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local AccountGroup = {}
+	for szKey, v in pairs(AllPlayerList) do
+		if not v.hash01 or v.hash01 == "" then
+			v.hash01 = "unknown"
+		end
+		AccountGroup[v.hash01] = AccountGroup[v.hash01] or {}
+		local server = sformat("%s_%s", v.realArea, v.realServer)
+		AccountGroup[v.hash01][server] = AccountGroup[v.hash01][server] or {}
+		AccountGroup[v.hash01][server][szKey] = {}
+	end
+	LR_AS_Group.AccountGroup = clone(AccountGroup)
+	return AccountGroup
+end
+
+function _Group.GetAccountGroup(account_code, server)
+	if not server then
+		local data = {}
+		for server, v in pairs(LR_AS_Group.AccountGroup[account_code]) do
+			for szKey, v2 in pairs(v) do
+				data[szKey] = {}
+			end
+		end
+		return data
+	else
+		return LR_AS_Group.AccountGroup[account_code][server]
+	end
+end
+
+function _Group.ChangeAccountOthorName(account_code)
+	GetUserInput(_L["Group Name"], function(szText)
+		local szText =  string.gsub(szText, "^%s*%[?(.-)%]?%s*$", "%1")
+		if szText ~=  "" then
+			LR_AS_Group.AccountOtherName[account_code] = szText
+		else
+			LR_AS_Group.AccountOtherName[account_code] = nil
+			--刷新UI
+			LR_AS_Panel.RefreshUI()
+		end
+		local path = sformat("%s\\%s", SaveDataPath, "AccountOtherName")
+		LR.SaveLUAData(path, LR_AS_Group.AccountOtherName)
+	end)
+end
+
+function _Group.LoadAccountOtherName()
+	local path = sformat("%s\\%s", SaveDataPath, "AccountOtherName")
+	LR_AS_Group.AccountOtherName = LoadLUAData(path) or {}
+end
+
+LR.RegisterEvent("FIRST_LOADING_END", function() _Group.LoadAccountOtherName() end)
 ------------------------------------------------
 --判定某个分组里是否有某个人
 function _Group.ifGroupHasUser(key, groupID)
@@ -165,11 +221,65 @@ end
 --------------------------------------------
 function _Group.PopupUIMenu()
 	local menu = {}
+	---
+	menu[#menu + 1] = {szOption = _L["Group By Account"], fnDisable = function() return true end}
+	menu[#menu + 1] = {szOption = _L["Show All Account"], bCheck = true, bMCheck = true, bChecked = function() return LR_AS_Group.ShowGroupType == 0 end, fnAction = function()
+		LR_AS_Group.ShowGroupType = 0
+		LR_AS_Group.AccountGroupChoose.account_code = nil
+		LR_AS_Group.AccountGroupChoose.server = nil
+		--
+		LR_AS_Panel.RefreshUI()
+		FireEvent("LR_ACS_REFRESH_FP")
+		Wnd.CloseWindow(GetPopupMenu())
+	end}
+	local AccountGroup = clone(LR_AS_Group.AccountGroup)
+	for account_code, v in pairs(AccountGroup) do
+		local text = sformat(_L["Account:%s...%s"], ssub(account_code, 1, 3), ssub(account_code, -3))
+		if LR_AS_Group.AccountOtherName[account_code] then
+			text = sformat(_L["Account:%s"], LR_AS_Group.AccountOtherName[account_code])
+		end
+		tinsert(menu, {szOption = text, bCheck = true, bMCheck = true, bChecked = function() return LR_AS_Group.ShowGroupType == 1 and account_code == LR_AS_Group.AccountGroupChoose.account_code end,
+			fnAction = function()
+				LR_AS_Group.ShowGroupType = 1
+				LR_AS_Group.AccountGroupChoose.account_code = account_code
+				LR_AS_Group.AccountGroupChoose.server = nil
+				--
+				LR_AS_Panel.RefreshUI()
+				FireEvent("LR_ACS_REFRESH_FP")
+				Wnd.CloseWindow(GetPopupMenu())
+			end,
+		})
+		local m = menu[#menu]
+		m[#m + 1] = {szOption = _L["Set other name"], fnAction = function() _Group.ChangeAccountOthorName(account_code) end}
+		m[#m + 1] = {bDevide = true}
+		for server, v2 in pairs(v) do
+			tinsert(m, {szOption = server, bCheck = true, bMCheck = true,
+				bChecked = function()
+					return LR_AS_Group.ShowGroupType == 1
+					and account_code == LR_AS_Group.AccountGroupChoose.account_code
+					and server == LR_AS_Group.AccountGroupChoose.server
+				end,
+				fnAction = function()
+					LR_AS_Group.ShowGroupType = 1
+					LR_AS_Group.AccountGroupChoose.account_code = account_code
+					LR_AS_Group.AccountGroupChoose.server = server
+					--
+					LR_AS_Panel.RefreshUI()
+					FireEvent("LR_ACS_REFRESH_FP")
+					Wnd.CloseWindow(GetPopupMenu())
+				end,
+			})
+		end
+	end
+	---
+	menu[#menu + 1] = {bDevide = true}
+	menu[#menu + 1] = {szOption = _L["Custom Group"], fnDisable = function() return true end}
 	local GroupList = LR_AS_Group.GroupList
 	for groupID, v in pairs(GroupList) do
 		local szGroupName = v.szName
 		tinsert(menu, {szOption = szGroupName, bCheck = true, bMCheck = false, bChecked = function() return _Group.CheckShowGroup(groupID) end,
 			fnAction = function()
+				LR_AS_Group.ShowGroupType = 2
 				_Group.AddShowGroup(groupID)
 				--读取
 				LR_AS_Base.LoadData()
@@ -270,6 +380,7 @@ LR_AS_Group.PopupUIMenu = _Group.PopupUIMenu
 LR_AS_Group.ifGroupHasUser = _Group.ifGroupHasUser
 LR_AS_Group.ChangeUserGroup = _Group.ChangeUserGroup
 LR_AS_Group.SaveData = _Group.SaveData
+LR_AS_Group.GetAccountGroup = _Group.GetAccountGroup
 
 --注册模块
 LR_AS_Module.Group = {}

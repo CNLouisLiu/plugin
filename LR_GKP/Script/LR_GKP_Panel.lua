@@ -12,7 +12,7 @@ local VERSION = "20170717"
 ----------------------------------------------------------------
 ------主界面
 ----------------------------------------------------------------
-LR_GKP_Panel = CreateAddon("LR_GKP_Panel")
+LR_GKP_Panel = _G2.CreateAddon("LR_GKP_Panel")
 LR_GKP_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_GKP_Panel.UsrData = {
@@ -740,7 +740,7 @@ end
 ----------------------------------------------------------------
 ------新建Bill界面
 ----------------------------------------------------------------
-LR_GKP_NewBill_Panel = CreateAddon("LR_GKP_NewBill_Panel")
+LR_GKP_NewBill_Panel = _G2.CreateAddon("LR_GKP_NewBill_Panel")
 LR_GKP_NewBill_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_GKP_NewBill_Panel.UsrData = {
@@ -905,7 +905,7 @@ end
 ------------------------------------------------------
 ---新建门派老板
 ------------------------------------------------------
-LR_GKP_NewMenPaiBoss_Panel = CreateAddon("LR_GKP_NewMenPaiBoss_Panel")
+LR_GKP_NewMenPaiBoss_Panel = _G2.CreateAddon("LR_GKP_NewMenPaiBoss_Panel")
 LR_GKP_NewMenPaiBoss_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_GKP_NewMenPaiBoss_Panel.UsrData = {

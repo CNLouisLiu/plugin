@@ -40,8 +40,12 @@ LR_AS_Base.default = {
 LR_AS_Base.UsrData = clone(LR_AS_Base.default.UsrData)
 RegisterCustomData("LR_AS_Base.UsrData", VERSION)
 
+---------------------------------
+---账目本共享数据，不使用BASE库中的_GMV
+---------------------------------
 LR_AS_Data = {}
 LR_AS_Data.AllPlayerList = {}
+LR_AS_Data.All_Stamina = {}
 LR_AS_Data.AllUsrFilteredList = {}
 LR_AS_Data.AllUsrSortedList = {}
 LR_AS_Data.AllPlayerInfo = {}
@@ -53,7 +57,7 @@ LR_AS_Data.ExamData = {}
 ---LoadData
 ---------------------------------
 function LR_AS_Base.LoadData()
-	Log("[LR] AS load begin\n")
+	LR.Log("[LR] AS load begin....")
 	local _begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "AS_BASE_LOAD_DATA_05DC638DAB8A11477BDFF035C167AFC9")
@@ -64,29 +68,49 @@ function LR_AS_Base.LoadData()
 		end
 	end
 	LR.CloseDB(DB)
-	Log(sformat("[LR] AS load cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
+	LR.Log(sformat("[LR] AS load end, cost %d ms", GetTickCount() - _begin_time))
 end
 
 ---------------------------------
 ---AutoSave
 ---------------------------------
 function LR_AS_Base.SaveData()
+	if not LR_AS_Base.UsrData.bRecord then
+		return
+	end
 	local me = GetClientPlayer()
 	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
-	--------------save
 	local _begin_time = GetTickCount()
+	--------------Prepare data
+	LR.Log("[LR] Preparing data....")
+	local text = {}
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].PrepareData then
+			local t = GetTickCount()
+			LR_AS_Module[v].PrepareData()
+			text[#text + 1] = sformat("[LR] %s, %0.3f s", v, (GetTickCount() - t) * 1.0 / 1000)
+		end
+	end
+	LR.Log(text)
+	LR.Log(sformat("[LR] Preparation is over, cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
+	--------------save
+	LR.Log("[LR] Begin save...")
+	_begin_time = GetTickCount()
+	text = {}
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "AS_BASE_SAVE_DATA_0D9F801993115A3C7F3EA6267F0AAA9C")
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].SaveData then
-			--Log(sformat("%s\n", v))
+			local t = GetTickCount()
 			LR_AS_Module[v].SaveData(DB)
+			text[#text + 1] = sformat("[LR] %s, %0.3f s", v, (GetTickCount() - t) * 1.0 / 1000)
 		end
 	end
+	LR.Log(text)
 	LR.CloseDB(DB)
-	Log(sformat("[LR] AS save cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
+	Log(sformat("[LR] AS save ends, cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
 end
 
 function LR_AS_Base.AutoSave()
@@ -179,6 +203,7 @@ function LR_AS_Base.ResetData()
 
 	if RefreshTimeMonday > RC_ResetTime.ClearTimeMonday or RefreshTimeFriday > RC_ResetTime.ClearTimeFriday or RefreshTimeEveryDay > RC_ResetTime.ClearTimeEveryDay then
 		if RefreshTimeMonday > RC_ResetTime.ClearTimeMonday then
+			LR.Log("Weekly reset...")
 			LR_AS_Base.ResetDataMonday(DB)
 			LR_AS_Base.ResetDataFriday(DB)
 			LR_AS_Base.ResetDataEveryDay(DB)
@@ -195,6 +220,7 @@ function LR_AS_Base.ResetData()
 				end
 			end)
 		elseif RefreshTimeFriday > RC_ResetTime.ClearTimeFriday then
+			LR.Log("Friday reset...")
 			LR_AS_Base.ResetDataFriday(DB)
 			LR_AS_Base.ResetDataEveryDay(DB)
 
@@ -202,6 +228,7 @@ function LR_AS_Base.ResetData()
 			RC_ResetTime.ClearTimeFriday = CurrentTime
 			RC_ResetTime.ClearTimeEveryDay = CurrentTime
 		elseif RefreshTimeEveryDay > RC_ResetTime.ClearTimeEveryDay then
+			LR.Log("Everyday reset...")
 			LR_AS_Base.ResetDataEveryDay(DB)
 			--
 			RC_ResetTime.ClearTimeEveryDay = CurrentTime
@@ -220,6 +247,8 @@ function LR_AS_Base.ResetData()
 			DB_REPLACE2:BindAll(v, RC_ResetTime[v])
 			DB_REPLACE2:Execute()
 		end
+	else
+		LR.Log("Nothing reset....")
 	end
 
 	LR.CloseDB(DB)
@@ -230,15 +259,25 @@ end
 ---------------------------------
 function LR_AS_Base.FIRST_LOADING_END()
 	local _begin_time = GetTickCount()
+	LR.Log("[LR] AS FIRST_LOADING_END RESET DATA begin ...")
+	LR_AS_Base.ResetData()
+	LR.Log(sformat("[LR] AS FIRST_LOADING_END RESET DATA end, cost %d ms", GetTickCount() - _begin_time))
+
+	LR.Log("[LR] AS FIRST_LOADING_END load data begin ...")
+	_begin_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "AS_BASE_FIRST_LOADING_END_AA481F7DB2E1EC1CBD53005AF1A11D3F")
+	local text = {}
 	for k, v in pairs(Module_List) do
 		if LR_AS_Module[v] and LR_AS_Module[v].FIRST_LOADING_END then
+			local t = GetTickCount()
 			LR_AS_Module[v].FIRST_LOADING_END(DB)
+			text[#text + 1] = sformat("[LR] %s loaded..., cost %d ms", v, GetTickCount() - t)
 		end
 	end
+	LR.Log(text)
 	LR.CloseDB(DB)
-	Log(sformat("[LR] AS FIRST_LOADING_END load data cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
+	LR.Log(sformat("[LR] AS FIRST_LOADING_END load data end, cost %d ms", GetTickCount() - _begin_time))
 	--FireEvent("LR_ACS_REFRESH_FP")
 
 	if not LR_AS_Base.UsrData.bRecord and LR_AS_Base.UsrData.nUpdateDel ~= VERSION then
@@ -250,8 +289,12 @@ function LR_AS_Base.FIRST_LOADING_END()
 		LR_AS_Base.UsrData.nUpdateDel = VERSION
 	end
 
-	LR_AS_Base.ResetData()
-	LR.DelayCall(6000, function() LR_AS_Base.AutoSave() end)
+	LR.DelayCall(300, function()
+			local t = GetTickCount()
+			LR.Log("[LR] FIRST_LOADING_END AUTO SAVE BEGIN...")
+			LR_AS_Base.AutoSave()
+			LR.Log(sformat("[LR] FIRST_LOADING_END AUTO SAVE ENDS...., cost %d ms", GetTickCount() - t))
+		end)
 end
 
 LR.RegisterEvent("FIRST_LOADING_END", function() LR_AS_Base.FIRST_LOADING_END() end)
@@ -274,8 +317,10 @@ function LR_AS_Base.ON_FRAME_CREATE()
 					frame:Lookup("Btn_Sure"):Enable(true)
 				end
 			end)
-			Log("[LR_AccountStatistics]:Exit save")
+			LR.Log("[LR_AccountStatistics]:Exit save begin....")
+			local t = GetTickCount()
 			LR_AS_Base.AutoSave()
+			LR.Log(sformat("[LR_AccountStatistics]:Exit save end, cost %d ms", GetTickCount() - t))
 			if LR_AS_Trade then
 				LR_AS_Trade.SaveTempData(true)
 				LR_AS_Trade.MoveData2MainTable()
@@ -288,8 +333,10 @@ function LR_AS_Base.ON_FRAME_CREATE()
 			local _now = GetTickCount()
 			if _now - _auto_save_lasttime2 > 3 * 60 * 1000 then
 				_auto_save_lasttime2 = _now
-				Log("[LR_AccountStatistics]:Esc save")
+				LR.Log("[LR_AccountStatistics]:Esc save begin ... ")
+				local t = GetTickCount()
 				LR_AS_Base.AutoSave()
+				LR.Log(sformat("[LR_AccountStatistics]:Esc save end, cost %d ms", GetTickCount() - t))
 			end
 		end
 		FireEvent("LR_ACS_REFRESH_FP")
@@ -467,51 +514,6 @@ function LR_AS_Base.SeparateUsrList()
 		end
 	end)
 
-
---[[	tsort(TempTable, function(a, b)
-		if a[nKey] and b[nKey] then
-			if nSort  ==  "asc" then
-				if a[nKey]  ==  b[nKey] then
-					if  a["nLevel"]  ==  b["nLevel"] then
-						if a["dwForceID"]  ==  b["dwForceID"] then
-							if a["szName"]  ==  b["szName"] then
-								return a["dwID"] < b["dwID"]
-							else
-								return a["szName"] < b["szName"]
-							end
-						else
-							return a["dwForceID"] < b["dwForceID"]
-						end
-					else
-						return a["nLevel"] > b["nLevel"]
-					end
-				else
-					return a[nKey] < b[nKey]
-				end
-			else
-				if a[nKey]  ==  b[nKey] then
-					if  a["nLevel"]  ==  b["nLevel"] then
-						if a["dwForceID"]  ==  b["dwForceID"] then
-							if a["szName"]  ==  b["szName"] then
-								return a["dwID"] > b["dwID"]
-							else
-								return a["szName"] > b["szName"]
-							end
-						else
-							return a["dwForceID"] < b["dwForceID"]
-						end
-					else
-						return a["nLevel"] < b["nLevel"]
-					end
-				else
-					return a[nKey] > b[nKey]
-				end
-			end
-		else
-			return true
-		end
-	end)]]
-
 	local TempTable_NotCal = {}
 	local TempTable_Cal = {}
 
@@ -528,17 +530,26 @@ function LR_AS_Base.SeparateUsrList()
 			bCal = false
 		end
 
-		local GroupChose = LR_AS_Group.GroupChose
 		local isExist = true
-		if next(GroupChose) ~= nil then
+		if LR_AS_Group.ShowGroupType ==  1 then
 			isExist = false
-			for k, v in pairs(GroupChose) do
-				if LR_AS_Group.ifGroupHasUser(key, v) then
-					isExist = true
+			local AccountGroupChoose = LR_AS_Group.AccountGroupChoose
+			local tData = LR_AS_Group.GetAccountGroup(AccountGroupChoose.account_code, AccountGroupChoose.server)
+			if tData[key] then
+				isExist = true
+			end
+		elseif LR_AS_Group.ShowGroupType ==  2 then
+			local GroupChose = LR_AS_Group.GroupChose
+			if next(GroupChose) ~= nil then
+				isExist = false
+				for k, v in pairs(GroupChose) do
+					if LR_AS_Group.ifGroupHasUser(key, v) then
+						isExist = true
+					end
 				end
 			end
 		end
-
+		--
 		if LR_AS_Group.ShowDataNotInGroup then
 			if bCal and isExist then
 				tinsert(TempTable_Cal, TempTable[i])
@@ -621,6 +632,27 @@ function LR_AS_Base.PopupPlayerMenu(hComboBox, fnAction, all_option)
 	PopupMenu(m)
 end
 
+---------------------------------
+---压力测试
+---------------------------------
+local StressTest = {}
+
+function StressTest.IniDB()
+	LR.Log("[LR] AS StressTest IniDB begin....")
+	local _begin_time = GetTickCount()
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
+	local DB = LR.OpenDB(path, "AS_StressTestIniDB_0sdfdsdfsdfsdfsddfC9")
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].StressTest and LR_AS_Module[v].StressTest.IniDB then
+			--Log(sformat("%s\n", v))
+			LR_AS_Module[v].StressTest.IniDB(DB)
+		end
+	end
+	LR.CloseDB(DB)
+	LR.Log(sformat("[LR] AS StressTest IniDB end, cost %d ms", GetTickCount() - _begin_time))
+end
+
+LR_AS_Base.StressTest = StressTest
 ---------------------------------
 ---打开设置界面
 ---------------------------------

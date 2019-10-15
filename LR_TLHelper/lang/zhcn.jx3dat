@@ -39,4 +39,5 @@ data={
 	
 	--20170419add--
 	["Press Alt+Ctrl Move"]="按住Alt+Ctrl进行拖动、移动位置",
+	["Hide bar"]="隐藏插件的神机条和技能面板",
 }

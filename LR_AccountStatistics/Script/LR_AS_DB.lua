@@ -9,7 +9,7 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20180420"
+local VERSION = "20190627"
 -------------------------------------------------------------
 LR_AS_DB = LR_AS_DB or {}
 LR_AS_DEBUG = false
@@ -23,10 +23,6 @@ local schema_group_list = {
 	data = {
 		{name = "groupID", 	sql = "groupID INTEGER"},		--主键
 		{name = "szName", sql = "szName VARCHAR(30) DEFAULT('DEFAULT GROUP')"},
-		{name = "nCurrentStamina", 	sql = "nCurrentStamina INTEGER DEFAULT(0)"},
-		{name = "nMaxStamina", 	sql = "nMaxStamina INTEGER DEFAULT(0)"},
-		{name = "nCurrentThew", 	sql = "nCurrentThew INTEGER DEFAULT(0)"},
-		{name = "nMaxThew", 	sql = "nMaxThew INTEGER DEFAULT(0)"},
 		{name = "SaveTime", 	sql = "SaveTime INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( groupID )"},
@@ -42,6 +38,19 @@ local schema_player_group = {
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
 }
 
+local schema_stamina_data = {
+	name = "schema_stamina_data",
+	version = VERSION,
+	data = {
+		{name = "hash01", 	sql = "hash01 VARCHAR(999)"},		--主键账号code
+		{name = "hash02", 	sql = "hash02 VARCHAR(999)"},		--主键区服hash
+		{name = "nCurrentStamina", sql = "nCurrentStamina INTEGER DEFAULT(0)"},			--精力值
+		{name = "nMaxStamina", sql = "nMaxStamina INTEGER DEFAULT(0)"},			--精力值
+		{name = "SaveTime", 	sql = "SaveTime INTEGER DEFAULT(0)"},	--保存时间
+	},
+	primary_key = {sql = "PRIMARY KEY ( hash01, hash02 )"},
+}
+
 local schema_player_list = {
 	name = "player_list",
 	version = VERSION,
@@ -55,6 +64,8 @@ local schema_player_list = {
 		{name = "loginServer", sql = "loginServer VARCHAR(20) DEFAULT('')"},
 		{name = "realArea", sql = "realArea VARCHAR(20) DEFAULT('')"},
 		{name = "realServer", sql = "realServer VARCHAR(20) DEFAULT('')"},
+		{name = "hash01", 	sql = "hash01 VARCHAR(999) DEFAULT('')"},		--账号code
+		{name = "hash02", 	sql = "hash02 VARCHAR(999) DEFAULT('')"},		--人物code
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
 }
@@ -67,23 +78,29 @@ local schema_player_info = {
 		{name = "nGold", 	sql = "nGold INTEGER DEFAULT(0)"},
 		{name = "nSilver", 	sql = "nSilver INTEGER DEFAULT(0)"},
 		{name = "nCopper", 	sql = "nCopper INTEGER DEFAULT(0)"},
-		{name = "JianBen", 	sql = "JianBen INTEGER DEFAULT(0)"},
-		{name = "BangGong", 	sql = "BangGong INTEGER DEFAULT(0)"},
-		{name = "XiaYi", 	sql = "XiaYi INTEGER DEFAULT(0)"},
-		{name = "WeiWang", 	sql = "WeiWang INTEGER DEFAULT(0)"},
-		{name = "ZhanJieJiFen", 	sql = "ZhanJieJiFen INTEGER DEFAULT(0)"},
+		{name = "JianBen", 	sql = "JianBen INTEGER DEFAULT(0)"},		--监本
+		{name = "remainJianBen", 	sql = "remainJianBen INTEGER DEFAULT(1500)"},		--可获取监本
+		{name = "BangGong", 	sql = "BangGong INTEGER DEFAULT(0)"},	--帮贡
+		{name = "remainBangGong", 	sql = "remainBangGong INTEGER DEFAULT(200000)"},	--可获帮贡
+		{name = "XiaYi", 	sql = "XiaYi INTEGER DEFAULT(0)"},		--狭义
+		{name = "remainXiaYi", 	sql = "remainXiaYi INTEGER DEFAULT(9000)"},		--可获狭义
+		{name = "WeiWang", 	sql = "WeiWang INTEGER DEFAULT(0)"},	--威望
+		{name = "remainWeiWang", 	sql = "remainWeiWang INTEGER DEFAULT(200000)"},	--可获威望
+		{name = "ZhanJieJiFen", 	sql = "ZhanJieJiFen INTEGER DEFAULT(0)"},	--战阶积分
+		{name = "remainZhanJieJiFen", 	sql = "remainZhanJieJiFen INTEGER DEFAULT(0)"},	--战阶升级百分比
 		{name = "ZhanJieDengJi", 	sql = "ZhanJieDengJi INTEGER DEFAULT(0)"},
-		{name = "MingJianBi", 	sql = "MingJianBi INTEGER DEFAULT(0)"},
+		{name = "MingJianBi", 	sql = "MingJianBi INTEGER DEFAULT(0)"},		--名剑币
+		{name = "remainMingJianBi", 	sql = "remainMingJianBi INTEGER DEFAULT(2400)"},		--可获名剑币
 		{name = "szTitle", sql = "szTitle VARCHAR(20) DEFAULT('')"},
-		{name = "nCurrentStamina", 	sql = "nCurrentStamina INTEGER DEFAULT(0)"},
-		{name = "nMaxStamina", 	sql = "nMaxStamina INTEGER DEFAULT(0)"},
-		{name = "nCurrentThew", 	sql = "nCurrentThew INTEGER DEFAULT(0)"},
-		{name = "nMaxThew", 	sql = "nMaxThew INTEGER DEFAULT(0)"},
 		{name = "nCurrentTrainValue", 	sql = "nCurrentTrainValue INTEGER DEFAULT(0)"},
 		{name = "nCamp", 	sql = "nCamp INTEGER DEFAULT(0)"},
 		{name = "szTongName", sql = "szTongName VARCHAR(20) DEFAULT('')"},
-		{name = "remainJianBen", 	sql = "remainJianBen INTEGER DEFAULT(0)"},
+		{name = "nVigor", 	sql = "nVigor INTEGER DEFAULT(0)"},			--100级新版精力
+		{name = "nMaxVigor", 	sql = "nMaxVigor INTEGER DEFAULT(10000)"},			--100级新版最大精力
+		{name = "nVigorRemainSpace", 	sql = "nVigorRemainSpace INTEGER DEFAULT(3000)"},			--100级新版精力，可获
 		{name = "SaveTime", sql = "SaveTime INTEGER DEFAULT(0)"},
+		{name = "LastLoginTime", sql = "LastLoginTime INTEGER DEFAULT(0)"},
+		{name = "LastLogoutTime", sql = "LastLogoutTime INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey )"},
 }
@@ -116,6 +133,7 @@ local schema_richang_data = {
 		{name = "XUN", 	sql = "XUN TEXT DEFAULT('{}')"},
 		{name = "TU", 	sql = "TU TEXT DEFAULT('{}')"},
 		{name = "MI", 	sql = "MI TEXT DEFAULT('{}')"},
+		{name = "ZHENYINGRICHANG", 	sql = "ZHENYINGRICHANG TEXT DEFAULT('{}')"},
 		{name = "HUIGUANG", 	sql = "HUIGUANG TEXT DEFAULT('{}')"},
 		{name = "HUASHAN", 	sql = "HUASHAN TEXT DEFAULT('{}')"},
 		{name = "LONGMENJUEJING", 	sql = "LONGMENJUEJING TEXT DEFAULT('{}')"},
@@ -283,6 +301,18 @@ local schema_equipment_data = {
 		{name = "bDel", 	sql = "bDel INTEGER DEFAULT(0)"},
 	},
 	primary_key = {sql = "PRIMARY KEY ( szKey, nSuitIndex )"},
+}
+
+local schema_wltj_data = {
+	name = "wltj_data",
+	version = VERSION,
+	data = {
+		{name = "szKey", 	sql = "szKey VARCHAR(80)"},		--主键
+		{name = "tCommon", 	sql = "tCommon TEXT DEFAULT('[]')"},
+		{name = "t5R", 	sql = "t5R TEXT DEFAULT('[]')"},
+		{name = "t10R", 	sql = "t10R TEXT DEFAULT('[]')"},
+	},
+	primary_key = {sql = "PRIMARY KEY ( szKey )"},
 }
 
 --收支交易数据库
@@ -456,6 +486,8 @@ local tTableConfig = {
 	schema_mail_receive_time,
 	schema_achievement_data,
 	schema_equipment_data,
+	schema_wltj_data,
+	schema_stamina_data,
 }
 
 function LR_AS_DB.IniMainDB()
@@ -565,6 +597,21 @@ function LR_AS_DB.IniQYHistoryDB()
 	local path = SaveDataPath
 	local db_name = "qiyu_history.db"
 	LR.IniDB(SaveDataPath, db_name, tTableConfig)
+end
+
+local Module_List = {
+	"PlayerList", "PlayerInfo", "Group", "ItemRecord", "EquipmentRecord", "BookRd", "AchievementRecord", "FBList", "RC", "QY",
+}
+function LR_AS_DB.RepairDB()
+	local path = sformat("%s\\%s", SaveDataPath, db_name)
+	local DB = LR.OpenDB(path, "AS_DB_RepairDB_fkjsaldkjfljklasjdkfjlksadjflksadjflkdsjaf")
+	for k, v in pairs(Module_List) do
+		if LR_AS_Module[v] and LR_AS_Module[v].RepairDB then
+			LR_AS_Module[v].RepairDB(DB)
+		end
+	end
+	LR.CloseDB(DB)
+	LR_AS_DB.MainDBVacuum(true)
 end
 
 ----------------------------------------------

@@ -6,8 +6,98 @@ local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, tabl
 local AddonPath="Interface\\LR_Plugin\\LR_1Base"
 local SaveDataPath="Interface\\LR_Plugin@DATA\\LR_1Base"
 local _L = LR.LoadLangPack(AddonPath)
----------------------------------------------------------------
-LR = LR or {}
+--------------------------------------------------------------
+----------Web
+--------------------------------------------------------------
+local WEB_LOADING_STATE = {
+	NONE = 0,
+	LOADING = 1,
+	DONE = 2,
+}
+local EXPIRE_TIME = 1000 * 60
+local _Web = {}
+_Web.Queue = {}
+_Web.nExpireTime = nil
+
+function _Web.AddQueue(szName, data)
+	tinsert(_Web.Queue, {szName = szName, url = data. url, fnAction = data.fnAction, state = WEB_LOADING_STATE.NONE})
+end
+
+function _Web.Go(data)
+	local hWeb = LR.hWeb
+	hWeb:Navigate(data.url)
+	hWeb.OnDocumentComplete = function()
+		local szUrl, szTitle, szContent = hWeb:GetLocationURL(), hWeb:GetLocationName(), hWeb:GetDocument()
+		if szUrl ~= "about:blank" then
+			pcall(data.fnAction, szUrl, szTitle, szContent)
+			if #_Web.Queue > 0 then
+				_Web.Queue[1].state = WEB_LOADING_STATE.DONE
+				Output("11")
+			end
+			hWeb:Navigate("about:blank")
+		end
+	end
+	hWeb.OnWebLoadEnd = function()
+		----
+	end
+end
+
+function _Web.GetData()
+	local hWeb = LR.hWeb
+	local szUrl, szTitle, szContent = hWeb:GetLocationURL(), hWeb:GetLocationName(), hWeb:GetDocument()
+	return szUrl, szTitle, szContent
+end
+
+function _Web.BreatheCall()
+	local nTime = GetTime()
+	if _Web.nExpireTime then
+		if #_Web.Queue > 0 then
+			if _Web.Queue[1].state == WEB_LOADING_STATE.DONE then
+				tremove(_Web.Queue, 1)
+				_Web.nExpireTime = nil
+			elseif _Web.nExpireTime < nTime then
+				local data = tremove(_Web.Queue, 1)
+				if data then
+					pcall(data.fnAction)
+				end
+				_Web.nExpireTime = nil
+			end
+		end
+	end
+
+	if _Web.nExpireTime == nil then
+		if #_Web.Queue > 0 then
+			local page = _Web.Queue[1]
+			_Web.Go(page)
+			_Web.nExpireTime = GetTime() + EXPIRE_TIME
+		end
+	end
+end
+LR.BreatheCall("WEB", function() _Web.BreatheCall() end)
+
+LR.Web = {}
+LR.Web.Go = _Web.AddQueue
+
+function LR.Web.t(nType)
+
+end
+
+function LR.TTT()
+	local t = {}
+	local nCount = g_tTable.PathList:GetRowCount()
+	Output(nCount)
+	for i = 1, nCount do
+		local tPath = g_tTable.PathList:GetRow(i)
+		if tPath then
+			tinsert(t, tPath)
+		end
+	end
+	SaveLUAData(sformat("%s\\Path", SaveDataPath), t, "\t")
+end
+function LR.TTT2()
+	Output(GetRootPath())
+	local szFile = GetOpenFileName(sformat("%s", _L["Choose file"]), "Save data File(*.jx3dat)\0*.jx3dat\0All Files(*.*)\0*.*\0", "k:\\downloads33\\")
+end
 
 --------------------------------------------------------------
 ----------物品格子
@@ -489,28 +579,29 @@ function LR.hsv2rgb(h, s, v)
 end
 
 function LR.rgb2hsv(r, g, b)
-	local r=r/255
-	local g=g/255
-	local b=b/255
-	local MAX,MIN
-	if r>g then
-		MAX=mmax(r,b)
-		MIN=mmin(g,b)
+	local r = r / 255
+	local g = g / 255
+	local b = b / 255
+	local MAX, MIN
+	local h, s, v
+	if r > g then
+		MAX = mmax(r, b)
+		MIN = mmin(g, b)
 	else
-		MAX=mmax(g,b)
-		MIN=mmin(r,b)
+		MAX = mmax(g, b)
+		MIN = mmin(r, b)
 	end
-	local v=MAX
-	local delta=MAX-MIN
+	local v = MAX
+	local delta = MAX - MIN
 
 	if MAX == 0 then
-		s=0
+		s = 0
 	else
-		s=delta / MAX
+		s = delta / MAX
 	end
 
-	if MAX==MIN then
-		h=0
+	if MAX == MIN then
+		h = 0
 	else
 		if r == MAX and g >= b then
 			h = 60 * ( g - b ) / delta + 0
@@ -530,10 +621,10 @@ function LR.rgb2hsv(r, g, b)
 		h = h +360
 	end
 
-	return h, mfloor(s*100 + 0.5), mfloor(v*100 + 0.5)
+	return h, mfloor(s * 100 + 0.5), mfloor(v * 100 + 0.5)
 end
 
-ColorPanel = CreateAddon("ColorPanel")
+ColorPanel = _G2.CreateAddon("ColorPanel")
 ColorPanel:BindEvent("OnFrameDragEnd", "OnDragEnd")
 ColorPanel:BindEvent("OnFrameDestroy", "OnDestroy")
 
@@ -806,7 +897,7 @@ end
 
 
 ------字体面板
-_FontPanel = CreateAddon("_FontPanel")
+_FontPanel = _G2.CreateAddon("_FontPanel")
 _FontPanel:BindEvent("OnFrameDragEnd", "OnDragEnd")
 _FontPanel:BindEvent("OnFrameDestroy", "OnDestroy")
 
@@ -859,6 +950,7 @@ local _FontSheild = {
 	[182] = true,
 	[183] = true,
 	[211] = true,
+	[288] = true,
 }
 
 function _FontPanel:Init(fnAction,rgb)
@@ -874,15 +966,16 @@ function _FontPanel:Init(fnAction,rgb)
 	local hScroll = LR.AppendUI("Scroll", hPageSet, "Scroll", {x = 0, y = 0, w = 340, h = 420})
 
 	_FontPanel.hSelected = {}
-	for i = 1, 241, 1 do
+
+	local add = function(i)
 		if not _FontSheild[i] then
-			local handle = LR.AppendUI("Handle", hScroll, sformat("Handle_%d", i), {w = 85, h = 40})
-			local hover = LR.AppendUI("Image", handle, sformat("Hover_%d", i), {w = 85, h = 40})
+			local handle = LR.AppendUI("Handle", hScroll, sformat("Handle_%d", i), {w = 85, h = 30})
+			local hover = LR.AppendUI("Image", handle, sformat("Hover_%d", i), {w = 85, h = 30})
 			hover:FromUITex("ui/image/common/box.uitex", 1)
 			hover:Hide()
 			hover:SetImageType(10)
 
-			local selected = LR.AppendUI("Image", handle, sformat("Selected_%d", i), {w = 85, h = 40})
+			local selected = LR.AppendUI("Image", handle, sformat("Selected_%d", i), {w = 85, h = 30})
 			selected:FromUITex("ui/image/common/box.uitex", 10)
 			selected:Hide()
 			if i == _FontPanel.selected then
@@ -890,12 +983,11 @@ function _FontPanel:Init(fnAction,rgb)
 			end
 			_FontPanel.hSelected[i] = selected
 
-
-			local text = LR.AppendUI("Text", handle, sformat("Text_%d", i), {w = 85, h = 40, text = sformat(_L["Font%d"], i)})
+			local text = LR.AppendUI("Text", handle, sformat("Text_%d", i), {w = 85, h = 30, text = sformat(_L["Font%d"], i)})
 			text:SetHAlign(1)
 			text:SetVAlign(1)
 			text:SetFontScheme(i)
-			--text:SetFontColor(255, 255, 255)
+			text:SetFontColor(255, 255, 255)
 
 			handle.OnClick = function()
 				if _FontPanel.hSelected[_FontPanel.selected] then
@@ -918,6 +1010,11 @@ function _FontPanel:Init(fnAction,rgb)
 				hover:Hide()
 			end
 		end
+	end
+
+	local fonts = {1, 2, 4, 7, 10, 15, 19, 20, 21, 23, 40, 44, 50, 99, 167, 168, 192, 199, 201, 207, 208, 209, 226, 230, 231, 232, 233, 234, 237, 238, 247, 248, 251, 252, 257, 259, 260, 262, 263, 264, 265, 273, 274}
+	for k, v in pairs(fonts) do
+		add(v)
 	end
 
 	hScroll:UpdateList()
@@ -1201,6 +1298,186 @@ end })
 
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() infopanel.ON_BG_CHANNEL_MSG() end)
 
+--[[local _C3 = {}
+function _C3.ON_FRAME_CREATE()
+	local frame = arg0
+	local szName = frame:GetName()
+	if szName == "GuildListPanel" then
+		local edit = frame:Lookup("Edit_JoinGuild")
+		local OnSetFocus = function()
+			local edit = frame:Lookup("Edit_JoinGuild")
+			local w, h = edit:GetSize()
+			local x, y = edit:GetAbsPos()
+			local m = {nMiniWidth = w, x = x, y = y + h, bDisableSound = true, bShowKillFocus = true}
+			m[#m + 1] = {	szOption = _L["Enter name"], fnAction = function() edit:SetText(_L["__blank"]) end,}
+			PopupMenu(m)
+		end
+		if LR_TOOLS.CheckS() then
+			HookTableFunc(edit, "OnSetFocus", function() OnSetFocus() end)
+		end
+	end
+end
+LR.RegisterEvent("ON_FRAME_CREATE", function() _C3.ON_FRAME_CREATE() end)]]
+----------------------------------------------------------
+----人物特征码
+----------------------------------------------------------
+local Role_Code = {}
+---
+Role_Code.DATA_CACHE = {}	--存放已有数据(关键字是area_server_dwID)
+Role_Code.DATA_CACHE2 = {}	--存放已有数据(关键字是area_server_szName)
+Role_Code.DATA_2B_SAVE = {}		--存放新出现的需要保存的数据
+---
+Role_Code.DB_PATH = sformat("%s\\data", SaveDataPath)
+Role_Code.DB_NAME = "role_code.db"
+Role_Code.VERSION = "20190624"
+---数据库
+local schema_role_code_db = {
+	name = "role_code_db",
+	version = Role_Code.VERSION,
+	data = {
+		{name = "szKey", 	sql = "szKey VARCHAR(100) DEFAULT('')"},  --主键
+		{name = "role_code", 	sql = "role_code VARCHAR(999) DEFAULT('')"},
+		{name = "szName", 	sql = "szName VARCHAR(30) DEFAULT('')"},
+	},
+	primary_key = {sql = "PRIMARY KEY ( szKey )"},
+}
+--
+function Role_Code.IniDB()
+	local tTableConfig = {
+		schema_role_code_db,
+	}
+	LR.IniDB(Role_Code.DB_PATH, Role_Code.DB_NAME, tTableConfig)
+end
+Role_Code.IniDB()
+--
+function Role_Code.SaveData()
+	local data = clone(Role_Code.DATA_2B_SAVE)
+	Role_Code.DATA_2B_SAVE = {}
+	if next(data) == nil then
+		return
+	end
+	--
+	local path = sformat("%s\\%s", Role_Code.DB_PATH, Role_Code.DB_NAME)
+	local DB = LR.OpenDB(path, "LR_Role_Code_Save_#234!dfadf23431ofjoijl314")
+	local DB_REPLACE = DB:Prepare("REPLACE INTO role_code_db ( szKey, role_code, szName ) VALUES ( ?, ?, ? )")
+	for k, v in pairs(data) do
+		DB_REPLACE:ClearBindings()
+		DB_REPLACE:BindAll(v.szKey, v.role_code, v.szName)
+		DB_REPLACE:Execute()
+	end
+	LR.CloseDB(DB)
+end
+--
+function Role_Code.LoadDB(data)
+	local bHave, role = Role_Code.CheckExist(data)
+	if not bHave then
+		if data.szName or data.dwID then
+			local ServerInfo = {GetUserServer()}
+			local realArea, realServer = ServerInfo[5], ServerInfo[6]
+			local path = sformat("%s\\%s", Role_Code.DB_PATH, Role_Code.DB_NAME)
+			local DB = LR.OpenDB(path, "LR_Role_Code_Load_C3BC6B1CA99C4C062BD1DDBD297DDD28")
+			local DB_SELECT_SQL = ""
+			if data.dwID then
+				DB_SELECT_SQL = sformat("SELECT * FROM role_code_db WHERE szKey = '%s_%s_%d'", realArea, realServer, data.dwID)
+			elseif data.szName then
+				DB_SELECT_SQL = sformat("SELECT * FROM role_code_db WHERE szName = '%s'", data.szName)
+			end
+			local DB_SELECT = DB:Prepare(DB_SELECT_SQL)
+			local tData = DB_SELECT:GetAll()
+			LR.CloseDB(DB)
+			if next(tData) ~= nil then
+				local v = tData[1]
+				Role_Code.DATA_CACHE[v.szKey] = clone(v)
+				Role_Code.DATA_CACHE2[sformat("%s_%s_%s", realArea, realServer, v.szName)] = clone(v)
+			end
+		end
+	end
+end
+--
+function Role_Code.CheckExist(data)
+	local ServerInfo = {GetUserServer()}
+	local realArea, realServer = ServerInfo[5], ServerInfo[6]
+	if data.dwID then
+		local role = Role_Code.DATA_CACHE[sformat("%s_%s_%d", realArea, realServer, data.dwID)]
+		if role then
+			return true, role
+		end
+	elseif data.szName then
+		local role = Role_Code.DATA_CACHE2[sformat("%s_%s_%s", realArea, realServer, data.szName)]
+		if role then
+			return true, role
+		end
+	end
+	return false, nil
+end
+
+
+function Role_Code.PARTY_UPDATE_BASE_INFO()
+	local me = GetClientPlayer()
+	if not me or IsRemotePlayer(me.dwID) then
+		return
+	end
+	local team = GetClientTeam()
+	if not team then
+		return
+	end
+	local data = {dwID = me.dwID, code = LR.GetUserCode(), szName = me.szName}
+	LR.BgTalk(PLAYER_TALK_CHANNEL.RAID, "LR_TeamHelper", "SEND_SELF_CODE", data)
+end
+
+function Role_Code.ON_BG_CHANNEL_MSG()
+	local szKey = arg0
+	local nChannel = arg1
+	local dwTalkerID = arg2
+	local szTalkerName = arg3
+	local data = arg4
+	if LR.IsMapBlockAddon() then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me or IsRemotePlayer(me.dwID) or dwTalkerID == me.dwID then
+		return
+	end
+	if szKey == "LR_TeamHelper" then
+		if data[1] == "SEND_SELF_CODE" then
+			local v = data[2]
+			local ServerInfo = {GetUserServer()}
+			local realArea, realServer = ServerInfo[5], ServerInfo[6]
+			local szKey = sformat("%s_%s_%d", realArea, realServer, v.dwID)
+			if not Role_Code.DATA_CACHE[szKey] then
+				Role_Code.DATA_CACHE[szKey] = {szKey = szKey, role_code = v.code, szName = v.szName}
+				Role_Code.DATA_CACHE[sformat("%s_%s_%s", realArea, realServer, v.szName)] = {szKey = szKey, role_code = v.code, szName = v.szName}
+				Role_Code.DATA_2B_SAVE[szKey] = {szKey = szKey, role_code = v.code, szName = v.szName}
+			end
+		end
+	elseif szKey == "LR_TeamRequest" then
+		if data[1] == "ANSWER" then
+			local v = data[2]
+			local ServerInfo = {GetUserServer()}
+			local realArea, realServer = ServerInfo[5], ServerInfo[6]
+			local szKey = sformat("%s_%s_%d", realArea, realServer, v.dwID)
+			if not Role_Code.DATA_CACHE[szKey] then
+				Role_Code.DATA_CACHE[szKey] = {szKey = szKey, role_code = v.uc, szName = v.szName}
+				Role_Code.DATA_CACHE[sformat("%s_%s_%s", realArea, realServer, v.szName)] = {szKey = szKey, role_code = v.uc, szName = v.szName}
+				Role_Code.DATA_2B_SAVE[szKey] = {szKey = szKey, role_code = v.uc, szName = v.szName}
+			end
+		end
+	end
+end
+
+function Role_Code.ON_FRAME_CREATE()
+	local szName = arg0:GetName()
+	if szName  ==  "ExitPanel" then
+		Role_Code.SaveData()
+	elseif szName == "OptionPanel" then
+		Role_Code.SaveData()
+	end
+end
+
+LR.RegisterEvent("PARTY_UPDATE_BASE_INFO", function() Role_Code.PARTY_UPDATE_BASE_INFO() end)
+LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() Role_Code.ON_BG_CHANNEL_MSG() end)
+LR.RegisterEvent("ON_FRAME_CREATE", function() Role_Code.ON_FRAME_CREATE() end)
+LR.Role_Code = Role_Code
 ----------------------------------------------------------
 ----团队告示
 ----------------------------------------------------------
@@ -1383,7 +1660,7 @@ function teamnotice.PARTY_ADD_MEMBER()
 	--Output("PARTY_DELETE_MEMBER")
 	local dwTeamID = arg0
 	local dwMemberID = arg1
-	local nGroupIndex =arg2
+	local nGroupIndex = arg2
 	if LR.IsMapBlockAddon() then
 		return
 	end
@@ -1445,11 +1722,12 @@ function teamnotice.LR_TeamRequest()
 		return
 	end
 	if data[1] == "ASK" then
-		local t = {szName = me.szName, dwID = me.dwID, dwKungfuID = UI_GetPlayerMountKungfuID(), bGongZhan = LR.HasBuff(LR.GetBuffList(me), 3219)}
+		local user_code = LR.GetUserCode()
+		local role_type = me.nRoleType
+		local t = {szName = me.szName, rt = role_type, dwID = me.dwID, dwKungfuID = UI_GetPlayerMountKungfuID(), bGongZhan = LR.HasBuff(LR.GetBuffList(me), 3219), uc = user_code}
 		LR.BgTalk(szTalkerName, "LR_TeamRequest", "ANSWER", t)
 	end
 end
-
 
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() teamnotice.ON_BG_CHANNEL_MSG() end)
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() teamnotice.LR_TeamRequest() end)

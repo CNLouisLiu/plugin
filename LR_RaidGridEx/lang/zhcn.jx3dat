@@ -57,6 +57,7 @@ data={
 	["Map:"]="地图：",
 	["Camp:"]="阵营：",
 	
+	--心法
 	["xia"]="侠",
 	["xi"]="洗",
 	["yi"]="易",
@@ -81,6 +82,11 @@ data={
 	["fen"]="分",
 	["mo"]="莫",
 	["zhi"]="知",
+	--20161012add--
+	["ba"]="霸",
+	--20181023add--
+	["peng"]="蓬",
+	
 	
 	["Extraterrestrials"]="天外来客",
 	["Fly up"]="飞升大法",
@@ -279,9 +285,6 @@ data={
 
 	--20160601add--
 	["End GoldTeam"]="收入已发放，请查看！",
-
-	--20161012add--
-	["ba"]="霸",
 
 	--20161109add--
 	["BaDao"]="霸刀",
@@ -572,4 +575,60 @@ data={
 	["New style 2 tip"]="新(包括刷新)的BUFF置尾显示,有BUFF消失后，其余BUFF自动缩进",
 	["To make this function work normally, please turn off player sound because it may interrupt this sound."]="为了使这个功能正常工作，请关闭角色音效。因为当有大量角色音效触发时，极易被打断或覆盖。",
 	["TeamBuffTool_Panel_Tip03\n"]="请及时导出自定义的BUFF数据，以防插件更新时被默认数据覆盖。",
+
+	--20190101add--
+	["Auto change color in common quest"]="世界公共任务自动切换颜色",
+	["Name text tip01"]="1、需要开启系统的任务追踪面板\n2、当系统的任务追踪面板切换到世界任务页时，会自动切换成按阵营着色\n3、在野外地图时，请调整相同阵营的人员到相同小队，以便激活阵眼以及奶妈操作",
+	["Clear history"]="清除历史记录",
+
+	--20190103add--
+	["Dungeon data"]="副本数据",
+	["Custom data"]="自定义数据",
+	["Sure to delete group: %s ?"]="确定要删除分组：%s？",
+	["Sure delete buff: %s"]="确定要删除BUFF：%s？",
+
+	["Show map buff cache"]="显示当前地图NPC的BUFF数据",
+	["Show select group npc buff"]="地图数据",
+	["Clear choose"]="清除选择",
+
+	--20190105add--
+	["IconID: %d\n"]="图标ID：%d\n",
+	["Total time:%fs\n"]="持续时间：%fs\n",
+	["NPC self buff\n"]="  NPC自身的BUFF\n",
+	["From npc:\n"]="来自NPC：\n",
+	["From :\n"]="来自：\n",
+	["%s (Player) %s\n"]="%s (玩家) %s\n",
+	
+	["%s cast skill %s"]="%s 释放了技能 %s",
+	["dwTemplateID:%d\n"]="模版ID：%d\n",
+	[" cast skill: "]=" 释放了技能：",
+	[" cast ot skill: "]=" 开始技能读条：",
+	[" ends ot skill."]=" 结束了技能读条。",
+	[" say: "]=" 说：",
+	[" enter the scene."]="出现在了场景里",
+	["Blood :%d%%\n"]="血量：%d%%",
+	["[MAP] "]="[地图] ",
+
+	["LR_FIGHT_LOG"]="懒人战斗记录",
+	["Option"]="选项",
+	["Begin log"]="开始记录",
+	["Load current data"]="显示当前记录",
+	["Load history"]="载入历史记录",
+	["time"]="时间",
+
+	["ShowBuffOnNPC"]="显示NPC身上的BUFF",
+	["ShowBuffOnPlayer"]="显示玩家身上的BUFF",
+	["bShowRefreshBuff"]="显示刷新的BUFF",
+	["bShowBuffOnlyFromNPC"]="只显示来自NPC的BUFF",
+	["bShowNormalBuff"]="显示一般BUFF",
+	["bShowHideBuff"]="显示隐藏BUFF",
+	["bShowBUFFGood"]="显示增益BUFF",
+	["bShowBUFFBad"]="显示减益BUFF",
+
+	["GOLD_TEXT"]="收入已发放，请查看！",
+	["Log by fight"]="每场战斗分开记录",
+
+	--20190128add--
+	["Disable dungeon data"]="禁用副本数据",
+
 }

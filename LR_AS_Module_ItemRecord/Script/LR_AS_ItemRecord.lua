@@ -103,6 +103,8 @@ end
 --记录背包物品
 -------------------------------------------------------------------
 local _Bag = {}
+local DATA2BSAVE_BAG = {}
+
 function _Bag.GetItemByGrid()
 	local me = GetClientPlayer()
 	local ItemInBag = {}
@@ -123,11 +125,12 @@ function _Bag.GetItemByGrid()
 	return ItemInBag
 end
 
+function _Bag.PrepareData()
+	DATA2BSAVE_BAG = _Bag.GetItemByGrid()
+end
+
 function _Bag.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
-	local data = _Bag.GetItemByGrid()
+	local data = clone(DATA2BSAVE_BAG)
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
@@ -147,10 +150,27 @@ function _Bag.SaveData(DB)
 	end
 end
 
+function _Bag.RepairDB(DB)
+	local DB_SELECT = DB:Prepare("SELECT belong FROM bag_item_data GROUP BY belong")
+	local result = DB_SELECT:GetAll()
+	--
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_DELETE = DB:Prepare("DELETE FROM bag_item_data WHERE belong = ?")
+	for k, v in pairs(result) do
+		if not AllPlayerList[d2g(v.belong)] then
+			DB_DELETE:ClearBindings()
+			DB_DELETE:BindAll(v.belong)
+			DB_DELETE:Execute()
+		end
+	end
+end
+
 ------------------------------------------------------------------------------------------------------
 ---------记录仓库物品
 ------------------------------------------------------------------------------------------------------
 local _Bank = {}
+local DATA2BSAVE_BANK = {}
+
 function _Bank.GetItemByGrid()
 	local me = GetClientPlayer()
 	local ItemInBank = {}
@@ -172,11 +192,12 @@ function _Bank.GetItemByGrid()
 	return ItemInBank
 end
 
+function _Bank.PrepareData()
+	DATA2BSAVE_BANK = _Bank.GetItemByGrid()
+end
+
 function _Bank.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
-	local data = _Bank.GetItemByGrid()
+	local data = clone(DATA2BSAVE_BANK)
 	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
@@ -196,6 +217,20 @@ function _Bank.SaveData(DB)
 	end
 end
 
+function _Bank.RepairDB(DB)
+	local DB_SELECT = DB:Prepare("SELECT belong FROM bank_item_data GROUP BY belong")
+	local result = DB_SELECT:GetAll()
+	--
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_DELETE = DB:Prepare("DELETE FROM bank_item_data WHERE belong = ?")
+	for k, v in pairs(result) do
+		if not AllPlayerList[d2g(v.belong)] then
+			DB_DELETE:ClearBindings()
+			DB_DELETE:BindAll(v.belong)
+			DB_DELETE:Execute()
+		end
+	end
+end
 ------------------------------------------------------------------------------------------------------
 ----记录邮件附件
 ------------------------------------------------------------------------------------------------------
@@ -483,6 +518,50 @@ function _Mail.SaveData()
 	Log(sformat("[LR] AS mail save cost %0.3f s", (GetTickCount() - _begin_time) * 1.0 / 1000))
 end
 
+function _Mail.RepairDB(DB)
+	--mail_item_data
+	local DB_SELECT = DB:Prepare("SELECT belong FROM mail_item_data GROUP BY belong")
+	local result = DB_SELECT:GetAll()
+	--
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_DELETE = DB:Prepare("DELETE FROM mail_item_data WHERE belong = ?")
+	for k, v in pairs(result) do
+		if not AllPlayerList[d2g(v.belong)] then
+			DB_DELETE:ClearBindings()
+			DB_DELETE:BindAll(v.belong)
+			DB_DELETE:Execute()
+		end
+	end
+
+	--mail_data
+	local DB_SELECT2 = DB:Prepare("SELECT belong FROM mail_data GROUP BY belong")
+	local result2 = DB_SELECT2:GetAll()
+	--
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_DELETE2 = DB:Prepare("DELETE FROM mail_data WHERE belong = ?")
+	for k, v in pairs(result2) do
+		if not AllPlayerList[d2g(v.belong)] then
+			DB_DELETE2:ClearBindings()
+			DB_DELETE2:BindAll(v.belong)
+			DB_DELETE2:Execute()
+		end
+	end
+
+	--mail_receive_time
+	local DB_SELECT3 = DB:Prepare("SELECT szKey FROM mail_receive_time")
+	local result3 = DB_SELECT3:GetAll()
+	--
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	local DB_DELETE3 = DB:Prepare("DELETE FROM mail_receive_time WHERE szKey = ?")
+	for k, v in pairs(result3) do
+		if not AllPlayerList[d2g(v.szKey)] then
+			DB_DELETE3:ClearBindings()
+			DB_DELETE3:BindAll(v.belong)
+			DB_DELETE3:Execute()
+		end
+	end
+end
+
 function _Mail.Open_Window()
 	local dwIndex = arg0
 	local text = LR.Trim(arg1)
@@ -526,6 +605,7 @@ function _Mail.CheckAllMail()
 	if not (LR_AS_Mail.UsrData.atMaturity or LR_AS_Mail.UsrData.remind) then
 		return
 	end
+	LR.Log("[LR] ESC check mail expire begin...")
 	local _check_time = GetTickCount()
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "MAIL_CHECK_MaturityDay_LOAD_DATA_3F2BE76E7773F09F899F220FFB17F490")
@@ -573,7 +653,7 @@ function _Mail.CheckAllMail()
 	end
 
 	LR.CloseDB(DB)
-	Log(sformat("[LR] Checking Mail expire cost %0.3f s", (GetTickCount() - _check_time) * 1.0 / 1000 ))
+	LR.Log(sformat("[LR] Checking Mail expire end, cost %d ms", GetTickCount() - _check_time))
 end
 -----------
 
@@ -786,7 +866,7 @@ end
 ------------------------------------------------------------------------------------------------------
 ----界面
 ------------------------------------------------------------------------------------------------------
-LR_AS_ItemRecord_Panel = CreateAddon("LR_AS_ItemRecord_Panel")
+LR_AS_ItemRecord_Panel = _G2.CreateAddon("LR_AS_ItemRecord_Panel")
 LR_AS_ItemRecord_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_AS_ItemRecord_Panel.UserData = {
@@ -950,6 +1030,15 @@ function LR_AS_ItemRecord_Panel:Init()
 	local hEditBox = self:Append("Edit", frame, "searchText", {w = 100 , h = 26, x = 220, y = 51, text = ""})
 	hEditBox:Enable(true)
 	hEditBox.OnChange = function (value)
+		if ssub(value, 1, 1) == "@" then
+			local x = ssub(value, 2)
+			local y = LR.Friend.GetFriend(x)
+			if next(y) ~= nil then
+				Output(y)
+			end
+			return
+		end
+
 		LR_AS_ItemRecord_Panel.searchText = value
 
 		--LR_AS_ItemRecord_Panel.LoadUserAllData()
@@ -1948,7 +2037,7 @@ function LR_AS_ItemRecord_Panel:LoadItemBox(hWin)
 		hIconViewContent:Clear()
 		hBtnNext:Enable(true)
 		for i = 1, 84 do
-			k = (n - 1) * 84 + i
+			local k = (n - 1) * 84 + i
 			local item_data = t_table[k]
 			if item_data then
 				LR_AS_ItemRecord_Panel:LoadOneItem2(hIconViewContent, item_data)
@@ -1966,7 +2055,7 @@ function LR_AS_ItemRecord_Panel:LoadItemBox(hWin)
 		hIconViewContent:Clear()
 		hBtnPrev:Enable(true)
 		for i = 1, 84 do
-			k = (n - 1) * 84 + i
+			local k = (n - 1) * 84 + i
 			local item_data = t_table[k]
 			if item_data then
 				LR_AS_ItemRecord_Panel:LoadOneItem2(hIconViewContent, item_data)
@@ -2023,7 +2112,7 @@ function _Hook.HookMailPanel()
 		local BTN_Mail = frame:Lookup("LR_BTN_Mail")
 		if not BTN_Mail then
 			if LR_AS_ItemRecord.UsrData.bShowButtonInMailPanel then
-				local BTN_Mail = LR.AppendUI("Button", frame, "LR_BTN_Mail", {w = 90, h = 28, x = 200, y = 8})
+				local BTN_Mail = LR.AppendUI("UIButton", frame, "LR_BTN_Mail", {w = 90, h = 26, x = 160, y = 5, ani = {"ui\\Image\\UICommon\\HelpPanel.UITex", 22, 23, 54, 21}})
 				BTN_Mail:SetText(_L["LR Mail"])
 				BTN_Mail.OnClick = function()
 					LR_AS_ItemRecord_Panel:Open(nil, nil, nil, nil ,true)
@@ -2082,9 +2171,8 @@ function _Hook.ON_FRAME_CREATE()
 		LR.DelayCall(150, function() _Hook.HookGuildBank() end)
 	elseif szName == "OptionPanel" then
 		if GetTickCount() - _option_time > 10 * 1000 then
+			--检查邮件到期情况
 			_option_time = GetTickCount()
-			Log("ITEM_RECORD_ESC\n")
-			LR_AS_Base.LoadData()
 			_Mail.CheckAllMail()
 		end
 	end
@@ -2095,6 +2183,17 @@ LR.RegisterEvent("ON_FRAME_CREATE", function() _Hook.ON_FRAME_CREATE() end)
 
 LR_AS_ItemRecord.HookBag = _Hook.HookBag
 LR_AS_ItemRecord.HookMailPanel = _Hook.HookMailPanel
+
+---------------------------------
+---压力测试
+---------------------------------
+local StressTest = {}
+StressTest.Num = 50
+function StressTest.IniDB(DB)
+
+
+end
+
 ------------------------------------------------------------------------------------------------------
 ----注册模块
 ------------------------------------------------------------------------------------------------------
@@ -2103,9 +2202,22 @@ function _ItemRecord.SaveData(DB)
 	_Bag.SaveData(DB)
 	_Bank.SaveData(DB)
 end
-LR_AS_Module.ItemRecord = {}
-LR_AS_Module.ItemRecord.SaveData = _ItemRecord.SaveData
 
+function _ItemRecord.PrepareData()
+	_Bag.PrepareData()
+	_Bank.PrepareData()
+end
+
+function _ItemRecord.RepairDB(DB)
+	_Bag.RepairDB(DB)
+	_Bank.RepairDB(DB)
+	_Mail.RepairDB(DB)
+end
+
+LR_AS_Module.ItemRecord = {}
+LR_AS_Module.ItemRecord.PrepareData = _ItemRecord.PrepareData
+LR_AS_Module.ItemRecord.SaveData = _ItemRecord.SaveData
+LR_AS_Module.ItemRecord.RepairDB = _ItemRecord.RepairDB
 
 
 

@@ -111,6 +111,8 @@ data={
 	["Restore"]="恢复",
 	["LR Color Tip"]="H:色相\nS:饱和度\nV:亮度\n按住Ctrl时，鼠标滑过调色板时不会取色\n更多有关HSV的信息请自行百度",
 	["LR_MenPai_Color"]="门派颜色",
+	["Tips4"]="",
+	["m"]="么么哒萌萌哒",
 
 	["About"]="关于",
 	["JX3 LR Plugin"]="剑网3懒人插件集",
@@ -118,9 +120,9 @@ data={
 	["Enable Bottom-Right Button"]="开启右下角入口按钮",
 	["Welcome %s to use LR Plugins"]="欢迎 %s 使用懒人插件集！",
 	["Author:HuaQi@DianLiu"]="作者：华契@电一国色",
-	["If you have any suggestions or comments, please open the Weibo of the author!"]="如果你有任何的意见和建议，请点击打开作者微博！",
+	["If you have any suggestions or comments, please open the Weibo of the author!"]="点击打开'懒人插件'官方微博(有红包)\n也请反馈bug、提出宝贵建议和意见",
 	["Click to open the Setting_Interface of LR Plugins"]="点击打开懒人插件设置界面",
-	["I want to make suggestions and comments, feedback bugs"]="我要提建议和意见，反馈bug",
+	["I want to make suggestions and comments, feedback bugs"]="点击打开'懒人插件'官方微博",
 	["Plugins"]="插件",
 	["Team Grid"]="团队面板",
 	["Setting Panel"]="设置面板",
@@ -185,4 +187,19 @@ data={
 	["This map can not use team notice\n"]="此地图不能使用团队告示\n",
 
 	["Remote player can not use.\n"]="【懒人】跨服不可使用\n",
+
+	["Shutdown Tong Message"]="关闭聊天栏插件帮会招人信息",
+
+	--20190104add--
+	[".(.+)"]="·(.+)",
+	["LANJINGKUANG"]="蓝晶矿",
+	["D1"]="电信一区",
+	["DLH"]="蝶恋花",
+	["TipsJia"]="电一【红尘蝶恋服】(原电六国色)\n懒人插件作者的中恶休闲养老帮会【么么哒萌萌哒】收人\n15神行、帮修(8折)、骑马跑商、双倍秘境已开\n欢迎各类人士加入",
+	["NoTips"]="没帮会时不再显示帮会推荐",
+	["TipsTong"]="懒人插件帮会招人（非剑网3官方发布）：您现在还没有帮会！诚挚邀请您加入懒人插件的电一【红尘蝶恋服】中恶休闲小帮会【么么哒萌萌哒】，15神行、跑商、帮修、帮会四任务 已开，欢迎加入！请打开左下角的帮会界面，搜索 么么哒萌萌哒 加入，空位很多！如您不想再看到此条消息，请打开懒人设置面板，进行关闭。\n",
+
+	["Enter name"]="输入名字",
+	["__blank"]="",
+
 }

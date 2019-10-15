@@ -92,7 +92,7 @@ end
 ---------------------------------------------------------------
 local ONE_KEY_CACHE = {}
 
-LR_GKP_Loot = CreateAddon("LR_GKP_Loot")
+LR_GKP_Loot = _G2.CreateAddon("LR_GKP_Loot")
 LR_GKP_Loot.UsrData = {
 	Anchor = {s = "CENTER", r = "CENTER",  x = 500, y = 500},
 }
@@ -510,7 +510,7 @@ function LR_GKP_Loot:LoadOneItem(parent, item, dwDoodadID)
 		UpdateBoxObject(box:GetSelf(), UI_OBJECT_ITEM_INFO, 1, v.dwTabType, v.dwIndex)
 		box:SetOverText(1, v.nStackNum)
 		box:SetOverTextFontScheme(1, 15)
-		box:SetOverTextPosition(1, IITEM_POSITION.RIGHT_BOTTOM)
+		box:SetOverTextPosition(1, ITEM_POSITION.RIGHT_BOTTOM)
 	end
 
 	--
@@ -899,7 +899,7 @@ end
 ----------------------------------------------------------------
 ------∑÷≈‰ΩÁ√Ê
 ----------------------------------------------------------------
-LR_GKP_Distribute_Panel = CreateAddon("LR_GKP_Distribute_Panel")
+LR_GKP_Distribute_Panel = _G2.CreateAddon("LR_GKP_Distribute_Panel")
 LR_GKP_Distribute_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_GKP_Distribute_Panel.UsrData = {

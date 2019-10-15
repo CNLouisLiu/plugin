@@ -7,6 +7,12 @@ local AddonPath="Interface\\LR_Plugin\\LR_TLHelper"
 local _L = LR.LoadLangPack(AddonPath)
 local UI={}
 ----------------------------------------------------
+local SKILL_SHOW = {
+	{dwID = 3110, nLevel = 1, bOn = true,},
+	{dwID = 3111, nLevel = 1, bOn = true,},
+	{dwID = 3108, nLevel = 1, bOn = true,},
+}
+
 LR_TLHelper={
 	bombImg={},
 	bombTime={},
@@ -26,7 +32,7 @@ LR_TLHelper={
 	GuiFuEndFrame=0,
 }
 
-LR_TLHelper.UsrData={
+LR_TLHelper.UsrData = {
 	on=false,
 	Anchor = {s = "CENTER", r = "CENTER",  x = 0, y = 0,},
 	Alpha= 80,
@@ -35,14 +41,30 @@ LR_TLHelper.UsrData={
 	showTargetLine=false,
 	showMeLine=false,
 	showSelf=false,
+	HideS = false,
 }
 
 LR_TLHelper.Bombs={}
 LR_TLHelper.SelectSelf=true
 
-local CustomVersion = "20170111"
+local CustomVersion = "20190306"
 RegisterCustomData("LR_TLHelper.UsrData", CustomVersion)
 
+function LR_TLHelper.HideSwitch()
+	local frame = Station.Lookup("Normal/LR_TLHelper")
+	if not frame then
+		return
+	end
+	local Handle_Energy = frame:Lookup("",""):Lookup("Handle_TM")
+	local Handle_Skill = frame:Lookup("",""):Lookup("Handle_Skill")
+	if LR_TLHelper.UsrData.HideS then
+		Handle_Energy:Hide()
+		Handle_Skill:Hide()
+	else
+		Handle_Energy:Show()
+		Handle_Skill:Show()
+	end
+end
 
 function LR_TLHelper.OnFrameCreate()
 	this:RegisterEvent("UI_SCALED")
@@ -58,7 +80,7 @@ function LR_TLHelper.OnFrameCreate()
 	LR_TLHelper.MainFrame=Station.Lookup("Normal/LR_TLHelper")
 	LR_TLHelper.MainFrame:SetAlpha(0)
 
-	LR_TLHelper.handle=LR_TLHelper.MainFrame:Lookup("","")
+	LR_TLHelper.handle=LR_TLHelper.MainFrame:Lookup("",""):Lookup("Handle_QJB")
 	LR_TLHelper.QJB.Box_Img=LR_TLHelper.handle:Lookup("Box_1")
 	LR_TLHelper.QJB.Box_TypeText=LR_TLHelper.handle:Lookup("Text_1")
 
@@ -83,6 +105,12 @@ function LR_TLHelper.OnFrameCreate()
 	LR_TLHelper.GuiFuBox=LR_TLHelper.handle:Lookup("Box_5")
 	LR_TLHelper.GuiFuBoxTime=LR_TLHelper.handle:Lookup("Text_5")
 	LR_TLHelper.GuiFuBoxStack=LR_TLHelper.handle:Lookup("Text_GuiFu")
+
+	LR_TLHelper.EnergyHandle = LR_TLHelper.MainFrame:Lookup("",""):Lookup("Handle_TM")
+	LR_TLHelper.EnergyBar = LR_TLHelper.EnergyHandle:Lookup("Image_Strip")
+	LR_TLHelper.EnergyText = LR_TLHelper.EnergyHandle:Lookup("Text_Energy")
+
+	LR_TLHelper.Handle_Skill = LR_TLHelper.MainFrame:Lookup("",""):Lookup("Handle_Skill")
 
 	LR_TLHelper.QJB.QJB_tar:SetText("")
 	LR_TLHelper.QJB.QJB_Distance2Self:SetText("")
@@ -124,8 +152,12 @@ function LR_TLHelper.OnFrameCreate()
 	LR_TLHelper.Shadow_ToME:Hide()
 	LR_TLHelper.Shadow_ToTarget:Hide()
 
+	LR_TLHelper.AppendSkillBOx()
+
 	LR_TLHelper.UpdateAnchor(this)
 	LR_TLHelper.ScaleFont()
+
+	LR_TLHelper.HideSwitch()
 end
 
 function LR_TLHelper.ScaleFont ()
@@ -143,6 +175,64 @@ function LR_TLHelper.ScaleFont ()
 	LR_TLHelper.bombTime[3]:SetFontScale(LR_TLHelper.UsrData.Scale)
 end
 
+function LR_TLHelper.UpdateEnery()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	local nMaxEnergy = me.nMaxEnergy
+	local nCurrentEnergy = me.nCurrentEnergy
+	local fp = nCurrentEnergy * 1.0 / nMaxEnergy
+	LR_TLHelper.EnergyBar:SetPercentage(fp)
+	LR_TLHelper.EnergyText:SetText(sformat("%d/%d", nCurrentEnergy, nMaxEnergy))
+end
+
+function LR_TLHelper.AppendSkillBOx()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	LR_TLHelper.Handle_Skill:Clear()
+	for k, v in pairs(SKILL_SHOW) do
+		if v.bOn then
+			local Handle_Skill_BOX = LR_TLHelper.Handle_Skill:AppendItemFromIni(sformat("%s\\UI\\LR_TLHelper.ini", AddonPath), "Handle_Skill_BOX", sformat("Handle_%d", v.dwID))
+			local Box = Handle_Skill_BOX:Lookup("Box_Skill_BOX")
+			local Text_Time = Handle_Skill_BOX:Lookup("Text_Time")
+			Box:SetObject(1)
+			Box:SetObjectIcon(Table_GetSkillIconID(v.dwID, v.nLevel))
+			Text_Time:SetText("")
+		end
+	end
+end
+
+function LR_TLHelper.UpdateSkill()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	for k, v in pairs(SKILL_SHOW) do
+		if v.bOn then
+			local Handle_Skill_BOX = LR_TLHelper.Handle_Skill:Lookup(sformat("Handle_%d", v.dwID))
+			local Box_Skill = Handle_Skill_BOX:Lookup("Box_Skill_BOX")
+			local Text_Time = Handle_Skill_BOX:Lookup("Text_Time")
+			local isCDing, nLeftFrame, nTotalFrame, nNum, _ = me.GetSkillCDProgress(v.dwID, v.nLevel)
+			local nowFrame = GetLogicFrameCount()
+			local nEndFrame = nowFrame + nLeftFrame
+			if nLeftFrame > 0 and nTotalFrame > 0 then
+				Box_Skill:SetObjectCoolDown(true)
+				Box_Skill:SetCoolDownPercentage(1 - nLeftFrame/nTotalFrame)
+				if nLeftFrame < 5 then
+					Box_Skill:SetObjectSparking(true)
+				end
+				Text_Time:SetText(sformat("%0.1f", nLeftFrame / 16.0))
+			else
+				Box_Skill:SetObjectCoolDown(false)
+				Box_Skill:SetCoolDownPercentage(1)
+				Text_Time:SetText("")
+			end
+		end
+	end
+end
 
 function LR_TLHelper.OnEvent(event)
 	if event == "LOADING_END" then
@@ -189,6 +279,8 @@ function LR_TLHelper.OnFrameBreathe()
 	LR_TLHelper.UpdateBomb()
 	LR_TLHelper.UpdateQJB()
 	LR_TLHelper.UpdateGF()
+	LR_TLHelper.UpdateEnery()
+	LR_TLHelper.UpdateSkill()
 
 	if IsCtrlKeyDown() and  (IsShiftKeyDown() or IsAltKeyDown()) then
 		this:SetDragArea(0, 0, this:GetSize())
@@ -812,7 +904,7 @@ function UI.draw(xScreen, yScreen,zScreen)
 end
 
 function UI.DrawShape(tar, sha, nAngle, nRadius, col, dwType, __Alpha)
-	local pi=mpi
+	local pi = mpi
 	local nRadius = nRadius * 64
 	local nFace = mceil(128 * nAngle / 360)
 	local dwRad1 = pi * (tar.nFaceDirection - nFace) / 128
@@ -826,7 +918,7 @@ function UI.DrawShape(tar, sha, nAngle, nRadius, col, dwType, __Alpha)
 		dwRad2 = dwRad2 + pi / 20
 	end
 
-	nAlpha=__Alpha
+	local nAlpha = __Alpha
 	local r, g, b = unpack(col)
 	-- orgina point
 	sha:SetTriangleFan(GEOMETRY_TYPE.TRIANGLE)

@@ -31,7 +31,6 @@ function Animate:ctor(ui, nTime)
 	return oo
 end
 
-
 function Animate:FadeIn(nTime, fnAction)
 	if ANI_QUEUE.FADEIN[self.ui] then
 		return self
@@ -242,5 +241,4 @@ function Animate:Pos(tPos, nTime, bMove, fnAction)
 	return self
 end
 
-LR = LR or {}
 LR.Animate = setmetatable({}, { __call = function(me, ...) return Animate:ctor( ... ) end, __newindex = function() end, __metatable = true })

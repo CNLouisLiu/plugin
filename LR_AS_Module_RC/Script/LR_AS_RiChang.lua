@@ -27,6 +27,7 @@ local RI_CHANG = {
 	HUASHAN = 13, 	--扇子(7周年)
 	LONGMENJUEJING = 14,	--吃鸡
 	LUOYANGSHENBING = 15,	--洛阳神兵
+	ZHENYINGRICHANG = 16,	--阵营日常
 }
 
 local RI_CHANG_NAME = {
@@ -45,6 +46,7 @@ local RI_CHANG_NAME = {
 	[RI_CHANG.HUASHAN] = _L["HUASHAN"], 	--扇子(7周年)
 	[RI_CHANG.LONGMENJUEJING] = _L["LONGMENJUEJING"], 	--吃鸡
 	[RI_CHANG.LUOYANGSHENBING] = _L["LUOYANGSHENBING"], 	--洛阳神兵
+	[RI_CHANG.ZHENYINGRICHANG] = _L["ZHENYINGRICHANG"], 	--阵营日常
 }
 
 local RESET_TYPE = {
@@ -71,6 +73,7 @@ LR_AS_RC.Default = {
 		[RI_CHANG.HUASHAN] = false,
 		[RI_CHANG.LONGMENJUEJING] = false,
 		[RI_CHANG.LUOYANGSHENBING] = false,
+		[RI_CHANG.ZHENYINGRICHANG] = false,
 	},
 	bUseCommonData = true,
 	InstantSaving = false,
@@ -102,6 +105,7 @@ _RC.SelfData = {
 	[RI_CHANG.HUASHAN] = {eQuestPhase = 0, need = 100, have = 0, finished = false,	},
 	[RI_CHANG.LONGMENJUEJING] = {eQuestPhase = 0, need = 2, have = 0, finished = false,	},
 	[RI_CHANG.LUOYANGSHENBING] = {eQuestPhase = 0, need = 1000, have = 0, finished = false,	},
+	[RI_CHANG.ZHENYINGRICHANG] = {eQuestPhase = 0, need = 1000, have = 0, finished = false,	},
 }
 
 _RC.SelfCustomQuestStatus = {}
@@ -275,19 +279,11 @@ function _RC.LoadAllUsrData(DB)
 	_RC.AllUsrData[szKey].CUSTOM_QUEST = clone(_RC.SelfCustomQuestStatus)
 end
 
-function _RC.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
-	local me = GetClientPlayer()
-	if not me or IsRemotePlayer(me.dwID) then
-		return
-	end
-	local serverInfo = {GetUserServer()}
-	local realArea, realServer = serverInfo[5], serverInfo[6]
-	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	_RC.CheckAll()
+local DATA2BSAVE_RC = {}
+function _RC.PrepareData()
 	local name, wen, value = {}, {}, {}
+	--默认日常数据
+	_RC.CheckAll()
 	for k, v in pairs(RI_CHANG) do
 		name[#name+1] = k
 		wen[#wen+1] = "?"
@@ -298,10 +294,22 @@ function _RC.SaveData(DB)
 	name[#name+1] = "CUSTOM_QUEST"
 	wen[#wen+1] = "?"
 	value[#value+1] = LR.JsonEncode(_RC.SelfCustomQuestStatus or {})
+	DATA2BSAVE_RC = {
+		name = name,
+		wen = wen,
+		value = value,
+	}
+end
 
-	local DB_REPLACE = DB:Prepare(sformat("REPLACE INTO richang_data ( bDel, szKey, %s ) VALUES ( ?, %s, ? )", tconcat(name, ", "), tconcat(wen, ", ")))
+function _RC.SaveData(DB)
+	local me = GetClientPlayer()
+	local serverInfo = {GetUserServer()}
+	local realArea, realServer = serverInfo[5], serverInfo[6]
+	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+	local Data = clone(DATA2BSAVE_RC)
+	local DB_REPLACE = DB:Prepare(sformat("REPLACE INTO richang_data ( bDel, szKey, %s ) VALUES ( ?, %s, ? )", tconcat(Data.name, ", "), tconcat(Data.wen, ", ")))
 	DB_REPLACE:ClearBindings()
-	DB_REPLACE:BindAll(unpack(g2d({0, szKey, unpack(value)})))
+	DB_REPLACE:BindAll(unpack(g2d({0, szKey, unpack(Data.value)})))
 	DB_REPLACE:Execute()
 end
 
@@ -322,21 +330,31 @@ _RC.List = {
 	[12] = {szName = _L["HUASHAN"], nType = "ONCE", order = RI_CHANG.HUASHAN, },
 	[13] = {szName = _L["LONGMENJUEJING"], nType = "ZC", order = RI_CHANG.LONGMENJUEJING, },
 	[14] = {szName = _L["LUOYANGSHENBING"], nType = "RC", order = RI_CHANG.LUOYANGSHENBING, },
+	[14] = {szName = _L["ZHENYINGRICHANG"], nType = "RC", order = RI_CHANG.ZHENYINGRICHANG, },
 }
 
 ----大战副本数据
 _RC.Dazhan = {
 	----[任务id] = true,
---[[	[14765] = true, 		--14765 大战！英雄微山书院！
+--[[95级初
+	[14765] = true, 		--14765 大战！英雄微山书院！
 	[14766] = true, 		--14766 大战！英雄天泣林！
 	[14767] = true, 		--14767 大战！英雄梵空禅院！
 	[14768] = true, 		--14768 大战！英雄阴山圣泉！
 	[14769] = true, 		--14769 大战！英雄引仙水榭！]]
+--[[95级改版后
 	[17816] = true,		--稻香秘事
 	[17817] = true,		--银雾湖
 	[17818] = true,		--刀轮海厅
 	[17819] = true,		--夕颜阁
-	[17820] = true,		--白帝水宫
+	[17820] = true,		--白帝水宫]]
+--100级大战
+	[19191] = true,	--九辩馆
+	[19192] = true,	--泥兰洞天
+	[19195] = true,	--镜泊糊
+	[19196] = true,	--大衍盘丝洞
+	[19197] = true,	--迷渊岛
+
 }
 ADD2MONITED_QUEST_LIST(_RC.Dazhan)
 
@@ -381,13 +399,76 @@ function _RC.CheckDazhan()
 	end
 
 	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:869 秘境任务牌子
-	local eCanAccept = me.CanAcceptQuest(17820, 869)		------用【大战！英雄微山书院！】测试大战是否有cd 。代码57：任务完成度已达上限
+	local eCanAccept = me.CanAcceptQuest(19191, 869)		------用【大战！英雄九辩岛！】测试大战是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
 		_RC.SelfData[RI_CHANG.DA].finished = true
 	else
 		_RC.SelfData[RI_CHANG.DA].finished = false
 	end
 end
+
+
+-------检查阵营日常
+local ZHENYINGRICHANG_QUEST = {
+	--恶人
+	[14894] = true,
+	[18936] = true,
+	[19201] = true,
+	[19311] = true,
+	[19720] = true,
+	--浩气
+	[14893] = true,
+	[18904] = true,
+	[19200] = true,
+	[19310] = true,
+	[19719] = true,
+}
+ADD2MONITED_QUEST_LIST(ZHENYINGRICHANG_QUEST)
+function _RC.CheckZHENYINGRICHANG()
+	local me = GetClientPlayer()
+	if not me then
+		return
+	end
+	if not (me.nCamp == 1 or me.nCamp == 2) then
+		return
+	end
+	local dwTemplateID, dwQuestID = 0, 0
+	local IDs = {}
+	if me.nCamp == 1 then		--浩气
+		dwTemplateID = 62002
+		IDs = {14893, 18904, 19200, 19310, 19719}
+	elseif me.nCamp == 2 then		--恶人
+		dwTemplateID = 62039
+		IDs = {14894, 18936, 19201, 19311, 19720}
+	end
+
+	for k, _dwQuestID in pairs(IDs) do
+		local eCanAccept = me.CanAcceptQuest(_dwQuestID, dwTemplateID)
+		if eCanAccept == 1 or eCanAccept == 7 or eCanAccept == 57 then
+			dwQuestID = _dwQuestID
+		end
+	end
+	if dwQuestID == 0 then
+		return
+	end
+	_RC.SelfData[RI_CHANG.ZHENYINGRICHANG] = {eQuestPhase = 0, need = 1000, have = 0, finished = false,}
+	local eCanAccept = me.CanAcceptQuest(dwQuestID, dwTemplateID)
+	if eCanAccept == 57 then
+		_RC.SelfData[RI_CHANG.ZHENYINGRICHANG].finished = true
+		return
+	end
+	if eCanAccept == 7 then
+		local eQuestPhase = me.GetQuestPhase(dwQuestID)
+		local QuestTraceInfo = me.GetQuestTraceInfo(dwQuestID)
+		local quest_state = QuestTraceInfo.quest_state or {{need = 0, have = 0}}
+		local need = quest_state[1].need
+		local have = quest_state[1].have
+		_RC.SelfData[RI_CHANG.ZHENYINGRICHANG].eQuestPhase = eQuestPhase
+		_RC.SelfData[RI_CHANG.ZHENYINGRICHANG].need = need
+		_RC.SelfData[RI_CHANG.ZHENYINGRICHANG].have = have
+	end
+end
+
 
 -------检查公共事件
 --local dwQuestID = 14831
@@ -427,7 +508,8 @@ end
 
 -------检查茶馆
 local CHA_QUEST = {
-	[14246] = true,
+	--[14246] = true,	--95级茶馆任务
+	[19514] = true,	--100级茶馆任务
 }
 ADD2MONITED_QUEST_LIST(CHA_QUEST)
 function _RC.CheckChaGuan()
@@ -436,8 +518,9 @@ function _RC.CheckChaGuan()
 		return
 	end
 
-	-----[快马江湖杯中茶] 任务ID：14246
-	local dwQuestID = 14246
+	-----[快马江湖杯中茶] 95级任务ID：14246
+	----[沧海云帆闻茶香]	100级任务ID：19514
+	local dwQuestID = 19514
 	local eQuestPhase = me.GetQuestPhase(dwQuestID)
 	if eQuestPhase ==  0 or eQuestPhase ==  -1 then
 		_RC.SelfData[RI_CHANG.CHA] = {eQuestPhase = eQuestPhase, need = 10, have = 0, }
@@ -451,8 +534,8 @@ function _RC.CheckChaGuan()
 		_RC.SelfData[RI_CHANG.CHA] = {eQuestPhase = eQuestPhase, need = 10, have = 10, }
 	end
 
-	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:45009 赵云睿
-	local eCanAccept = me.CanAcceptQuest(dwQuestID, 45009)		------测试茶馆是否有cd 。代码57：任务完成度已达上限
+	------CanAcceptQuest(dwQuestID, dwTemplateID) dwTemplateID:45009 95级赵云睿		63734：100级赵云睿
+	local eCanAccept = me.CanAcceptQuest(dwQuestID, 63734)		------测试茶馆是否有cd 。代码57：任务完成度已达上限
 	if eCanAccept ==  57 then
 		_RC.SelfData[RI_CHANG.CHA].finished = true
 	else
@@ -490,6 +573,8 @@ _RC.QinXiu = {
 	[14732] = true, 		-----长歌
 	[16205] = true, 		-----霸刀
 	[16206] = true, 		-----霸刀
+	[19225] = true,		-----蓬莱
+	[19226] = true,		-----蓬莱
 }
 ADD2MONITED_QUEST_LIST(_RC.QinXiu)
 -----检查勤修不辍
@@ -1042,19 +1127,18 @@ function _Exam.LoadData(DB)
 	LR_AS_Data.ExamData = clone(_Exam.AllUsrData)
 end
 
-function _Exam.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
-	local me = GetClientPlayer()
-	if not me or IsRemotePlayer(me.dwID) then
-		return
-	end
+local DATA2BSAVE_Exam = {}
+function _Exam.PrepareData()
 	_Exam.CheckExam()
+	DATA2BSAVE_Exam = _Exam.SelfData
+end
+
+function _Exam.SaveData(DB)
+	local me = GetClientPlayer()
 	local ServerInfo = {GetUserServer()}
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
-	local v = _Exam.SelfData or {}
+	local v = clone(DATA2BSAVE_Exam)
 	local DB_REPLACE = DB:Prepare("REPLACE INTO exam_data ( szKey, ShengShi, HuiShi, bDel ) VALUES ( ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
 	DB_REPLACE:BindAll(unpack(g2d({szKey, v.ShengShi, v.HuiShi, 0})))
@@ -1099,6 +1183,7 @@ function _Exam.CheckExam()
 	end
 
 	_Exam.AllUsrData[szKey] = clone(_Exam.SelfData)
+	LR_AS_Data.ExamData[szKey] = clone(_Exam.SelfData)
 end
 
 -----------------------------------
@@ -1184,6 +1269,8 @@ end
 function _RC.ResetDataMonday(DB)
 	_RC.ClearZC(DB)
 	_Exam.ResetData(DB)
+
+	LR_WLTJ.ClearWLTJdatMonday(DB)
 end
 
 function _RC.ResetDataEveryDay(DB)
@@ -1232,6 +1319,8 @@ function _RC.CheckAll()
 	_RC.CheckLongMenJueJing()
 	---检查洛阳神兵
 	_RC.CheckLuoYangShenBing()
+	--检查阵营日常
+	_RC.CheckZHENYINGRICHANG()
 
 	----考试
 	_Exam.CheckExam()
@@ -1303,7 +1392,7 @@ function _RC.ListRC()
 
 	_RC.Container = frame:Lookup("PageSet_Menu/Page_RC/WndScroll_RC/Wnd_RC")
 	_RC.Container:Clear()
-	num = _RC.ShowItem (TempTable_Cal, 255, 1, 0)
+	local num = _RC.ShowItem (TempTable_Cal, 255, 1, 0)
 	num = _RC.ShowItem (TempTable_NotCal, 60, 1, num)
 	_RC.Container:FormatAllContentPos()
 end
@@ -1432,67 +1521,7 @@ function _RC.ShowItem(t_Table, Alpha, bCal, _num)
 		handle:RegisterEvent(304)
 		handle.OnItemMouseEnter = function ()
 			item_Select:Show()
-			local nMouseX, nMouseY =  Cursor.GetPos()
-			local szTipInfo = {}
-			local szPath, nFrame = GetForceImage(v.dwForceID)
-			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
-			--szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\Common\\Money.uitex", 246, 260, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 260, 27)
-			szTipInfo[#szTipInfo+1] = GetFormatText("\n", 62)
-			local List = _RC.List
-			for i = 1, #List, 1 do
-				if RC_Record[List[i].order] then
-					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：\t", List[i].szName), 224)
-					if RC_Record[List[i].order].finished then
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
-					elseif RC_Record[List[i].order].eQuestPhase ==  0 or RC_Record[List[i].order].eQuestPhase ==  -1 then
-						szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
-					elseif RC_Record[List[i].order].eQuestPhase ==  1 then
-						if RC_Record[List[i].order].have == 0 and List[i].szName ~=  _L["MI"] then
-							szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Accepted"]), 31)
-						else
-							szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s / %s\n", tostring(RC_Record[List[i].order].have or 0), tostring(RC_Record[List[i].order].need or 0)), 31)
-						end
-					elseif RC_Record[List[i].order].eQuestPhase ==  2 then
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Finished but not pay"]), 17)
-					elseif RC_Record[List[i].order].eQuestPhase ==  3 then			------这个基本没用
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
-					end
-				end
-			end
-
-			------自定义任务
-			local CustomQuestList = LR_AS_RC.CustomQuestList or {}
-			local CUSTOM_QUEST = RC_Record.CUSTOM_QUEST or {}
-			if next(CustomQuestList) ~= nil then
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Custom quest under"]), 47)
-			end
-			for k, v in pairs(CustomQuestList) do
-				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：\t", v.szName), 224)
-				if CUSTOM_QUEST[tostring(v.dwID)] then
-					if CUSTOM_QUEST[tostring(v.dwID)].full then
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
-					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 1 then
-						if CUSTOM_QUEST[tostring(v.dwID)].have == 0 then
-							szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Accepted"]), 31)
-						else
-							szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s / %s\n", tostring(CUSTOM_QUEST[tostring(v.dwID)].have or 0), tostring(CUSTOM_QUEST[tostring(v.dwID)].need or 0)), 31)
-						end
-					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 2 then
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Finished but not pay"]), 17)
-					elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 3 then
-						szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
-					else
-						szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
-					end
-				else
-					szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
-				end
-			end
-
-			OutputTip(tconcat(szTipInfo), 250, {nMouseX, nMouseY, 0, 0})
+			_RC.ShowTip(v)
 		end
 		handle.OnItemMouseLeave = function()
 			item_Select:Hide()
@@ -1508,6 +1537,83 @@ function _RC.ShowItem(t_Table, Alpha, bCal, _num)
 	end
 	return num
 end
+
+function _RC.ShowTip(v)
+	local nMouseX, nMouseY =  Cursor.GetPos()
+	local szTipInfo = {}
+	local szPath, nFrame = GetForceImage(v.dwForceID)
+	local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
+	local RC_Record = _RC.AllUsrData[szKey] or {}
+	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if v.dwID == me.dwID and v.realArea == realArea and v.realServer == realServer then
+		_RC.CheckAll()
+		_Exam.CheckExam()
+		RC_Record = clone(_RC.SelfData)
+	end
+
+	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
+	szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 260, 27)
+	szTipInfo[#szTipInfo+1] = GetFormatText("\n", 62)
+	local List = _RC.List
+	for i = 1, #List, 1 do
+		if RC_Record[List[i].order] then
+			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：\t", List[i].szName), 224)
+			if RC_Record[List[i].order].finished then
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
+			elseif RC_Record[List[i].order].eQuestPhase ==  0 or RC_Record[List[i].order].eQuestPhase ==  -1 then
+				szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
+			elseif RC_Record[List[i].order].eQuestPhase ==  1 then
+				if RC_Record[List[i].order].have == 0 and List[i].szName ~=  _L["MI"] then
+					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Accepted"]), 31)
+				else
+					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s / %s\n", tostring(RC_Record[List[i].order].have or 0), tostring(RC_Record[List[i].order].need or 0)), 31)
+				end
+			elseif RC_Record[List[i].order].eQuestPhase ==  2 then
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Finished but not pay"]), 17)
+			elseif RC_Record[List[i].order].eQuestPhase ==  3 then			------这个基本没用
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
+			end
+		end
+	end
+
+	------自定义任务
+	local CustomQuestList = LR_AS_RC.CustomQuestList or {}
+	local CUSTOM_QUEST = RC_Record.CUSTOM_QUEST or {}
+	if next(CustomQuestList) ~= nil then
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Custom quest under"]), 47)
+	end
+	for k, v in pairs(CustomQuestList) do
+		szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s：\t", v.szName), 224)
+		if CUSTOM_QUEST[tostring(v.dwID)] then
+			if CUSTOM_QUEST[tostring(v.dwID)].full then
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
+			elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 1 then
+				if CUSTOM_QUEST[tostring(v.dwID)].have == 0 then
+					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Accepted"]), 31)
+				else
+					szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s / %s\n", tostring(CUSTOM_QUEST[tostring(v.dwID)].have or 0), tostring(CUSTOM_QUEST[tostring(v.dwID)].need or 0)), 31)
+				end
+			elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 2 then
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Finished but not pay"]), 17)
+			elseif CUSTOM_QUEST[tostring(v.dwID)].nQuestPhase == 3 then
+				szTipInfo[#szTipInfo+1] = GetFormatText(sformat("%s\n", _L["Done"]), 47)
+			else
+				szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
+			end
+		else
+			szTipInfo[#szTipInfo+1] = GetFormatText("------\n", 80)
+		end
+	end
+
+	OutputTip(tconcat(szTipInfo), 250, {nMouseX, nMouseY, 0, 0})
+end
+
 
 function _RC.AddPageButton()
 	local frame = Station.Lookup("Normal/LR_AS_Panel")
@@ -1531,7 +1637,7 @@ end
 
 
 -----------------------------------------------------------------
-LR_QuestTools = CreateAddon("LR_QuestTools")
+LR_QuestTools = _G2.CreateAddon("LR_QuestTools")
 LR_QuestTools:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_QuestTools.UsrData = {
@@ -1652,7 +1758,7 @@ function LR_QuestTools:LoadItemBox()
 			if npc then
 				local questids = npc.GetNpcQuest()
 				for k, v in pairs(questids) do
-					Quest[#Quest+1] = {dwQuestID = v}
+					Quest[#Quest+1] = {dwQuestID = v, dwTemplateID = npc.dwTemplateID}
 				end
 			end
 		end
@@ -1696,8 +1802,10 @@ function LR_QuestTools:LoadItemBox()
 		local dwQuestID = Quest[m].dwQuestID
 		local QuestInfo = LR.Table_GetQuestStringInfo(dwQuestID)
 		local szName = sformat("%s(%s)", QuestInfo.szName, TextPhase[me.GetQuestPhase(dwQuestID)])
-
-
+		if Quest[m].dwTemplateID then
+			local eCanAccept = me.CanAcceptQuest(dwQuestID, Quest[m].dwTemplateID)
+			szName = szName .. " C " .. eCanAccept
+		end
 
 		local Text_break1 = self:Append("Text", hIconViewContent, sformat("Text_break_%d_1", m), {w = 80, h = 30, x  = 0, y = 2, text = dwQuestID , font = 18})
 		Text_break1:SetHAlign(1)
@@ -1745,6 +1853,8 @@ function LR_QuestTools:LoadItemBox()
 				elseif questInfo.dwStartNpcTemplateID ~= 0 then
 
 				end
+				local Hortation = questInfo.GetHortation()
+				Output("Hortation", Hortation)
 			end
 			local tQuest = g_tTable.Quest:Search(dwQuestID)
 			if tQuest then
@@ -1755,7 +1865,7 @@ function LR_QuestTools:LoadItemBox()
 					if v.nType == "D" or v.nType == "N" then
 						Output(_L["Accept npc"], "nType:"..v.nType, "dwMapID:"..v.dwMapID..Table_GetMapName(v.dwMapID), "dwTemplateID:"..v.dwTemplateID, "szName:"..v.szName, Table_GetQuestPoint(dwQuestID, "accept", k - 1, v.dwMapID))
 						local eCanAccept = me.CanAcceptQuest(dwQuestID, v.dwTemplateID)
-						Output(_L["Can accept?"], eCanAccept, g_tStrings.tQuestResultString[eCanAccept])
+						Output(_L["Do ..... Can accept?"], eCanAccept, v.dwTemplateID, g_tStrings.tQuestResultString[eCanAccept])
 					end
 				end
 				for k, v in pairs (LR_HeadName.SpliteString(tQuest.szFinish)) do
@@ -1766,6 +1876,9 @@ function LR_QuestTools:LoadItemBox()
 			else
 				Output("g_tTable.Quest 无信息")
 			end
+
+			local nQuestPhase = me.GetQuestPhase(dwQuestID)
+			Output("nQuestPhase", nQuestPhase)
 
 			if IsCtrlKeyDown() then
 				local _nType, _dwID = me.GetTarget()
@@ -1803,6 +1916,13 @@ end
 --------------------------------------
 local _quest_save_time = 0
 local function SAVE_QUEST(dwQuestID)
+	if not LR_AS_Base.UsrData.bRecord then
+		return
+	end
+	local me = GetClientPlayer()
+	if not me or IsRemotePlayer(me.dwID) then
+		return
+	end
 	--非即时保存则返回
 	if not LR_AS_RC.UsrData.InstantSaving then
 		return
@@ -1817,6 +1937,7 @@ local function SAVE_QUEST(dwQuestID)
 	end
 	local path = sformat("%s\\%s", SaveDataPath, db_name)
 	local DB = LR.OpenDB(path, "RC_SAVE_QUEST_C4C149DED36AB08F230374D361E4103E")
+	_RC.PrepareData()
 	_RC.SaveData(DB)
 	LR.CloseDB(DB)
 	Log("[LR] RI_CHANG_QUEST_EVENT_SAVE\n")
@@ -1893,14 +2014,22 @@ LR.RegisterEvent("FIRST_LOADING_END", function() _RC.FIRST_LOADING_END() end)
 ------------------------------------------
 LR_AS_RC.LoadCustomQuestList = _RC.LoadCustomQuestList
 LR_AS_RC.SaveCommomMenuList = _RC.SaveCommomMenuList
+LR_AS_RC.LoadCommomMenuList = _RC.LoadCommomMenuList
 LR_AS_RC.SaveCustomQuestList = _RC.SaveCustomQuestList
 LR_AS_RC.RI_CHANG = RI_CHANG
 LR_AS_RC.RI_CHANG_NAME = RI_CHANG_NAME
 
 ------------------------------------------
+function _RC.PrepareData2()
+	_RC.PrepareData()
+	_Exam.PrepareData()
+	LR_WLTJ.PrepareData()
+end
+
 function _RC.SaveData2(DB)
 	_RC.SaveData(DB)
 	_Exam.SaveData(DB)
+	LR_WLTJ.SaveData(DB)
 end
 
 function _RC.LoadData2(DB)
@@ -1910,10 +2039,13 @@ end
 
 --注册模块
 LR_AS_Module.RC = {}
+LR_AS_Module.RC.PrepareData = _RC.PrepareData2
 LR_AS_Module.RC.SaveData = _RC.SaveData2
 LR_AS_Module.RC.LoadData = _RC.LoadData2
 LR_AS_Module.RC.ResetDataMonday = _RC.ResetDataMonday		--包含了清考试记录
 LR_AS_Module.RC.ResetDataEveryDay = _RC.ResetDataEveryDay
 LR_AS_Module.RC.AddPage = _RC.AddPage
 LR_AS_Module.RC.RefreshPage = _RC.RefreshPage
-
+LR_AS_Module.RC.ShowTip = _RC.ShowTip
+LR_AS_Module.RC.FIRST_LOADING_END = _RC.LoadData2
+LR_AS_Module.RC.CheckExam = _Exam.CheckExam

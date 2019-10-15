@@ -44,7 +44,7 @@ LR_HeadName_UI = {
 				tTips[#tTips+1] = {szText = _L["Instructions05\n"], font = 5, r = 255, g = 255, b = 255, }
 				return tTips
 			end,
-		}, {	name = "LR_Head_FontSize", type = "ComboBox", x = 150, y = 0, w = 120, text = _L["FontSize"],
+		}, { name = "LR_Head_FontSize", type = "ComboBox", x = 150, y = 0, w = 120, text = _L["Font Settings"],
 			enable =  function ()
 				return LR_HeadName.bOn
 			end,
@@ -53,22 +53,19 @@ LR_HeadName_UI = {
 				if not player then
 					return
 				end
-				local menu  = {
-					{szOption = _L["Small"], bCheck = true, bMCheck = true, bChecked = function() return LR_HeadName.UsrData.font == 17 end,
-						fnAction = function()
-							LR_HeadName.UsrData.font = 17
+				local menu = {}
+				menu[#menu + 1] = {szOption = _L["Font Style"]}
+				local m2 = menu[#menu]
+				local FontStyle = {1, 40, 259, 192, 232}
+				for k, v in pairs(FontStyle) do
+					m2[#m2 + 1] = {szOption = sformat(_L["Font Style %d"], k), bCheck = true, bMCheck = true, bChecked = function() return LR_HeadName.UsrData.font == v end,
+						fnAction =function()
+							LR_HeadName.UsrData.font = v
 							LR_HeadName.SaveCommonSettings()
 							LR_HeadName.ReDrawAll()
 						end,
-					},
---[[					{szOption = _L["Big"], bCheck = true, bMCheck = true, bChecked = function() return LR_HeadName.UsrData.font == 23 end,
-						fnAction = function()
-							LR_HeadName.UsrData.font = 23
-							LR_HeadName.SaveCommonSettings()
-							LR_HeadName.ReDrawAll()
-						end,
-					},]]
-				}
+					}
+				end
 				menu[#menu+1] = {bDevide = true}
 				menu[#menu+1] = {szOption = _L["Scale"],
 					fnMouseEnter = function()
@@ -90,9 +87,17 @@ LR_HeadName_UI = {
 						end,
 					}
 				end
+				menu[#menu+1] = {szOption = _L["Change size by ui scale"], bCheck = true, bChecked = function() return LR_HeadName.UsrData.bChangeSizeByUIScale end,
+					fnAction = function()
+						LR_HeadName.UsrData.bChangeSizeByUIScale = not LR_HeadName.UsrData.bChangeSizeByUIScale
+						LR_HeadName.SaveCommonSettings()
+						LR_HeadName.ReDrawAll()
+					end,
+				}
 				for i = 1, #menu do
 					tinsert(m, menu[i])
 				end
+
 				PopupMenu(m)
 			end,
 		}, {name = "LR_Head_Line_Spacing", type = "ComboBox", x = 300, y = 0, w = 100, text = _L["Line spacing"],
@@ -701,6 +706,15 @@ LR_HeadName_UI = {
 				return LR_HeadName.bOn
 			end,
 			callback = function(m)
+				m[#m + 1] = {szOption = _L["bShowMine"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowMine end,
+					fnAction = function()
+						LR_HeadName.UsrData.bShowMine = not LR_HeadName.UsrData.bShowMine
+						LR_HeadName.AddAllDoodad2AllList()
+						LR_HeadName.ReDrawAll()
+						LR_HeadName.SaveCommonSettings()
+					end,
+				}
+				m[#m + 1] = {bDevide = true}
 				local Mineral = LR_HeadName.Mineral
 				for k, v in pairs(HEAD_NAME_MINERAL) do
 					m[#m+1] = {szOption = v, bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.Mineral[v] or false end,
@@ -709,6 +723,9 @@ LR_HeadName_UI = {
 							LR_HeadName.AddAllDoodad2AllList()
 							LR_HeadName.ReDrawAll()
 							LR_HeadName.SaveCommonSettings()
+						end,
+						fnDisable = function()
+							return not LR_HeadName.UsrData.bShowMine
 						end,
 					}
 
@@ -736,6 +753,16 @@ LR_HeadName_UI = {
 				return LR_HeadName.bOn
 			end,
 			callback = function(m)
+				m[#m + 1] = {szOption = _L["bShowAgriculture"], bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.UsrData.bShowAgriculture end,
+					fnAction = function()
+						LR_HeadName.UsrData.bShowAgriculture = not LR_HeadName.UsrData.bShowAgriculture
+						LR_HeadName.AddAllDoodad2AllList()
+						LR_HeadName.ReDrawAll()
+						LR_HeadName.SaveCommonSettings()
+					end,
+				}
+				m[#m + 1] = {bDevide = true}
+
 				local Agriculture = LR_HeadName.Agriculture
 				for k, v in pairs(HEAD_NAME_AGRICULTURE) do
 					m[#m+1] = {szOption = v, bCheck = true, bMCheck = false, bChecked = function() return LR_HeadName.Agriculture[v] or false end,
@@ -744,6 +771,9 @@ LR_HeadName_UI = {
 							LR_HeadName.AddAllDoodad2AllList()
 							LR_HeadName.ReDrawAll()
 							LR_HeadName.SaveCommonSettings()
+						end,
+						fnDisable = function()
+							return not LR_HeadName.UsrData.bShowAgriculture
 						end,
 					}
 				end
@@ -856,23 +886,40 @@ LR_HeadName_UI = {
 						LR_HeadName.SaveCommonSettings()
 					end,
 				})
-				tinsert(m, {szOption = _L["Set lifeper text offsetX"] .. sformat(": %d", LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0) ,
+				tinsert(m, {szOption = _L["Set lifeper text offsetX"] .. sformat(": %d", LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0), bCheck = true,
 					fnAction = function()
-						GetUserInputNumber(LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0, 1000, nil, function(arg0)
-							LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX = arg0,
-							LR_HeadName.ReDrawAll()
-							LR_HeadName.SaveCommonSettings()
-						end)
+						local x, y = this:GetAbsPos()
+						local h, w = this:GetSize()
+						GetUserInput(_L["Input number"], function(arg0)
+							local number = tonumber(LR.Trim(arg0))
+							if type(number) == "number" then
+								LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX = arg0,
+								LR_HeadName.ReDrawAll()
+								LR_HeadName.SaveCommonSettings()
+							end
+						end, nil, nil, {x, y, w, h}, LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetX or 0, 10, false, false, nil)
 					end,
 					fnDisable = function() return not LR_HeadName.UsrData.LifeBar.bShowLifePercentText end,
+					{szOption = _L["Not cal life lenth"], bCheck = true, bChecked = function() return LR_HeadName.UsrData.LifeBar.bNotCalLifeLenth end,
+						fnAction = function()
+							LR_HeadName.UsrData.LifeBar.bNotCalLifeLenth = not LR_HeadName.UsrData.LifeBar.bNotCalLifeLenth
+							LR_HeadName.ReDrawAll()
+							LR_HeadName.SaveCommonSettings()
+						end,
+					},
 				})
 				tinsert(m, {szOption = _L["Set lifeper text offsetY"] .. sformat(": %d", LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY or 0) ,
 					fnAction = function()
-						GetUserInputNumber(LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY or 0, 1000, nil, function(arg0)
-							LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY = arg0,
-							LR_HeadName.ReDrawAll()
-							LR_HeadName.SaveCommonSettings()
-						end)
+						local x, y = this:GetAbsPos()
+						local h, w = this:GetSize()
+						GetUserInput(_L["Input number"], function(arg0)
+							local number = tonumber(LR.Trim(arg0))
+							if type(number) == "number" then
+								LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY = arg0,
+								LR_HeadName.ReDrawAll()
+								LR_HeadName.SaveCommonSettings()
+							end
+						end, nil, nil, {x, y, w, h}, LR_HeadName.UsrData.LifeBar.nLifePercentTextOffsetY or 0, 10, false, false, nil)
 					end,
 					fnDisable = function() return not LR_HeadName.UsrData.LifeBar.bShowLifePercentText end,
 				})

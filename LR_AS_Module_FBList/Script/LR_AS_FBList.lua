@@ -9,7 +9,7 @@ local LanguagePath = "Interface\\LR_Plugin\\LR_AccountStatistics"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_AccountStatistics\\UsrData"
 local db_name = "maindb.db"
 local _L = LR.LoadLangPack(LanguagePath)
-local VERSION = "20180619"
+local VERSION = "20181220"
 -------------------------------------------------------------
 --[[
 因为获取副本信息是异步操作
@@ -22,6 +22,12 @@ local INDEPENDENT_MAP = {
 	[300] = true,
 	[299] = true,
 	[301] = true,
+	[360] = true,
+	[354] = true,
+	[349] = true,
+	[348] = true,
+	[347] = true,
+	[341] = true,
 }
 
 LR_AS_FBList = {}
@@ -29,17 +35,17 @@ local DefaultUsrData = {
 	On = true,
 	CommonSetting = true,
 	bShowMapID = {
-		{dwMapID = 298},
-		{dwMapID = 289},
-		{dwMapID = 288},
-		{dwMapID = 287},
-		{dwMapID = 286},
-		{dwMapID = 284},
+		{dwMapID = 361},
+		{dwMapID = 354},
+		{dwMapID = 350},
+		{dwMapID = 348},
+		{dwMapID = 347},
+		{dwMapID = 341},
 		--{dwMapID = 283},
 	},
 	VERSION = VERSION,
 }
-LR_AS_FBList.UsrData = clone( DefaultUsrData )
+LR_AS_FBList.UsrData = clone(DefaultUsrData)
 RegisterCustomData("LR_AS_FBList.UsrData", VERSION)
 
 local _FBList = {}
@@ -171,21 +177,46 @@ function _FBList.ResetDataFriday(DB)
 end
 
 
-------↓↓↓获取副本CD（异步）
-function _FBList.GetFBList()
+------↓↓↓获取副本CD
+local CAUSED_BY_SELF = false
+function _FBList.ApplyCDProgress()
+	CAUSED_BY_SELF = true
+	--请求副本独立BOSS的CD
+	LR.Log("[LR] Apply dungeon role progress begin")
 	for dwMapID, v in pairs(INDEPENDENT_MAP) do
 		ApplyDungeonRoleProgress(dwMapID, GetClientPlayer().dwID)
 	end
+	LR.Log("[LR] Apply dungeon role progress end")
+	--请求通用副本的CD
+	LR.Log("[LR] Apply map savecopy begin")
 	ApplyMapSaveCopy()
+	LR.Log("[LR] Apply map savecopy end")
 end
 
 ------↓↓↓保存自己的副本CD数据
-function _FBList.SaveData2(DB)
-	LR.DelayCall(100, function() _FBList.GetFBList() end)
-	_FBList.SaveData(DB)
+local DATA2BSAVE = {}
+function _FBList.PrepareData()
+	_FBList.ApplyCDProgress()
+	local FB_Record = {}
+	for dwMapID, nCopyIndex in pairs (_FBList.SelfData) do
+		FB_Record[tostring(dwMapID)] = nCopyIndex
+	end
+	DATA2BSAVE = FB_Record
 end
 
-function _FBList.SaveData(DB)
+function _FBList.SaveData(DB, TestData, TestszKey)
+	local me = GetClientPlayer()
+	local serverInfo = {GetUserServer()}
+	local realArea, realServer = serverInfo[5], serverInfo[6]
+	local szKey = TestszKey or sformat("%s_%s_%d", realArea, realServer, me.dwID)
+	local FB_Record = TestData or clone(DATA2BSAVE)
+	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
+	DB_REPLACE:ClearBindings()
+	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(FB_Record)})))
+	DB_REPLACE:Execute()
+end
+
+function _FBList.SaveData2(DB)
 	if not LR_AS_Base.UsrData.bRecord then
 		return
 	end
@@ -193,20 +224,8 @@ function _FBList.SaveData(DB)
 	if not me or IsRemotePlayer(me.dwID) then
 		return
 	end
-
-	local serverInfo = {GetUserServer()}
-	local realArea, realServer = serverInfo[5], serverInfo[6]
-	local dwID = me.dwID
-	local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
-
-	local FB_Record = {}
-	for dwMapID, nCopyIndex in pairs (_FBList.SelfData) do
-		FB_Record[tostring(dwMapID)] = nCopyIndex
-	end
-	local DB_REPLACE = DB:Prepare("REPLACE INTO fb_data ( szKey, fb_data, bDel ) VALUES ( ?, ?, 0 )")
-	DB_REPLACE:ClearBindings()
-	DB_REPLACE:BindAll(unpack(g2d({szKey, LR.JsonEncode(FB_Record)})))
-	DB_REPLACE:Execute()
+	_FBList.PrepareData()
+	_FBList.SaveData(DB)
 end
 
 function _FBList.LoadAllUsrData(DB)
@@ -232,7 +251,7 @@ function _FBList.LoadAllUsrData(DB)
 	_FBList.AllUsrData[szKey] = clone(_FBList.SelfData)
 
 	--将自己的数据加入列表
-	LR.DelayCall(500, function() _FBList.GetFBList() end)
+	LR.DelayCall(500, function() _FBList.ApplyCDProgress() end)
 end
 
 ------↓↓↓对服务器获取副本CD事件的响应
@@ -245,6 +264,10 @@ arg0 = {
 }
 ]]
 function _FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
+	if not CAUSED_BY_SELF then
+		return
+	end
+	LR.Log("[LR] PLAYER_SAVED_COPY_RESPOND begin")
 	local FB_Record = arg0
 	--添加独立CD
 	for dwMapID, v in pairs(INDEPENDENT_MAP) do
@@ -268,29 +291,24 @@ function _FBList.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
 		end
 	end
 
-	---讲数据添加进数据库
+	---讲数据添加进内存中所有人物副本信息
 	local ServerInfo = {GetUserServer()}
 	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
 	local szKey = sformat("%s_%s_%d", realArea, realServer, GetClientPlayer().dwID)
 	_FBList.SelfData = clone(FB_Record)
 	_FBList.AllUsrData[szKey] = clone(FB_Record)
 
-	--保存进数据库
-	local path = sformat("%s\\%s", SaveDataPath, db_name)
-	local DB = LR.OpenDB(path, "FB_LIST_APPLY_RESPOND_SAVE_DE4533D93EA9A55619841F731C02064C")
-	_FBList.SaveData(DB)
-	LR.CloseDB(DB)
-
-	local frame = Station.Lookup("Normal/LR_AS_Panel")
-	if frame then
-		_FBList.ListFB()
-	end
+	LR.Log("[LR] PLAYER_SAVED_COPY_RESPOND end")
+	CAUSED_BY_SELF = false
 end
 
 
 function _FBList.FIRST_LOADING_END()
+	local t = GetTickCount()
+	LR.Log("[LR] FBList FIRST_LOADING_END get self cd progress begin...")
 	_FBList.LoadCommonSetting()
-	_FBList.GetFBList()
+	_FBList.ApplyCDProgress()
+	LR.Log(sformat("[LR] FBList FIRST_LOADING_END get self cd progress end..., cost %d ms", GetTickCount() - t))
 end
 
 function _FBList.ResetData()
@@ -381,8 +399,8 @@ function _FBList.ListFB()
 	local TempTable_Cal, TempTable_NotCal = LR_AS_Base.SeparateUsrList()
 	_FBList.Container = frame:Lookup("PageSet_Menu/Page_FBList/WndScroll_FBList/Wnd_FBList")
 	_FBList.Container:Clear()
-	num = _FBList.ShowItem (TempTable_Cal, 255, 1, 0)
-	num = _FBList.ShowItem (TempTable_NotCal, 60, 1, num)
+	local num = _FBList.ShowItem(TempTable_Cal, 255, 1, 0)
+	num = _FBList.ShowItem(TempTable_NotCal, 60, 1, num)
 	_FBList.Container:FormatAllContentPos()
 end
 
@@ -495,42 +513,7 @@ function _FBList.ShowItem(t_Table, Alpha, bCal, _num)
 		handle:RegisterEvent(304)
 		handle.OnItemMouseEnter = function ()
 			item_Select:Show()
-			local nMouseX, nMouseY =  Cursor.GetPos()
-			local szTipInfo = {}
-			local szPath, nFrame = GetForceImage(v.dwForceID)
-			szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
-			szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
-			--szTipInfo[#szTipInfo+1] = GetFormatText(" ================================ \n", 17)
-			szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
-			szTipInfo[#szTipInfo+1] = GetFormatText("\n", 41)
-			for dwMapID, v in pairs (FB_Record) do
-				szTipInfo[#szTipInfo+1] = GetFormatText(Table_GetMapName(dwMapID), 224)
-				local str = ""
-				if INDEPENDENT_MAP[dwMapID] then
-					local tBossList = Table_GetCDProcessBoss and Table_GetCDProcessBoss(dwMapID) or {}
-					if false then
-						tBossList = {{dwProgressID = 1}, {dwProgressID = 2}, {dwProgressID = 3}, {dwProgressID = 4}, {dwProgressID = 5}, }
-					end
-					tsort(tBossList, function(a, b) return a.dwProgressID < b.dwProgressID end)
-					local szText = ""
-					for k2, v2 in pairs(tBossList) do
-						if FB_Record[dwMapID][tostring(v2.dwProgressID)] then
-							szText = sformat("%s%s", szText, _L["<SYMBOL_DONE>"])
-						else
-							szText = sformat("%s%s", szText, _L["<SYMBOL_NOT>"])
-						end
-					end
-					str = sformat(_L["\tKill status：%s \n"], szText)
-				else
-					str = sformat(_L["\tID:%6d \n"], v[1] or -1)
-				end
-				szTipInfo[#szTipInfo+1] = GetFormatText(str, 27)
-			end
-			--szTipInfo = szTipInfo .. GetFormatText("〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓\n", 41)
-			szTipInfo[#szTipInfo+1] = GetFormatText("\t \n", 41)
-			local szOutputTip = tconcat(szTipInfo)
-			OutputTip(szOutputTip, 330, {nMouseX, nMouseY, 0, 0})
+			_FBList.ShowTip(v)
 		end
 		handle.OnItemMouseLeave = function()
 			item_Select:Hide()
@@ -575,10 +558,75 @@ function _FBList.RefreshPage()
 	_FBList.ListFB()
 end
 
+function _FBList.ShowTip(v)
+	local nMouseX, nMouseY =  Cursor.GetPos()
+	local szTipInfo = {}
+	local szPath, nFrame = GetForceImage(v.dwForceID)
+	local szKey = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
+	local FB_Record = _FBList.AllUsrData[szKey] or {}
+	local r, g, b = LR.GetMenPaiColor(v.dwForceID)
+
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local loginArea, loginServer, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if v.dwID == me.dwID and v.realArea == realArea and v.realServer == realServer then
+		FB_Record = _FBList.SelfData
+	end
+
+	szTipInfo[#szTipInfo+1] = GetFormatImage(szPath, nFrame, 26, 26)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat(_L["%s(%d)"], v.szName, v.nLevel), 62, r, g, b)
+	szTipInfo[#szTipInfo+1] = GetFormatText(sformat("\n%s@%s\n", v.realArea, v.realServer))
+	szTipInfo[#szTipInfo+1] = GetFormatImage("ui\\image\\ChannelsPanel\\NewChannels.uitex", 166, 330, 27)
+	szTipInfo[#szTipInfo+1] = GetFormatText("\n", 41)
+
+	local tList = {["25"] = {}, ["10"] = {}, ["5"] = {}}
+	for dwMapID, v2 in pairs(FB_Record) do
+		local data = clone(LR.MapType[tonumber(dwMapID)])
+		tinsert(tList[tostring(data.nMaxPlayerCount)], {dwMapID = dwMapID, nCopyIndex = v2[1]})
+	end
+	local keys = {"25", "10", "5"}
+	for k2, v2 in pairs(keys) do
+		tsort(tList[v2], function(a, b) return a.dwMapID > b.dwMapID end)
+	end
+	for k2, v2 in pairs(keys) do
+		if next(tList[v2]) ~= nil then
+			szTipInfo[#szTipInfo + 1] = GetFormatText(sformat(_L["===%s People Dungeon===\n"], v2), 59)
+			for k3, v3 in pairs(tList[v2]) do
+				local dwMapID = v3.dwMapID
+				szTipInfo[#szTipInfo + 1] = GetFormatText(Table_GetMapName(dwMapID), 224)
+				local str = ""
+				if INDEPENDENT_MAP[dwMapID] then
+					local tBossList = Table_GetCDProcessBoss and Table_GetCDProcessBoss(dwMapID) or {}
+					if false then
+						tBossList = {{dwProgressID = 1}, {dwProgressID = 2}, {dwProgressID = 3}, {dwProgressID = 4}, {dwProgressID = 5}, }
+					end
+					tsort(tBossList, function(a, b) return a.dwProgressID < b.dwProgressID end)
+					local szText = ""
+					for k4, v4 in pairs(tBossList) do
+						if FB_Record[dwMapID][tostring(v4.dwProgressID)] then
+							szText = sformat("%s%s", szText, _L["<SYMBOL_DONE>"])
+						else
+							szText = sformat("%s%s", szText, _L["<SYMBOL_NOT>"])
+						end
+					end
+					str = sformat(_L["\tKill status：%s \n"], szText)
+				else
+					str = sformat(_L["\tID:%6d \n"], v3.nCopyIndex)
+				end
+				szTipInfo[#szTipInfo+1] = GetFormatText(str, 27)
+			end
+		end
+	end
+	--szTipInfo = szTipInfo .. GetFormatText("〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓〓\n", 41)
+	szTipInfo[#szTipInfo+1] = GetFormatText("\t \n", 41)
+	local szOutputTip = tconcat(szTipInfo)
+	OutputTip(szOutputTip, 330, {nMouseX, nMouseY, 0, 0})
+end
+
 ------------------------------------------------------------------------------------
 -----明细小窗口
 ------------------------------------------------------------------------------------
-LR_AS_FB_Detail_Panel = CreateAddon("LR_AS_FB_Detail_Panel")
+LR_AS_FB_Detail_Panel = _G2.CreateAddon("LR_AS_FB_Detail_Panel")
 LR_AS_FB_Detail_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_AS_FB_Detail_Panel.UsrData = {
@@ -899,6 +947,7 @@ local LR_FB_Tips = {
 	tCopyID = {},
 }
 
+--进本检查CD情况
 function LR_FB_Tips.LOADING_END()
 	local me = GetClientPlayer()
 	if not me then
@@ -908,19 +957,15 @@ function LR_FB_Tips.LOADING_END()
 	if not scene then
 		return
 	end
-	if scene.nType ~=  MAP_TYPE.DUNGEON then
+	if scene.nType ~= MAP_TYPE.DUNGEON then
 		return
 	end
 	LR_FB_Tips.FirstCheck = false
 	LR_FB_Tips.SecondCheck = false
-	LR.DelayCall(500, function() _FBList.GetFBList() end)
-	LR.DelayCall(3000, function() LR_FB_Tips.OutBlackCD() end)
-end
-
-function LR_FB_Tips.ON_APPLY_PLAYER_SAVED_COPY_RESPOND()
-	local tCopyID = arg0 or {}
-	LR_FB_Tips.tCopyID = clone(tCopyID)
-	LR.DelayCall(750, function() LR_FB_Tips.CheckCD() end)
+	LR.DelayCall(500, function()
+		_FBList.ApplyCDProgress()
+		LR_FB_Tips.CheckCD()
+	end)
 end
 
 function LR_FB_Tips.CheckCD()
@@ -939,6 +984,7 @@ function LR_FB_Tips.CheckCD()
 	local szName = Table_GetMapName(dwMapID)
 	local MSG = {}
 	local FB_ID = _FBList.GetFBIDByMapID(_FBList.SelfData, dwMapID)
+	LR_FB_Tips.OutBlackCD()
 	if not LR_FB_Tips.FirstCheck then
 		MSG[#MSG+1] = sformat(_L["LR:You enter FB[%s], ID is %d, "], szName, nCopyIndex)
 		if FB_ID ~= nil then
@@ -971,13 +1017,21 @@ function LR_FB_Tips.CheckCD()
 	end
 end
 
+----副本进度改变时输出被黑信息
+function LR_FB_Tips.ON_MAP_COPY_PROGRESS_UPDATE()
+	LR.DelayCall(150, function()
+		_FBList.ApplyCDProgress()
+		LR_FB_Tips.OutBlackCD()
+	end)
+end
+
 function LR_FB_Tips.OutBlackCD()
 	local me = GetClientPlayer()
 	if not me then
 		return
 	end
 	local scene = me.GetScene()
-	if scene.nType ~=  MAP_TYPE.DUNGEON then
+	if scene.nType ~= MAP_TYPE.DUNGEON then
 		return
 	end
 	local dwMapID = scene.dwMapID
@@ -1001,14 +1055,8 @@ function LR_FB_Tips.OutBlackCD()
 	end
 end
 
-function LR_FB_Tips.ON_MAP_COPY_PROGRESS_UPDATE()
-	LR.DelayCall(150, function() _FBList.GetFBList() end)
-end
-
 LR.RegisterEvent("LOADING_END", function() LR_FB_Tips.LOADING_END() end)
 LR.RegisterEvent("ON_MAP_COPY_PROGRESS_UPDATE", function() LR_FB_Tips.ON_MAP_COPY_PROGRESS_UPDATE() end)
-LR.RegisterEvent("ON_APPLY_PLAYER_SAVED_COPY_RESPOND", function() LR_FB_Tips.ON_APPLY_PLAYER_SAVED_COPY_RESPOND() end)
-
 ------------------------------------------
 LR_AS_FBList.FB25R = _FBList.FB25R
 LR_AS_FBList.FB10R = _FBList.FB10R
@@ -1016,16 +1064,43 @@ LR_AS_FBList.FB5R = _FBList.FB5R
 LR_AS_FBList.SaveCommonSetting = _FBList.SaveCommonSetting
 LR_AS_FBList.LoadCommonSetting = _FBList.LoadCommonSetting
 
+---------------------------------
+---压力测试
+---------------------------------
+local StressTest = {}
+StressTest.Num = 50
+function StressTest.IniDB(DB)
+	for i = 1, StressTest.Num, 1 do
+		local realArea = sformat(_L["Area%d"], i % 3)
+		local realServer = sformat(_L["Server%d"], i % 4)
+		local dwID = 1000000 + i
+		local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
 
-------------------------------------------
---注册模块
+		local fenlei = {"FB25R", "FB10R", "FB5R"}
+		local FB_Record = {}
+		for k, v in pairs(fenlei) do
+			for k2, v2 in pairs(_FBList[v]) do
+				FB_Record[tostring(v2.dwMapID)] = {i * 1000 + v2.dwMapID}
+			end
+		end
+
+		_FBList.SaveData(DB, FB_Record, szKey)
+	end
+end
+
+---------------------------------
+---注册模块
+---------------------------------
 LR_AS_Module.FBList = {}
-LR_AS_Module.FBList.SaveData = _FBList.SaveData2
+LR_AS_Module.FBList.PrepareData = _FBList.PrepareData
+LR_AS_Module.FBList.SaveData = _FBList.SaveData
 LR_AS_Module.FBList.LoadData = _FBList.LoadAllUsrData
 LR_AS_Module.FBList.ResetDataMonday = _FBList.ResetDataMonday
 LR_AS_Module.FBList.ResetDataEveryDay = _FBList.ResetDataEveryDay
 LR_AS_Module.FBList.ResetDataFriday = _FBList.ResetDataFriday
 LR_AS_Module.FBList.AddPage = _FBList.AddPage
 LR_AS_Module.FBList.RefreshPage = _FBList.RefreshPage
-
+LR_AS_Module.FBList.ShowTip = _FBList.ShowTip
+-----
+LR_AS_Module.FBList.StressTest = StressTest
 

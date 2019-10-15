@@ -20,14 +20,23 @@ local LR_TeamHelper_UI ={
 	dwIcon = 6641,
 	szClass = "SmallHelpers",
 	tWidget = {
-		{	name="LR_TeamHelper_UI_check_box",type="CheckBox",text=_L["Enable LR TeamHelper"],x=0,y=0,w=200,
+		{	name = "LR_TeamHelper_UI_check_box", type = "CheckBox", text = _L["Enable LR TeamHelper"], x = 0, y = 0, w = 200,
 			default = function ()
 				return LR_TeamRequest.UsrData.bOn
 			end,
 			callback = function (enabled)
 				LR_TeamRequest.UsrData.bOn = enabled
-			end
-		},{	name="LR_TeamHelper_UI_Button_01", type="Button", text = _L["Open LR_CDRP"], x = 0, y = 40, w = 200,
+			end,
+			Tip = _L["Please close MY_PartyRequest"],
+		},{	name = "LR_TeamHelper_UI_ComboBox_01", type = "ComboBox", x = 200, y = 0, text = _L["Auto Action"], w = 220, h = 40,
+			enable = function()
+				return true
+			end,
+			callback = function(m)
+				LR_TeamRequest.OptionMenu(m)
+				PopupMenu(m)
+			end,
+		},{	name = "LR_TeamHelper_UI_Button_01", type = "Button", text = _L["Open LR_CDRP"], x = 0, y = 40, w = 200,
 			callback = function ()
 				LR_CDRP.OpenFrame()
 			end
@@ -35,8 +44,6 @@ local LR_TeamHelper_UI ={
 	}
 }
 LR_TOOLS:RegisterPanel(LR_TeamHelper_UI)
-
-
 -----------------------------------
 ----×¢²áÍ·Ïñ¡¢°âÊÖ²Ëµ¥
 -----------------------------------
@@ -67,6 +74,8 @@ LR_TeamHelper_UI.menu = {
 	rgb = {255, 255, 255},
 	fnAutoClose=true,
 }
+LR_TeamRequest.OptionMenu(LR_TeamHelper_UI.menu)
+
 LR_TeamHelper_UI.menu2 = {
 	szOption =_L["Open LR_CDRP"],
 	fnAction = function()

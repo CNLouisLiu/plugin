@@ -742,4 +742,101 @@ data={
 	["Instant saving when quest update"]="日常任務變化時即時保存",
 	["QYJSMD"]="奇遇基數埋點",
 
+	--20181225add--
+	["JingLi"]="精力",
+	["ShengYuJingLi"]="可獲精力",
+
+	--20190101add--
+	["WLTJ"]="武林通鑒",
+
+	["PlayerInfo"]="角色",
+	["FBList"]="副本",
+	["RC"]="日常",
+	["QY"]="奇遇",
+
+	["TAI_XING_DAO"]="太行道",
+	["DIALOG_TAI_XING_DAO_01"]="今天我收到的寒泉岩已經足夠了",
+	["MI_BAO_TU"]="秘寶圖",
+	["DIALOG_MI_BAO_TU_01"]="今天我收到的魚餌已經足夠了",
+	["KE_JIANG_GAN"]="客江乾",
+	["DIALOG_KE_JIANG_GAN_01"]="貧僧今日已有足夠的野菜了",
+
+	["Money:"]="金錢：",
+	["BangGong:"]="江湖貢獻值",
+	["XiaYi:"]="俠義值",
+	["WeiWang:"]="威望值",
+	["ZhanJieJiFen:"]="戰階積分：",
+	["ZhanJieDengJi:"]="戰階等級：",
+	["MingJianBi:"]="名劍幣：",
+	["JianBen:"]="監本：",
+	["Finished HuiShi exam(6-7)\n"]="完成了會試(周六至周日)\n",
+	["Finished ShengShi exam(1-7)\n"]="完成了省試(周一至周日)\n",
+	["Haven't had any exam yet\n"]="還沒有考試\n",
+	["JingLi:"]="精力：",
+	["JingLi remain:"]="還可獲得精力：",
+	["Gold"]="金",
+	["Silver"]="銀",
+	["Copper"]="銅",
+	["ZHENYINGRICHANG"]="陣營日常",
+
+
+	["===%s People Dungeon===\n"]="=== %s人副本 ===\n",
+	["discard"]="（廢棄）",
+
+	--20190203add--
+	["remainBangGong:"]="可獲得江湖貢獻值：",
+	["remainXiaYi:"]="可獲得狹義值：",
+	["remainWeiWang:"]="可獲得威望值：",
+	["remainZhanJieJiFen:"]="戰階百分比：",
+	["JianTouShang"]="↑",
+	["JianTouXia"]="↓",
+	["nMoney"]="金錢",
+	["BangGong"]="江貢值",
+	["remainBangGong"]="可獲江貢",
+	["remainXiaYi"]="可獲狹義",
+	["remainZhanJieJiFen"]="戰階百分比",
+	["ZhanJieDengJi"]="戰階等級",
+	["JianBen"]="監本印文",
+	["MingJianBi"]="名劍幣",
+	["nVigor"]="精力",
+	["nVigorRemainSpace"]="可獲精力",
+	["remainWeiWang"]="可獲威望",
+	["H%sH"]="▲%s▲",
+	["S%sS"]="△%s△",
+	["Choose details"]="選擇明細列",
+	["Reset"]="重置",
+	["Sure to reset?"]="    確定要重置嗎？",
+
+	["Account Stamina:"]="賬號精力：",
+	["DB Repair"]="數據庫修複",
+	["Are you sure to repair database ?"]="確定要修複數據庫？",
+
+	--20190626add--
+	["%d minute ago"]="%d分鐘前",
+	["%d hour ago"]="%d小時前",
+	["%d days ago"]="%d天前",
+	["3 Years ago"]="超過3年",
+	["LastLoginTime"]="最後登錄",
+
+	["Group By Account"]="按賬戶分組",
+	["Custom Group"]="自定義分組",
+	["Account:%s...%s"]="賬戶：%s...%s",
+	["Set other name"]="設置別名",
+	["Account:%s"]="賬戶：%s",
+	["Show All Account"]="顯示所有賬號",
+
+	["MI_SHU_SHENG"]="迷書生",
+	["DIALOG_MI_SHU_SHENG_01"]="看樣子還想再吃一根",
+	["DIALOG_MI_SHU_SHENG_02"]="已經吃得圓滾滾，吃不下啦",
+
+	["DI_SHUI_EN"]="滴水恩",
+	["DIALOG_DI_SHUI_EN_01"]="綠頭鴨的羽毛似乎還有些臟",
+	["DIALOG_DI_SHUI_EN_02"]="表示自己不想再洗了",
+
+	["CANG_HAI_DI"]="滄海笛",
+	["DIALOG_CANG_HAI_DI_01"]="想要的話明天再來吧",
+
+	["Auto refresh"]="每5秒刷新一次",
+	
+
 }

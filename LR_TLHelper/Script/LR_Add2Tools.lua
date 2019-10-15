@@ -147,6 +147,22 @@ local LR_TLHelper_UI = {
 			callback = function (enabled)
 				LR_TLHelper.UsrData.showSelf = enabled
 			end
+		},{
+			name = "LR_TLHelper_UIcheck_box8", type = "CheckBox", text = _L["Hide bar"], x = 0, y = 220, w = 200,
+			enable = function ()
+				if LR.GetXinFa() == Table_GetSkillName(10225, 1) and LR_TLHelper.UsrData.on then
+					return true
+				else
+					return false
+				end
+			end,
+			default = function ()
+				return LR_TLHelper.UsrData.HideS
+			end,
+			callback = function (enabled)
+				LR_TLHelper.UsrData.HideS = enabled
+				LR_TLHelper.HideSwitch()
+			end
 		}, {
 			name = "LR_TLHelper_UItips1", type = "TipBox", x = 0, y = 290, w = 60, h = 28, text = "Tips",
 			callback = function ()

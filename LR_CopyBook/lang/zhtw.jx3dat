@@ -20,7 +20,7 @@ data={
 	["Choose book(s) which to print"]="選擇抄錄的書籍",
 	["(Bind after printing)"]="（抄錄後綁定）",
 	["(Never Read\)"]="（未閱讀）",
-	["Continuous print"]="連續抄錄",
+	["Continuous print"]="連續抄錄(套)",
 	["unit"]="本",
 	["Enter num"]="輸入數值",
 	["Open mini panel"]="打開迷你界面",
@@ -32,5 +32,10 @@ data={
 	--20170523add--
 	["No book set, please set"]="請點擊左上角圖標設置套書",
 	["SuitBook Name:%s"]="套書：%s",
+
+	--20190425add--
+	["Recipe have"]="需要的材料在背包中的數量",
+	["Recipe need"]="需購買的材料及數量",
+	["Need thew: %d, get examprint: %d"]="需要精力：%d，獲得監本：%d",
 
 }

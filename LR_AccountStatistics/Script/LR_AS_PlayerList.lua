@@ -12,6 +12,7 @@ local _L = LR.LoadLangPack(LanguagePath)
 local VERSION = "20180403"
 -------------------------------------------------------------
 local _C = {}
+local DATA2BSAVE = {}
 
 function _C.GetSelfData()
 	local me = GetClientPlayer()
@@ -28,38 +29,166 @@ function _C.GetSelfData()
 		loginServer = loginServer,
 		realArea = realArea,
 		realServer = realServer,
+		hash01 = LR.GetAccountCode(),
+		hash02 = LR.GetUserCode(),
+		--
+		nCurrentStamina = me.nCurrentStamina,
+		nMaxStamina = me.nMaxStamina,
 	}
+	--将自己的数据放入全局变量表
+	LR_AS_Data.AllPlayerList[szKey] = clone(data)
+	LR_AS_Data.All_Stamina[data.hash01] = LR_AS_Data.All_Stamina[data.hash01] or {}
+	LR_AS_Data.All_Stamina[data.hash01][sformat("%s_%s", realArea, realServer)] = {nCurrentStamina = data.nCurrentStamina, nMaxStamina = data.nMaxStamina, SaveTime = GetCurrentTime()}
+	--返回数据
 	return data
 end
 
-function _C.SaveData(DB)
-	if not LR_AS_Base.UsrData.bRecord then
-		return
-	end
-	local v = _C.GetSelfData()
-	local DB_REPLACE = DB:Prepare("REPLACE INTO player_list ( szKey, dwID, szName, nLevel, dwForceID, loginArea, loginServer, realArea, realServer ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+function _C.PrepareData()
+	DATA2BSAVE = _C.GetSelfData()
+end
+
+function _C.SaveData(DB, TestData)
+	local v = TestData or clone(DATA2BSAVE) or {}
+	local DB_REPLACE = DB:Prepare("REPLACE INTO player_list ( szKey, dwID, szName, nLevel, dwForceID, loginArea, loginServer, realArea, realServer, hash01, hash02 ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
 	DB_REPLACE:ClearBindings()
-	DB_REPLACE:BindAll(unpack(g2d({ v.szKey, v.dwID, v.szName, v.nLevel, v.dwForceID, v.loginArea, v.loginServer, v.realArea, v.realServer })))
+	DB_REPLACE:BindAll(unpack(g2d({ v.szKey, v.dwID, v.szName, v.nLevel, v.dwForceID, v.loginArea, v.loginServer, v.realArea, v.realServer, v.hash01, v.hash02 })))
 	DB_REPLACE:Execute()
+	--
+	local DB_REPLACE2 = DB:Prepare("REPLACE INTO schema_stamina_data ( hash01, hash02, nCurrentStamina, nMaxStamina, SaveTime ) VALUES ( ?, ?, ?, ?, ? )")
+	DB_REPLACE2:ClearBindings()
+	DB_REPLACE2:BindAll(unpack(g2d({ v.hash01, sformat("%s_%s", v.realArea, v.realServer), v.nCurrentStamina, v.nMaxStamina, GetCurrentTime() })))
+	DB_REPLACE2:Execute()
 end
 
 function _C.LoadData(DB)
+	--载入所有人物的列表
 	local DB_SELECT = DB:Prepare("SELECT * FROM player_list WHERE szKey IS NOT NULL ORDER BY nLevel DESC, dwForceID ASC, szName ASC")
 	local data = d2g(DB_SELECT:GetAll())
-	local AllUsrList = {}
+	local AllPlayerList = {}
 	for k, v in pairs(data) do
-		AllUsrList[v.szKey] = v
+		AllPlayerList[v.szKey] = v
 	end
-	local myself = _C.GetSelfData()
-	AllUsrList[myself.szKey] = clone(myself)
-	LR_AS_Data.AllPlayerList = clone(AllUsrList)
+	LR_AS_Data.AllPlayerList = clone(AllPlayerList)
+	--载入所有账号的精力体力信息
+	local DB_SELECT2 = DB:Prepare("SELECT * FROM schema_stamina_data WHERE hash01 IS NOT NULL AND hash02 IS NOT NULL")
+	local data2 = d2g(DB_SELECT2:GetAll())
+	local All_Stamina = {}
+	for k, v in pairs(data2) do
+		All_Stamina[v.hash01] = All_Stamina[v.hash01] or {}
+		All_Stamina[v.hash01][v.hash02] = {nCurrentStamina = v.nCurrentStamina, nMaxStamina = v.nMaxStamina, SaveTime = v.SaveTime}
+	end
+	LR_AS_Data.All_Stamina = clone(All_Stamina)
+	--将当前账号的信息以及账号信息放入共享数据
+	_C.GetSelfData()
 end
 
---注册模块
+function _C.RepairDB(DB)
+	--导入数据
+	_C.LoadData(DB)
+	local AllPlayerList = clone(LR_AS_Data.AllPlayerList)
+	--修复 szKey 为""的数据
+	if AllPlayerList[""] then
+		if AllPlayerList[""].dwID and AllPlayerList[""].dwID ~= 0 and AllPlayerList[""].realArea and LR.Trim(AllPlayerList[""].realArea) ~= "" and AllPlayerList[""].realServer and AllPlayerList[""].realServer ~= "" then
+			local szKey = sformat("%s_%s_%d", AllPlayerList[""].realArea, AllPlayerList[""].realServer, AllPlayerList[""].dwID)
+			AllPlayerList[szKey] = clone(AllPlayerList[""])
+			AllPlayerList[""] = nil
+		end
+	end
+	--修复NULL数据，用默认替代，如果szKey 不规范，则根据realarea/realServer/dwID修复，若realarea/realServer/dwID其中有不规范(空或者"")的，放弃这条数据
+	--
+	local all_data = {}
+	local check01 = function(value)
+		if not value or LR.Trim(value) == "" then
+			return false
+		else
+			return true
+		end
+	end
+	local value1 = function(value, default)
+		return value and value ~= "" and value or default
+	end
+	for szKey, v in pairs(AllPlayerList) do
+		local flag = true
+		local key = szKey
+		local _s, _e, area, server, id = sfind(szKey, "(.+)_(.+)_(%d+)")
+		if not _s then
+			if not (check01(v.realArea) and check01(v.realServer) and check01(v.dwID)) then
+				flag = false
+			else
+				key = sformat("%s_%s_%d", v.realArea, v.realServer, v.dwID)
+			end
+		end
+		if flag then
+			local data = {}
+			data.szKey = key
+			data.dwID = value1(v.dwID, 0)
+			data.szName = value1(v.szName, sformat("PLAYER#%d", data.dwID))
+			data.nLevel = value1(v.nLevel, 1)
+			data.dwForceID = value1(v.dwForceID, 0)
+			data.loginArea = value1(v.loginArea, area)
+			data.loginServer = value1(v.loginServer, server)
+			data.realArea = value1(v.realArea, area)
+			data.realServer = value1(v.realServer, server)
+			all_data[key] = clone(data)
+		end
+	end
+
+	--先清除数据库
+	local DB_DELETE = DB:Prepare("DELETE FROM player_list")
+	DB_DELETE:Execute()
+	--插入数据
+	local DB_REPLACE = DB:Prepare("REPLACE INTO player_list ( szKey, dwID, szName, nLevel, dwForceID, loginArea, loginServer, realArea, realServer ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+	for k, v in pairs(all_data) do
+		DB_REPLACE:ClearBindings()
+		DB_REPLACE:BindAll(unpack(g2d({ v.szKey, v.dwID, v.szName, v.nLevel, v.dwForceID, v.loginArea, v.loginServer, v.realArea, v.realServer })))
+		DB_REPLACE:Execute()
+	end
+	LR_AS_Data.AllPlayerList = clone(all_data)
+end
+
+---------------------------------
+---压力测试
+---------------------------------
+local StressTest = {}
+StressTest.Num = 50
+function StressTest.IniDB(DB)
+	for i = 1, StressTest.Num, 1 do
+		local realArea = sformat(_L["Area%d"], i % 3)
+		local realServer = sformat(_L["Server%d"], i % 4)
+		local dwID = 1000000 + i
+		local szKey = sformat("%s_%s_%d", realArea, realServer, dwID)
+
+		local data = {
+			szKey = szKey,
+			dwID = dwID,
+			szName = sformat(_L["TestUser_%d"], i),
+			nLevel = 100,
+			dwForceID = i % 10,
+			loginArea = realArea,
+			loginServer = realServer,
+			realArea = realArea,
+			realServer = realServer,
+			hash01 = LR.GetAccountCode(sformat(_L["TestAccount_%d"], i % 5)),
+			hash02 = LR.GetUserCode({AccountCode = LR.GetAccountCode(_L["TestAccount_%d"], i % 5), szKey = szKey}),
+			--
+			nCurrentStamina = 3000,
+			nMaxStamina = 3000,
+		}
+		_C.SaveData(DB, data)
+	end
+end
+
+---------------------------------
+---注册模块
+---------------------------------
 LR_AS_Module.PlayerList = {}
+LR_AS_Module.PlayerList.PrepareData = _C.PrepareData
 LR_AS_Module.PlayerList.SaveData = _C.SaveData
 LR_AS_Module.PlayerList.LoadData = _C.LoadData
 LR_AS_Module.PlayerList.FIRST_LOADING_END = _C.LoadData
+LR_AS_Module.PlayerList.RepairDB = _C.RepairDB
+----
+LR_AS_Module.PlayerList.StressTest = StressTest
 
 
 

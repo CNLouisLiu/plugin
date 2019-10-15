@@ -6,24 +6,7 @@ local tconcat, tinsert, tremove, tsort, tgetn = table.concat, table.insert, tabl
 local AddonPath = "Interface\\LR_Plugin\\LR_1Base"
 local SaveDataPath = "Interface\\LR_Plugin@DATA\\LR_1Base"
 ---------------------------------------------------------------
-BAG_PACKAGE = {
-	INVENTORY_INDEX.PACKAGE,	--1
-	INVENTORY_INDEX.PACKAGE1,	--2
-	INVENTORY_INDEX.PACKAGE2,	--3
-	INVENTORY_INDEX.PACKAGE3,	--4
-	INVENTORY_INDEX.PACKAGE4,	--5
-	INVENTORY_INDEX.PACKAGE_MIBAO,	--6
-}
-BANK_PACKAGE = {
-	INVENTORY_INDEX.BANK,
-	INVENTORY_INDEX.BANK_PACKAGE1,
-	INVENTORY_INDEX.BANK_PACKAGE2,
-	INVENTORY_INDEX.BANK_PACKAGE3,
-	INVENTORY_INDEX.BANK_PACKAGE4,
-	INVENTORY_INDEX.BANK_PACKAGE5,
-}
------------------------------------------------------------
-LR = LR or {
+LR = {
 	tDelayCall = {},
 	tEvent = {},
 	tBreatheCall = {},
@@ -70,6 +53,11 @@ function LR.LoadLangPack(szLangFolder)
 		for k, v in pairs(t3) do
 			t0[k] = v
 		end
+		--
+		local t4 = LoadLUAData(sformat("%s\\lang\\%s", SaveDataPath, szLang)) or {}
+		for k, v in pairs(t4) do
+			t0[k] = v
+		end
 	end
 	setmetatable(t0, {
 		__index = function(t, k) return k end,
@@ -80,6 +68,234 @@ end
 local _L = LR.LoadLangPack(AddonPath)
 
 ---------------------------------------------------------------------------------
+local _DEBUGDD = {
+	bOn = false,
+	tAddon = {},
+}
+---
+_DEBUGDD.EventM = {}	--存放需要监控Debug的Event列表
+_DEBUGDD.EventD = {}	--存放Event的信息
+---
+function _DEBUGDD.RegisterEvent(szEvent, szAddon)		--注册需要监控的Event
+	local szAddon = szAddon or "BASE"
+	if not szEvent then
+		return
+	end
+	_DEBUGDD.EventM[szEvent] = _DEBUGDD.EventM[szEvent] or {}
+	_DEBUGDD.EventM[szEvent][szAddon] = true
+end
+
+function _DEBUGDD.UnRegisterEvent(szEvent, szAddon)
+	local szAddon = szAddon or "BASE"
+	if not szEvent then
+		for event, addons in pairs(_DEBUGDD.EventM) do
+			addons[szAddon] = nil
+			if next(addons) == nil then
+				_DEBUGDD.EventM[szEvent] = nil
+			end
+		end
+		return
+	end
+	if _DEBUGDD.EventM[szEvent] then
+		_DEBUGDD.EventM[szEvent][szAddon] = nil
+		if next(_DEBUGDD.EventM[szEvent]) == nil then
+			_DEBUGDD.EventM[szEvent] = nil
+		end
+	end
+end
+
+function _DEBUGDD.OutputEvent(szEvent)
+	if not _DEBUGDD.bOn then
+		return
+	end
+	if _DEBUGDD.EventM[szEvent] and next(_DEBUGDD.EventM[szEvent]) ~= nil then
+		if _DEBUGDD.EventD[szEvent] then
+			local out, check = {sformat("EVENT = '%s'", szEvent), VALUE = {}}, {}
+			for k, v in pairs(_DEBUGDD.EventD[szEvent]) do
+				out.VALUE[sformat("%s (arg%d)", v, k - 1)] = _G[sformat("arg%d", k - 1)] == nil and "NULL" or _G[sformat("arg%d", k - 1)]
+				check[sformat("%s", v)] = _G[sformat("arg%d", k - 1)] == nil and "NULL" or _G[sformat("arg%d", k - 1)]
+			end
+			if szEvent == "" then
+
+			else
+				Output(out)
+			end
+		else
+			--LR.SysMsg(sformat("[LR] no such event data.(%s)\n", szEvent))
+		end
+	end
+end
+
+function _DEBUGDD.LoadCFG()
+	_DEBUGDD.EventD = LoadLUAData(sformat("%s\\data\\event.dat", AddonPath)) or {}
+end
+
+function _DEBUGDD.Output(szText , szHeader , nLevel )
+	if not (LR.UsrData and LR.UsrData.Debug_enable) then
+		return
+	end
+	local szText = szText or ""
+	local nLevel = nLevel or 1
+	local szHeader = szHeader or "-LR-> "
+	if not (nLevel >= LR.UsrData.Debug_Level) then
+		return
+	end
+	if type(szText) == "string" then
+		LR.SysMsg(sformat("%s%s\n", szHeader, szText))
+	elseif type(szText) == "number" then
+		LR.SysMsg(sformat("%s%s\n", szHeader, tostring(szText)))
+	elseif type(szText) == "table" then
+		LR.SysMsg(sformat("%s{\n", szHeader))
+		if next(szText)~= nil then
+			for k, v in pairs(szText) do
+				LR.SysMsg(sformat("%s\[%d\] = ", szHeader, k))
+				if type(v) == "string" or type(v) == "number" then
+					_DEBUGDD.Output(v , "" , nLevel)
+				elseif type(v) == "table" then
+					_DEBUGDD.Output(v , szHeader.."    " , nLevel)
+				end
+			end
+		end
+		LR.SysMsg(sformat("%s}\n", szHeader))
+	end
+end
+
+function _DEBUGDD.bCanDebug()
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if realArea == "电信一区" and realServer == "蝶恋花" and IsShiftKeyDown() and IsAltKeyDown() then
+		return true
+	else
+		return false
+	end
+end
+
+function _DEBUGDD.bCanDebug2()
+	local me = GetClientPlayer()
+	local ServerInfo = {GetUserServer()}
+	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
+	if realArea == "电信一区" and realServer == "蝶恋花" and LR.GetTongName(me.dwTongID) == "么么哒萌萌哒" then
+		return true
+	else
+		return false
+	end
+end
+
+function _DEBUGDD.SysMenuAdd()
+	if _DEBUGDD.bCanDebug2() then
+		local menu = {szOption = "DEBUG", bCheck = true, bChecked = function() return _DEBUGDD.bOn end, fnAction = function() _DEBUGDD.bOn = not _DEBUGDD.bOn end}
+		for k, v in pairs(_DEBUGDD.tAddon) do
+			menu[#menu + 1] = {szOption = v:GetName(), bCheck = true, bMCheck = false, bChecked = function() return v:IsOn() end, fnAction = function() v:Switch() end}
+			local m = menu[#menu]
+			for k2, v2 in pairs(v.tEvent) do
+				m[#m + 1] = {szOption = k2, bCheck = true, bMCheck = false, bChecked = function() return v:IsEventOn(k2) end, fnAction = function() v:SwitchEvent(k2) end}
+			end
+		end
+		---头像菜单
+		Player_AppendAddonMenu ({menu})
+		---扳手菜单
+		TraceButton_AppendAddonMenu ({menu})
+	end
+end
+
+------------------------------
+local _DEBUG_ADDON = {}
+_DEBUG_ADDON.__index = _DEBUG_ADDON
+
+function _DEBUG_ADDON:New(szAddon)
+	local o = {}
+	setmetatable(o, self)
+	o.bOn = false
+	o.szName = szAddon
+	o.desName = szAddon
+	o.tEvent = {}
+	_DEBUGDD.tAddon[szAddon] = o
+	return o
+end
+
+function _DEBUG_ADDON:On(arg)
+	self.bOn = arg == nil and true or arg
+	return self
+end
+
+function _DEBUG_ADDON:Off()
+	Self.bOn = false
+	return self
+end
+
+function _DEBUG_ADDON:IsOn()
+	return self.bOn
+end
+
+function _DEBUG_ADDON:Switch()
+	self.bOn = not self.bOn
+	return self
+end
+
+function _DEBUG_ADDON:RegisterEvent(szEvent)
+	self.tEvent[szEvent] = false
+	return self
+end
+
+function _DEBUG_ADDON:EventOn(szEvent)
+	if self.tEvent[szEvent] ~= nil then
+		self.tEvent[szEvent] = true
+		_DEBUGDD.RegisterEvent(szEvent, self.szName)
+	end
+	return self
+end
+
+function _DEBUG_ADDON:EventOff(szEvent)
+	if self.tEvent[szEvent] ~= nil then
+		self.tEvent[szEvent] = false
+		_DEBUGDD.UnRegisterEvent(szEvent, self.szName)
+	end
+	return self
+end
+
+function _DEBUG_ADDON:IsEventOn(szEvent)
+	if self.tEvent[szEvent] ~= nil then
+		return self.tEvent[szEvent]
+	else
+		return false
+	end
+end
+
+function _DEBUG_ADDON:SwitchEvent(szEvent)
+	if self.tEvent[szEvent] ~= nil then
+		if self:IsEventOn(szEvent) then
+			self:EventOff(szEvent)
+		else
+			self:EventOn(szEvent)
+		end
+	end
+	return self
+end
+
+function _DEBUG_ADDON:GetName()
+	return self.szName
+end
+
+function _DEBUG_ADDON:Output(...)
+	if self.bOn then
+		Output(...)
+	end
+end
+
+--
+
+--
+LR.DEBUG = {}
+LR.DEBUG.Output = _DEBUGDD.Output
+LR.DEBUG.Addon = _DEBUG_ADDON
+--
+local _DEBUG = _DEBUG_ADDON:New("BASE")
+--
+function LR.DebugD()
+	Output("EventM", _DEBUGDD.EventM, "EventD", _DEBUGDD.EventD)
+end
+
 ------------------------------------
 function LR.Trim(szText)
 	if not szText or szText == "" then
@@ -158,13 +374,13 @@ function LR.LoadDragonMapData()
 		else
 			desc = sformat("(%d%s)", num_limit, wssub(tLevel, 1, 1))
 		end
-		local _s2, _e2, szOtherName = sfind(tLine.szOtherName, _L["·(.+)"])
+		local _s2, _e2, szOtherName = sfind(tLine.szOtherName, _L[".(.+)"])
 		if not _s2 then
 			szOtherName = LR.Trim(tLine.szOtherName)
 		end
 		local szName = sformat("%s%s", szOtherName, desc)
 		local szBossInfo = sgsub(tLine.szBossInfo, "(%s+)", ",")
-		LR.MapType[dwMapID] = {szName = szName, dwMapID = dwMapID, nMaxPlayerCount = tonumber(num_limit), bossList = szBossInfo, Level = tLine.nDivideLevel, szVersionName = LR.Trim(tLine.szVersionName), path = tLine.szDungeonImage2, nFrame = tLine.nDungeonFrame2 }
+		LR.MapType[dwMapID] = {szName = szName, szOtherName = szOtherName, dwMapID = dwMapID, nMaxPlayerCount = tonumber(num_limit), bossList = szBossInfo, Level = tLine.nDivideLevel, szVersionName = LR.Trim(tLine.szVersionName), path = tLine.szDungeonImage2, nFrame = tLine.nDungeonFrame2 }
 	end
 
 	---下面是重定义bossList
@@ -194,20 +410,64 @@ function LR.LoadDragonMapData()
 end
 LR.LoadDragonMapData()
 
-function LR.IsMapBlockAddon()
+function LR.IsMapBlockAddon(dwMapID)
 	local me = GetClientPlayer()
 	if not me then
 		return true
 	end
-	if Table_IsTreasureBattleFieldMap(me.GetMapID()) then
+	local dwMapID = dwMapID or me.GetMapID()
+	if IsAddonBanMap and IsAddonBanMap(dwMapID) then
 		return true
 	end
-	if Table_IsZombieBattleFieldMap and Table_IsZombieBattleFieldMap(me.GetMapID()) then
+	if Table_IsTreasureBattleFieldMap(dwMapID) then
+		return true
+	end
+	if Table_IsZombieBattleFieldMap and Table_IsZombieBattleFieldMap(dwMapID) then
 		return true
 	end
 	return false
 end
 
+function LR.GetMapData(dwMapID)
+	local me = GetClientPlayer()
+	if not me then
+		return nil
+	end
+	local result = {nType = MAP_TYPE.NORMAL_MAP, dwMapID = 0, nCopyIndex = 0, data = {}}
+	if dwMapID then
+		local MapParams = GetMapParams(dwMapID)
+		result.nType = MapParams.nType
+		result.dwMapID = dwMapID
+	else
+		local scene = me.GetScene()
+		result.nType = scene.nType
+		result.dwMapID = scene.dwMapID
+		result.nCopyIndex = scene.nCopyIndex
+	end
+	if result.nType == MAP_TYPE.DUNGEON then
+		result.data = clone(LR.MapType[result.dwMapID])
+	end
+	return result
+end
+
+function LR.IsDungeonMap(dwMapID)
+	local data = LR.GetCurrentMapData(dwMapID)
+	if data.nType == MAP_TYPE.DUNGEON then
+		return true
+	else
+		return false
+	end
+end
+
+--------------------------------------
+function LR.CheckUnLock()
+	local state = Lock_State()
+	return state == "NO_PASSWORD" or state == "PASSWORD_UNLOCK"
+end
+
+function LR.IsPhoneLock()
+	return GetClientPlayer() and GetClientPlayer().IsTradingMibaoSwitchOpen()
+end
 --------------------------------------
 function LR.Table_GetBookItemIndex(dwBookID, dwSegmentID)
 	local dwBookItemIndex = 0
@@ -265,26 +525,31 @@ function LR.GetItemNameByItemInfo(itemInfo, nBookInfo)
 	end
 end
 
-function LR.CheckUnLock()
-	local state = Lock_State()
-	return state == "NO_PASSWORD" or state == "PASSWORD_UNLOCK"
-end
-
-function LR.GetItemNumInBag(dwTabType, dwIndex, nBookID)
+function LR.GetItemNumInBag(dwTabType, dwIndex, nBookID, nSegID, bNotCalMiBao)
 	local me = GetClientPlayer()
 	if not me then
 		return 0
 	end
 	local num = 0
 	for _, dBox in pairs(BAG_PACKAGE) do
+		if bNotCalMiBao and dBox == INVENTORY_INDEX.PACKAGE_MIBAO then
+			break
+		end
 		for dX = 0, me.GetBoxSize(dBox) - 1, 1 do
 			local item = me.GetItem(dBox, dX)
 			if item then
 				if item.dwTabType == dwTabType and item.dwIndex == dwIndex then
 					local nStackNum = 1
 					if item.nGenre == ITEM_GENRE.BOOK then
-						if item.nBookID ~= nBookID then
-							nStackNum = 0
+						if not nSegID then
+							if item.nBookID ~= nBookID then
+								nStackNum = 0
+							end
+						else
+							local dwBookID, dwSegmentID = GlobelRecipeID2BookID(item.nBookID)
+							if dwBookID ~= nBookID or dwSegmentID ~= nSegID then
+								nStackNum = 0
+							end
 						end
 					else
 						if item.bCanStack then
@@ -300,7 +565,7 @@ function LR.GetItemNumInBag(dwTabType, dwIndex, nBookID)
 	return num
 end
 
-function LR.GetItemNumInBank(dwTabType, dwIndex, nBookID)
+function LR.GetItemNumInBank(dwTabType, dwIndex, nBookID, nSegID)
 	local me = GetClientPlayer()
 	if not me then
 		return 0
@@ -313,8 +578,16 @@ function LR.GetItemNumInBank(dwTabType, dwIndex, nBookID)
 				if item.dwTabType == dwTabType and item.dwIndex == dwIndex then
 					local nStackNum = 1
 					if item.nGenre == ITEM_GENRE.BOOK then
-						if item.nBookID ~= nBookID then
-							nStackNum = 0
+						--当nSegID == nil时, nBookID = item.nBookID, 当nSegID ~= nil时, nBookID = dwBookID, nSegID = dwSegmentID
+						if not nSegID then
+							if item.nBookID ~= nBookID then
+								nStackNum = 0
+							end
+						else
+							local dwBookID, dwSegmentID = GlobelRecipeID2BookID(item.nBookID)
+							if dwBookID ~= nBookID or dwSegmentID ~= nSegID then
+								nStackNum = 0
+							end
 						end
 					else
 						if item.bCanStack then
@@ -383,12 +656,54 @@ function LR.GetItemNumInHorseBag(dwTabType, dwIndex, nBookID)
 	return num
 end
 
-function LR.GetItemNumInBagAndBank(dwTabType, dwIndex, nBookID)
-	local bagNum = LR.GetItemNumInBag(dwTabType, dwIndex, nBookID)
-	local bankNum = LR.GetItemNumInBank(dwTabType, dwIndex, nBookID)
+function LR.GetItemNumInBagAndBank(dwTabType, dwIndex, nBookID, nSegID, bNotCalMiBao)
+	local bagNum = LR.GetItemNumInBag(dwTabType, dwIndex, nBookID, nSegID, bNotCalMiBao)
+	local bankNum = LR.GetItemNumInBank(dwTabType, dwIndex, nBookID, nSegID)
 	return bagNum + bankNum
 end
 
+function LR.GetPlayerBagFreeBoxList()
+	local me = GetClientPlayer()
+	local tBoxTable = {}
+	for _, dwBox in pairs(BAG_PACKAGE) do
+		local dwSize = me.GetBoxSize(dwBox)
+		if dwSize > 0 then
+			for dwX = dwSize, 1, -1 do
+				local item = me.GetItem(dwBox, dwX - 1)
+				if not item then
+					local i, j = dwBox, dwX - 1
+					tinsert(tBoxTable, 1, {i, j})
+				end
+			end
+		end
+	end
+	return tBoxTable
+end
+
+function LR.IsPhoneLock()
+	return GetClientPlayer() and GetClientPlayer().IsTradingMibaoSwitchOpen()
+end
+
+function LR.GetBagEmptyBoxNum()
+	local num = 0
+	local me = GetClientPlayer()
+	for _, dBox in pairs(BAG_PACKAGE) do
+		if not LR.IsPhoneLock() and dBox == INVENTORY_INDEX.PACKAGE_MIBAO then
+			break
+		end
+		for dX = 0, me.GetBoxSize(dBox) - 1, 1 do
+			local item = me.GetItem(dBox, dX)
+			if not item then
+				num = num + 1
+			end
+		end
+	end
+
+	return num
+end
+------------------------------------------------------------------
+------
+------------------------------------------------------------------
 function LR.FormatTimeString(nTime)
 	local t = TimeToDate(nTime)
 	return string.format("%d-%02d-%02d %02d:%02d:%02d", t.year, t.month, t.day, t.hour, t.minute, t.second)
@@ -401,55 +716,58 @@ end
 function LR.GetFormatText(szText, font, r, g, b, nEvent, valign, halign, w, h)
 	return sformat("<text>text=\"%s\" font=%d h=%d lockshowhide=0 eventid=0 valign=1 halign=1 r=%d g=%d b=%d</text>", szText or "", font or 162, height or 60, r or 255, g or 255, b or 255)
 end
+
 ------------------------------------------------------------------
 ------UI
 ------------------------------------------------------------------
 function LR.AppendUI(__type, parent, szName, data)
 	local __h = nil
 	if __type == "Frame" then
-		__h = _G.CreateFrame(parent, szName, data)
+		__h = _G2.CreateFrame(parent, szName, data)
 	elseif __type == "Window" then
-		__h = _G.CreateWindow(parent, szName, data)
+		__h = _G2.CreateWindow(parent, szName, data)
 	elseif __type == "WndContainer" then
-		__h = _G.CreateWndContainer(parent, szName, data)
+		__h = _G2.CreateWndContainer(parent, szName, data)
 	elseif __type == "WndContainerScroll" then
-		__h = _G.CreateWndContainerScroll(parent, szName, data)
+		__h = _G2.CreateWndContainerScroll(parent, szName, data)
 	elseif __type == "PageSet" then
-		__h = _G.CreatePageSet(parent, szName, data)
+		__h = _G2.CreatePageSet(parent, szName, data)
 	elseif __type == "Button" then
-		__h = _G.CreateButton(parent, szName, data)
+		__h = _G2.CreateButton(parent, szName, data)
 	elseif __type == "Edit" then
-		__h = _G.CreateEdit(parent, szName, data)
+		__h = _G2.CreateEdit(parent, szName, data)
 	elseif __type == "CheckBox" then
-		__h = _G.CreateCheckBox(parent, szName, data)
+		__h = _G2.CreateCheckBox(parent, szName, data)
 	elseif __type == "UICheckBox" then
-		__h = _G.CreateUICheckBox(parent, szName, data)
+		__h = _G2.CreateUICheckBox(parent, szName, data)
 	elseif __type == "ComboBox" then
-		__h = _G.CreateComboBox(parent, szName, data)
+		__h = _G2.CreateComboBox(parent, szName, data)
 	elseif __type == "RadioBox" then
-		__h = _G.CreateRadioBox(parent, szName, data)
+		__h = _G2.CreateRadioBox(parent, szName, data)
 	elseif __type == "CSlider" then
-		__h = _G.CreateCSlider(parent, szName, data)
+		__h = _G2.CreateCSlider(parent, szName, data)
 	elseif __type == "ColorBox" then
-		__h = _G.CreateColorBox(parent, szName, data)
+		__h = _G2.CreateColorBox(parent, szName, data)
 	elseif __type == "Scroll" then
-		__h = _G.CreateScroll(parent, szName, data)
+		__h = _G2.CreateScroll(parent, szName, data)
 	elseif __type == "UIButton" then
-		__h = _G.CreateUIButton(parent, szName, data)
+		__h = _G2.CreateUIButton(parent, szName, data)
 	elseif __type == "Handle" then
-		__h = _G.CreateHandle(parent, szName, data)
+		__h = _G2.CreateHandle(parent, szName, data)
+	elseif __type == "HoverHandle" then
+		__h = _G2.CreateHoverHandle(parent, szName, data)
 	elseif __type == "Text" then
-		__h = _G.CreateText(parent, szName, data)
+		__h = _G2.CreateText(parent, szName, data)
 	elseif __type == "Image" then
-		__h = _G.CreateImage(parent, szName, data)
+		__h = _G2.CreateImage(parent, szName, data)
 	elseif __type == "Animate" then
-		__h = _G.CreateAnimate(parent, szName, data)
+		__h = _G2.CreateAnimate(parent, szName, data)
 	elseif __type == "Shadow" then
-		__h = _G.CreateShadow(parent, szName, data)
+		__h = _G2.CreateShadow(parent, szName, data)
 	elseif __type == "Box" then
-		__h = _G.CreateBox(parent, szName, data)
+		__h = _G2.CreateBox(parent, szName, data)
 	elseif __type == "TreeLeaf" then
-		__h = _G.CreateTreeLeaf(parent, szName, data)
+		__h = _G2.CreateTreeLeaf(parent, szName, data)
 	end
 
 	return __h
@@ -462,9 +780,9 @@ end
 function LR.GetSelfXiaYi()
 	local player = GetClientPlayer()
 	if not player then
-		return 0
+		return 0, 0, 0
 	end
-	return player.nJustice
+	return player.nJustice, player.GetJusticeRemainSpace(), player.GetMaxJustice()
 end
 
 ---帮贡
@@ -473,7 +791,9 @@ function LR.GetSelfJiangGong()
 	if not player then
 		return 0
 	end
-	return player.nContribution
+	local levelUp = GetLevelUpData(player.nRoleType, player.nLevel)
+	local nMaxContribution = levelUp['MaxContribution'] or 0
+	return player.nContribution, player.GetContributionRemainSpace(), nMaxContribution
 end
 
 
@@ -483,7 +803,7 @@ function LR.GetSelfJianBen()
 	if not player then
 		return 0
 	end
-	return player.nExamPrint
+	return player.nExamPrint, player.GetExamPrintRemainSpace(), player.GetMaxExamPrint()
 end
 
 ---威望
@@ -492,7 +812,7 @@ function LR.GetSelfWeiWang()
 	if not player then
 		return 0
 	end
-	return player.nCurrentPrestige
+	return player.nCurrentPrestige, player.GetPrestigeRemainSpace(), player.GetMaxPrestige()
 end
 
 ----战阶积分
@@ -501,7 +821,7 @@ function LR.GetSelfZhanJieJiFen()
 	if not player then
 		return 0
 	end
-	return player.nTitlePoint
+	return player.nTitlePoint, player.GetRankPointPercentage()
 end
 
 ----战阶等级
@@ -519,8 +839,36 @@ function LR.GetSelfMingJianBi()
 	if not player then
 		return 0
 	end
-	return player.nArenaAward
+	return player.nArenaAward, player.GetArenaAwardRemainSpace(), player.GetMaxArenaAward()
 end
+
+function LR.GetAccountCode(szText)
+	local account = szText or "unknown"
+	if account == "unknown" and GetUserAccount then
+		account = GetUserAccount()
+	end
+	local code = LR.md5(LR.AES.encrypt("haohaohaolanrenchajianfeichanghao", LR.basexx.to_base64(account)))
+	return code
+end
+
+function LR.GetUserCode(data)
+	if not data then
+		local me = GetClientPlayer()
+		local ServerInfo = {GetUserServer()}
+		local realArea, realServer = ServerInfo[5], ServerInfo[6]
+		local szKey = sformat("%s_%s_%d", realArea, realServer, me.dwID)
+		local AccountCode = LR.GetAccountCode()
+		local code = LR.AES.encrypt("hugeforest@qq.com", sformat("%s_%s", AccountCode, szKey))
+		return code
+	else
+		return LR.AES.encrypt("hugeforest@qq.com", sformat("%s_%s", data.AccountCode, data.szKey))
+	end
+end
+
+function LR.DecodeUserCode(text)
+	return LR.AES.decrypt("hugeforest@qq.com", text)
+end
+
 
 ---------------------------------------------------
 --获取心法名字
@@ -535,8 +883,31 @@ function LR.GetXinFa(dwSkillID)
 		return Table_GetSkillName(dwSkillID, 1)
 	else
 		local kungfu = me.GetKungfuMount()
+		if kungfu then
+			local dwSkillID = kungfu.dwSkillID
+			return Table_GetSkillName(dwSkillID, 1)
+		else
+			return g_tStrings.STR_MENTOR_MALE
+		end
+	end
+end
+
+function LR.IsNurse()
+	local me = GetClientPlayer()
+	if not me then
+		return false
+	end
+	local kungfu = me.GetKungfuMount()
+	if kungfu then
 		local dwSkillID = kungfu.dwSkillID
-		return Table_GetSkillName(dwSkillID, 1)
+		--10028:奶花	10080:奶秀	10176:奶毒	10448:奶歌
+		if dwSkillID == 10028 or dwSkillID == 10080 or dwSkillID == 10176 or dwSkillID == 10448 then
+			return true
+		else
+			return false
+		end
+	else
+		return false
 	end
 end
 
@@ -707,6 +1078,7 @@ local DefaltColor = {
 			[21] = {180, 60, 0}, 		--苍云
 			[22] = {100, 250, 180}, 	--长歌门
 			[23] = {106 , 108, 189}, 			----霸刀
+			[24] = {195 , 210, 225}, 			----蓬莱
 		},
 		CampColor = {
 			[0] = {128, 255, 128}, 	--中立
@@ -726,38 +1098,24 @@ LR.MenPaiColor = clone(DefaltColor.Color.KungFuColor)
 LR.CampColor = clone(DefaltColor.Color.CampColor)
 LR.RelationColor = clone(DefaltColor.Color.RelationColor)
 
+local KungfuID2dwForceID = {
+	[10002] = 1, [10003] = 1,		--少林
+	[10021] = 2, [10028] = 2,		--万花
+	[10026] = 3, [10062] = 3,		--天策
+	[10014] = 4, [10015] = 4,		--纯阳
+	[10080] = 5, [10080] = 5,		--七秀
+	[10175] = 6, [10176] = 6,		--五毒
+	[10224] = 7, [10225] = 7,		--唐门
+	[10144] = 8, [10145] = 8,		--藏剑
+	[10268] = 9, 					--丐帮
+	[10242] = 10, [10243] = 10,	--明教
+	[10389] = 21, [10390] = 21,	--苍云
+	[10447] = 22, [10448] = 22,	--长歌门
+	[10464] = 23,					--霸刀
+	[10533] = 24,					--蓬莱
+}
 function LR.GetMenPaiByKungfuID(dwKungfuID)
-	if not dwKungfuID then  ----大侠
-		return 0
-	elseif dwKungfuID == 10002 or dwKungfuID == 10002 then	----少林
-		return 1
-	elseif dwKungfuID == 10021 or dwKungfuID == 10028 then	----万花
-		return 2
-	elseif dwKungfuID == 10026 or dwKungfuID == 10062 then	----天策
-		return 3
-	elseif dwKungfuID == 10014 or dwKungfuID == 10015 then	----纯阳
-		return 4
-	elseif dwKungfuID == 10080 or dwKungfuID == 10081 then	----七秀
-		return 5
-	elseif dwKungfuID == 10175 or dwKungfuID == 10176 then	----五毒
-		return 6
-	elseif dwKungfuID == 10224 or dwKungfuID == 10225 then	----唐门
-		return 7
-	elseif dwKungfuID == 10144 or dwKungfuID == 10144 then	----藏剑
-		return 8
-	elseif dwKungfuID == 10268 then	----丐帮
-		return 9
-	elseif dwKungfuID == 10242 or dwKungfuID == 10243 then	----明教
-		return 10
-	elseif dwKungfuID == 10389 or dwKungfuID == 10390 then	----苍云
-		return 21
-	elseif dwKungfuID == 10447 or dwKungfuID == 10448 then	----长歌门
-		return 22
-	elseif dwKungfuID == 10464  then	----霸刀
-		return 23
-	else
-		return 0
-	end
+	return KungfuID2dwForceID[dwKungfuID or 0] or 0
 end
 
 function LR.GetMenPaiColor(dwForceID)
@@ -907,7 +1265,6 @@ function LR.UpdateMiniFlag(dwType, tar, nF1, nF2)
 	end
 end
 
-
 ----------------------------------------
 --对象操作
 ----------------------------------------
@@ -954,7 +1311,7 @@ end
 -- nY		-- 世界坐标系下的目标点 Y 值
 -- nZ		-- *可选* 世界坐标系下的目标点 Z 值
 function LR.GetDistance(nX, nY, nZ)
-	local NX, XY, NZ
+	local NX, NY, NZ
 	local me = GetClientPlayer()
 	if not nX then
 		return 0
@@ -1008,58 +1365,6 @@ function LR.SysMsg (szText, nType, bRich, nFont, tColor)
 	OutputMessage(nType, szText, bRich, nFont, tColor)
 end
 
-function LR.Debug(szText , szHeader , nLevel )
-	if not (LR.UsrData and LR.UsrData.Debug_enable) then
-		return
-	end
-	local szText = szText or ""
-	local nLevel = nLevel or 1
-	local szHeader = szHeader or "-LR-> "
-	if not (nLevel >= LR.UsrData.Debug_Level) then
-		return
-	end
-	if type(szText) == "string" then
-		LR.SysMsg(sformat("%s%s\n", szHeader, szText))
-	elseif type(szText) == "number" then
-		LR.SysMsg(sformat("%s%s\n", szHeader, tostring(szText)))
-	elseif type(szText) == "table" then
-		LR.SysMsg(sformat("%s{\n", szHeader))
-		if next(szText)~= nil then
-			for k, v in pairs(szText) do
-				LR.SysMsg(sformat("%s\[%d\] = ", szHeader, k))
-				if type(v) == "string" or type(v) == "number" then
-					LR.Debug(v , "" , nLevel)
-				elseif type(v) == "table" then
-					LR.Debug(v , szHeader.."    " , nLevel)
-				end
-			end
-		end
-		LR.SysMsg(sformat("%s}\n", szHeader))
-	end
-end
-
-function LR.bCanDebug()
-	local me = GetClientPlayer()
-	local ServerInfo = {GetUserServer()}
-	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if realArea == "电信一区" and realServer == "红尘寻梦" and IsShiftKeyDown() and IsAltKeyDown() then
-		return true
-	else
-		return false
-	end
-end
-
-function LR.bCanDebug2()
-	local me = GetClientPlayer()
-	local ServerInfo = {GetUserServer()}
-	local Area, Server, realArea, realServer = ServerInfo[3], ServerInfo[4], ServerInfo[5], ServerInfo[6]
-	if realArea == "电信一区" and realServer == "红尘寻梦" and LR.GetTongName(me.dwTongID) == "么么哒萌萌哒" then
-		return true
-	else
-		return false
-	end
-end
-
 ---------------------------------------------
 ---发布系统警告
 ---------------------------------------------
@@ -1073,6 +1378,20 @@ end
 
 function LR.GreenAlert(...)
 	OutputWarningMessage("MSG_WARNING_GREEN", ...)
+end
+
+function LR.Log(arg0, ...)
+	if not arg0 then
+		return
+	end
+	if type(arg0) == "string" then
+		Log(arg0)
+	elseif type(arg0) == "table" then
+		for k, v in pairs(arg0) do
+			LR.Log(v)
+		end
+	end
+	LR.Log(...)
 end
 
 ---------------------------------------------
@@ -1513,10 +1832,20 @@ function LR.GetTongName(dwTongID)
 		return ""
 	end
 end
+
+function LR.SetDataToClip(szText)
+	local lenth = slen(szText)
+	if lenth > 128 then
+		LR.Log(sformat("Text is too long.(%s -- %d)\n", szText, lenth))
+		SetDataToClip(ssub(szText, 1, 128))
+	else
+		SetDataToClip(szText)
+	end
+end
+
 -------------------------------------------------------------------------------
 ----------------任务相关
 -------------------------------------------------------------------------------
-
 LR.tAllSceneQuest = {}  ---------------存放所有任务
 LR.tAllUnknownAccept = {}
 LR.tAllUnknownFinish = {}
@@ -1638,7 +1967,11 @@ function LR.GetQuestPoint(szText)
 				end
 				local szName = ""
 				if szType == "N" then
-					szName = Table_GetNpcTemplateName(tNum[2])
+					if tNum[2] then
+						szName = Table_GetNpcTemplateName(tNum[2])
+					else
+						--Output("test", szText)
+					end
 				else
 					szName = LR.TABLE_GetDoodadTemplateName(tNum[2])
 				end
@@ -1671,32 +2004,7 @@ function LR.IsQuestNameShield(szName)
 	return false
 end
 
-function LR.Table_GetAllSceneQuest(dwMapID)
-	local tSceneQuest = {}
-	if LR.tAllSceneQuest[dwMapID] then
-		tSceneQuest = LR.tAllSceneQuest[dwMapID]
-	end
-
-	return tSceneQuest
-end
-
-function LR.Table_LoadSceneQuest()
-	local path = sformat("%s\\QuestStartFinish.dat", SaveDataPath)
-	local data = LoadLUAData(path) or {}
-	local flag = false
-	if data.SaveTime then
-		local TimeNow, TimeRecord = GetCurrentTime(), data.SaveTime
-		local DateNow, DateRecord = TimeToDate(TimeNow), TimeToDate(TimeRecord)
-		if DateNow.year == DateRecord.year and DateNow.month == DateRecord.month and DateNow.day == DateRecord.day then
-			flag = true
-		end
-	end
-	if flag then
-		LR.tAllUnknownAccept = clone(data.tStart)
-		LR.tAllUnknownFinish = clone(data.tFinish)
-		return
-	end
-
+function LR.GetAllSceneQuest()
 	local nRow = g_tTable.Quest:GetRowCount()
 	for i = 2, nRow, 1 do
 		local tQuest = g_tTable.Quest:GetRow(i)
@@ -1714,47 +2022,32 @@ function LR.Table_LoadSceneQuest()
 			end
 		end
 	end
-	local tStart, tFinish = {}, {}
-	for i = 1, 18500, 1 do
-		local questInfo = GetQuestInfo(i)
-		if questInfo then
-			local tt = g_tTable.Quest:Search(i)
-			if not tt then
-				if questInfo.dwStartDoodadTemplateID ~= 0 then
-					local szKey = sformat("D_%d", questInfo.dwStartDoodadTemplateID)
-					tStart[szKey] = tStart[szKey] or {}
-					tinsert(tStart[szKey], i)
-
-					local szKey2 = sformat("D_%d", questInfo.dwEndNpcTemplateID)
-					tFinish[szKey2] = tFinish[szKey] or {}
-					tinsert(tFinish[szKey2], i)
-				elseif questInfo.dwStartNpcTemplateID ~= 0 then
-					local szKey = sformat("N_%d", questInfo.dwStartNpcTemplateID)
-					tStart[szKey] = tStart[szKey] or {}
-					tinsert(tStart[szKey], i)
-
-					local szKey2 = sformat("N_%d", questInfo.dwEndNpcTemplateID)
-					tFinish[szKey2] = tFinish[szKey] or {}
-					tinsert(tFinish[szKey2], i)
-				end
-			end
-		end
-	end
-	LR.tAllUnknownAccept = clone(tStart)
-	LR.tAllUnknownFinish = clone(tFinish)
-
-	local data2 = {}
-	data2.SaveTime = GetCurrentTime()
-	data2.tStart = clone(tStart)
-	data2.tFinish = clone(tFinish)
-	LR.SaveLUAData(path, data2)
 end
 
-RegisterEvent("FIRST_LOADING_END", LR.Table_LoadSceneQuest)
+function LR.Table_GetAllSceneQuest(dwMapID)
+	local tSceneQuest = {}
+	if LR.tAllSceneQuest[dwMapID] then
+		tSceneQuest = LR.tAllSceneQuest[dwMapID]
+	end
+
+	return tSceneQuest
+end
+RegisterEvent("FIRST_LOADING_END", function() LR.LoadQuestData() end)
+
+
+function LR.LoadQuestData()
+	local path = sformat("%s\\Script\\QuestStartFinish.dat", AddonPath)
+	local data = LoadLUAData(path) or {}
+	LR.tAllUnknownAccept = clone(data.tStart)
+	LR.tAllUnknownFinish = clone(data.tFinish)
+end
+RegisterEvent("FIRST_LOADING_END", function() LR.GetAllSceneQuest() end)
 ---------------------------DOODAD
 function LR.TABLE_GetDoodadTemplateName(dwTemplateID)
 	if dwTemplateID == 5402 then
 		return "亮银枪头"
+	elseif dwTemplateID == 7425 then
+		--return _L["LANJINGKUANG"]
 	end
 	local RowCount = g_tTable.DoodadTemplate:GetRowCount()
 	local i = 1
@@ -1763,7 +2056,7 @@ function LR.TABLE_GetDoodadTemplateName(dwTemplateID)
 		if dwTemplateID == t.nID then
 			return t.szName
 		end
-		i = i+1
+		i = i + 1
 	end
 	return ""
 end
@@ -1805,6 +2098,7 @@ end
 function LR.EventHandler (szEvent)
 	local tEvent = LR.tEvent[szEvent]
 	if next(tEvent) ~= nil then
+		_DEBUGDD.OutputEvent(szEvent)
 		for k, v in pairs (tEvent) do
 			local res, err = pcall(v)
 			if not res then
@@ -1819,7 +2113,7 @@ end
 -- fnAction		-- 事件处理函数，arg0 ~ arg9，传入 nil 相当于取消该事件
 --特别注意：当 fnAction 为 nil 并且 szKey 也为 nil 时会取消所有通过本函数注册的事件处理器
 --注册时结构：LR.RegisterEvent("event", function() 需要执行的函数 end)，一定要这么写
-function LR.RegisterEvent (szEvent, fnAction)
+function LR.RegisterEvent (szEvent, fnAction, addon)
 	local szKey = nil
 	local nPos = StringFindW(szEvent, ".")
 	if nPos then
@@ -1829,13 +2123,23 @@ function LR.RegisterEvent (szEvent, fnAction)
 	if not LR.tEvent[szEvent] then
 		LR.tEvent[szEvent] = {}
 		RegisterEvent(szEvent, function() LR.EventHandler(szEvent) end)
+		--
+		if not addon then
+			_DEBUG:RegisterEvent(szEvent)
+		end
 	end
+
 	local tEvent = LR.tEvent[szEvent]
 	if fnAction then
 		if not szKey then
 			tinsert(tEvent, fnAction)
 		else
 			tEvent[szKey] = fnAction
+		end
+		if addon then
+			if _DEBUGDD.tAddon[addon] then
+				_DEBUGDD.tAddon[addon]:RegisterEvent(szEvent)
+			end
 		end
 	else
 		if not szKey then
@@ -1873,26 +2177,7 @@ function LR.UnRegisterEvent (szEvent, fnAction)
 	end
 end
 
-----------------------------------------------
-function LR.GetPlayerBagFreeBoxList()
-	local me = GetClientPlayer()
-	local tBoxTable = {}
-	for _, dwBox in pairs(BAG_PACKAGE) do
-		local dwSize = me.GetBoxSize(dwBox)
-		if dwSize > 0 then
-			for dwX = dwSize, 1, -1 do
-				local item = me.GetItem(dwBox, dwX - 1)
-				if not item then
-					local i, j = dwBox, dwX - 1
-					tinsert(tBoxTable, 1, {i, j})
-				end
-			end
-		end
-	end
-	return tBoxTable
-end
-
-----------------------------------------------
+---------------------------------------------
 -----各种菜单获取
 ----------------------------------------------
 function LR.GetShiTuMenu(dwID)
@@ -2020,12 +2305,11 @@ end
 ---------------------------------------------
 ----DelayCall
 ---------------------------------------------
-LR_Breathe = {}
-function LR_Breathe.OnFrameCreate()
-
+function LR.OnFrameCreate()
+	LR.hWeb = this:Lookup("Web_Page")
 end
 
-function LR_Breathe.OnFrameBreathe()
+function LR.OnFrameBreathe()
 	--Output("LR_Breathe.OnFrameBreathe")
 	local nFrame = GetTickCount()
 	for k, v in pairs(LR.tBreatheCall) do
@@ -2042,7 +2326,7 @@ function LR_Breathe.OnFrameBreathe()
 	end
 end
 
-function LR_Breathe.OnFrameRender()
+function LR.OnFrameRender()
 	local nTime = GetTime()
 	for k, v in pairs (LR.tDelayCall) do
 		if v then
@@ -2094,7 +2378,7 @@ end
 function LR.UnBreatheCall(szKey)
 	LR.BreatheCall(szKey)
 end
-Wnd.OpenWindow("Interface\\LR_Plugin\\LR_1Base\\UI\\LR_1Base_None.ini", "LR_Breathe")
+Wnd.OpenWindow("Interface\\LR_Plugin\\LR_1Base\\UI\\LR_1Base_None.ini", "LR")
 ------------------------------------------------------------------------------------
 -------
 ------------------------------------------------------------------------------------
@@ -2144,6 +2428,139 @@ function LR.CJ_TigerRun()
 	end
 end
 
+-------------------------------------------------------------------------------
+--------好友列表
+-------------------------------------------------------------------------------
+local tFriend_List_ByID = {}
+local tFriend_List_ByName = {}
+local _Friend = {}
+function _Friend.GetFriendList()
+	--
+	tFriend_List_ByID = {}
+	tFriend_List_ByName = {}
+	--
+	local me = GetClientPlayer()
+	local tGroupInfo = me.GetFellowshipGroupInfo() or {}
+	tinsert(tGroupInfo, {id = 0, name = g_tStrings.STR_MAKE_FRIEND})
+	for k, v in pairs(tGroupInfo) do
+		local tFriend = me.GetFellowshipInfo(v.id) or {}
+		for k2, v2 in pairs(tFriend) do
+			local data = {}
+			data.dwID = v2.id
+			data.szName = v2.name
+			local fellowClient = GetFellowshipCardClient()
+			if fellowClient then
+				local card = fellowClient.GetFellowshipCardInfo(v2.id)
+				if card then
+					data.dwForceID = card.dwForceID
+					data.nCamp = card.nCamp
+					data.nRoleType = card.nRoleType
+					data.nLevel = card.nLevel
+					data.szSignature = card.szSignature
+				end
+			end
+			tFriend_List_ByID[v2.id] = clone(data)
+			tFriend_List_ByName[v2.name] = clone(data)
+		end
+	end
+end
+
+function _Friend.IsFriend(arg0)
+	if not arg0 then
+		return false
+	end
+	if type(arg0) == "string" then
+		if tFriend_List_ByName[arg0] then
+			return true
+		end
+	elseif type(arg0) == "number" then
+		if tFriend_List_ByID[arg0] then
+			return true
+		end
+	end
+	return false
+end
+
+function _Friend.GetFriend(arg0)
+	if not arg0 then
+		return {}
+	end
+	if type(arg0) == "string" then
+		return tFriend_List_ByName[arg0] or {}
+	elseif type(arg0) == "number" then
+		return tFriend_List_ByID[arg0] or {}
+	end
+	return {}
+end
+
+LR.Friend = _Friend
+LR.RegisterEvent("FIRST_LOADING_END", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("PLAYER_FELLOWSHIP_UPDATE", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("PLAYER_FELLOWSHIP_CHANGE", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("PLAYER_FELLOWSHIP_LOGIN", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("PLAYER_FOE_UPDATE", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("PLAYER_BLACK_LIST_UPDATE", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("DELETE_FELLOWSHIP", function() _Friend.GetFriendList() end)
+LR.RegisterEvent("FELLOWSHIP_TWOWAY_FLAG_CHANGE", function() _Friend.GetFriendList() end)
+
+------------------------------------------------------------------------------------
+----帮会
+------------------------------------------------------------------------------------
+local _tTong_Member_List_ByID = {}
+local _tTong_Member_List_ByName = {}
+local _Tong = {}
+function _Tong.GetMemberList()
+	------
+	_tTong_Member_List_ByID = {}
+	_tTong_Member_List_ByName = {}
+	------
+	local Tong = GetTongClient()
+	local MemberList = Tong.GetMemberList(true, "name", true, -1, -1)
+	for k, dwID in pairs(MemberList) do
+		local info = Tong.GetMemberInfo(dwID)
+		local data = {}
+		data.dwID = dwID
+		data.dwForceID = info.nForceID
+		data.szName = info.szName
+		data.nLevel = info.nLevel
+		--
+		_tTong_Member_List_ByID[dwID] = clone(data)
+		_tTong_Member_List_ByName[info.szName] = clone(data)
+	end
+end
+
+function _Tong.IsTongMember(arg0)
+	if not arg0 then
+		return false
+	end
+	if type(arg0) == "string" then
+		if _tTong_Member_List_ByName[arg0] then
+			return true
+		end
+	elseif type(arg0) == "number" then
+		if _tTong_Member_List_ByID[arg0] then
+			return true
+		end
+	end
+	return false
+end
+
+function _Tong.GetTongMember(arg0)
+	if not arg0 then
+		return {}
+	end
+	if type(arg0) == "string" then
+		return _tTong_Member_List_ByName[arg0] or {}
+	elseif type(arg0) == "number" then
+		return _tTong_Member_List_ByID[arg0] or {}
+	end
+	return {}
+end
+
+LR.Tong = _Tong
+LR.RegisterEvent("FIRST_LOADING_END", function() _Tong.GetMemberList() end)
+------------------------------------------------------------------------------------
+----黑本
 ------------------------------------------------------------------------------------
 LR.BlackFBList = {}
 LR.BlackACK = 0
@@ -2316,6 +2733,7 @@ end
 
 function LR.LOGIN_GAME()
 	LR.RegisterHotKey()
+	_DEBUGDD.LoadCFG()
 end
 
 function LR.SYS_MSG()
@@ -2349,8 +2767,10 @@ end)
 LR.RegisterEvent("FIRST_LOADING_END", function()
 	LR.Black_FIRST_LOADING_END()
 	LR.LoadMenPaiColor()
+	_DEBUGDD.SysMenuAdd()
 end)
 LR.RegisterEvent("ON_BG_CHANNEL_MSG", function() LR.Black_ON_BG_CHANNEL_MSG() end)
 LR.RegisterEvent("PARTY_ADD_MEMBER", function() LR.Black_PARTY_ADD_MEMBER() end)
 LR.RegisterEvent("LOGIN_GAME", function() LR.LOGIN_GAME() end)
 LR.RegisterEvent("SYS_MSG", function() LR.SYS_MSG() end)
+

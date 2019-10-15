@@ -276,7 +276,7 @@ function LR_EquipSearch.ExportDB()
 					tAttribute[#tAttribute + 1] = sformat("A%d,", LR_ATTRIBUTE_nID[v2.nID])
 				end
 			end
-			szAttribute = tconcat(tAttribute, "")
+			local szAttribute = tconcat(tAttribute, "")
 
 			local nRequireLevel = 0
 			if v.dwTabType ~= ITEM_TABLE_TYPE.OTHER then
@@ -395,7 +395,7 @@ end
 ----------------------------------------------------------------
 ------界面
 ----------------------------------------------------------------
-LR_EquipSearch_Panel = CreateAddon("LR_EquipSearch_Panel")
+LR_EquipSearch_Panel = _G2.CreateAddon("LR_EquipSearch_Panel")
 LR_EquipSearch_Panel:BindEvent("OnFrameDestroy", "OnDestroy")
 
 LR_EquipSearch_Panel.UsrData = {
@@ -878,6 +878,8 @@ function LR_EquipSearch_Panel:LoadItemBox(hWin)
 			handle:GetHandle().OnItemLButtonClick = function()	--等效于 Handle:OnClick()
 				if IsCtrlKeyDown() then
 					EditBox_AppendLinkItemInfo(1, dwTabType, dwIndex, 0)
+				elseif IsShiftKeyDown() then
+					Output("sub:" .. v.nSub, "detail:" .. v.nDetail)
 				elseif IsAltKeyDown() then
 					Addon_ExteriorViewByItemInfo(dwTabType, dwIndex)
 				else
